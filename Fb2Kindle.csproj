@@ -65,6 +65,9 @@
     <None Include="fonts\Lombardina-Initial-One.ttf" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="kindlegen.exe">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="styles.css" />
   </ItemGroup>
 </Project>
