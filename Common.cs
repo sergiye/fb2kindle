@@ -315,43 +315,41 @@ namespace Fb2Kindle
             Console.WriteLine();
         }
 
-        public static void CreateMobi(string executingPath, string tempDir, string bookName, string parentPath, bool deleteOrigin, string bookPath)
+        public static bool CreateMobi(string executingPath, string tempDir, string bookName, string parentPath, bool deleteOrigin, string bookPath)
         {
             if (!File.Exists(executingPath + @"\kindlegen.exe"))
             {
                 Console.Write("!!!Не найден kindlegen.exe, конвертация в mobi невозможна!!!");
                 Console.WriteLine();
                 Directory.Delete(tempDir, true);
+                return false;
             }
-            else
+            Console.Write("Конвертируем в mobi(KF8)...");
+            var startInfo = new ProcessStartInfo {FileName = executingPath + @"\kindlegen.exe", Arguments = "\"" + tempDir + @"\" + bookName + ".opf\"", WindowStyle = ProcessWindowStyle.Hidden};
+            var process2 = Process.Start(startInfo);
+            process2.WaitForExit();
+            if (process2.ExitCode == 2)
             {
-                Console.Write("Конвертируем в mobi(KF8)...");
-                var startInfo = new ProcessStartInfo {FileName = executingPath + @"\kindlegen.exe", Arguments = "\"" + tempDir + @"\" + bookName + ".opf\"", WindowStyle = ProcessWindowStyle.Hidden};
-                var process2 = Process.Start(startInfo);
-                process2.WaitForExit();
-                if (process2.ExitCode == 2)
-                {
-                    Console.Write("Error: ");
-                    Console.WriteLine();
-                    Console.Write("Не удалось сконвертировать в mobi");
-                    Console.WriteLine();
-                }
-                else
-                {
-                    if (deleteOrigin)
-                        File.Delete(bookPath);
-                    var versionNumber = 1;
-                    var resultPath = Path.GetDirectoryName(bookPath);
-                    var resultName = bookName;
-                    while (File.Exists(Path.Combine(resultPath, resultName) + ".mobi"))
-                    {
-                        resultName = bookName + "(v" + versionNumber + ")";
-                        versionNumber++;
-                    }
-                    File.Move(tempDir + @"\" + bookName + ".mobi", Path.Combine(resultPath, resultName) + ".mobi");
-                    Console.Write("(Ok)");
-                }
+                Console.Write("Error: ");
+                Console.WriteLine();
+                Console.Write("Не удалось сконвертировать в mobi");
+                Console.WriteLine();
+                return false;
             }
+            
+            if (deleteOrigin)
+                File.Delete(bookPath);
+            var versionNumber = 1;
+            var resultPath = Path.GetDirectoryName(bookPath);
+            var resultName = bookName;
+            while (File.Exists(Path.Combine(resultPath, resultName) + ".mobi"))
+            {
+                resultName = bookName + "(v" + versionNumber + ")";
+                versionNumber++;
+            }
+            File.Move(tempDir + @"\" + bookName + ".mobi", Path.Combine(resultPath, resultName) + ".mobi");
+            Console.Write("(Ok)");
+            return true;
         }
 
         public static string AddEncodingToXml(string text)
@@ -385,43 +383,38 @@ namespace Fb2Kindle
 
         public static bool ExtractImages(string executingPath, string tempDir, string images, string bookPath)
         {
-            //extract images
-            var processingAppFound = true;
             var startInfo = new ProcessStartInfo();
-            if (File.Exists(executingPath + @"\fb2bin.exe"))
+            if (!File.Exists(executingPath + @"\fb2bin.exe"))
             {
-                Console.WriteLine("Извлекаем картинки...");
-                startInfo.FileName = executingPath + @"\fb2bin.exe";
-                startInfo.Arguments = "-x -q -q -d \"" + tempDir + @"\" + images + "\" \"" + bookPath + "\"";
-                startInfo.WindowStyle = ProcessWindowStyle.Hidden;
-                var process = Process.Start(startInfo);
-                process.WaitForExit();
-                switch (process.ExitCode)
-                {
-                    case 0:
-                        Console.WriteLine("(Ok)");
-                        break;
-                    case 1:
-                        Console.WriteLine("(Картинки извлечены, но могут быть ошибки!)");
-                        break;
-                    case 2:
-                        Console.WriteLine("(Невалидный исходный файл - выполнение невозможно!)");
-                        break;
-                    case 3:
-                        Console.WriteLine("(Приключилась фатальная ошибка!)");
-                        break;
-                    case 4:
-                        Console.WriteLine("(Ошибка в параметрах командной строки!)");
-                        break;
-                }
-            }
-            else
-            {
-                processingAppFound = false;
                 Console.Write("Невозможно извлечь картинки");
                 Console.WriteLine();
+                return false;
             }
-            return processingAppFound;
+            Console.Write("Извлекаем картинки...");
+            startInfo.FileName = executingPath + @"\fb2bin.exe";
+            startInfo.Arguments = "-x -q -q -d \"" + tempDir + @"\" + images + "\" \"" + bookPath + "\"";
+            startInfo.WindowStyle = ProcessWindowStyle.Hidden;
+            var process = Process.Start(startInfo);
+            process.WaitForExit();
+            switch (process.ExitCode)
+            {
+                case 0:
+                    Console.WriteLine("(Ok)");
+                    break;
+                case 1:
+                    Console.WriteLine("(Картинки извлечены, но могут быть ошибки!)");
+                    break;
+                case 2:
+                    Console.WriteLine("(Невалидный исходный файл - выполнение невозможно!)");
+                    break;
+                case 3:
+                    Console.WriteLine("(Приключилась фатальная ошибка!)");
+                    break;
+                case 4:
+                    Console.WriteLine("(Ошибка в параметрах командной строки!)");
+                    break;
+            }
+            return true;
         }
 
         public static string PrepareTempFolder(string bookName, string images, string executingPath)

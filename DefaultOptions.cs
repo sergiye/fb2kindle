@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 
 namespace Fb2Kindle
 {
@@ -7,7 +8,7 @@ namespace Fb2Kindle
     {
         public DefaultOptions()
         {
-            d = "True";
+            d = Debugger.IsAttached ? "False" : "True";
             nh = "True";
             nstitle = "False";
             NoteBox = "False";
