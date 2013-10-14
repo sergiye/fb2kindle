@@ -37,6 +37,7 @@
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
     <Compile Include="AssemblyInfo.cs" />
+    <Compile Include="Convertor.cs" />
     <Compile Include="DataItem.cs" />
     <Compile Include="XHelper.cs" />
     <Compile Include="SectionInfo.cs" />
