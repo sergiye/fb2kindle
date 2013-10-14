@@ -10,13 +10,33 @@ namespace Fb2Kindle
     class Convertor
     {
         const string images = "images";
+        private string _tempDir;
+        private readonly string _workingFolder;
+        private readonly string _defaultCSS;
+        private readonly bool _customFontsUsed;
+        private DefaultOptions _currentSettings { get; set; }
 
-        public static bool ConvertBook(string bookName, string executingPath, string bookPath, DefaultOptions currentSettings, string defaultCSS, string parentPath)
+        public Convertor(DefaultOptions currentSettings, string workingFolder, string defaultCSS)
         {
+            _currentSettings = currentSettings;
+            _workingFolder = workingFolder;
+            _defaultCSS = defaultCSS;
+            if (_defaultCSS != null) 
+                _customFontsUsed = _defaultCSS.Contains("src: url(\"fonts/");
+        }
+
+        public bool ConvertBook(string bookPath)
+        {
+            var bookName = Path.GetFileNameWithoutExtension(bookPath);
             Console.WriteLine("Processing: " + bookName);
             //create temp working folder
-            var tempDir = Common.PrepareTempFolder(bookName, images, executingPath);
-            var imagesPrepared = Common.ExtractImages(executingPath, tempDir, images, bookPath);
+            _tempDir = Common.PrepareTempFolder(bookName, images, _workingFolder);
+            if (_customFontsUsed && Directory.Exists(_workingFolder + @"\fonts"))
+            {
+                Directory.CreateDirectory(_tempDir + @"\fonts");
+                Common.CopyDirectory(_workingFolder + @"\fonts", _tempDir + @"\fonts", true);
+            }
+            var imagesPrepared = Common.ExtractImages(_workingFolder, _tempDir, images, bookPath);
             var fData = File.ReadAllText(bookPath);
             if (fData.Length == 0)
             {
@@ -39,13 +59,13 @@ namespace Fb2Kindle
             XElement element6;
             List<DataItem> titles;
             int index;
-            var element5 = ConvertToHtml(bookPath, currentSettings, fData, imagesPrepared, tempDir, out num9, out element2, out element3, out notesList2, out bodyStr, out flag13, out element6, out titles, out index);
+            var element5 = ConvertToHtml(bookPath, _currentSettings, fData, imagesPrepared, out num9, out element2, out element3, out notesList2, out bodyStr, out flag13, out element6, out titles, out index);
 
 
             var str17 = element2.ToString();
-            if (currentSettings.nc != "True")
+            if (_currentSettings.nc != "True")
             {
-                num9 = CreateChapters(currentSettings, bodyStr, num9, element2, tempDir, element3, titles, element6, element5, ref index);
+                num9 = CreateChapters(_currentSettings, bodyStr, num9, element2, element3, titles, element6, element5, ref index);
             }
             else
             {
@@ -67,7 +87,7 @@ namespace Fb2Kindle
                     element14.Add(XHelper.CreateAttribute("src", htmlFile + "#" + str35));
                     element15.Add(element14);
                     element6.Elements("navMap").ElementAtOrDefault(0).Add(element15);
-                    if (currentSettings.ntoc != "True")
+                    if (_currentSettings.ntoc != "True")
                     {
                         element15 = new XElement("li");
                         element14 = new XElement("a");
@@ -93,14 +113,14 @@ namespace Fb2Kindle
                 element15.Add(XHelper.CreateAttribute("href", htmlFile));
                 element3.Elements("guide").ElementAtOrDefault(0).Add(element15);
                 bodyStr = Common.TabRep(bodyStr);
-                if (currentSettings.nh != "True")
+                if (_currentSettings.nh != "True")
                 {
                     bodyStr = Common.GipherHTML(bodyStr);
                 }
                 str17 = str17.Insert(str17.IndexOf("<body>") + 6, bodyStr).Replace("<sectio1", "<div class=\"book\"").Replace("</sectio1>", "</div>");
-                File.WriteAllText(tempDir + @"\" + htmlFile, str17);
+                File.WriteAllText(_tempDir + @"\" + htmlFile, str17);
             }
-            if (currentSettings.ntoc != "True" && currentSettings.ContentOf == "True")
+            if (_currentSettings.ntoc != "True" && _currentSettings.ContentOf == "True")
             {
                 element15 = new XElement("navPoint");
                 element15.Add(XHelper.CreateAttribute("id", "navpoint-" + (index + 2).ToString()));
@@ -154,7 +174,7 @@ namespace Fb2Kindle
                     element14.Add(XHelper.CreateAttribute("src", item.Name));
                     element15.Add(element14);
                     element6.Elements("navMap").ElementAtOrDefault(0).Add(element15);
-                    if (currentSettings.ntoc != "True")
+                    if (_currentSettings.ntoc != "True")
                     {
                         element15 = new XElement("li");
                         element14 = new XElement("a");
@@ -166,28 +186,28 @@ namespace Fb2Kindle
                     num9++;
                 }
             }
-            File.WriteAllText(tempDir + @"\book.css", defaultCSS);
-            element3.Save(tempDir + @"\" + bookName + ".opf");
+            File.WriteAllText(_tempDir + @"\book.css", _defaultCSS);
+            element3.Save(_tempDir + @"\" + bookName + ".opf");
             element3.RemoveAll();
-            element6.Save(tempDir + @"\toc.ncx");
+            element6.Save(_tempDir + @"\toc.ncx");
             element6.RemoveAll();
-            if (currentSettings.ntoc != "True")
+            if (_currentSettings.ntoc != "True")
             {
-                element5.Save(tempDir + @"\toc.html");
+                element5.Save(_tempDir + @"\toc.html");
                 element5.RemoveAll();
             }
-            if (Directory.Exists(executingPath + @"\fonts"))
+            var parentPath = Path.GetDirectoryName(bookPath);
+            if (string.IsNullOrEmpty(parentPath))
             {
-                Directory.CreateDirectory(tempDir + @"\fonts");
-                Common.CopyDirectory(executingPath + @"\fonts", tempDir + @"\fonts", true);
+                bookPath = Path.Combine(_workingFolder, bookPath);
+                parentPath = _workingFolder;
             }
-
-            var result = Common.CreateMobi(executingPath, tempDir, bookName, parentPath, currentSettings.deleteOrigin, bookPath);
-            Directory.Delete(tempDir, true);
+            var result = Common.CreateMobi(_workingFolder, _tempDir, bookName, parentPath, _currentSettings.deleteOrigin, bookPath);
+            Directory.Delete(_tempDir, true);
             return result;
         }
 
-        private static int CreateChapters(DefaultOptions currentSettings, string bodyStr, int num9, XElement element2, string tempDir, XElement element3, List<DataItem> titles, XElement element6, XElement element5, ref int index)
+        private int CreateChapters(DefaultOptions currentSettings, string bodyStr, int num9, XElement element2, XElement element3, List<DataItem> titles, XElement element6, XElement element5, ref int index)
         {
             int num16;
             int num17;
@@ -236,7 +256,7 @@ namespace Fb2Kindle
                             {
                                 bodyContent = Common.GipherHTML(bodyContent);
                             }
-                            Common.SaveElementToFile(element2.ToString(), bodyContent, noBookFlag, tempDir, bookNum);
+                            Common.SaveElementToFile(element2.ToString(), bodyContent, noBookFlag, _tempDir, bookNum);
                             element15 = new XElement("item");
                             element15.Add(XHelper.CreateAttribute("id", "text" + bookNum));
                             element15.Add(new XAttribute("media-type", "text/x-oeb1-document"));
@@ -315,7 +335,7 @@ namespace Fb2Kindle
                             {
                                 bodyContent = Common.GipherHTML(bodyContent);
                             }
-                            Common.SaveElementToFile(element2.ToString(), bodyContent, noBookFlag, tempDir, bookNum);
+                            Common.SaveElementToFile(element2.ToString(), bodyContent, noBookFlag, _tempDir, bookNum);
 
                             element15 = new XElement("item");
                             element15.Add(XHelper.CreateAttribute("id", "text" + bookNum));
@@ -378,7 +398,7 @@ namespace Fb2Kindle
             return num9;
         }
 
-        public static XElement ConvertToHtml(string bookPath, DefaultOptions currentSettings, string fData, bool imagesPrepared, string tempDir, out int num9, out XElement element2, out XElement element3, out List<DataItem> notesList2, out string bodyStr, out bool flag13, out XElement element6, out List<DataItem> titles, out int index)
+        public XElement ConvertToHtml(string bookPath, DefaultOptions currentSettings, string fData, bool imagesPrepared, out int num9, out XElement element2, out XElement element3, out List<DataItem> notesList2, out string bodyStr, out bool flag13, out XElement element6, out List<DataItem> titles, out int index)
         {
             var allText = File.ReadAllText(bookPath, fData.ToUpper().IndexOf("UTF-8") > 0 ? Encoding.UTF8 : Encoding.Default);
             Console.Write("FB2 to HTML...");
@@ -483,7 +503,7 @@ namespace Fb2Kindle
                 element13.Add(element14);
                 element12.Add(element13);
                 content.Add(element12);
-                content.Save(tempDir + @"\booktitle.html");
+                content.Save(_tempDir + @"\booktitle.html");
             }
             element2 = new XElement("html");
             element13 = new XElement("head");
@@ -654,7 +674,7 @@ namespace Fb2Kindle
                         htmltxt = Common.GipherHTML(htmltxt);
                     }
                     htmltxt = Common.AddEncodingToXml(htmltxt);
-                    File.WriteAllText(tempDir + @"\" + str21 + ".html", htmltxt);
+                    File.WriteAllText(_tempDir + @"\" + str21 + ".html", htmltxt);
                     flag13 = true;
                 }
             }

@@ -72,14 +72,8 @@ namespace Fb2Kindle
                 Console.WriteLine();
                 return;
             }
-            var bookName = Path.GetFileNameWithoutExtension(bookPath);
-            var parentPath = Path.GetDirectoryName(bookPath);
-            if (string.IsNullOrEmpty(parentPath))
-            {
-                bookPath = Path.Combine(executingPath, bookPath);
-                parentPath = executingPath;
-            }
-            if (!Convertor.ConvertBook(bookName, executingPath, bookPath, currentSettings, defaultCSS, parentPath) || Debugger.IsAttached)
+            var conv = new Convertor(currentSettings, executingPath, defaultCSS);
+            if (!conv.ConvertBook(bookPath) || Debugger.IsAttached)
             {
                 Console.WriteLine();
                 Console.WriteLine();
