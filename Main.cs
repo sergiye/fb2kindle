@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -28,7 +27,6 @@ namespace Fb2Kindle
                 defaultCSS = File.ReadAllText(currentSettings.defaultCSS, Encoding.UTF8);
 
             var bookPath = string.Empty;
-            const string str = "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧЩШЬЪЫЭЮЯQWERTYUIOPASDFGHJKLZXCVBNM";
             for (var j = 0; j < args.Length; j++)
             {
                 switch (args[j].ToLower().Trim())
@@ -42,7 +40,6 @@ namespace Fb2Kindle
                             {
                                 Console.Write("(Err) Не найден файл стилей: " + args[j + 1]);
                                 Console.WriteLine();
-                                return;
                             }
                             j++;
                         }
@@ -67,7 +64,7 @@ namespace Fb2Kindle
             }
             if (string.IsNullOrEmpty(defaultCSS))
             {
-                Console.Write("Файл стилей не найден: " + currentSettings.defaultCSS);
+                Console.Write("Пустой файл стилей: " + currentSettings.defaultCSS);
                 Console.WriteLine();
                 return;
             }
@@ -77,6 +74,7 @@ namespace Fb2Kindle
                 Console.WriteLine();
                 return;
             }
+
             var bookName = Path.GetFileNameWithoutExtension(bookPath);
             var htmlFile = bookName + ".html";
             var parentPath = Path.GetDirectoryName(bookPath);
@@ -85,53 +83,13 @@ namespace Fb2Kindle
                 bookPath = Path.Combine(executingPath, bookPath);
                 parentPath = executingPath;
             }
+            Console.WriteLine("Processing: " + bookName);
+
             //create temp working folder
             const string images = "images";
-            var tempDir = Path.Combine(Path.GetTempPath(), bookName);
-            if (!Directory.Exists(tempDir))
-                Directory.CreateDirectory(tempDir);
-            if (!Directory.Exists(tempDir + @"\" + images))
-                Directory.CreateDirectory(tempDir + @"\" + images);
-            if (Directory.Exists(executingPath + @"\" + images))
-                ConverterHelper.CopyDirectory(executingPath + @"\" + images, tempDir + @"\" + images, true);
+            var tempDir = ConverterHelper.PrepareTempFolder(bookName, images, executingPath);
 
-            Console.WriteLine("Processing: " + bookName);
-            //extract images
-            var processingAppFound = true;
-            var startInfo = new ProcessStartInfo();
-            if (File.Exists(executingPath + @"\fb2bin.exe"))
-            {
-                Console.WriteLine("Извлекаем картинки...");
-                startInfo.FileName = executingPath + @"\fb2bin.exe";
-                startInfo.Arguments = "-x -q -q -d \"" + tempDir + @"\" + images + "\" \"" + bookPath + "\"";
-                startInfo.WindowStyle = ProcessWindowStyle.Hidden;
-                var process = Process.Start(startInfo);
-                process.WaitForExit();
-                switch (process.ExitCode)
-                {
-                    case 0:
-                        Console.WriteLine("(Ok)");
-                        break;
-                    case 1:
-                        Console.WriteLine("(Картинки извлечены, но могут быть ошибки!)");
-                        break;
-                    case 2:
-                        Console.WriteLine("(Невалидный исходный файл - выполнение невозможно!)");
-                        break;
-                    case 3:
-                        Console.WriteLine("(Приключилась фатальная ошибка!)");
-                        break;
-                    case 4:
-                        Console.WriteLine("(Ошибка в параметрах командной строки!)");
-                        break;
-                }
-            }
-            else
-            {
-                processingAppFound = false;
-                Console.Write("Невозможно извлечь картинки");
-                Console.WriteLine();
-            }
+            var imagesPrepared = ConverterHelper.ExtractImages(executingPath, tempDir, images, bookPath);
 
             var fData = File.ReadAllText(bookPath);
             if (fData.Length == 0)
@@ -164,7 +122,7 @@ namespace Fb2Kindle
                     oldValue = oldValue + ch;
                 }
                 string newValue;
-                if (processingAppFound)
+                if (imagesPrepared)
                 {
                     var num24 = oldValue.IndexOf("#");
                     if (num24 != -1)
@@ -192,6 +150,7 @@ namespace Fb2Kindle
 
             var element = XElement.Parse(allText);
             var element5 = element;
+            const string str = "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧЩШЬЪЫЭЮЯQWERTYUIOPASDFGHJKLZXCVBNM";
 
             var tempClass = new TempClass();
             var namespace2 = XNamespace.Get("");
@@ -414,16 +373,15 @@ namespace Fb2Kindle
             var num7 = 0;
             if (num > 1)
             {
-                var num44 = num - 1;
-                for (var n = 1; n <= num44; n++)
+                for (var i = 0; i < num; i++)
                 {
-                    var str21 = InternalXmlHelper.get_AttributeValue(element.Elements(InternalXmlHelper.GetXName("body")).ElementAtOrDefault(n), name30);
+                    var str21 = InternalXmlHelper.get_AttributeValue(element.Elements(InternalXmlHelper.GetXName("body")).ElementAtOrDefault(i), name30);
                     if (str21 == "") continue;
                     num5++;
                     strArray2 = (string[,]) Utils.CopyArray(strArray2, new string[2,num5 + 1]);
                     strArray2[0, num5] = str21 + ".html";
                     strArray2[1, num5] = str21;
-                    var list = element.Elements(InternalXmlHelper.GetXName("body")).ElementAtOrDefault(n).Descendants(name64).ToList();
+                    var list = element.Elements(InternalXmlHelper.GetXName("body")).ElementAtOrDefault(i).Descendants(name64).ToList();
                     if (list.Count > 0)
                     {
                         var num45 = list.Count - 1;
@@ -469,7 +427,7 @@ namespace Fb2Kindle
                         element13.Add(element12);
                         element14.Add(element13);
                         element13 = new XElement(InternalXmlHelper.GetXName("body"));
-                        element13.Add(element.Elements(InternalXmlHelper.GetXName("body")).ElementAtOrDefault(n).Nodes());
+                        element13.Add(element.Elements(InternalXmlHelper.GetXName("body")).ElementAtOrDefault(i).Nodes());
                         element14.Add(element13);
                         var element9 = element14;
                         var htmltxt = ConverterHelper.FormatToHTML(element9.ToString());
@@ -867,7 +825,7 @@ namespace Fb2Kindle
                                 {
                                     bodyContent = ConverterHelper.GipherHTML(bodyContent);
                                 }
-                                ConverterHelper.SaveElementToFile(element2, bodyContent, noBookFlag, tempDir, bookNum);
+                                ConverterHelper.SaveElementToFile(element2.ToString(), bodyContent, noBookFlag, tempDir, bookNum);
                                 element15 = new XElement(name51);
                                 element15.Add(InternalXmlHelper.CreateAttribute(InternalXmlHelper.GetXName("id"), "text" + bookNum));
                                 element15.Add(new XAttribute(name52, "text/x-oeb1-document"));
@@ -947,8 +905,7 @@ namespace Fb2Kindle
                                 {
                                     bodyContent = ConverterHelper.GipherHTML(bodyContent);
                                 }
-
-                                ConverterHelper.SaveElementToFile(element2, bodyContent, noBookFlag, tempDir, bookNum);
+                                ConverterHelper.SaveElementToFile(element2.ToString(), bodyContent, noBookFlag, tempDir, bookNum);
 
                                 element15 = new XElement(name51);
                                 element15.Add(InternalXmlHelper.CreateAttribute(InternalXmlHelper.GetXName("id"), "text" + bookNum));
@@ -1094,36 +1051,35 @@ namespace Fb2Kindle
             }
             if (flag13)
             {
-                var num55 = num5;
-                for (var num37 = 1; num37 <= num55; num37++)
+                for (var i = 0; i < num5; i++)
                 {
                     element15 = new XElement(name51);
-                    element15.Add(InternalXmlHelper.CreateAttribute(InternalXmlHelper.GetXName("id"), strArray2[1, num37]));
+                    element15.Add(InternalXmlHelper.CreateAttribute(InternalXmlHelper.GetXName("id"), strArray2[1, i]));
                     element15.Add(new XAttribute(name52, "text/x-oeb1-document"));
-                    element15.Add(InternalXmlHelper.CreateAttribute(InternalXmlHelper.GetXName("href"), strArray2[0, num37]));
+                    element15.Add(InternalXmlHelper.CreateAttribute(InternalXmlHelper.GetXName("href"), strArray2[0, i]));
                     element15.Add("");
                     element3.Elements(name50).ElementAtOrDefault(0).Add(element15);
                     element15 = new XElement(name56);
-                    element15.Add(InternalXmlHelper.CreateAttribute(name57, strArray2[1, num37]));
+                    element15.Add(InternalXmlHelper.CreateAttribute(name57, strArray2[1, i]));
                     element3.Elements(name53).ElementAtOrDefault(0).Add(element15);
                     element15 = new XElement(name69);
-                    element15.Add(InternalXmlHelper.CreateAttribute(InternalXmlHelper.GetXName("id"), "navpoint-" + strArray2[1, num37]));
+                    element15.Add(InternalXmlHelper.CreateAttribute(InternalXmlHelper.GetXName("id"), "navpoint-" + strArray2[1, i]));
                     element15.Add(InternalXmlHelper.CreateAttribute(name70, num9));
                     element14 = new XElement(name71);
                     element13 = new XElement(name67);
-                    element13.Add(strArray2[1, num37]);
+                    element13.Add(strArray2[1, i]);
                     element14.Add(element13);
                     element15.Add(element14);
                     element14 = new XElement(name41);
-                    element14.Add(InternalXmlHelper.CreateAttribute(name62, strArray2[0, num37]));
+                    element14.Add(InternalXmlHelper.CreateAttribute(name62, strArray2[0, i]));
                     element15.Add(element14);
                     element6.Elements(name68).ElementAtOrDefault(0).Add(element15);
                     if (currentSettings.ntoc != "True")
                     {
                         element15 = new XElement(name73);
                         element14 = new XElement(name74);
-                        element14.Add(InternalXmlHelper.CreateAttribute(InternalXmlHelper.GetXName("href"), strArray2[0, num37]));
-                        element14.Add(strArray2[1, num37]);
+                        element14.Add(InternalXmlHelper.CreateAttribute(InternalXmlHelper.GetXName("href"), strArray2[0, i]));
+                        element14.Add(strArray2[1, i]);
                         element15.Add(element14);
                         element5.Elements(InternalXmlHelper.GetXName("body")).ElementAtOrDefault(0).Elements(name72).ElementAtOrDefault(0).Add(element15);
                     }
