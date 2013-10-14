@@ -356,7 +356,6 @@ namespace Fb2Kindle
                         versionNumber++;
                     }
                     File.Move(tempDir + @"\" + bookName + ".mobi", Path.Combine(resultPath, resultName) + ".mobi");
-                    Directory.Delete(tempDir, true);
                     Console.Write("(Ok)");
                 }
             }
