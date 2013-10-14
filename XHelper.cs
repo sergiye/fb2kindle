@@ -17,23 +17,39 @@ namespace Fb2Kindle
             return item;
         }
 
-        public static string get_Value(IEnumerable<XElement> source)
+        public static string Value(IEnumerable<XElement> source)
         {
             foreach (var element in source)
                 return element.Value;
             return null;
         }
 
-        public static string get_AttributeValue(XElement source, XName name)
+        public static string AttributeValue(XElement source, XName name)
         {
             return (string) source.Attribute(name);
         }
 
-        public static string get_AttributeValue(IEnumerable<XElement> source, XName name)
+        public static string AttributeValue(IEnumerable<XElement> source, XName name)
         {
             foreach (var element in source)
                 return (string) element.Attribute(name);
             return null;
+        }
+
+        public static XElement First(IEnumerable<XElement> source)
+        {
+            foreach (var item in source)
+                return item;
+            return null;
+        }
+
+        public static int Count(IEnumerable<XElement> source)
+        {
+
+            var result = 0;
+            foreach (var item in source)
+                result++;
+            return result;
         }
 
         public static XAttribute CreateAttribute(XName name, object value)
