@@ -36,8 +36,9 @@ namespace Fb2Kindle
                                 defaultCSS = File.ReadAllText(args[j + 1], Encoding.UTF8);
                             else
                             {
-                                Console.Write("(Err) Не найден файл стилей: " + args[j + 1]);
+                                Console.Write("Error: Не найден файл стилей: " + args[j + 1]);
                                 Console.WriteLine();
+                                defaultCSS = Common.GetScriptFromResource("defstyles.css");
                             }
                             j++;
                         }

@@ -304,7 +304,7 @@ namespace Fb2Kindle
 
         public static void ShowMainInfo()
         {
-            Console.Clear();
+//            Console.Clear();
             var assembly = Assembly.GetExecutingAssembly();
             var description = GetAttribute<AssemblyDescriptionAttribute>(assembly);
             Console.WriteLine(description != null ? description.Description : assembly.GetName().Name);
