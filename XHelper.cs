@@ -3,11 +3,18 @@ using System.Xml.Linq;
 
 namespace Fb2Kindle
 {
-    public sealed class InternalXmlHelper
+    public sealed class XHelper
     {
-        public static XName GetXName(string name, string ns = "")
+        private static readonly List<XName> _xnamesCache = new List<XName>();
+
+        public static XName Name(string name, string ns = "")
         {
-            return XNamespace.Get(ns).GetName(name);
+            var item = _xnamesCache.Find(f => f.Namespace == ns && f.LocalName == name);
+            if (item != null)
+                return item;
+            item = XNamespace.Get(ns).GetName(name);
+            _xnamesCache.Add(item);
+            return item;
         }
 
         public static string get_Value(IEnumerable<XElement> source)
@@ -19,7 +26,7 @@ namespace Fb2Kindle
 
         public static string get_AttributeValue(XElement source, XName name)
         {
-            return (string)source.Attribute(name);
+            return (string) source.Attribute(name);
         }
 
         public static string get_AttributeValue(IEnumerable<XElement> source, XName name)
