@@ -5,17 +5,17 @@ namespace Fb2Kindle
 {
     public sealed class XHelper
     {
-//        private static readonly List<XName> _xnamesCache = new List<XName>();
-//
-//        public static XName Name(string name, string ns = "")
-//        {
-//            var item = _xnamesCache.Find(f => f.Namespace == ns && f.LocalName == name);
-//            if (item != null)
-//                return item;
-//            item = XNamespace.Get(ns).GetName(name);
-//            _xnamesCache.Add(item);
-//            return item;
-//        }
+        private static readonly List<XName> _xnamesCache = new List<XName>();
+
+        public static XName Name(string name, string ns = "")
+        {
+            var item = _xnamesCache.Find(f => f.Namespace == ns && f.LocalName == name);
+            if (item != null)
+                return item;
+            item = XNamespace.Get(ns).GetName(name);
+            _xnamesCache.Add(item);
+            return item;
+        }
 
         public static string get_Value(IEnumerable<XElement> source)
         {

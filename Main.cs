@@ -74,21 +74,13 @@ namespace Fb2Kindle
                 Console.WriteLine();
                 return;
             }
-
             var bookName = Path.GetFileNameWithoutExtension(bookPath);
-            var htmlFile = bookName + ".html";
             var parentPath = Path.GetDirectoryName(bookPath);
             if (string.IsNullOrEmpty(parentPath))
             {
                 bookPath = Path.Combine(executingPath, bookPath);
                 parentPath = executingPath;
             }
-            Console.WriteLine("Processing: " + bookName);
-
-            //create temp working folder
-            const string images = "images";
-            var tempDir = Common.PrepareTempFolder(bookName, images, executingPath);
-            var imagesPrepared = Common.ExtractImages(executingPath, tempDir, images, bookPath);
             var fData = File.ReadAllText(bookPath);
             if (fData.Length == 0)
             {
@@ -96,6 +88,12 @@ namespace Fb2Kindle
                 Console.WriteLine();
                 return;
             }
+            Console.WriteLine("Processing: " + bookName);
+
+            //create temp working folder
+            const string images = "images";
+            var tempDir = Common.PrepareTempFolder(bookName, images, executingPath);
+            var imagesPrepared = Common.ExtractImages(executingPath, tempDir, images, bookPath);
             var allText = File.ReadAllText(bookPath, fData.ToUpper().IndexOf("UTF-8") > 0 ? Encoding.UTF8 : Encoding.Default);
             Console.Write("FB2 to HTML...");
             allText = allText.Replace("xmlns=\"http://www.gribuser.ru/xml/fictionbook/2.0\"", "").
@@ -149,14 +147,6 @@ namespace Fb2Kindle
             var element = XElement.Parse(allText);
             var element5 = element;
             const string str = "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧЩШЬЪЫЭЮЯQWERTYUIOPASDFGHJKLZXCVBNM";
-
-            var name43 = XNamespace.Get("http://www.w3.org/2000/xmlns/").GetName("dc");
-            var namespace4 = XNamespace.Get("http://");
-            var name44 = namespace4.GetName("Title");
-            var name45 = namespace4.GetName("Language");
-            var name46 = namespace4.GetName("Creator");
-            var name47 = namespace4.GetName("Publisher");
-            var name48 = namespace4.GetName("date");
 
             var num9 = 0;
             XElement element12;
@@ -236,20 +226,22 @@ namespace Fb2Kindle
             element12.Add(new XAttribute("content", "true"));
             element13.Add(element12);
             element12 = new XElement("dc-metadata");
-            element12.Add(new XAttribute(name43, "http://"));
-            content = new XElement(name44);
+            element12.Add(new XAttribute(XNamespace.Get("http://www.w3.org/2000/xmlns/").GetName("dc"), "http://"));
+
+            var nsHttp = XNamespace.Get("http://");
+            content = new XElement(nsHttp.GetName("Title"));
             content.Add(XHelper.get_Value(element.Elements("description").Elements("t-i").Elements("book-title")));
             element12.Add(content);
-            content = new XElement(name45);
+            content = new XElement(nsHttp.GetName("Language"));
             content.Add(str20);
             element12.Add(content);
-            content = new XElement(name46);
+            content = new XElement(nsHttp.GetName("Creator"));
             content.Add(XHelper.get_Value(element.Elements("description").Elements("t-i").Elements("author").ElementAtOrDefault(0).Elements("last-name")) + " " + XHelper.get_Value(element.Elements("description").Elements("t-i").Elements("author").ElementAtOrDefault(0).Elements("first-name")) + " " + XHelper.get_Value(element.Elements("description").Elements("t-i").Elements("author").ElementAtOrDefault(0).Elements("middle-name")));
             element12.Add(content);
-            content = new XElement(name47);
+            content = new XElement(nsHttp.GetName("Publisher"));
             content.Add(XHelper.get_Value(element.Elements("description").Elements("publish-info").Elements("publisher")));
             element12.Add(content);
-            content = new XElement(name48);
+            content = new XElement(nsHttp.GetName("date"));
             content.Add(XHelper.get_Value(element.Elements("description").Elements("publish-info").Elements("year")));
             element12.Add(content);
             content = new XElement("x-metadata");
@@ -890,6 +882,7 @@ namespace Fb2Kindle
             }
             else
             {
+                var htmlFile = bookName + ".html";
                 index = 0;
                 while (index < titles.Count)
                 {

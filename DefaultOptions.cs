@@ -9,6 +9,8 @@ namespace Fb2Kindle
         {
             d = "True";
             nh = "True";
+            nstitle = "False";
+            NoteBox = "False";
             defaultCSS = "styles.css";
             DropCap = "АБВГДЕЖЗИКЛМНОПРСТУФХЦЧЩШЭЮЯ";
             TabReplace = "";
@@ -16,7 +18,6 @@ namespace Fb2Kindle
 
         public string d { get; set; }
         public bool deleteOrigin { get { return d.Equals("True", StringComparison.OrdinalIgnoreCase); } }
-
         public string nb { get; set; }
         public string nc { get; set; }
         public string nh { get; set; }

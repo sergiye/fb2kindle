@@ -331,22 +331,15 @@ namespace Fb2Kindle
                 process2.WaitForExit();
                 if (process2.ExitCode == 2)
                 {
-                    if (!Directory.Exists(parentPath + @"\" + bookName))
-                    {
-                        Directory.CreateDirectory(parentPath + @"\" + bookName);
-                    }
-                    Directory.Move(tempDir, parentPath + @"\" + bookName);
-                    Console.Write("(xErr)");
+                    Console.Write("Error: ");
                     Console.WriteLine();
-                    Console.Write("!!!Не удалось сконвертировать в mobi!!!");
+                    Console.Write("Не удалось сконвертировать в mobi");
                     Console.WriteLine();
                 }
                 else
                 {
                     if (deleteOrigin)
-                    {
                         File.Delete(bookPath);
-                    }
                     var versionNumber = 1;
                     var resultPath = Path.GetDirectoryName(bookPath);
                     var resultName = bookName;
