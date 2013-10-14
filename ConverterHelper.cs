@@ -2,10 +2,8 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using System.Text;
-using System.Xml.Linq;
 
 namespace Fb2Kindle 
 {
@@ -266,7 +264,7 @@ namespace Fb2Kindle
 
             var files = dir.GetFiles();
             foreach (var file in files)
-                file.CopyTo(Path.Combine(destDirName, file.Name), false);
+                file.CopyTo(Path.Combine(destDirName, file.Name), true);
 
             if (!copySubDirs) return;
             foreach (var subdir in dirs)
@@ -297,10 +295,11 @@ namespace Fb2Kindle
 
         public static T GetAttribute<T>(ICustomAttributeProvider assembly, bool inherit = false)where T : Attribute
         {
-            return assembly
-                .GetCustomAttributes(typeof(T), inherit)
-                .OfType<T>()
-                .FirstOrDefault();
+            var attr = assembly.GetCustomAttributes(typeof (T), inherit);
+            foreach (var o in attr)
+                if (o is T)
+                    return o as T;
+            return null;
         }
 
         public static void ShowMainInfo()
@@ -327,10 +326,7 @@ namespace Fb2Kindle
             else
             {
                 Console.Write("Конвертируем в mobi(KF8)...");
-                var startInfo = new ProcessStartInfo();
-                startInfo.FileName = executingPath + @"\kindlegen.exe";
-                startInfo.Arguments = "\"" + tempDir + @"\" + bookName + ".opf\"";
-                startInfo.WindowStyle = ProcessWindowStyle.Hidden;
+                var startInfo = new ProcessStartInfo {FileName = executingPath + @"\kindlegen.exe", Arguments = "\"" + tempDir + @"\" + bookName + ".opf\"", WindowStyle = ProcessWindowStyle.Hidden};
                 var process2 = Process.Start(startInfo);
                 process2.WaitForExit();
                 if (process2.ExitCode == 2)
@@ -371,9 +367,9 @@ namespace Fb2Kindle
             return "<?xml version=\"1.0\" encoding=\"utf-8\"?>" + text;
         }
 
-        public static void SaveElementToFile(XElement element, string bodyContent, bool noBookFlag, string folder, int bookNum)
+        public static void SaveElementToFile(string elementData, string bodyContent, bool noBookFlag, string folder, int bookNum)
         {
-            var text = AddEncodingToXml(element.ToString());
+            var text = AddEncodingToXml(elementData);
             text = text.Insert(text.IndexOf("<body>") + 6, bodyContent);
             text = text.Replace("<sectio1", noBookFlag ? "<div class=\"nobook\"" : "<div class=\"book\"");
             text = text.Replace("</sectio1>", "</div>");
@@ -383,7 +379,7 @@ namespace Fb2Kindle
         public static string GetScriptFromResource(string resourceName)
         {
             var assembly = Assembly.GetExecutingAssembly();
-            var scriptsPath = string.Format("{0}.{1}", assembly.GetTypes()[0].Namespace, resourceName);
+            var scriptsPath = String.Format("{0}.{1}", assembly.GetTypes()[0].Namespace, resourceName);
             using (var stream = assembly.GetManifestResourceStream(scriptsPath))
             {
                 if (stream != null)
@@ -393,6 +389,59 @@ namespace Fb2Kindle
                     }
                 return null;
             }
+        }
+
+        public static bool ExtractImages(string executingPath, string tempDir, string images, string bookPath)
+        {
+            //extract images
+            var processingAppFound = true;
+            var startInfo = new ProcessStartInfo();
+            if (File.Exists(executingPath + @"\fb2bin.exe"))
+            {
+                Console.WriteLine("Извлекаем картинки...");
+                startInfo.FileName = executingPath + @"\fb2bin.exe";
+                startInfo.Arguments = "-x -q -q -d \"" + tempDir + @"\" + images + "\" \"" + bookPath + "\"";
+                startInfo.WindowStyle = ProcessWindowStyle.Hidden;
+                var process = Process.Start(startInfo);
+                process.WaitForExit();
+                switch (process.ExitCode)
+                {
+                    case 0:
+                        Console.WriteLine("(Ok)");
+                        break;
+                    case 1:
+                        Console.WriteLine("(Картинки извлечены, но могут быть ошибки!)");
+                        break;
+                    case 2:
+                        Console.WriteLine("(Невалидный исходный файл - выполнение невозможно!)");
+                        break;
+                    case 3:
+                        Console.WriteLine("(Приключилась фатальная ошибка!)");
+                        break;
+                    case 4:
+                        Console.WriteLine("(Ошибка в параметрах командной строки!)");
+                        break;
+                }
+            }
+            else
+            {
+                processingAppFound = false;
+                Console.Write("Невозможно извлечь картинки");
+                Console.WriteLine();
+            }
+            return processingAppFound;
+        }
+
+        public static string PrepareTempFolder(string bookName, string images, string executingPath)
+        {
+            var tempDir = Path.Combine(Path.GetTempPath(), bookName);
+            if (!Directory.Exists(tempDir))
+                Directory.CreateDirectory(tempDir);
+            if (!Directory.Exists(tempDir + @"\" + images))
+                Directory.CreateDirectory(tempDir + @"\" + images);
+            if (Directory.Exists(executingPath + @"\" + images))
+                CopyDirectory(executingPath + @"\" + images, tempDir + @"\" + images, true);
+            return tempDir;
         }
     }
 }
