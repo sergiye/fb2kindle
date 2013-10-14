@@ -7,7 +7,7 @@ using System.Text;
 
 namespace Fb2Kindle 
 {
-    public static class ConverterHelper
+    public static class Common
     {
         public static string CodStr(string Str)
         {
@@ -442,6 +442,11 @@ namespace Fb2Kindle
             if (Directory.Exists(executingPath + @"\" + images))
                 CopyDirectory(executingPath + @"\" + images, tempDir + @"\" + images, true);
             return tempDir;
+        }
+
+        public static string TabRep(string Str)
+        {
+            return Str.Replace(Convert.ToChar(160).ToString(), "&nbsp;").Replace(Convert.ToChar(0xad).ToString(), "&shy;");
         }
     }
 }

@@ -37,10 +37,10 @@
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
     <Compile Include="AssemblyInfo.cs" />
+    <Compile Include="DataItem.cs" />
     <Compile Include="InternalXmlHelper.cs" />
     <Compile Include="TempClass.cs" />
     <Compile Include="XmlSerializerHelper.cs" />
-    <Reference Include="Microsoft.VisualBasic" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
     <Reference Include="System.Xml.Linq" />

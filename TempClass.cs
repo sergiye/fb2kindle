@@ -13,13 +13,13 @@ namespace Fb2Kindle
         public XElement Process(XElement avtorbook)
         {
             var element2 = new XElement(h2);
-            element2.Add(InternalXmlHelper.get_Value(avtorbook.Elements(lastName)));
+            element2.Add(XHelper.get_Value(avtorbook.Elements(lastName)));
             var content = new XElement(br);
             element2.Add(content);
-            element2.Add(InternalXmlHelper.get_Value(avtorbook.Elements(firstName)));
+            element2.Add(XHelper.get_Value(avtorbook.Elements(firstName)));
             content = new XElement(br);
             element2.Add(content);
-            element2.Add(InternalXmlHelper.get_Value(avtorbook.Elements(middleName)));
+            element2.Add(XHelper.get_Value(avtorbook.Elements(middleName)));
             content = new XElement(br);
             element2.Add(content);
             return element2;
