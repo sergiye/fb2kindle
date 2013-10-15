@@ -29,6 +29,12 @@ namespace Fb2Kindle
         {
             var bookName = Path.GetFileNameWithoutExtension(bookPath);
             Console.WriteLine("Processing: " + bookName);
+            var book = XHelper.ReadObjectFromFile<FictionBook>(bookPath);
+            if (book == null)
+            {
+                Console.WriteLine("Error: Неизвестный формат файла" + bookName);
+                return false;
+            }
             //create temp working folder
             _tempDir = Common.PrepareTempFolder(bookName, images, _workingFolder);
             if (_customFontsUsed && Directory.Exists(_workingFolder + @"\fonts"))
@@ -36,7 +42,7 @@ namespace Fb2Kindle
                 Directory.CreateDirectory(_tempDir + @"\fonts");
                 Common.CopyDirectory(_workingFolder + @"\fonts", _tempDir + @"\fonts", true);
             }
-            var imagesPrepared = !_currentSettings.noImages && Common.ExtractImages(_workingFolder, _tempDir, images, bookPath);
+            var imagesPrepared = !_currentSettings.noImages && Common.ExtractImages(book.binary, _tempDir, images);
             var fData = File.ReadAllText(bookPath);
             if (fData.Length == 0)
             {

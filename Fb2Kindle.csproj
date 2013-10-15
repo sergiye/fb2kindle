@@ -40,6 +40,9 @@
   <ItemGroup>
     <Compile Include="AssemblyInfo.cs" />
     <Compile Include="Convertor.cs" />
+    <Compile Include="FictionBook2.cs">
+      <SubType>code</SubType>
+    </Compile>
     <Compile Include="XHelper.cs" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
@@ -55,7 +58,6 @@
     <EmbeddedResource Include="defstyles.css" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="fb2bin.exe" />
     <EmbeddedResource Include="kindlegen.exe" />
     <Content Include="7za.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -67,6 +69,9 @@
   <ItemGroup>
     <None Include="convertAll.cmd">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="FictionBook2.xsd">
+      <SubType>Designer</SubType>
     </None>
     <None Include="fonts\DroidSerif-Bold.ttf">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
