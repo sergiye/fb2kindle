@@ -331,38 +331,14 @@ namespace Fb2Kindle
             }
         }
 
-        public static bool ExtractImages(string executingPath, string tempDir, string images, string bookPath)
+        public static bool ExtractImages(FictionBookBinary[] binary, string tempDir, string images)
         {
+            if (binary == null || binary.Length == 0) return true;
             Console.Write("Извлекаем картинки...");
-            if (!File.Exists(tempDir + @"\fb2bin.exe"))
-            {
-                Console.WriteLine("Отсутствует скрипт извлечения картинок");
-                return false;
-            }
-            var startInfo = new ProcessStartInfo {FileName = tempDir + @"\fb2bin.exe", 
-                Arguments = "-x -q -q -d \"" + tempDir + @"\" + images + "\" \"" + bookPath + "\"", 
-                WindowStyle = ProcessWindowStyle.Hidden};
-            var process = Process.Start(startInfo);
-            process.WaitForExit();
-            switch (process.ExitCode)
-            {
-                case 0:
-                    Console.WriteLine("(Ok)");
-                    break;
-                case 1:
-                    Console.WriteLine("(Картинки извлечены, но могут быть ошибки!)");
-                    break;
-                case 2:
-                    Console.WriteLine("(Невалидный исходный файл - выполнение невозможно!)");
-                    break;
-                case 3:
-                    Console.WriteLine("(Приключилась фатальная ошибка!)");
-                    break;
-                case 4:
-                    Console.WriteLine("(Ошибка в параметрах командной строки!)");
-                    break;
-            }
+            foreach (var img in binary)
+                File.WriteAllBytes(string.Format("{0}\\{1}\\{2}", tempDir, images, img.id), img.Value);
             CompressImagesInFolder(tempDir + "\\images");
+            Console.WriteLine("(Ok)");
             return true;
         }
 
@@ -375,12 +351,11 @@ namespace Fb2Kindle
                 Directory.CreateDirectory(tempDir + @"\" + images);
 //            if (Directory.Exists(executingPath + @"\" + images))
 //                CopyDirectory(executingPath + @"\" + images, tempDir + @"\" + images, true);
-            GetFileFromResource("fb2bin.exe", tempDir + "\\fb2bin.exe");
             GetFileFromResource("kindlegen.exe", tempDir + "\\kindlegen.exe");
             return tempDir;
         }
 
-        public static void CompressImagesInFolder(string folder)
+        private static void CompressImagesInFolder(string folder)
         {
             var files = Directory.GetFiles(folder, "*.jp*");
             foreach (var file in files)
