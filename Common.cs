@@ -274,7 +274,7 @@ namespace Fb2Kindle
         public static void ShowHelpText()
         {
             Console.WriteLine();
-            Console.WriteLine(Assembly.GetExecutingAssembly().GetName().Name + " <book.fb2> [-css <styles.css>] [-d] [-nb] [-nch] [-nh]");
+            Console.WriteLine(Assembly.GetExecutingAssembly().GetName().Name + " <book.fb2> [-css <styles.css>] [-d] [-nb] [-nch] [-nh] [-ni]");
             Console.WriteLine();
             Console.WriteLine("<book.fb2>: входной файл формата fb2");
             Console.WriteLine("-css <styles.css>: использование файла стилей <MyStyles.css> при конвертации");
@@ -282,6 +282,7 @@ namespace Fb2Kindle
             Console.WriteLine("-nb: без буквицы");
             Console.WriteLine("-nch: без разбивки на главы");
             Console.WriteLine("-nh: без переносов слов");
+            Console.WriteLine("-ni: без картинок");
             Console.WriteLine();
         }
 

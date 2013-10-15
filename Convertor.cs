@@ -36,7 +36,7 @@ namespace Fb2Kindle
                 Directory.CreateDirectory(_tempDir + @"\fonts");
                 Common.CopyDirectory(_workingFolder + @"\fonts", _tempDir + @"\fonts", true);
             }
-            var imagesPrepared = Common.ExtractImages(_workingFolder, _tempDir, images, bookPath);
+            var imagesPrepared = !_currentSettings.ni && Common.ExtractImages(_workingFolder, _tempDir, images, bookPath);
             var fData = File.ReadAllText(bookPath);
             if (fData.Length == 0)
             {
