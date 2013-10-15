@@ -4,8 +4,8 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("fb2 to mobi converter by Sergey Egoshin")]
-[assembly: AssemblyDescription("fb2 to mobi converter by Sergey Egoshin")]
+[assembly: AssemblyTitle("fb2 to mobi converter by Sergey Egoshin (egoshin.sergey@gmail.com)")]
+[assembly: AssemblyDescription("fb2 to mobi converter by Sergey Egoshin (egoshin.sergey@gmail.com)")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Sergey Egoshin")]
 [assembly: AssemblyProduct("fb2kindle")]

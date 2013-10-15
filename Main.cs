@@ -20,10 +20,6 @@ namespace Fb2Kindle
 
             var executingPath = Path.GetDirectoryName(Application.ExecutablePath);
             var currentSettings = XmlSerializerHelper.ReadObjectFromFile<DefaultOptions>(executingPath + @"\fb2kf8.set") ?? new DefaultOptions();
-            var defaultCSS = Common.GetScriptFromResource("defstyles.css"); 
-            if (File.Exists(currentSettings.defaultCSS))
-                defaultCSS = File.ReadAllText(currentSettings.defaultCSS, Encoding.UTF8);
-
             var bookPath = string.Empty;
             for (var j = 0; j < args.Length; j++)
             {
@@ -33,13 +29,9 @@ namespace Fb2Kindle
                         if (args.Length > (j + 1))
                         {
                             if (File.Exists(args[j + 1]))
-                                defaultCSS = File.ReadAllText(args[j + 1], Encoding.UTF8);
+                                currentSettings.defaultCSS = args[j + 1];
                             else
-                            {
-                                Console.Write("Error: Не найден файл стилей: " + args[j + 1]);
-                                Console.WriteLine();
-                                defaultCSS = Common.GetScriptFromResource("defstyles.css");
-                            }
+                                Console.WriteLine("Error: Не найден указанный файл стилей: " + args[j + 1]);
                             j++;
                         }
                         break;
@@ -56,24 +48,25 @@ namespace Fb2Kindle
                         currentSettings.nh = "True";
                         break;
                     default:
-                        if (j == 0)
+//                        if (j == 0)
                             bookPath = args[j];
                         break;
                 }
             }
-            if (string.IsNullOrEmpty(defaultCSS))
+            var defaultCss = File.Exists(currentSettings.defaultCSS) 
+                ? File.ReadAllText(currentSettings.defaultCSS, Encoding.UTF8) 
+                : Common.GetScriptFromResource("defstyles.css");
+            if (string.IsNullOrEmpty(defaultCss))
             {
-                Console.Write("Пустой файл стилей: " + currentSettings.defaultCSS);
-                Console.WriteLine();
+                Console.WriteLine("Пустой файл стилей: " + currentSettings.defaultCSS);
                 return;
             }
             if (string.IsNullOrEmpty(bookPath) || !File.Exists(bookPath))
             {
-                Console.Write("Файл не найден: " + bookPath);
-                Console.WriteLine();
+                Console.WriteLine("Файл не найден: " + bookPath);
                 return;
             }
-            var conv = new Convertor(currentSettings, executingPath, defaultCSS);
+            var conv = new Convertor(currentSettings, executingPath, defaultCss);
             if (!conv.ConvertBook(bookPath) || Debugger.IsAttached)
             {
                 Console.WriteLine();

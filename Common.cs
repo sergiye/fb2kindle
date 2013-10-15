@@ -274,22 +274,14 @@ namespace Fb2Kindle
         public static void ShowHelpText()
         {
             Console.WriteLine();
-            Console.Write(Assembly.GetExecutingAssembly().GetName().Name + " <InBook.fb2> [<OutBook.mobi>] [-css <styles.css>] [-d]");
+            Console.WriteLine(Assembly.GetExecutingAssembly().GetName().Name + " <book.fb2> [-css <styles.css>] [-d] [-nb] [-nch] [-nh]");
             Console.WriteLine();
-            Console.WriteLine();
-            Console.Write("<InBook.fb2>: входной файл формата fb2");
-            Console.WriteLine();
-            Console.Write("<OutBook.mobi>: имя файла на выходе, в формате mobi");
-            Console.WriteLine();
-            Console.Write("-css <styles.css>: использование файла стилей <MyStyles.css> при конвертации");
-            Console.WriteLine();
-            Console.Write("-d: удалить входной файл формата fb2");
-            Console.WriteLine();
-            Console.Write("-nb: без буквицы");
-            Console.WriteLine();
-            Console.Write("-nch: без разбивки на главы");
-            Console.WriteLine();
-            Console.Write("-nh: без переносов слов");
+            Console.WriteLine("<book.fb2>: входной файл формата fb2");
+            Console.WriteLine("-css <styles.css>: использование файла стилей <MyStyles.css> при конвертации");
+            Console.WriteLine("-d: удалить входной файл формата fb2");
+            Console.WriteLine("-nb: без буквицы");
+            Console.WriteLine("-nch: без разбивки на главы");
+            Console.WriteLine("-nh: без переносов слов");
             Console.WriteLine();
         }
 
@@ -302,38 +294,48 @@ namespace Fb2Kindle
             return null;
         }
 
+        public static DateTime GetBuildTime(Version ver)
+        {
+            var buildTime = new DateTime(2000, 1, 1).AddDays(ver.Build).AddSeconds(ver.Revision * 2);
+            if (TimeZone.IsDaylightSavingTime(DateTime.Now, TimeZone.CurrentTimeZone.GetDaylightChanges(DateTime.Now.Year)))
+                buildTime = buildTime.AddHours(1);
+            return buildTime;
+        }
+
         public static void ShowMainInfo()
         {
 //            Console.Clear();
             var assembly = Assembly.GetExecutingAssembly();
-            var description = GetAttribute<AssemblyDescriptionAttribute>(assembly);
-            Console.WriteLine(description != null ? description.Description : assembly.GetName().Name);
+            Console.WriteLine(assembly.GetName().Name);
+            var title = GetAttribute<AssemblyTitleAttribute>(assembly);
+            if (title != null)
+                Console.WriteLine(title.Title);
             var copyright = GetAttribute<AssemblyCopyrightAttribute>(assembly);
             if (copyright != null)
                 Console.WriteLine(copyright.Copyright);
-            Console.WriteLine("Version: " + assembly.GetName().Version);
+//            var description = GetAttribute<AssemblyDescriptionAttribute>(assembly);
+//            if (description != null)
+//                Console.WriteLine(description.Description);
+            var ver = Assembly.GetExecutingAssembly().GetName().Version;
+            Console.WriteLine("Version: " + ver + "; Build time: " + GetBuildTime(ver).ToString("yyyy/MM/dd HH:mm:ss"));
             Console.WriteLine();
         }
 
         public static bool CreateMobi(string executingPath, string tempDir, string bookName, string parentPath, bool deleteOrigin, string bookPath)
         {
-            if (!File.Exists(executingPath + @"\kindlegen.exe"))
+            if (!File.Exists(tempDir + @"\kindlegen.exe"))
             {
-                Console.Write("!!!Не найден kindlegen.exe, конвертация в mobi невозможна!!!");
-                Console.WriteLine();
+                Console.WriteLine("!!!Не найден kindlegen.exe, конвертация в mobi невозможна!!!");
                 Directory.Delete(tempDir, true);
                 return false;
             }
             Console.Write("Конвертируем в mobi(KF8)...");
-            var startInfo = new ProcessStartInfo {FileName = executingPath + @"\kindlegen.exe", Arguments = "\"" + tempDir + @"\" + bookName + ".opf\"", WindowStyle = ProcessWindowStyle.Hidden};
+            var startInfo = new ProcessStartInfo { FileName = tempDir + @"\kindlegen.exe", Arguments = "\"" + tempDir + @"\" + bookName + ".opf\"", WindowStyle = ProcessWindowStyle.Hidden };
             var process2 = Process.Start(startInfo);
             process2.WaitForExit();
             if (process2.ExitCode == 2)
             {
-                Console.Write("Error: ");
-                Console.WriteLine();
-                Console.Write("Не удалось сконвертировать в mobi");
-                Console.WriteLine();
+                Console.WriteLine("Error: Не удалось сконвертировать в mobi");
                 return false;
             }
             
@@ -348,7 +350,7 @@ namespace Fb2Kindle
                 versionNumber++;
             }
             File.Move(tempDir + @"\" + bookName + ".mobi", Path.Combine(resultPath, resultName) + ".mobi");
-            Console.Write("(Ok)");
+            Console.WriteLine("(Ok)");
             return true;
         }
 
@@ -381,19 +383,34 @@ namespace Fb2Kindle
             }
         }
 
+        public static void GetFileFromResource(string resourceName, string filename)
+        {
+            var assembly = Assembly.GetExecutingAssembly();
+            var scriptsPath = String.Format("{0}.{1}", assembly.GetTypes()[0].Namespace, resourceName);
+            using (var stream = assembly.GetManifestResourceStream(scriptsPath))
+            {
+                if (stream == null) return;
+                using (Stream file = File.OpenWrite(filename))
+                {
+                    var buffer = new byte[8 * 1024];
+                    int len;
+                    while ((len = stream.Read(buffer, 0, buffer.Length)) > 0)
+                        file.Write(buffer, 0, len);
+                }
+            }
+        }
+
         public static bool ExtractImages(string executingPath, string tempDir, string images, string bookPath)
         {
-            var startInfo = new ProcessStartInfo();
-            if (!File.Exists(executingPath + @"\fb2bin.exe"))
+            Console.Write("Извлекаем картинки...");
+            if (!File.Exists(tempDir + @"\fb2bin.exe"))
             {
-                Console.Write("Невозможно извлечь картинки");
-                Console.WriteLine();
+                Console.WriteLine("Отсутствует скрипт извлечения картинок");
                 return false;
             }
-            Console.Write("Извлекаем картинки...");
-            startInfo.FileName = executingPath + @"\fb2bin.exe";
-            startInfo.Arguments = "-x -q -q -d \"" + tempDir + @"\" + images + "\" \"" + bookPath + "\"";
-            startInfo.WindowStyle = ProcessWindowStyle.Hidden;
+            var startInfo = new ProcessStartInfo {FileName = tempDir + @"\fb2bin.exe", 
+                Arguments = "-x -q -q -d \"" + tempDir + @"\" + images + "\" \"" + bookPath + "\"", 
+                WindowStyle = ProcessWindowStyle.Hidden};
             var process = Process.Start(startInfo);
             process.WaitForExit();
             switch (process.ExitCode)
@@ -426,6 +443,8 @@ namespace Fb2Kindle
                 Directory.CreateDirectory(tempDir + @"\" + images);
             if (Directory.Exists(executingPath + @"\" + images))
                 CopyDirectory(executingPath + @"\" + images, tempDir + @"\" + images, true);
+            GetFileFromResource("fb2bin.exe", tempDir + "\\fb2bin.exe");
+            GetFileFromResource("kindlegen.exe", tempDir + "\\kindlegen.exe");
             return tempDir;
         }
 

@@ -40,8 +40,7 @@ namespace Fb2Kindle
             var fData = File.ReadAllText(bookPath);
             if (fData.Length == 0)
             {
-                Console.Write("Файл " + bookPath + " пустой или недоступный для чтения!");
-                Console.WriteLine();
+                Console.WriteLine("Файл " + bookPath + " пустой или недоступный для чтения!");
                 return false;
             }
 
@@ -197,7 +196,14 @@ namespace Fb2Kindle
                 parentPath = _workingFolder;
             }
             var result = Common.CreateMobi(_workingFolder, _tempDir, bookName, parentPath, _currentSettings.deleteOrigin, bookPath);
-            Directory.Delete(_tempDir, true);
+            try
+            {
+                Directory.Delete(_tempDir, true);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Ошибка очистки временной папки: " + ex.Message);
+            }
             return result;
         }
 
@@ -385,8 +391,7 @@ namespace Fb2Kindle
             referenceEl.Add(new XAttribute("title", "Book"));
             referenceEl.Add(XHelper.CreateAttribute("href", "book0.html"));
             XHelper.First(element3.Elements("guide")).Add(referenceEl);
-            Console.Write("(Ok)");
-            Console.WriteLine();
+            Console.WriteLine("(Ok)");
             return num9;
         }
 
@@ -976,8 +981,7 @@ namespace Fb2Kindle
                               Replace("<titl9", "<div class = \"title\"><div class = \"title9\"").Replace("</titl9>", "</div></div>").
                               Replace("<body", "<sectio1").Replace("</body>", "</sectio1>").
                               Replace("<titl0", "<div class = \"title\"><div class = \"title0\"").Replace("</titl0>", "</div></div>");
-            Console.Write("(Ok)");
-            Console.WriteLine();
+            Console.WriteLine("(Ok)");
             return element5;
         }
 
