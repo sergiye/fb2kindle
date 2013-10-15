@@ -44,7 +44,7 @@ namespace Fb2Kindle
                 return false;
             }
 
-            XElement hemlElement;
+            XElement htmlElement;
             XElement packElement;
             XElement ncxElement;
             List<DataItem> notesList2;
@@ -53,15 +53,11 @@ namespace Fb2Kindle
             bool flag13;
             int index;
             int num9;
-            var element5 = ConvertToHtml(bookPath, _currentSettings, fData, imagesPrepared, out num9, out hemlElement, out packElement, 
+            var element5 = ConvertToHtml(bookPath, _currentSettings, fData, imagesPrepared, out num9, out htmlElement, out packElement, 
                 out notesList2, out bodyStr, out flag13, out ncxElement, out titles, out index);
-            var str17 = hemlElement.ToString();
-            if (!_currentSettings.noChapters)
+            if (_currentSettings.noChapters)
             {
-                num9 = CreateChapters(_currentSettings, bodyStr, hemlElement, packElement, titles, ncxElement, element5, ref index);
-            }
-            else
-            {
+                var htmlContent = htmlElement.ToString();
                 var htmlFile = bookName + ".html";
                 index = 0;
                 while (index < titles.Count)
@@ -105,13 +101,18 @@ namespace Fb2Kindle
                 itemEl.Add(new XAttribute("title", "Book"));
                 itemEl.Add(XHelper.CreateAttribute("href", htmlFile));
                 XHelper.First(packElement.Elements("guide")).Add(itemEl);
-                bodyStr = Common.TabRep(bodyStr);
+                bodyStr = TabRep(bodyStr);
                 if (!_currentSettings.nh)
                 {
                     bodyStr = Common.GipherHTML(bodyStr);
                 }
-                str17 = str17.Insert(str17.IndexOf("<body>") + 6, bodyStr).Replace("<sectio1", "<div class=\"book\"").Replace("</sectio1>", "</div>");
-                File.WriteAllText(_tempDir + @"\" + htmlFile, str17);
+                htmlContent = htmlContent.Insert(htmlContent.IndexOf("<body>") + 6, bodyStr).Replace("<sectio1", "<div class=\"book\"").Replace("</sectio1>", "</div>");
+                htmlContent = Common.AddEncodingToXml(htmlContent);
+                File.WriteAllText(_tempDir + @"\" + htmlFile, htmlContent);
+            }
+            else
+            {
+                num9 = CreateChapters(_currentSettings, bodyStr, htmlElement, packElement, titles, ncxElement, element5, ref index);
             }
             if (!_currentSettings.ntoc && _currentSettings.ContentOf)
             {
@@ -190,7 +191,7 @@ namespace Fb2Kindle
                 element5.RemoveAll();
             }
             var parentPath = Path.GetDirectoryName(bookPath);
-            if (string.IsNullOrEmpty(parentPath))
+            if (String.IsNullOrEmpty(parentPath))
             {
                 bookPath = Path.Combine(_workingFolder, bookPath);
                 parentPath = _workingFolder;
@@ -248,7 +249,7 @@ namespace Fb2Kindle
                         {
                             bodyContent = str40 + bodyContent;
                             str40 = "";
-                            bodyContent = Common.TabRep(bodyContent);
+                            bodyContent = TabRep(bodyContent);
                             if (!currentSettings.nh)
                             {
                                 bodyContent = Common.GipherHTML(bodyContent);
@@ -327,7 +328,7 @@ namespace Fb2Kindle
                         {
                             bodyContent = str40 + bodyContent;
                             str40 = "";
-                            bodyContent = Common.TabRep(bodyContent);
+                            bodyContent = TabRep(bodyContent);
                             if (!currentSettings.nh)
                             {
                                 bodyContent = Common.GipherHTML(bodyContent);
@@ -395,7 +396,7 @@ namespace Fb2Kindle
             return num9;
         }
 
-        public XElement ConvertToHtml(string bookPath, DefaultOptions currentSettings, string fData, bool imagesPrepared, out int num9, out XElement hemlElement, out XElement packElement, out List<DataItem> notesList2, out string bodyStr, out bool flag13, out XElement ncxElement, out List<DataItem> titles, out int index)
+        public XElement ConvertToHtml(string bookPath, DefaultOptions currentSettings, string fData, bool imagesPrepared, out int num9, out XElement htmlElement, out XElement packElement, out List<DataItem> notesList2, out string bodyStr, out bool flag13, out XElement ncxElement, out List<DataItem> titles, out int index)
         {
             var allText = File.ReadAllText(bookPath, fData.ToUpper().IndexOf("UTF-8") > 0 ? Encoding.UTF8 : Encoding.Default);
             Console.Write("FB2 to HTML...");
@@ -497,15 +498,15 @@ namespace Fb2Kindle
                 content.Add(headEl);
                 content.Save(_tempDir + @"\booktitle.html");
             }
-            hemlElement = new XElement("html");
+            htmlElement = new XElement("html");
             linkEl = new XElement("link");
             linkEl.Add(new XAttribute("type", "text/css"));
             linkEl.Add(new XAttribute("href", "book.css"));
             linkEl.Add(new XAttribute("rel", "Stylesheet"));
-            hemlElement.Add(new XElement("head", linkEl));
-            hemlElement.Add(new XElement("body", ""));
+            htmlElement.Add(new XElement("head", linkEl));
+            htmlElement.Add(new XElement("body", ""));
             var str20 = XHelper.Value(XHelper.First(XHelper.First(element.Elements("description")).Elements("t-i")).Elements("lang"));
-            if (string.IsNullOrEmpty(str20))
+            if (String.IsNullOrEmpty(str20))
                 str20 = "ru";
             var packEl = new XElement("package");
             linkEl = new XElement("meta");
@@ -573,7 +574,7 @@ namespace Fb2Kindle
                 packEl.Add(new XAttribute("href", "booktitle.html"));
                 XHelper.First(packElement.Elements("guide")).Add(packEl);
             }
-            if ((!currentSettings.ntoc) && (!currentSettings.ContentOf))
+            if (!currentSettings.ntoc && !currentSettings.ContentOf)
             {
                 packEl = new XElement("item");
                 packEl.Add(new XAttribute("id", "content"));
@@ -636,27 +637,29 @@ namespace Fb2Kindle
                             notesList.Add(di);
                         }
                     }
-                    if (currentSettings.nbox) continue;
-                    packEl = new XElement("html");
-                    headEl = new XElement("head");
-                    linkEl = new XElement("link");
-                    linkEl.Add(new XAttribute("type", "text/css"));
-                    linkEl.Add(new XAttribute("href", "book.css"));
-                    linkEl.Add(new XAttribute("rel", "Stylesheet"));
-                    headEl.Add(linkEl);
-                    packEl.Add(headEl);
-                    headEl = new XElement("body");
-                    headEl.Add(element.Elements("body").ElementAtOrDefault(i).Nodes());
-                    packEl.Add(headEl);
-                    var element9 = packEl;
-                    var htmltxt = Common.FormatToHTML(element9.ToString());
-                    if (!currentSettings.nh)
+                    if (!currentSettings.nbox)
                     {
-                        htmltxt = Common.GipherHTML(htmltxt);
+                        packEl = new XElement("html");
+                        headEl = new XElement("head");
+                        linkEl = new XElement("link");
+                        linkEl.Add(new XAttribute("type", "text/css"));
+                        linkEl.Add(new XAttribute("href", "book.css"));
+                        linkEl.Add(new XAttribute("rel", "Stylesheet"));
+                        headEl.Add(linkEl);
+                        packEl.Add(headEl);
+                        headEl = new XElement("body");
+                        headEl.Add(element.Elements("body").ElementAtOrDefault(i).Nodes());
+                        packEl.Add(headEl);
+                        var element9 = packEl;
+                        var htmltxt = Common.FormatToHTML(element9.ToString());
+                        if (!currentSettings.nh)
+                        {
+                            htmltxt = Common.GipherHTML(htmltxt);
+                        }
+                        htmltxt = Common.AddEncodingToXml(htmltxt);
+                        File.WriteAllText(_tempDir + @"\" + bodyName + ".html", htmltxt);
+                        flag13 = true;
                     }
-                    htmltxt = Common.AddEncodingToXml(htmltxt);
-                    File.WriteAllText(_tempDir + @"\" + bodyName + ".html", htmltxt);
-                    flag13 = true;
                 }
             }
             bodyStr = bodyStr.Replace("<a ", "<A ").Replace("</a>", "</A> ");
@@ -987,6 +990,11 @@ namespace Fb2Kindle
             element2.Add(XHelper.Value(avtorbook.Elements("middle-name")));
             element2.Add(new XElement("br"));
             return element2;
+        }
+
+        private static string TabRep(string Str)
+        {
+            return Str.Replace(Convert.ToChar(160).ToString(), "&nbsp;").Replace(Convert.ToChar(0xad).ToString(), "&shy;");
         }
     }
 }
