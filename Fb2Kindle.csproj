@@ -40,11 +40,7 @@
   <ItemGroup>
     <Compile Include="AssemblyInfo.cs" />
     <Compile Include="Convertor.cs" />
-    <Compile Include="DataItem.cs" />
-    <Compile Include="ImagesHelper.cs" />
     <Compile Include="XHelper.cs" />
-    <Compile Include="SectionInfo.cs" />
-    <Compile Include="XmlSerializerHelper.cs" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
@@ -52,8 +48,8 @@
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Compile Include="Common.cs" />
-    <Compile Include="DefaultOptions.cs" />
-    <Compile Include="Main.cs" />
+    <Compile Include="Classes.cs" />
+    <Compile Include="Program.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="defstyles.css" />
@@ -61,14 +57,34 @@
   <ItemGroup>
     <EmbeddedResource Include="fb2bin.exe" />
     <EmbeddedResource Include="kindlegen.exe" />
-    <Content Include="styles.css" />
+    <Content Include="7za.exe">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="styles.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <ItemGroup>
-    <None Include="fonts\DroidSerif-Bold.ttf" />
-    <None Include="fonts\DroidSerif-BoldItalic.ttf" />
-    <None Include="fonts\DroidSerif-Italic.ttf" />
-    <None Include="fonts\DroidSerif-Regular.ttf" />
-    <None Include="fonts\Edisson.ttf" />
-    <None Include="fonts\Lombardina-Initial-One.ttf" />
+    <None Include="convertAll.cmd">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="fonts\DroidSerif-Bold.ttf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="fonts\DroidSerif-BoldItalic.ttf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="fonts\DroidSerif-Italic.ttf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="fonts\DroidSerif-Regular.ttf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="fonts\Edisson.ttf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="fonts\Lombardina-Initial-One.ttf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 </Project>
