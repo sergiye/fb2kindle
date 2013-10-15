@@ -217,39 +217,6 @@ namespace Fb2Kindle
             return Txt;
         }
 
-        public static string RandomMas(string Str)
-        {
-            var num2 = 0;
-            var index = Str.IndexOf("{");
-            if (index != -1)
-            {
-                num2 = Str.IndexOf("}");
-            }
-            var rnd = new Random();
-            while (index != -1)
-            {
-                var strArray = ReturnMasStr(Str, ref index, ref num2, '{', '}');
-                var num3 = strArray.Length * rnd.Next();
-                Str = Str.Substring(0, index) + strArray[num3] + Str.Substring(num2 + 1, (Str.Length - num2) - 1);
-                index = Str.IndexOf("{");
-                num2 = Str.IndexOf("}");
-            }
-            return Str;
-        }
-
-        public static string[] ReturnMasStr(string Str, ref int i1, ref int i2, char ChBegin = '[', char ChEnd = ']', char ChR = '|', string N = "")
-        {
-            if ((i1 == 0) & (i2 == 0))
-            {
-                i1 = Str.IndexOf(ChBegin, i2);
-                if (i1 != -1)
-                    i2 = Str.IndexOf(ChEnd, i1);
-            }
-            if ((i1 != -1) & (i2 != -1))
-                return Str.Substring(i1 + 1, (i2 - i1) - 1).Split(new[] {ChR});
-            return new[] {""};
-        }
-
         public static void CopyDirectory(string sourceDirName, string destDirName, bool copySubDirs)
         {
             // Get the subdirectories for the specified directory.
@@ -284,11 +251,12 @@ namespace Fb2Kindle
             Console.WriteLine("-nh: без переносов слов");
             Console.WriteLine("-ni: без картинок");
             Console.WriteLine("-ntoc: без оглавления");
+            Console.WriteLine("-nbox: сноски в тексте");
             Console.WriteLine("-nstitle: без информации о книге");
+            Console.WriteLine("-ntitle0: без разрыва после описания книги");
+            Console.WriteLine("-dztitle: удалять пустой заголовок");
             Console.WriteLine("-save: сохранить параметры запуска");
-//            Console.WriteLine("-ntitle0: без разрывов страниц в конце частей");
-//            Console.WriteLine("-dztitle: удалять пустой заголовок");
-//            Console.WriteLine("-nbox: без сносок");
+            Console.WriteLine("-a: все файлы в текущей папке");
             Console.WriteLine();
         }
 
@@ -449,16 +417,11 @@ namespace Fb2Kindle
                 Directory.CreateDirectory(tempDir);
             if (!Directory.Exists(tempDir + @"\" + images))
                 Directory.CreateDirectory(tempDir + @"\" + images);
-            if (Directory.Exists(executingPath + @"\" + images))
-                CopyDirectory(executingPath + @"\" + images, tempDir + @"\" + images, true);
+//            if (Directory.Exists(executingPath + @"\" + images))
+//                CopyDirectory(executingPath + @"\" + images, tempDir + @"\" + images, true);
             GetFileFromResource("fb2bin.exe", tempDir + "\\fb2bin.exe");
             GetFileFromResource("kindlegen.exe", tempDir + "\\kindlegen.exe");
             return tempDir;
-        }
-
-        public static string TabRep(string Str)
-        {
-            return Str.Replace(Convert.ToChar(160).ToString(), "&nbsp;").Replace(Convert.ToChar(0xad).ToString(), "&shy;");
         }
     }
 }

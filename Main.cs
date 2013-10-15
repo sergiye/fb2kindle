@@ -66,8 +66,11 @@ namespace Fb2Kindle
                     case "-save":
                         currentSettings.save = true;
                         break;
+                    case "-a":
+                        currentSettings.all = true;
+                        break;
                     default:
-//                        if (j == 0)
+                        if (j == 0)
                             bookPath = args[j];
                         break;
                 }
@@ -77,7 +80,8 @@ namespace Fb2Kindle
                 defaultCss = File.ReadAllText(currentSettings.defaultCSS, Encoding.UTF8);
             else
             {
-                Console.WriteLine("Error: Не найден указанный файл стилей: " + currentSettings.defaultCSS);
+                if (!string.IsNullOrEmpty(currentSettings.defaultCSS))
+                    Console.WriteLine("Error: Не найден указанный файл стилей: " + currentSettings.defaultCSS);
                 defaultCss = Common.GetScriptFromResource("defstyles.css");
             }
             if (currentSettings.save)
@@ -87,19 +91,33 @@ namespace Fb2Kindle
                 Console.WriteLine("Пустой файл стилей: " + currentSettings.defaultCSS);
                 return;
             }
-            if (string.IsNullOrEmpty(bookPath) || !File.Exists(bookPath))
-            {
-                Console.WriteLine("Файл не найден: " + bookPath);
-                return;
-            }
             var conv = new Convertor(currentSettings, executingPath, defaultCss);
-            if (!conv.ConvertBook(bookPath) || Debugger.IsAttached)
+            if (currentSettings.all)
             {
-                Console.WriteLine();
-                Console.WriteLine();
-                Console.WriteLine("Нажмите любую клавишу для продолжения...");
-                Console.ReadKey();
+                var files = Directory.GetFiles(executingPath, "*.fb2");
+                if (files.Length == 0)
+                    Console.WriteLine("Исходные файлы не найдены");
+                foreach (var file in files)
+                    conv.ConvertBook(file);
             }
+            else
+            {
+                if (string.IsNullOrEmpty(bookPath) || !File.Exists(bookPath))
+                {
+                    if (string.IsNullOrEmpty(bookPath))
+                        Console.WriteLine("Не задан исходный файл");
+                    else
+                        Console.WriteLine("Файл не найден: " + bookPath);
+                }
+                else
+                    conv.ConvertBook(bookPath);
+            }
+//            if (Debugger.IsAttached)
+//            {
+//                Console.WriteLine();
+//                Console.WriteLine("Нажмите любую клавишу для продолжения...");
+//                Console.ReadKey();
+//            }
         }
     }
 }

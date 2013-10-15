@@ -8,7 +8,6 @@ namespace Fb2Kindle
     {
         public DefaultOptions()
         {
-            defaultCSS = "styles.css";
             DropCap = "АБВГДЕЖЗИКЛМНОПРСТУФХЦЧЩШЭЮЯ";
         }
 
@@ -26,5 +25,6 @@ namespace Fb2Kindle
         public bool ContentOf { get; set; }
         public bool nbox { get; set; } //note box
         [XmlIgnore]public bool save { get; set; } //note box
+        [XmlIgnore]public bool all { get; set; } //note box
     }
 }
