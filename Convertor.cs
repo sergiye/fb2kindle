@@ -820,7 +820,7 @@ namespace Fb2Kindle
                 packEl.Add(headEl);
                 XHelper.First(ncxElement.Elements("navMap")).Add(packEl);
             }
-            var num6 = 1;
+            var titleIdx = 1;
             if (currentSettings.ntoc != "True")
             {
                 packEl = new XElement("html");
@@ -849,8 +849,6 @@ namespace Fb2Kindle
                 packEl.Add(headEl);
                 element5 = packEl;
             }
-            string str34;
-            string str35;
             var prevTag = "";
             var flag11 = false;
             var flag15 = true;
@@ -915,41 +913,40 @@ namespace Fb2Kindle
                 }
                 else if (curTag.Contains("<titl"))
                 {
-                    num6++;
-                    bodyStr = bodyStr.Insert(num9 + 6, " id=\"title" + num6 + "\"");
+                    titleIdx++;
+                    bodyStr = bodyStr.Insert(num9 + 6, " id=\"title" + titleIdx + "\"");
                     index = bodyStr.IndexOf(">", index);
                     num16 = bodyStr.IndexOf("</titl", index);
-                    str35 = bodyStr.Substring(index + 1, (num16 - index) - 1);
-                    str34 = "";
-                    var str33 = "";
-                    var num51 = str35.Length - 1;
-                    for (var num34 = 0; num34 <= num51; num34++)
+                    var substring = bodyStr.Substring(index + 1, (num16 - index) - 1);
+                    var buf1 = "";
+                    var buf2 = "";
+                    for (var num34 = 0; num34 < substring.Length; num34++)
                     {
-                        ch = str35[num34];
+                        ch = substring[num34];
                         switch (ch)
                         {
                             case '<':
                                 flag15 = false;
-                                str33 = "";
+                                buf2 = "";
                                 break;
                             case '>':
-                                if (str33 == "/p")
-                                    str34 = str34 + " ";
+                                if (buf2 == "/p")
+                                    buf1 = buf1 + " ";
                                 flag15 = true;
                                 break;
                             default:
                                 if (flag15)
                                 {
-                                    str34 = str34 + ch;
+                                    buf1 = buf1 + ch;
                                 }
                                 else
                                 {
-                                    str33 = str33 + ch;
+                                    buf2 = buf2 + ch;
                                 }
                                 break;
                         }
                     }
-                    titles.Add(new DataItem("title" + num6, str34));
+                    titles.Add(new DataItem("title" + titleIdx, buf1));
                 }
                 if (curTag.Equals("</div>") || curTag.Equals("</cite>") || curTag.Equals("</poem>"))
                 {
