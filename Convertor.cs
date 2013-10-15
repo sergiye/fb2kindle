@@ -475,14 +475,19 @@ namespace Fb2Kindle
                 var pEl = new XElement("p");
                 pEl.Add(XHelper.AttributeValue(element.Elements("description").Elements("t-i").Elements("sequence"), "name") + " " + XHelper.AttributeValue(element.Elements("description").Elements("t-i").Elements("sequence"), "number"));
                 linkEl.Add(pEl);
-                pEl = new XElement("br");
-                linkEl.Add(pEl);
+                linkEl.Add(new XElement("br"));
                 pEl = new XElement("p");
                 pEl.Add(new XAttribute("class", "text-name"));
                 pEl.Add(XHelper.Value(element.Elements("description").Elements("t-i").Elements("book-title")));
                 linkEl.Add(pEl);
-                pEl = new XElement("br");
+
+                linkEl.Add(new XElement("br"));
+                pEl = new XElement("p");
+                pEl.Add(XHelper.Value(element.Elements("description").Elements("t-i").Elements("annotation")));
                 linkEl.Add(pEl);
+                linkEl.Add(new XElement("br"));
+
+                linkEl.Add(new XElement("br"));
                 pEl = new XElement("p");
                 pEl.Add(XHelper.Value(element.Elements("description").Elements("publish-info").Elements("publisher")));
                 linkEl.Add(pEl);
@@ -492,8 +497,7 @@ namespace Fb2Kindle
                 pEl = new XElement("p");
                 pEl.Add(XHelper.Value(element.Elements("description").Elements("publish-info").Elements("year")));
                 linkEl.Add(pEl);
-                pEl = new XElement("br");
-                linkEl.Add(pEl);
+                linkEl.Add(new XElement("br"));
                 headEl.Add(linkEl);
                 content.Add(headEl);
                 content.Save(_tempDir + @"\booktitle.html");
