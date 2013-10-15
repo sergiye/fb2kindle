@@ -36,7 +36,7 @@ namespace Fb2Kindle
                 Directory.CreateDirectory(_tempDir + @"\fonts");
                 Common.CopyDirectory(_workingFolder + @"\fonts", _tempDir + @"\fonts", true);
             }
-            var imagesPrepared = !_currentSettings.ni && Common.ExtractImages(_workingFolder, _tempDir, images, bookPath);
+            var imagesPrepared = !_currentSettings.noImages && Common.ExtractImages(_workingFolder, _tempDir, images, bookPath);
             var fData = File.ReadAllText(bookPath);
             if (fData.Length == 0)
             {
@@ -56,7 +56,7 @@ namespace Fb2Kindle
             var element5 = ConvertToHtml(bookPath, _currentSettings, fData, imagesPrepared, out num9, out hemlElement, out packElement, 
                 out notesList2, out bodyStr, out flag13, out ncxElement, out titles, out index);
             var str17 = hemlElement.ToString();
-            if (_currentSettings.nc != "True")
+            if (!_currentSettings.noChapters)
             {
                 num9 = CreateChapters(_currentSettings, bodyStr, hemlElement, packElement, titles, ncxElement, element5, ref index);
             }
@@ -80,7 +80,7 @@ namespace Fb2Kindle
                     navLabel.Add(XHelper.CreateAttribute("src", htmlFile + "#" + str35));
                     navPoint.Add(navLabel);
                     XHelper.First(ncxElement.Elements("navMap")).Add(navPoint);
-                    if (_currentSettings.ntoc != "True")
+                    if (!_currentSettings.ntoc)
                     {
                         navPoint = new XElement("li");
                         navLabel = new XElement("a");
@@ -106,14 +106,14 @@ namespace Fb2Kindle
                 itemEl.Add(XHelper.CreateAttribute("href", htmlFile));
                 XHelper.First(packElement.Elements("guide")).Add(itemEl);
                 bodyStr = Common.TabRep(bodyStr);
-                if (_currentSettings.nh != "True")
+                if (!_currentSettings.nh)
                 {
                     bodyStr = Common.GipherHTML(bodyStr);
                 }
                 str17 = str17.Insert(str17.IndexOf("<body>") + 6, bodyStr).Replace("<sectio1", "<div class=\"book\"").Replace("</sectio1>", "</div>");
                 File.WriteAllText(_tempDir + @"\" + htmlFile, str17);
             }
-            if (_currentSettings.ntoc != "True" && _currentSettings.ContentOf == "True")
+            if (!_currentSettings.ntoc && _currentSettings.ContentOf)
             {
                 var navPoint = new XElement("navPoint");
                 navPoint.Add(XHelper.CreateAttribute("id", "navpoint-" + (index + 2).ToString()));
@@ -167,7 +167,7 @@ namespace Fb2Kindle
                     navLabel.Add(XHelper.CreateAttribute("src", item.Name));
                     itemEl.Add(navLabel);
                     XHelper.First(ncxElement.Elements("navMap")).Add(itemEl);
-                    if (_currentSettings.ntoc != "True")
+                    if (!_currentSettings.ntoc)
                     {
                         itemEl = new XElement("li");
                         navLabel = new XElement("a");
@@ -184,7 +184,7 @@ namespace Fb2Kindle
             packElement.RemoveAll();
             ncxElement.Save(_tempDir + @"\toc.ncx");
             ncxElement.RemoveAll();
-            if (_currentSettings.ntoc != "True")
+            if (!_currentSettings.ntoc)
             {
                 element5.Save(_tempDir + @"\toc.html");
                 element5.RemoveAll();
@@ -227,13 +227,13 @@ namespace Fb2Kindle
                     if (!flag17)
                     {
                         bodyContent = bodyStr.Substring(start, num16 - start) + "</sectio1>";
-                        if (currentSettings.DelZeroTitle == "True" && (bookNum == 0))
+                        if (currentSettings.dztitle && (bookNum == 0))
                         {
                             flag18 = true;
                         }
                         else if (!XElement.Parse(bodyContent).Elements("p").Any())
                         {
-                            if (currentSettings.ntitle0 == "True")
+                            if (currentSettings.ntitle0)
                             {
                                 str40 = str40 + bodyContent;
                                 flag18 = true;
@@ -249,7 +249,7 @@ namespace Fb2Kindle
                             bodyContent = str40 + bodyContent;
                             str40 = "";
                             bodyContent = Common.TabRep(bodyContent);
-                            if (currentSettings.nh != "True")
+                            if (!currentSettings.nh)
                             {
                                 bodyContent = Common.GipherHTML(bodyContent);
                             }
@@ -282,7 +282,7 @@ namespace Fb2Kindle
                                     element14.Add(XHelper.CreateAttribute("src", "book" + bookNum + ".html#" + str35));
                                     itemEl.Add(element14);
                                     XHelper.First(ncxElement.Elements("navMap")).Add(itemEl);
-                                    if (currentSettings.ntoc != "True")
+                                    if (!currentSettings.ntoc)
                                     {
                                         itemEl = new XElement("li");
                                         element14 = new XElement("a");
@@ -306,13 +306,13 @@ namespace Fb2Kindle
                     if (!flag17)
                     {
                         bodyContent = bodyStr.Substring(start, (num17 - start) + 11);
-                        if (currentSettings.DelZeroTitle == "True" && (bookNum == 0))
+                        if (currentSettings.dztitle && (bookNum == 0))
                         {
                             flag18 = true;
                         }
                         else if (!XElement.Parse(bodyContent).Elements("p").Any())
                         {
-                            if (currentSettings.ntitle0 == "True")
+                            if (currentSettings.ntitle0)
                             {
                                 str40 = str40 + bodyContent;
                                 flag18 = true;
@@ -328,7 +328,7 @@ namespace Fb2Kindle
                             bodyContent = str40 + bodyContent;
                             str40 = "";
                             bodyContent = Common.TabRep(bodyContent);
-                            if (currentSettings.nh != "True")
+                            if (!currentSettings.nh)
                             {
                                 bodyContent = Common.GipherHTML(bodyContent);
                             }
@@ -362,7 +362,7 @@ namespace Fb2Kindle
                                     itemEl.Add(navLabel);
                                     XHelper.First(ncxElement.Elements("navMap")).Add(itemEl);
 
-                                    if (currentSettings.ntoc != "True")
+                                    if (!currentSettings.ntoc)
                                     {
                                         itemEl = new XElement("li");
                                         navLabel = new XElement("a");
@@ -454,7 +454,7 @@ namespace Fb2Kindle
             XElement content;
             XElement headEl;
             XElement linkEl;
-            if (!currentSettings.nstitleb)
+            if (!currentSettings.nstitle)
             {
                 content = new XElement("html");
                 //content = new XElement("html");
@@ -556,7 +556,7 @@ namespace Fb2Kindle
             headEl.Add("");
             packEl.Add(headEl);
             packElement = packEl;
-            if (!currentSettings.nstitleb)
+            if (!currentSettings.nstitle)
             {
                 packEl = new XElement("item");
                 packEl.Add(new XAttribute("id", "booktitle"));
@@ -573,7 +573,7 @@ namespace Fb2Kindle
                 packEl.Add(new XAttribute("href", "booktitle.html"));
                 XHelper.First(packElement.Elements("guide")).Add(packEl);
             }
-            if ((currentSettings.ntoc != "True") && (currentSettings.ContentOf != "True"))
+            if ((!currentSettings.ntoc) && (!currentSettings.ContentOf))
             {
                 packEl = new XElement("item");
                 packEl.Add(new XAttribute("id", "content"));
@@ -605,43 +605,38 @@ namespace Fb2Kindle
             {
                 for (var i = 1; i < num; i++)
                 {
-                    var str21 = XHelper.AttributeValue(element.Elements("body").ElementAtOrDefault(i), "name");
-                    if (str21 == "") continue;
-                    notesList2.Add(new DataItem(str21 + ".html", str21));
+                    var bodyName = XHelper.AttributeValue(element.Elements("body").ElementAtOrDefault(i), "name");
+                    if (bodyName == "") continue;
+                    notesList2.Add(new DataItem(bodyName + ".html", bodyName));
                     var list = element.Elements("body").ElementAtOrDefault(i).Descendants("section").ToList();
                     if (list.Count > 0)
                     {
                         for (var idx = 0; idx < list.Count; idx++)
                         {
                             var di = new DataItem();
-                            if (currentSettings.NoteBoxb)
+                            if (currentSettings.nbox)
                             {
                                 var list2 = list[idx].Descendants("p").ToList();
-                                var str36 = "<b>";
+                                var boldBox = "<b>";
                                 for (var idx2 = 0; idx2 < list2.Count; idx2++)
                                 {
                                     if (idx2 == 0)
-                                    {
-                                        str36 = str36 + list2[idx2].Value + "</b> ";
-                                    }
+                                        boldBox = boldBox + list2[idx2].Value + "</b> ";
                                     else
-                                    {
-                                        var str37 = list2[idx2].Value.Replace('<', '[').Replace('>', ']');
-                                        str36 = str36 + " " + str37;
-                                    }
+                                        boldBox = boldBox + " " + list2[idx2].Value.Replace('<', '[').Replace('>', ']');
                                 }
-                                str36 = str36.Replace("&", "");
-                                di.Name = str36;
+                                boldBox = boldBox.Replace("&", "");
+                                di.Name = boldBox;
                             }
                             else
                             {
-                                di.Name = str21 + ".html";
+                                di.Name = bodyName + ".html";
                             }
                             di.Value = XHelper.AttributeValue(list[idx], "id");
                             notesList.Add(di);
                         }
                     }
-                    if (currentSettings.NoteBoxb) continue;
+                    if (currentSettings.nbox) continue;
                     packEl = new XElement("html");
                     headEl = new XElement("head");
                     linkEl = new XElement("link");
@@ -655,12 +650,12 @@ namespace Fb2Kindle
                     packEl.Add(headEl);
                     var element9 = packEl;
                     var htmltxt = Common.FormatToHTML(element9.ToString());
-                    if (currentSettings.nh != "True")
+                    if (!currentSettings.nh)
                     {
                         htmltxt = Common.GipherHTML(htmltxt);
                     }
                     htmltxt = Common.AddEncodingToXml(htmltxt);
-                    File.WriteAllText(_tempDir + @"\" + str21 + ".html", htmltxt);
+                    File.WriteAllText(_tempDir + @"\" + bodyName + ".html", htmltxt);
                     flag13 = true;
                 }
             }
@@ -702,7 +697,7 @@ namespace Fb2Kindle
                     {
                         if (str22 == notesList[i].Value)
                         {
-                            if (currentSettings.NoteBoxb)
+                            if (currentSettings.nbox)
                                 str23 = Common.FormatToHTML(notesList[i].Name);
                             else
                                 str23 = notesList[i].Name + "#" + str22;
@@ -710,7 +705,7 @@ namespace Fb2Kindle
                         }
                     }
                 }
-                bodyStr = currentSettings.NoteBoxb
+                bodyStr = currentSettings.nbox
                               ? bodyStr.Insert(num15 + 5, "<span class=\"note\">" + str23 + "</span>").Replace(oldValue, "<sup>")
                               : bodyStr.Replace(oldValue, "<a href = \"" + str23 + "\"><sup>");
                 num18++;
@@ -718,7 +713,7 @@ namespace Fb2Kindle
                 if (startIndex != -1)
                     num15 = bodyStr.IndexOf("</A>", startIndex);
             }
-            bodyStr = bodyStr.Replace("</A>", currentSettings.NoteBoxb ? "</sup>" : "</sup></a>");
+            bodyStr = bodyStr.Replace("</A>", currentSettings.nbox ? "</sup>" : "</sup></a>");
             var num2 = bodyStr.IndexOf("<body>");
             var number = 1;
             var numArray = new List<SectionInfo>();
@@ -790,7 +785,7 @@ namespace Fb2Kindle
             headEl.Add("");
             packEl.Add(headEl);
             ncxElement = packEl;
-            if (!currentSettings.nstitleb)
+            if (!currentSettings.nstitle)
             {
                 packEl = new XElement("navPoint");
                 packEl.Add(new XAttribute("id", "navpoint-0"));
@@ -805,7 +800,7 @@ namespace Fb2Kindle
                 packEl.Add(headEl);
                 XHelper.First(ncxElement.Elements("navMap")).Add(packEl);
             }
-            if (currentSettings.ntoc != "True" && currentSettings.ContentOf != "True")
+            if (!currentSettings.ntoc && !currentSettings.ContentOf)
             {
                 packEl = new XElement("navPoint");
                 packEl.Add(new XAttribute("id", "navpoint-1"));
@@ -821,7 +816,7 @@ namespace Fb2Kindle
                 XHelper.First(ncxElement.Elements("navMap")).Add(packEl);
             }
             var titleIdx = 1;
-            if (currentSettings.ntoc != "True")
+            if (!currentSettings.ntoc)
             {
                 packEl = new XElement("html");
                 headEl = new XElement("head");
@@ -872,7 +867,7 @@ namespace Fb2Kindle
                 }
                 if (curTag.Contains("<p ") || curTag.Contains("<p>"))
                 {
-                    if (currentSettings.nb != "True")
+                    if (!currentSettings.noBig)
                     {
                         if (prevTag.Equals("</titl0>") || prevTag.Equals("</titl1>") || prevTag.Equals("</titl2>") || prevTag.Equals("</titl3>") ||
                             prevTag.Equals("</titl4>") || prevTag.Equals("</titl5>") || prevTag.Equals("</titl6>") || prevTag.Equals("</titl7>") ||

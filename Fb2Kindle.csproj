@@ -41,9 +41,11 @@
     <Compile Include="AssemblyInfo.cs" />
     <Compile Include="Convertor.cs" />
     <Compile Include="DataItem.cs" />
+    <Compile Include="ImagesHelper.cs" />
     <Compile Include="XHelper.cs" />
     <Compile Include="SectionInfo.cs" />
     <Compile Include="XmlSerializerHelper.cs" />
+    <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
     <Reference Include="System.Xml.Linq" />

@@ -19,7 +19,8 @@ namespace Fb2Kindle
             }
 
             var executingPath = Path.GetDirectoryName(Application.ExecutablePath);
-            var currentSettings = XmlSerializerHelper.ReadObjectFromFile<DefaultOptions>(executingPath + @"\fb2kf8.set") ?? new DefaultOptions();
+            var settingsFile = executingPath + @"\config.xml";
+            var currentSettings = XmlSerializerHelper.ReadObjectFromFile<DefaultOptions>(settingsFile) ?? new DefaultOptions();
             var bookPath = string.Empty;
             for (var j = 0; j < args.Length; j++)
             {
@@ -33,19 +34,37 @@ namespace Fb2Kindle
                         }
                         break;
                     case "-d":
-                        currentSettings.d = "True";
+                        currentSettings.deleteOrigin = true;
                         break;
                     case "-nb":
-                        currentSettings.nb = "True";
+                        currentSettings.noBig = true;
                         break;
                     case "-nch":
-                        currentSettings.nc = "True";
+                        currentSettings.noChapters = true;
                         break;
                     case "-nh":
-                        currentSettings.nh = "True";
+                        currentSettings.nh = true;
                         break;
                     case "-ni":
-                        currentSettings.ni = true;
+                        currentSettings.noImages = true;
+                        break;
+                    case "-ntoc":
+                        currentSettings.ntoc = true;
+                        break;
+                    case "-nstitle":
+                        currentSettings.nstitle = true;
+                        break;
+                    case "-ntitle0":
+                        currentSettings.ntitle0 = true;
+                        break;
+                    case "-dztitle":
+                        currentSettings.dztitle = true;
+                        break;
+                    case "-nbox":
+                        currentSettings.nbox = true;
+                        break;
+                    case "-save":
+                        currentSettings.save = true;
                         break;
                     default:
 //                        if (j == 0)
@@ -61,6 +80,8 @@ namespace Fb2Kindle
                 Console.WriteLine("Error: Не найден указанный файл стилей: " + currentSettings.defaultCSS);
                 defaultCss = Common.GetScriptFromResource("defstyles.css");
             }
+            if (currentSettings.save)
+                XmlSerializerHelper.WriteObjectToFile(settingsFile, currentSettings, true);
             if (string.IsNullOrEmpty(defaultCss))
             {
                 Console.WriteLine("Пустой файл стилей: " + currentSettings.defaultCSS);
