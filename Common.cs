@@ -1,25 +1,25 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Reflection;
 using System.Text;
+using Encoder = System.Drawing.Imaging.Encoder;
 
 namespace Fb2Kindle 
 {
     public static class Common
     {
-        public static string CodStr(string Str)
+        public static string CodStr(string str)
         {
-            return Str == "" ? "" : Convert.ToBase64String(Encoding.Unicode.GetBytes(Str));
+            return String.IsNullOrEmpty(str) ? str : Convert.ToBase64String(Encoding.Unicode.GetBytes(str));
         }
 
-        public static string DeCodStr(string Str)
+        public static string DeCodStr(string str)
         {
-            if (Str == "")
-                return "";
-            var bytes = Convert.FromBase64String(Str);
-            return Encoding.Unicode.GetString(bytes);
+            return String.IsNullOrEmpty(str) ? str : Encoding.Unicode.GetString(Convert.FromBase64String(str));
         }
 
         public static string FormatToHTML(string htmltxt2)
@@ -52,37 +52,6 @@ namespace Fb2Kindle
             return htmltxt2;
         }
 
-        public static object FormatToHTMLBox(string htmltxt2)
-        {
-            htmltxt2 = htmltxt2.Replace("<text-author>", "<b>");
-            htmltxt2 = htmltxt2.Replace("</text-author>", "</b>");
-            htmltxt2 = htmltxt2.Replace("<empty-line />", "<br/>");
-            htmltxt2 = htmltxt2.Replace("<epigraph>", "");
-            htmltxt2 = htmltxt2.Replace("</epigraph>", "");
-            htmltxt2 = htmltxt2.Replace("<empty-line/>", "<br/>");
-            htmltxt2 = htmltxt2.Replace("<subtitle ", "<div class = \"subtitle\" ");
-            htmltxt2 = htmltxt2.Replace("<subtitle>", "<div class = \"subtitle\">");
-            htmltxt2 = htmltxt2.Replace("</subtitle>", "</div>");
-            htmltxt2 = htmltxt2.Replace("<cite ", "<div class = \"cite\" ");
-            htmltxt2 = htmltxt2.Replace("<cite>", "<div class = \"cite\">");
-            htmltxt2 = htmltxt2.Replace("</cite>", "</div>");
-            htmltxt2 = htmltxt2.Replace("<emphasis>", "<i>");
-            htmltxt2 = htmltxt2.Replace("</emphasis>", "</i>");
-            htmltxt2 = htmltxt2.Replace("<strong>", "<b>");
-            htmltxt2 = htmltxt2.Replace("</strong>", "</b>");
-            htmltxt2 = htmltxt2.Replace("<poem", "<div class=\"poem\"");
-            htmltxt2 = htmltxt2.Replace("</poem>", "</div>");
-            htmltxt2 = htmltxt2.Replace("<stanza>", "<br/>");
-            htmltxt2 = htmltxt2.Replace("</stanza>", "<br/>");
-            htmltxt2 = htmltxt2.Replace("<v>", "<p>");
-            htmltxt2 = htmltxt2.Replace("</v>", "</p>");
-            htmltxt2 = htmltxt2.Replace("<title", "<div class = \"subtitle\"");
-            htmltxt2 = htmltxt2.Replace("</title>", "</div>");
-            htmltxt2 = htmltxt2.Replace("<section", "<div class = \"note\"");
-            htmltxt2 = htmltxt2.Replace("</section>", "</div>");
-            return htmltxt2;
-        }
-
         public static string GipherHTML(string htmltxt)
         {
             htmltxt = htmltxt.Replace("<p>", "<p1>");
@@ -104,19 +73,19 @@ namespace Fb2Kindle
             return htmltxt;
         }
 
-        public static string TransText(string Txt)
+        public static string TransText(string text)
         {
-            var str5 = Txt.ToLower();
+            var lowerText = text.ToLower();
             const string str6 = "ьъ";
             const string str2 = "аеёийоуыэюяaeiouy";
             const string str3 = "бвгджзклмнпрстфхцчшщbcdfghjklmnpqrstvwxz";
-            var num2 = str5.Length - 1;
+            var num2 = lowerText.Length - 1;
             var flag = true;
             var num6 = num2;
             for (var i = 0; i <= num6; i++)
             {
-                var str = str5[i];
-                switch (str)
+                var ch = lowerText[i];
+                switch (ch)
                 {
                     case '<':
                         flag = false;
@@ -126,113 +95,100 @@ namespace Fb2Kindle
                         break;
                     default:
                         if (!flag)
-                        {
-                            str5 = str5.Remove(i, 1).Insert(i, "_");
-                        }
-                        if ((str6.IndexOf(str) != -1) & flag)
-                        {
-                            str5 = str5.Remove(i, 1).Insert(i, "x");
-                        }
-                        else if ((str2.IndexOf(str) != -1) & flag)
-                        {
-                            str5 = str5.Remove(i, 1).Insert(i, "g");
-                        }
-                        else if ((str3.IndexOf(str) != -1) & flag)
-                        {
-                            str5 = str5.Remove(i, 1).Insert(i, "s");
-                        }
+                            lowerText = lowerText.Remove(i, 1).Insert(i, "_");
+                        if ((str6.IndexOf(ch) != -1) & flag)
+                            lowerText = lowerText.Remove(i, 1).Insert(i, "x");
+                        else if ((str2.IndexOf(ch) != -1) & flag)
+                            lowerText = lowerText.Remove(i, 1).Insert(i, "g");
+                        else if ((str3.IndexOf(ch) != -1) & flag)
+                            lowerText = lowerText.Remove(i, 1).Insert(i, "s");
                         break;
                 }
             }
             var source = new List<int>();
-            var num4 = str5.IndexOf("xgg");
+            var num4 = lowerText.IndexOf("xgg");
             while (num4 != -1)
             {
                 source.Add(num4 + 1);
-                num4 = str5.IndexOf("xgg", (num4 + 1));
+                num4 = lowerText.IndexOf("xgg", (num4 + 1));
             }
-            num4 = str5.IndexOf("xgs");
+            num4 = lowerText.IndexOf("xgs");
             while (num4 != -1)
             {
                 source.Add(num4 + 1);
-                num4 = str5.IndexOf("xgs", (num4 + 1));
+                num4 = lowerText.IndexOf("xgs", (num4 + 1));
             }
-            num4 = str5.IndexOf("xsg");
+            num4 = lowerText.IndexOf("xsg");
             while (num4 != -1)
             {
                 source.Add(num4 + 1);
-                num4 = str5.IndexOf("xsg", (num4 + 1));
+                num4 = lowerText.IndexOf("xsg", (num4 + 1));
             }
-            num4 = str5.IndexOf("xss");
+            num4 = lowerText.IndexOf("xss");
             while (num4 != -1)
             {
                 source.Add(num4 + 1);
-                num4 = str5.IndexOf("xss", (num4 + 1));
+                num4 = lowerText.IndexOf("xss", (num4 + 1));
             }
-            num4 = str5.IndexOf("gssssg");
+            num4 = lowerText.IndexOf("gssssg");
             while (num4 != -1)
             {
                 source.Add(num4 + 3);
-                num4 = str5.IndexOf("gssssg", (num4 + 1));
+                num4 = lowerText.IndexOf("gssssg", (num4 + 1));
             }
-            num4 = str5.IndexOf("gsssg");
+            num4 = lowerText.IndexOf("gsssg");
             while (num4 != -1)
             {
                 source.Add(num4 + 2);
                 source.Add(num4 + 3);
-                num4 = str5.IndexOf("gsssg", (num4 + 1));
+                num4 = lowerText.IndexOf("gsssg", (num4 + 1));
             }
-            num4 = str5.IndexOf("sgsg");
+            num4 = lowerText.IndexOf("sgsg");
             while (num4 != -1)
             {
                 source.Add(num4 + 2);
-                num4 = str5.IndexOf("sgsg", (num4 + 1));
+                num4 = lowerText.IndexOf("sgsg", (num4 + 1));
             }
-            num4 = str5.IndexOf("gssg");
+            num4 = lowerText.IndexOf("gssg");
             while (num4 != -1)
             {
                 source.Add(num4 + 2);
-                num4 = str5.IndexOf("gssg", (num4 + 1));
+                num4 = lowerText.IndexOf("gssg", (num4 + 1));
             }
-            num4 = str5.IndexOf("sggg");
+            num4 = lowerText.IndexOf("sggg");
             while (num4 != -1)
             {
                 source.Add(num4 + 2);
-                num4 = str5.IndexOf("sggg", (num4 + 1));
+                num4 = lowerText.IndexOf("sggg", (num4 + 1));
             }
-            num4 = str5.IndexOf("sggs");
+            num4 = lowerText.IndexOf("sggs");
             while (num4 != -1)
             {
                 source.Add(num4 + 2);
-                num4 = str5.IndexOf("sggs", (num4 + 1));
+                num4 = lowerText.IndexOf("sggs", (num4 + 1));
             }
             source.Sort((i, i1) => i.CompareTo(i1));
             var index = 0;
             foreach (var i in source)
             {
                 if (i == 0) continue;
-                Txt = Txt.Insert(index + i, "&shy;");
+                text = text.Insert(index + i, "&shy;");
                 index += 5;
             }
-            return Txt;
+            return text;
         }
 
         public static void CopyDirectory(string sourceDirName, string destDirName, bool copySubDirs)
         {
-            // Get the subdirectories for the specified directory.
             var dir = new DirectoryInfo(sourceDirName);
             var dirs = dir.GetDirectories();
-
             if (!dir.Exists)
                 throw new DirectoryNotFoundException("Source directory does not exist or could not be found: " + sourceDirName);
-
             if (!Directory.Exists(destDirName))
                 Directory.CreateDirectory(destDirName);
-
             var files = dir.GetFiles();
             foreach (var file in files)
                 file.CopyTo(Path.Combine(destDirName, file.Name), true);
-
             if (!copySubDirs) return;
             foreach (var subdir in dirs)
                 CopyDirectory(subdir.FullName, Path.Combine(destDirName, subdir.Name), true);
@@ -260,7 +216,7 @@ namespace Fb2Kindle
             Console.WriteLine();
         }
 
-        public static T GetAttribute<T>(ICustomAttributeProvider assembly, bool inherit = false)where T : Attribute
+        private static T GetAttribute<T>(ICustomAttributeProvider assembly, bool inherit = false)where T : Attribute
         {
             var attr = assembly.GetCustomAttributes(typeof (T), inherit);
             foreach (var o in attr)
@@ -269,7 +225,7 @@ namespace Fb2Kindle
             return null;
         }
 
-        public static DateTime GetBuildTime(Version ver)
+        private static DateTime GetBuildTime(Version ver)
         {
             var buildTime = new DateTime(2000, 1, 1).AddDays(ver.Build).AddSeconds(ver.Revision * 2);
             if (TimeZone.IsDaylightSavingTime(DateTime.Now, TimeZone.CurrentTimeZone.GetDaylightChanges(DateTime.Now.Year)))
@@ -358,7 +314,7 @@ namespace Fb2Kindle
             }
         }
 
-        public static void GetFileFromResource(string resourceName, string filename)
+        private static void GetFileFromResource(string resourceName, string filename)
         {
             var assembly = Assembly.GetExecutingAssembly();
             var scriptsPath = String.Format("{0}.{1}", assembly.GetTypes()[0].Namespace, resourceName);
@@ -406,7 +362,7 @@ namespace Fb2Kindle
                     Console.WriteLine("(Ошибка в параметрах командной строки!)");
                     break;
             }
-            ImagesHelper.CompressImagesInFolder(tempDir + "\\images");
+            CompressImagesInFolder(tempDir + "\\images");
             return true;
         }
 
@@ -422,6 +378,47 @@ namespace Fb2Kindle
             GetFileFromResource("fb2bin.exe", tempDir + "\\fb2bin.exe");
             GetFileFromResource("kindlegen.exe", tempDir + "\\kindlegen.exe");
             return tempDir;
+        }
+
+        public static void CompressImagesInFolder(string folder)
+        {
+            var files = Directory.GetFiles(folder, "*.jp*");
+            foreach (var file in files)
+            {
+                try
+                {
+                    var tempFileName = Path.GetTempFileName();
+                    using (var img = Image.FromFile(file))
+                    {
+                        var parList = new List<EncoderParameter>
+                            {
+                                new EncoderParameter(Encoder.Quality, 50L), 
+                                new EncoderParameter(Encoder.ColorDepth, 8L)
+                            };
+                        var encoderParams = new EncoderParameters(parList.Count);
+                        for (var i = 0; i < parList.Count; i++ )
+                            encoderParams.Param[i] = parList[i];
+                        var codec = GetEncoderInfo(Path.GetExtension(file));
+                        img.Save(tempFileName, codec, encoderParams);
+                    }
+                    File.Delete(file);
+                    File.Move(tempFileName, file);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message);
+                }
+            }
+        }
+
+        private static ImageCodecInfo GetEncoderInfo(string extension)
+        {
+            extension = extension.ToLower();
+            var codecs = ImageCodecInfo.GetImageEncoders();
+            for (var i = 0; i < codecs.Length; i++)
+                if (codecs[i].FilenameExtension.ToLower().Contains(extension))
+                    return codecs[i];
+            return null;
         }
     }
 }

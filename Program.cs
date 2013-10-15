@@ -1,12 +1,11 @@
 ﻿using System;
-using System.Diagnostics;
 using System.IO;
 using System.Text;
 using System.Windows.Forms;
 
 namespace Fb2Kindle
 {
-    class Module1
+    class Program
     {
         [STAThread]
         public static void Main(string[] args)
@@ -20,7 +19,7 @@ namespace Fb2Kindle
 
             var executingPath = Path.GetDirectoryName(Application.ExecutablePath);
             var settingsFile = executingPath + @"\config.xml";
-            var currentSettings = XmlSerializerHelper.ReadObjectFromFile<DefaultOptions>(settingsFile) ?? new DefaultOptions();
+            var currentSettings = XHelper.ReadObjectFromFile<DefaultOptions>(settingsFile) ?? new DefaultOptions();
             var bookPath = string.Empty;
             for (var j = 0; j < args.Length; j++)
             {
@@ -85,7 +84,7 @@ namespace Fb2Kindle
                 defaultCss = Common.GetScriptFromResource("defstyles.css");
             }
             if (currentSettings.save)
-                XmlSerializerHelper.WriteObjectToFile(settingsFile, currentSettings, true);
+                XHelper.WriteObjectToFile(settingsFile, currentSettings, true);
             if (string.IsNullOrEmpty(defaultCss))
             {
                 Console.WriteLine("Пустой файл стилей: " + currentSettings.defaultCSS);

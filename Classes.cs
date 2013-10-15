@@ -27,4 +27,27 @@ namespace Fb2Kindle
         [XmlIgnore]public bool save { get; set; } //note box
         [XmlIgnore]public bool all { get; set; } //note box
     }
+
+    public class SectionInfo
+    {
+        public int Val1 { get; set; }
+        public int Val2 { get; set; }
+        public int Val3 { get; set; }
+    }
+
+    public class DataItem
+    {
+        public string Name { get; set; }
+        public string Value { get; set; }
+
+        public DataItem()
+        {
+        }
+
+        public DataItem(string name, string value)
+        {
+            Name = name;
+            Value = value;
+        }
+    }
 }
