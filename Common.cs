@@ -283,6 +283,12 @@ namespace Fb2Kindle
             Console.WriteLine("-nch: без разбивки на главы");
             Console.WriteLine("-nh: без переносов слов");
             Console.WriteLine("-ni: без картинок");
+            Console.WriteLine("-ntoc: без оглавления");
+            Console.WriteLine("-nstitle: без информации о книге");
+            Console.WriteLine("-save: сохранить параметры запуска");
+//            Console.WriteLine("-ntitle0: без разрывов страниц в конце частей");
+//            Console.WriteLine("-dztitle: удалять пустой заголовок");
+//            Console.WriteLine("-nbox: без сносок");
             Console.WriteLine();
         }
 
@@ -432,6 +438,7 @@ namespace Fb2Kindle
                     Console.WriteLine("(Ошибка в параметрах командной строки!)");
                     break;
             }
+            ImagesHelper.CompressImagesInFolder(tempDir + "\\images");
             return true;
         }
 
