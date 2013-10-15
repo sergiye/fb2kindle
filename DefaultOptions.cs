@@ -22,6 +22,7 @@ namespace Fb2Kindle
         public string nb { get; set; }
         public string nc { get; set; }
         public string nh { get; set; }
+        public bool ni { get; set; }
         public string ntoc { get; set; }
         public string nstitle { get; set; }
         public bool nstitleb { get { return nstitle.Equals("True", StringComparison.OrdinalIgnoreCase); } }

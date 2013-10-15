@@ -28,10 +28,7 @@ namespace Fb2Kindle
                     case "-css":
                         if (args.Length > (j + 1))
                         {
-                            if (File.Exists(args[j + 1]))
-                                currentSettings.defaultCSS = args[j + 1];
-                            else
-                                Console.WriteLine("Error: Не найден указанный файл стилей: " + args[j + 1]);
+                            currentSettings.defaultCSS = args[j + 1];
                             j++;
                         }
                         break;
@@ -47,15 +44,23 @@ namespace Fb2Kindle
                     case "-nh":
                         currentSettings.nh = "True";
                         break;
+                    case "-ni":
+                        currentSettings.ni = true;
+                        break;
                     default:
 //                        if (j == 0)
                             bookPath = args[j];
                         break;
                 }
             }
-            var defaultCss = File.Exists(currentSettings.defaultCSS) 
-                ? File.ReadAllText(currentSettings.defaultCSS, Encoding.UTF8) 
-                : Common.GetScriptFromResource("defstyles.css");
+            string defaultCss;
+            if (File.Exists(currentSettings.defaultCSS))
+                defaultCss = File.ReadAllText(currentSettings.defaultCSS, Encoding.UTF8);
+            else
+            {
+                Console.WriteLine("Error: Не найден указанный файл стилей: " + currentSettings.defaultCSS);
+                defaultCss = Common.GetScriptFromResource("defstyles.css");
+            }
             if (string.IsNullOrEmpty(defaultCss))
             {
                 Console.WriteLine("Пустой файл стилей: " + currentSettings.defaultCSS);
