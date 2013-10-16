@@ -43,9 +43,6 @@ namespace Fb2Kindle
                         case "-nch":
                             currentSettings.noChapters = true;
                             break;
-                        case "-nh":
-                            currentSettings.nh = true;
-                            break;
                         case "-ni":
                             currentSettings.noImages = true;
                             break;

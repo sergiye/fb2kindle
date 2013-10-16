@@ -15,7 +15,7 @@ for /R "%fb2folder%\" %%a in ("*.fb2.zip") do del /f /q "%%~a"
 ::IF "%mode%"=="a" GOTO Kindle
 
 ::Сконвертировать
-for /R "%fb2folder%\" %%a in ("*.fb2") do "%~dp0Fb2Kindle.exe" "%%~a" -css styles.css -d -nh
+for /R "%fb2folder%\" %%a in ("*.fb2") do "%~dp0Fb2Kindle.exe" "%%~a" -css styles.css -d
 GOTO End
 :Kindle
 ::Сконвертировать

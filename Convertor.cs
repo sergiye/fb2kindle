@@ -118,8 +118,6 @@ namespace Fb2Kindle
                 itemEl.Add(Common.CreateAttribute("href", htmlFile));
                 packElement.Elements("guide").First().Add(itemEl);
                 bodyStr = Common.TabRep(bodyStr);
-                if (!_currentSettings.nh)
-                    bodyStr = Common.GipherHTML(bodyStr);
                 htmlContent = htmlContent.Insert(htmlContent.IndexOf("<body>") + 6, bodyStr).Replace("<sectio1", "<div class=\"book\"").Replace("</sectio1>", "</div>");
                 Common.SaveWithEncoding(_tempDir + @"\" + htmlFile, htmlContent);
             }
@@ -268,8 +266,6 @@ namespace Fb2Kindle
                             bodyContent = str40 + bodyContent;
                             str40 = "";
                             bodyContent = Common.TabRep(bodyContent);
-                            if (!_currentSettings.nh)
-                                bodyContent = Common.GipherHTML(bodyContent);
                             Common.SaveElementToFile(element2.ToString(), bodyContent, noBookFlag, _tempDir, bookNum);
                             var itemEl = new XElement("item");
                             itemEl.Add(Common.CreateAttribute("id", "text" + bookNum));
@@ -345,8 +341,6 @@ namespace Fb2Kindle
                             bodyContent = str40 + bodyContent;
                             str40 = "";
                             bodyContent = Common.TabRep(bodyContent);
-                            if (!_currentSettings.nh)
-                                bodyContent = Common.GipherHTML(bodyContent);
                             Common.SaveElementToFile(element2.ToString(), bodyContent, noBookFlag, _tempDir, bookNum);
 
                             var itemEl = new XElement("item");
@@ -563,7 +557,7 @@ namespace Fb2Kindle
 
                     if (!_currentSettings.nbox)
                     {
-                        Common.CreateNoteBox(book, i, bodyName, _tempDir, _currentSettings.nh);
+                        Common.CreateNoteBox(book, i, bodyName, _tempDir);
                         notesCreated = true;
                     }
                 }
