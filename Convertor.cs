@@ -8,7 +8,6 @@ namespace Fb2Kindle
 {
     class Convertor
     {
-        const string images = "images";
         private string _tempDir;
         private bool imagesPrepared;
         private readonly string _workingFolder;
@@ -53,13 +52,13 @@ namespace Fb2Kindle
                 return false;
             }
             //create temp working folder
-            _tempDir = Common.PrepareTempFolder(bookName, images, _workingFolder);
+            _tempDir = Common.PrepareTempFolder(bookName, Common.ImagesFolderName, _workingFolder);
             if (_customFontsUsed && Directory.Exists(_workingFolder + @"\fonts"))
             {
                 Directory.CreateDirectory(_tempDir + @"\fonts");
                 Common.CopyDirectory(_workingFolder + @"\fonts", _tempDir + @"\fonts", true);
             }
-            imagesPrepared = !_currentSettings.noImages && Common.ExtractImages(book, _tempDir, images);
+            imagesPrepared = !_currentSettings.noImages && Common.ExtractImages(book, _tempDir, Common.ImagesFolderName);
 
             XElement htmlElement;
             XElement packElement;
@@ -408,7 +407,7 @@ namespace Fb2Kindle
         {
             Console.Write("FB2 to HTML...");
 
-            var allText = UpdateImages(element.ToString());
+            var allText = Common.UpdateImages(element.ToString(), imagesPrepared);
             element = XElement.Parse(allText);
             var element5 = element;
             const string str = "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧЩШЬЪЫЭЮЯQWERTYUIOPASDFGHJKLZXCVBNM";
@@ -581,14 +580,14 @@ namespace Fb2Kindle
             bodyStr = bodyStr.Replace("<a ", "<A ").Replace("</a>", "</A> ");
             var str23 = "";
             var startIndex = bodyStr.IndexOf("<A ");
-            var num15 = bodyStr.IndexOf("</A>");
+            var endIndex = bodyStr.IndexOf("</A>");
             var num18 = 1;
             while (startIndex > -1)
             {
-                var num12 = bodyStr.Length - 1;
+                var bodyLen = bodyStr.Length - 1;
                 bodyStr = bodyStr.Insert(startIndex + 1, "!");
                 var oldValue = "<!A ";
-                var num47 = num12;
+                var num47 = bodyLen;
                 for (var num30 = startIndex + 4; num30 <= num47; num30++)
                 {
                     var ch = bodyStr[num30];
@@ -600,80 +599,78 @@ namespace Fb2Kindle
                     oldValue = oldValue + ch;
                 }
                 var str22 = "";
-                var num29 = oldValue.IndexOf("#");
-                if (num29 != -1)
+                var sharpIdx = oldValue.IndexOf("#");
+                if (sharpIdx != -1)
                 {
-                    var num48 = oldValue.Length;
-                    for (var num31 = num29 + 1; num31 <= num48; num31++)
+                    var oldLen = oldValue.Length;
+                    for (var i = sharpIdx + 1; i <= oldLen; i++)
                     {
-                        var ch = oldValue[num31];
+                        var ch = oldValue[i];
                         if (ch == '\"')
                             break;
                         str22 = str22 + ch;
                     }
                     str23 = "";
-                    for (var i = 0; i < notesList.Count; i++)
+                    foreach (var note in notesList)
                     {
-                        if (str22 == notesList[i].Value)
-                        {
-                            if (_currentSettings.nbox)
-                                str23 = Common.FormatToHTML(notesList[i].Name);
-                            else
-                                str23 = notesList[i].Name + "#" + str22;
-                            break;
-                        }
+                        if (!str22.Equals(note.Value)) continue;
+                        if (_currentSettings.nbox)
+                            str23 = Common.FormatToHTML(note.Name);
+                        else
+                            str23 = note.Name + "#" + str22;
+                        break;
                     }
                 }
                 bodyStr = _currentSettings.nbox
-                              ? bodyStr.Insert(num15 + 5, "<span class=\"note\">" + str23 + "</span>").Replace(oldValue, "<sup>")
+                              ? bodyStr.Insert(endIndex + 5, "<span class=\"note\">" + str23 + "</span>").Replace(oldValue, "<sup>")
                               : bodyStr.Replace(oldValue, "<a href = \"" + str23 + "\"><sup>");
                 num18++;
                 startIndex = bodyStr.IndexOf("<A ", startIndex);
                 if (startIndex != -1)
-                    num15 = bodyStr.IndexOf("</A>", startIndex);
+                    endIndex = bodyStr.IndexOf("</A>", startIndex);
             }
             bodyStr = bodyStr.Replace("</A>", _currentSettings.nbox ? "</sup>" : "</sup></a>");
-            var num2 = bodyStr.IndexOf("<body>");
+            var bodyIndex = bodyStr.IndexOf("<body>");
             var number = 1;
             var numArray = new List<SectionInfo>();
             var num10 = 1;
-            var num16 = bodyStr.IndexOf("<section");
-            var num17 = bodyStr.IndexOf("</section>");
-            while (num17 > 0)
+            var secStartIndex = bodyStr.IndexOf("<section");
+            var secEndIndex = bodyStr.IndexOf("</section>");
+            while (secEndIndex > 0)
             {
                 var si = new SectionInfo();
-                if ((num16 < num17) & (num16 != -1))
+                if ((secStartIndex < secEndIndex) & (secStartIndex != -1))
                 {
                     si.Val1 = number;
-                    si.Val2 = num16;
+                    si.Val2 = secStartIndex;
                     si.Val3 = 1;
-                    bodyStr = bodyStr.Remove(num16, 8).Insert(num16, "<sectio1");
+                    bodyStr = bodyStr.Remove(secStartIndex, 8).Insert(secStartIndex, "<sectio1");
                     number++;
                 }
                 else
                 {
                     number--;
                     si.Val1 = number;
-                    si.Val2 = num17;
+                    si.Val2 = secEndIndex;
                     si.Val3 = -1;
-                    bodyStr = bodyStr.Remove(num17, 10).Insert(num17, "</sectio1>");
+                    bodyStr = bodyStr.Remove(secEndIndex, 10).Insert(secEndIndex, "</sectio1>");
                 }
-                if (num16 != -1)
+                if (secStartIndex != -1)
                 {
-                    num16 = bodyStr.IndexOf("<section", num16);
+                    secStartIndex = bodyStr.IndexOf("<section", secStartIndex);
                 }
-                num17 = bodyStr.IndexOf("</section>", num17);
+                secEndIndex = bodyStr.IndexOf("</section>", secEndIndex);
                 numArray.Add(si);
                 num10++;
             }
-            num16 = bodyStr.IndexOf("<title");
-            num17 = bodyStr.IndexOf("</title>");
-            while (num16 > 0)
+            secStartIndex = bodyStr.IndexOf("<title");
+            secEndIndex = bodyStr.IndexOf("</title>");
+            while (secStartIndex > 0)
             {
                 number = 0;
                 for (var i = 1; i <= num10 - 2; i++)
                 {
-                    if ((num16 > numArray[i].Val2) && (num16 < numArray[i + 1].Val2))
+                    if ((secStartIndex > numArray[i].Val2) && (secStartIndex < numArray[i + 1].Val2))
                     {
                         number = numArray[i].Val1;
                         break;
@@ -683,9 +680,9 @@ namespace Fb2Kindle
                     number = 9;
                 if (number < 0)
                     number = 0;
-                bodyStr = bodyStr.Remove(num16, 6).Insert(num16, "<titl" + number).Remove(num17, 8).Insert(num17, "</titl" + number + ">");
-                num16 = bodyStr.IndexOf("<title", num17);
-                num17 = bodyStr.IndexOf("</title>", num17);
+                bodyStr = bodyStr.Remove(secStartIndex, 6).Insert(secStartIndex, "<titl" + number).Remove(secEndIndex, 8).Insert(secEndIndex, "</titl" + number + ">");
+                secStartIndex = bodyStr.IndexOf("<title", secEndIndex);
+                secEndIndex = bodyStr.IndexOf("</title>", secEndIndex);
             }
             packEl = new XElement("ncx");
             headEl = new XElement("head");
@@ -760,8 +757,8 @@ namespace Fb2Kindle
                 element5 = packEl;
             }
             var prevTag = "";
-            var flag11 = false;
-            var flag15 = true;
+            var specTag = false;
+            var tagClosed = true;
             titles = new List<DataItem>();
             index = bodyStr.IndexOf("<");
             while (index > -1)
@@ -778,7 +775,7 @@ namespace Fb2Kindle
                 if (curTag.Contains("<titl") || curTag.Contains("<epigraph") || curTag.Contains("<subtitle") || curTag.Contains("<div") ||
                     curTag.Contains("<poem") || curTag.Contains("<cite"))
                 {
-                    flag11 = false;
+                    specTag = false;
                 }
                 if (curTag.Contains("<p ") || curTag.Contains("<p>"))
                 {
@@ -788,7 +785,7 @@ namespace Fb2Kindle
                             prevTag.Equals("</titl4>") || prevTag.Equals("</titl5>") || prevTag.Equals("</titl6>") || prevTag.Equals("</titl7>") ||
                             prevTag.Equals("</titl8>") || prevTag.Equals("</titl9>") || prevTag.Equals("</titl1>") || prevTag.Equals("</subtitle>") || prevTag.Equals("</epigraph>"))
                         {
-                            flag11 = true;
+                            specTag = true;
                             while (ch != '<')
                             {
                                 ch = bodyStr[index];
@@ -803,7 +800,7 @@ namespace Fb2Kindle
                                 index++;
                             }
                         }
-                        else if (flag11)
+                        else if (specTag)
                         {
                             while (ch != '<')
                             {
@@ -811,9 +808,7 @@ namespace Fb2Kindle
                                 if (ch != ' ')
                                 {
                                     if (str.IndexOf(ch) != -1)
-                                    {
                                         bodyStr = bodyStr.Remove(index, 1).Insert(index, "<span class=\"dropcaps2\">" + ch + "</span>");
-                                    }
                                     break;
                                 }
                                 index++;
@@ -826,115 +821,42 @@ namespace Fb2Kindle
                     titleIdx++;
                     bodyStr = bodyStr.Insert(num9 + 6, " id=\"title" + titleIdx + "\"");
                     index = bodyStr.IndexOf(">", index);
-                    num16 = bodyStr.IndexOf("</titl", index);
-                    var substring = bodyStr.Substring(index + 1, (num16 - index) - 1);
+                    secStartIndex = bodyStr.IndexOf("</titl", index);
+                    var substring = bodyStr.Substring(index + 1, (secStartIndex - index) - 1);
                     var buf1 = "";
                     var buf2 = "";
-                    for (var num34 = 0; num34 < substring.Length; num34++)
+                    foreach (var t in substring)
                     {
-                        ch = substring[num34];
-                        switch (ch)
+                        switch (t)
                         {
                             case '<':
-                                flag15 = false;
+                                tagClosed = false;
                                 buf2 = "";
                                 break;
                             case '>':
                                 if (buf2 == "/p")
                                     buf1 = buf1 + " ";
-                                flag15 = true;
+                                tagClosed = true;
                                 break;
                             default:
-                                if (flag15)
-                                {
-                                    buf1 = buf1 + ch;
-                                }
+                                if (tagClosed)
+                                    buf1 = buf1 + t;
                                 else
-                                {
-                                    buf2 = buf2 + ch;
-                                }
+                                    buf2 = buf2 + t;
                                 break;
                         }
                     }
                     titles.Add(new DataItem("title" + titleIdx, buf1));
                 }
                 if (curTag.Equals("</div>") || curTag.Equals("</cite>") || curTag.Equals("</poem>"))
-                {
-                    flag11 = true;
-                }
+                    specTag = true;
                 if (!curTag.Equals("<empty-line/>") && !curTag.Equals("<empty-line />"))
-                {
                     prevTag = curTag;
-                }
                 index = bodyStr.IndexOf("<", index);
             }
-            bodyStr = bodyStr.Replace("<text-author>", "<p class=\"text-author\">").Replace("</text-author>", "</p>").
-                              Replace("<empty-line />", "<br/>").Replace("<epigraph ", "<div class = \"epigraph\" ").
-                              Replace("<epigraph>", "<div class = \"epigraph\">").Replace("</epigraph>", "</div>").
-                              Replace("<empty-line/>", "<br/>").Replace("<subtitle ", "<div class = \"subtitle\" ").
-                              Replace("<subtitle>", "<div class = \"subtitle\">").Replace("<cite ", "<div class = \"cite\" ").
-                              Replace("<cite>", "<div class = \"cite\">").Replace("</cite>", "</div>").Replace("</subtitle>", "</div>").
-                              Replace("<emphasis>", "<i>").Replace("</emphasis>", "</i>").Replace("<strong>", "<b>").
-                              Replace("</strong>", "</b>").Replace("<poem", "<div class=\"poem\"").Replace("</poem>", "</div>").
-                              Replace("<stanza>", "<br/>").Replace("</stanza>", "<br/>").Replace("<v>", "<p>").Replace("</v>", "</p>").
-                              Replace("<titl1", "<div class = \"title\"><div class = \"title1\"").Replace("</titl1>", "</div></div>").
-                              Replace("<titl2", "<div class = \"title\"><div class = \"title2\"").Replace("</titl2>", "</div></div>").
-                              Replace("<titl3", "<div class = \"title\"><div class = \"title3\"").Replace("</titl3>", "</div></div>").
-                              Replace("<titl4", "<div class = \"title\"><div class = \"title4\"").Replace("</titl4>", "</div></div>").
-                              Replace("<titl5", "<div class = \"title\"><div class = \"title5\"").Replace("</titl5>", "</div></div>").
-                              Replace("<titl6", "<div class = \"title\"><div class = \"title6\"").Replace("</titl6>", "</div></div>").
-                              Replace("<titl7", "<div class = \"title\"><div class = \"title7\"").Replace("</titl7>", "</div></div>").
-                              Replace("<titl8", "<div class = \"title\"><div class = \"title8\"").Replace("</titl8>", "</div></div>").
-                              Replace("<titl9", "<div class = \"title\"><div class = \"title9\"").Replace("</titl9>", "</div></div>").
-                              Replace("<body", "<sectio1").Replace("</body>", "</sectio1>").
-                              Replace("<titl0", "<div class = \"title\"><div class = \"title0\"").Replace("</titl0>", "</div></div>");
+            bodyStr = Common.ReplaceSomeTags(bodyStr);
             Console.WriteLine("(OK)");
             return element5;
-        }
-
-        private string UpdateImages(string allText)
-        {
-            var startIndex = allText.IndexOf("<image");
-            var num12 = allText.Length - 1;
-            while (startIndex > 0)
-            {
-                var imgSrc = "";
-                var oldValue = "<image";
-                var num42 = num12;
-                char ch;
-                for (var k = startIndex + 6; k <= num42; k++)
-                {
-                    ch = allText[k];
-                    if (ch == '>')
-                    {
-                        oldValue = oldValue + ch;
-                        break;
-                    }
-                    oldValue = oldValue + ch;
-                }
-                string newValue;
-                if (imagesPrepared)
-                {
-                    var idx = oldValue.IndexOf("#");
-                    if (idx != -1)
-                    {
-                        var length = oldValue.Length;
-                        for (var i = idx + 1; i <= length; i++)
-                        {
-                            ch = oldValue[i];
-                            if (ch == '\"')
-                                break;
-                            imgSrc = imgSrc + ch;
-                        }
-                    }
-                    newValue = "<div class=\"image\"><img src=\"" + images + "/" + imgSrc + "\"/></div>";
-                }
-                else
-                    newValue = " ";
-                allText = allText.Replace(oldValue, newValue);
-                startIndex = allText.IndexOf("<image", startIndex);
-            }
-            return allText;
         }
     }
 }
