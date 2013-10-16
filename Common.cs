@@ -28,9 +28,6 @@ namespace Fb2Kindle
         public bool noChapters { get; set; }
         public bool noImages { get; set; }
         public bool ntoc { get; set; }
-        public bool nstitle { get; set; }
-        public bool ntitle0 { get; set; }
-        public bool dztitle { get; set; } //del zero title
         public string defaultCSS { get; set; }
         public string DropCap { get; set; }
         public bool ContentOf { get; set; }
@@ -127,9 +124,6 @@ namespace Fb2Kindle
             Console.WriteLine("-ni: no images");
             Console.WriteLine("-ntoc: no table of content");
             Console.WriteLine("-nbox: notes in the text");
-            Console.WriteLine("-nstitle: no title page");
-            Console.WriteLine("-ntitle0: skip title separation");
-            Console.WriteLine("-dztitle: skip empty header");
             Console.WriteLine("-save: save parameters to be used at the next start");
             Console.WriteLine("-a: process all files in current folder");
             Console.WriteLine();

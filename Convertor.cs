@@ -233,81 +233,61 @@ namespace Fb2Kindle
             var start = 0;
             var str40 = "";
             var flag17 = false;
-            var flag18 = false;
-            var noBookFlag = false;
             var num9 = 2;
             while (num17 != -1)
             {
                 string bodyContent;
+                bool noBookFlag;
                 if ((num16 < num17) & (num16 != -1))
                 {
                     if (!flag17)
                     {
                         bodyContent = bodyStr.Substring(start, num16 - start) + "</sectio1>";
-                        if (_currentSettings.dztitle && (bookNum == 0))
+                        noBookFlag = !XElement.Parse(bodyContent).Elements("p").Any();
+                        bodyContent = str40 + bodyContent;
+                        str40 = "";
+                        bodyContent = Common.TabRep(bodyContent);
+                        Common.SaveElementToFile(element2.ToString(), bodyContent, noBookFlag, _tempDir, bookNum);
+                        var itemEl = new XElement("item");
+                        itemEl.Add(Common.CreateAttribute("id", "text" + bookNum));
+                        itemEl.Add(new XAttribute("media-type", "text/x-oeb1-document"));
+                        itemEl.Add(Common.CreateAttribute("href", "book" + bookNum + ".html"));
+                        itemEl.Add("");
+                        element3.Elements("manifest").First().Add(itemEl);
+                        itemEl = new XElement("itemref");
+                        itemEl.Add(Common.CreateAttribute("idref", "text" + bookNum));
+                        element3.Elements("spine").First().Add(itemEl);
+                        index = 0;
+                        while (index < titles.Count)
                         {
-                            flag18 = true;
-                        }
-                        else if (!XElement.Parse(bodyContent).Elements("p").Any())
-                        {
-                            if (_currentSettings.ntitle0)
+                            var str34 = titles[index].Value;
+                            var str35 = titles[index].Name;
+                            if (bodyContent.IndexOf("id=\"" + str35 + "\"") != -1)
                             {
-                                str40 = str40 + bodyContent;
-                                flag18 = true;
-                            }
-                            noBookFlag = true;
-                        }
-                        else
-                        {
-                            noBookFlag = false;
-                        }
-                        if (!flag18)
-                        {
-                            bodyContent = str40 + bodyContent;
-                            str40 = "";
-                            bodyContent = Common.TabRep(bodyContent);
-                            Common.SaveElementToFile(element2.ToString(), bodyContent, noBookFlag, _tempDir, bookNum);
-                            var itemEl = new XElement("item");
-                            itemEl.Add(Common.CreateAttribute("id", "text" + bookNum));
-                            itemEl.Add(new XAttribute("media-type", "text/x-oeb1-document"));
-                            itemEl.Add(Common.CreateAttribute("href", "book" + bookNum + ".html"));
-                            itemEl.Add("");
-                            element3.Elements("manifest").First().Add(itemEl);
-                            itemEl = new XElement("itemref");
-                            itemEl.Add(Common.CreateAttribute("idref", "text" + bookNum));
-                            element3.Elements("spine").First().Add(itemEl);
-                            index = 0;
-                            while (index < titles.Count)
-                            {
-                                var str34 = titles[index].Value;
-                                var str35 = titles[index].Name;
-                                if (bodyContent.IndexOf("id=\"" + str35 + "\"") != -1)
+                                itemEl = new XElement("navPoint");
+                                itemEl.Add(Common.CreateAttribute("id", "navpoint-" + num9));
+                                itemEl.Add(Common.CreateAttribute("playOrder", num9));
+                                var element14 = new XElement("navLabel");
+                                var element13 = new XElement("text");
+                                element13.Add(str34);
+                                element14.Add(element13);
+                                itemEl.Add(element14);
+                                element14 = new XElement("content");
+                                element14.Add(Common.CreateAttribute("src", "book" + bookNum + ".html#" + str35));
+                                itemEl.Add(element14);
+                                ncxElement.Elements("navMap").First().Add(itemEl);
+                                if (!_currentSettings.ntoc)
                                 {
-                                    itemEl = new XElement("navPoint");
-                                    itemEl.Add(Common.CreateAttribute("id", "navpoint-" + num9));
-                                    itemEl.Add(Common.CreateAttribute("playOrder", num9));
-                                    var element14 = new XElement("navLabel");
-                                    var element13 = new XElement("text");
-                                    element13.Add(str34);
-                                    element14.Add(element13);
+                                    itemEl = new XElement("li");
+                                    element14 = new XElement("a");
+                                    element14.Add(Common.CreateAttribute("href", "book" + bookNum + ".html#" + str35));
+                                    element14.Add(str34);
                                     itemEl.Add(element14);
-                                    element14 = new XElement("content");
-                                    element14.Add(Common.CreateAttribute("src", "book" + bookNum + ".html#" + str35));
-                                    itemEl.Add(element14);
-                                    ncxElement.Elements("navMap").First().Add(itemEl);
-                                    if (!_currentSettings.ntoc)
-                                    {
-                                        itemEl = new XElement("li");
-                                        element14 = new XElement("a");
-                                        element14.Add(Common.CreateAttribute("href", "book" + bookNum + ".html#" + str35));
-                                        element14.Add(str34);
-                                        itemEl.Add(element14);
-                                        element5.Elements("body").First().Elements("ul").First().Add(itemEl);
-                                    }
-                                    num9++;
+                                    element5.Elements("body").First().Elements("ul").First().Add(itemEl);
                                 }
-                                index++;
+                                num9++;
                             }
+                            index++;
                         }
                     }
                     start = num16;
@@ -319,79 +299,59 @@ namespace Fb2Kindle
                     if (!flag17)
                     {
                         bodyContent = bodyStr.Substring(start, (num17 - start) + 11);
-                        if (_currentSettings.dztitle && (bookNum == 0))
-                        {
-                            flag18 = true;
-                        }
-                        else if (!XElement.Parse(bodyContent).Elements("p").Any())
-                        {
-                            if (_currentSettings.ntitle0)
-                            {
-                                str40 = str40 + bodyContent;
-                                flag18 = true;
-                            }
-                            noBookFlag = true;
-                        }
-                        else
-                        {
-                            noBookFlag = false;
-                        }
-                        if (!flag18)
-                        {
-                            bodyContent = str40 + bodyContent;
-                            str40 = "";
-                            bodyContent = Common.TabRep(bodyContent);
-                            Common.SaveElementToFile(element2.ToString(), bodyContent, noBookFlag, _tempDir, bookNum);
+                        noBookFlag = !XElement.Parse(bodyContent).Elements("p").Any();
+                        bodyContent = str40 + bodyContent;
+                        str40 = "";
+                        bodyContent = Common.TabRep(bodyContent);
+                        Common.SaveElementToFile(element2.ToString(), bodyContent, noBookFlag, _tempDir, bookNum);
 
-                            var itemEl = new XElement("item");
-                            itemEl.Add(Common.CreateAttribute("id", "text" + bookNum));
-                            itemEl.Add(new XAttribute("media-type", "text/x-oeb1-document"));
-                            itemEl.Add(Common.CreateAttribute("href", "book" + bookNum + ".html"));
-                            itemEl.Add("");
-                            element3.Elements("manifest").First().Add(itemEl);
-                            itemEl = new XElement("itemref");
-                            itemEl.Add(Common.CreateAttribute("idref", "text" + bookNum));
-                            element3.Elements("spine").First().Add(itemEl);
-                            for (index = 0; index < titles.Count; index++)
-                            {
-                                var str34 = titles[index].Value;
-                                var str35 = titles[index].Name;
-                                if (bodyContent.IndexOf("id=\"" + str35 + "\"") == -1) continue;
-                                itemEl = new XElement("navPoint");
-                                itemEl.Add(Common.CreateAttribute("id", "navpoint-" + num9));
-                                itemEl.Add(Common.CreateAttribute("playOrder", num9));
-                                var navLabel = new XElement("navLabel");
-                                var textEl = new XElement("text");
-                                textEl.Add(str34);
-                                navLabel.Add(textEl);
-                                itemEl.Add(navLabel);
-                                navLabel = new XElement("content");
-                                navLabel.Add(Common.CreateAttribute("src", "book" + bookNum + ".html#" + str35));
-                                itemEl.Add(navLabel);
-                                ncxElement.Elements("navMap").First().Add(itemEl);
+                        var itemEl = new XElement("item");
+                        itemEl.Add(Common.CreateAttribute("id", "text" + bookNum));
+                        itemEl.Add(new XAttribute("media-type", "text/x-oeb1-document"));
+                        itemEl.Add(Common.CreateAttribute("href", "book" + bookNum + ".html"));
+                        itemEl.Add("");
+                        element3.Elements("manifest").First().Add(itemEl);
+                        itemEl = new XElement("itemref");
+                        itemEl.Add(Common.CreateAttribute("idref", "text" + bookNum));
+                        element3.Elements("spine").First().Add(itemEl);
+                        for (index = 0; index < titles.Count; index++)
+                        {
+                            var str34 = titles[index].Value;
+                            var str35 = titles[index].Name;
+                            if (bodyContent.IndexOf("id=\"" + str35 + "\"") == -1) continue;
+                            itemEl = new XElement("navPoint");
+                            itemEl.Add(Common.CreateAttribute("id", "navpoint-" + num9));
+                            itemEl.Add(Common.CreateAttribute("playOrder", num9));
+                            var navLabel = new XElement("navLabel");
+                            var textEl = new XElement("text");
+                            textEl.Add(str34);
+                            navLabel.Add(textEl);
+                            itemEl.Add(navLabel);
+                            navLabel = new XElement("content");
+                            navLabel.Add(Common.CreateAttribute("src", "book" + bookNum + ".html#" + str35));
+                            itemEl.Add(navLabel);
+                            ncxElement.Elements("navMap").First().Add(itemEl);
 
-                                if (!_currentSettings.ntoc)
-                                {
-                                    itemEl = new XElement("li");
-                                    navLabel = new XElement("a");
-                                    navLabel.Add(Common.CreateAttribute("href", "book" + bookNum + ".html#" + str35));
-                                    navLabel.Add(str34);
-                                    itemEl.Add(navLabel);
-                                    element5.Elements("body").First().Elements("ul").First().Add(itemEl);
-                                }
-                                num9++;
+                            if (!_currentSettings.ntoc)
+                            {
+                                itemEl = new XElement("li");
+                                navLabel = new XElement("a");
+                                navLabel.Add(Common.CreateAttribute("href", "book" + bookNum + ".html#" + str35));
+                                navLabel.Add(str34);
+                                itemEl.Add(navLabel);
+                                element5.Elements("body").First().Elements("ul").First().Add(itemEl);
                             }
+                            num9++;
                         }
                     }
                     flag17 = true;
                     start = num17;
                     num17 = bodyStr.IndexOf("</sectio1>", (num17 + 1));
                 }
-                if (!flag17 & !flag18)
+                if (!flag17)
                 {
                     bookNum++;
                 }
-                flag18 = false;
             }
             var referenceEl = new XElement("reference");
             referenceEl.Add(new XAttribute("type", "text"));
@@ -411,8 +371,7 @@ namespace Fb2Kindle
             const string str = "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧЩШЬЪЫЭЮЯQWERTYUIOPASDFGHJKLZXCVBNM";
 
             playOrder = 0;
-            if (!_currentSettings.nstitle)
-                Common.CreateTitlePage(book, _tempDir);
+            Common.CreateTitlePage(book, _tempDir);
 
             htmlElement = new XElement("html");
             var linkEl = new XElement("link");
@@ -473,7 +432,8 @@ namespace Fb2Kindle
             headEl.Add("");
             packEl.Add(headEl);
             packElement = packEl;
-            if (!_currentSettings.nstitle)
+
+            //if (!_currentSettings.nstitle)
             {
                 packEl = new XElement("item");
                 packEl.Add(new XAttribute("id", "booktitle"));
@@ -628,7 +588,7 @@ namespace Fb2Kindle
             headEl.Add("");
             packEl.Add(headEl);
             ncxElement = packEl;
-            if (!_currentSettings.nstitle)
+            //if (!_currentSettings.nstitle)
             {
                 packEl = new XElement("navPoint");
                 packEl.Add(new XAttribute("id", "navpoint-0"));
