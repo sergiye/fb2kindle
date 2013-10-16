@@ -40,9 +40,6 @@
   <ItemGroup>
     <Compile Include="AssemblyInfo.cs" />
     <Compile Include="Convertor.cs" />
-    <Compile Include="FictionBook2.cs">
-      <SubType>code</SubType>
-    </Compile>
     <Compile Include="XHelper.cs" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
@@ -69,9 +66,6 @@
   <ItemGroup>
     <None Include="convertAll.cmd">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="FictionBook2.xsd">
-      <SubType>Designer</SubType>
     </None>
     <None Include="fonts\DroidSerif-Bold.ttf">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
