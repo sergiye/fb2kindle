@@ -49,15 +49,6 @@ namespace Fb2Kindle
                         case "-ntoc":
                             currentSettings.ntoc = true;
                             break;
-                        case "-nstitle":
-                            currentSettings.nstitle = true;
-                            break;
-                        case "-ntitle0":
-                            currentSettings.ntitle0 = true;
-                            break;
-                        case "-dztitle":
-                            currentSettings.dztitle = true;
-                            break;
                         case "-nbox":
                             currentSettings.nbox = true;
                             break;
