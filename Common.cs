@@ -66,6 +66,8 @@ namespace Fb2Kindle
 
     public static class Common
     {
+        public const string ImagesFolderName = "images";
+
         public static string CodStr(string str)
         {
             return String.IsNullOrEmpty(str) ? str : Convert.ToBase64String(Encoding.Unicode.GetBytes(str));
@@ -571,6 +573,75 @@ namespace Fb2Kindle
             {
                 return null;
             }
+        }
+
+        public static string UpdateImages(string allText, bool imagesPrepared)
+        {
+            var startIndex = allText.IndexOf("<image");
+            var num12 = allText.Length - 1;
+            while (startIndex > 0)
+            {
+                var imgSrc = "";
+                var oldValue = "<image";
+                var num42 = num12;
+                char ch;
+                for (var k = startIndex + 6; k <= num42; k++)
+                {
+                    ch = allText[k];
+                    if (ch == '>')
+                    {
+                        oldValue = oldValue + ch;
+                        break;
+                    }
+                    oldValue = oldValue + ch;
+                }
+                string newValue;
+                if (imagesPrepared)
+                {
+                    var idx = oldValue.IndexOf("#");
+                    if (idx != -1)
+                    {
+                        var length = oldValue.Length;
+                        for (var i = idx + 1; i <= length; i++)
+                        {
+                            ch = oldValue[i];
+                            if (ch == '\"')
+                                break;
+                            imgSrc = imgSrc + ch;
+                        }
+                    }
+                    newValue = "<div class=\"image\"><img src=\"" + ImagesFolderName + "/" + imgSrc + "\"/></div>";
+                }
+                else
+                    newValue = " ";
+                allText = allText.Replace(oldValue, newValue);
+                startIndex = allText.IndexOf("<image", startIndex);
+            }
+            return allText;
+        }
+
+        public static string ReplaceSomeTags(string bodyStr)
+        {
+            return bodyStr.Replace("<text-author>", "<p class=\"text-author\">").Replace("</text-author>", "</p>").
+                           Replace("<empty-line />", "<br/>").Replace("<epigraph ", "<div class = \"epigraph\" ").
+                           Replace("<epigraph>", "<div class = \"epigraph\">").Replace("</epigraph>", "</div>").
+                           Replace("<empty-line/>", "<br/>").Replace("<subtitle ", "<div class = \"subtitle\" ").
+                           Replace("<subtitle>", "<div class = \"subtitle\">").Replace("<cite ", "<div class = \"cite\" ").
+                           Replace("<cite>", "<div class = \"cite\">").Replace("</cite>", "</div>").Replace("</subtitle>", "</div>").
+                           Replace("<emphasis>", "<i>").Replace("</emphasis>", "</i>").Replace("<strong>", "<b>").
+                           Replace("</strong>", "</b>").Replace("<poem", "<div class=\"poem\"").Replace("</poem>", "</div>").
+                           Replace("<stanza>", "<br/>").Replace("</stanza>", "<br/>").Replace("<v>", "<p>").Replace("</v>", "</p>").
+                           Replace("<titl1", "<div class = \"title\"><div class = \"title1\"").Replace("</titl1>", "</div></div>").
+                           Replace("<titl2", "<div class = \"title\"><div class = \"title2\"").Replace("</titl2>", "</div></div>").
+                           Replace("<titl3", "<div class = \"title\"><div class = \"title3\"").Replace("</titl3>", "</div></div>").
+                           Replace("<titl4", "<div class = \"title\"><div class = \"title4\"").Replace("</titl4>", "</div></div>").
+                           Replace("<titl5", "<div class = \"title\"><div class = \"title5\"").Replace("</titl5>", "</div></div>").
+                           Replace("<titl6", "<div class = \"title\"><div class = \"title6\"").Replace("</titl6>", "</div></div>").
+                           Replace("<titl7", "<div class = \"title\"><div class = \"title7\"").Replace("</titl7>", "</div></div>").
+                           Replace("<titl8", "<div class = \"title\"><div class = \"title8\"").Replace("</titl8>", "</div></div>").
+                           Replace("<titl9", "<div class = \"title\"><div class = \"title9\"").Replace("</titl9>", "</div></div>").
+                           Replace("<body", "<sectio1").Replace("</body>", "</sectio1>").
+                           Replace("<titl0", "<div class = \"title\"><div class = \"title0\"").Replace("</titl0>", "</div></div>");
         }
     }
 }
