@@ -26,7 +26,6 @@ namespace Fb2Kindle
         public bool deleteOrigin { get; set; }
         public bool noBig { get; set; }
         public bool noChapters { get; set; }
-        public bool nh { get; set; }
         public bool noImages { get; set; }
         public bool ntoc { get; set; }
         public bool nstitle { get; set; }
@@ -99,132 +98,6 @@ namespace Fb2Kindle
             return htmltxt2;
         }
 
-        public static string GipherHTML(string htmltxt)
-        {
-            htmltxt = htmltxt.Replace("<p>", "<p1>");
-            htmltxt = htmltxt.Replace("<p ", "<p1 ");
-            htmltxt = htmltxt.Replace("</p>", "</p1>");
-            var index = htmltxt.IndexOf("<p1");
-            var startIndex = htmltxt.IndexOf("</p1>");
-            var length = (startIndex - index) + 6;
-            for (var i = 1; index > 0; i++)
-            {
-                var txt = htmltxt.Substring(index, length);
-                htmltxt = htmltxt.Remove(index, length);
-                txt = TransText(txt).Remove(0, 4);
-                htmltxt = htmltxt.Insert(index, "<p" + txt.Remove(txt.Length - 5, 5) + "</p>");
-                index = htmltxt.IndexOf("<p1", index);
-                startIndex = htmltxt.IndexOf("</p1>", startIndex);
-                length = (startIndex - index) + 6;
-            }
-            return htmltxt;
-        }
-
-        public static string TransText(string text)
-        {
-            var lowerText = text.ToLower();
-            const string str6 = "ьъ";
-            const string str2 = "аеёийоуыэюяaeiouy";
-            const string str3 = "бвгджзклмнпрстфхцчшщbcdfghjklmnpqrstvwxz";
-            var num2 = lowerText.Length - 1;
-            var flag = true;
-            var num6 = num2;
-            for (var i = 0; i <= num6; i++)
-            {
-                var ch = lowerText[i];
-                switch (ch)
-                {
-                    case '<':
-                        flag = false;
-                        break;
-                    case '>':
-                        flag = true;
-                        break;
-                    default:
-                        if (!flag)
-                            lowerText = lowerText.Remove(i, 1).Insert(i, "_");
-                        if ((str6.IndexOf(ch) != -1) & flag)
-                            lowerText = lowerText.Remove(i, 1).Insert(i, "x");
-                        else if ((str2.IndexOf(ch) != -1) & flag)
-                            lowerText = lowerText.Remove(i, 1).Insert(i, "g");
-                        else if ((str3.IndexOf(ch) != -1) & flag)
-                            lowerText = lowerText.Remove(i, 1).Insert(i, "s");
-                        break;
-                }
-            }
-            var source = new List<int>();
-            var num4 = lowerText.IndexOf("xgg");
-            while (num4 != -1)
-            {
-                source.Add(num4 + 1);
-                num4 = lowerText.IndexOf("xgg", (num4 + 1));
-            }
-            num4 = lowerText.IndexOf("xgs");
-            while (num4 != -1)
-            {
-                source.Add(num4 + 1);
-                num4 = lowerText.IndexOf("xgs", (num4 + 1));
-            }
-            num4 = lowerText.IndexOf("xsg");
-            while (num4 != -1)
-            {
-                source.Add(num4 + 1);
-                num4 = lowerText.IndexOf("xsg", (num4 + 1));
-            }
-            num4 = lowerText.IndexOf("xss");
-            while (num4 != -1)
-            {
-                source.Add(num4 + 1);
-                num4 = lowerText.IndexOf("xss", (num4 + 1));
-            }
-            num4 = lowerText.IndexOf("gssssg");
-            while (num4 != -1)
-            {
-                source.Add(num4 + 3);
-                num4 = lowerText.IndexOf("gssssg", (num4 + 1));
-            }
-            num4 = lowerText.IndexOf("gsssg");
-            while (num4 != -1)
-            {
-                source.Add(num4 + 2);
-                source.Add(num4 + 3);
-                num4 = lowerText.IndexOf("gsssg", (num4 + 1));
-            }
-            num4 = lowerText.IndexOf("sgsg");
-            while (num4 != -1)
-            {
-                source.Add(num4 + 2);
-                num4 = lowerText.IndexOf("sgsg", (num4 + 1));
-            }
-            num4 = lowerText.IndexOf("gssg");
-            while (num4 != -1)
-            {
-                source.Add(num4 + 2);
-                num4 = lowerText.IndexOf("gssg", (num4 + 1));
-            }
-            num4 = lowerText.IndexOf("sggg");
-            while (num4 != -1)
-            {
-                source.Add(num4 + 2);
-                num4 = lowerText.IndexOf("sggg", (num4 + 1));
-            }
-            num4 = lowerText.IndexOf("sggs");
-            while (num4 != -1)
-            {
-                source.Add(num4 + 2);
-                num4 = lowerText.IndexOf("sggs", (num4 + 1));
-            }
-            source.Sort((i, i1) => i.CompareTo(i1));
-            var index = 0;
-            foreach (var i in source)
-            {
-                if (i == 0) continue;
-                text = text.Insert(index + i, "&shy;");
-                index += 5;
-            }
-            return text;
-        }
-
         public static void CopyDirectory(string sourceDirName, string destDirName, bool copySubDirs)
         {
             var dir = new DirectoryInfo(sourceDirName);
@@ -251,7 +124,6 @@ namespace Fb2Kindle
             Console.WriteLine("-d: delete source file after convertion");
             Console.WriteLine("-nb: no big letters at the chapter start");
             Console.WriteLine("-nch: no chapters");
-            Console.WriteLine("-nh: no words breaking");
             Console.WriteLine("-ni: no images");
             Console.WriteLine("-ntoc: no table of content");
             Console.WriteLine("-nbox: notes in the text");
@@ -618,7 +490,7 @@ namespace Fb2Kindle
                            Replace("<titl0", "<div class = \"title\"><div class = \"title0\"").Replace("</titl0>", "</div></div>");
         }
 
-        public static void CreateNoteBox(XElement book, int i, string bodyName, string folder, bool nh)
+        public static void CreateNoteBox(XElement book, int i, string bodyName, string folder)
         {
             if (book == null) return;
             var packEl = new XElement("html");
@@ -635,8 +507,6 @@ namespace Fb2Kindle
                 headEl.Add(body.Nodes());
             packEl.Add(headEl);
             var htmltxt = FormatToHTML(packEl.ToString());
-            if (!nh)
-                htmltxt = GipherHTML(htmltxt);
             SaveWithEncoding(folder + @"\" + bodyName + ".html", htmltxt);
         }
     }
