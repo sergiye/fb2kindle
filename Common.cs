@@ -5,12 +5,65 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Reflection;
+using System.Runtime.Serialization;
 using System.Text;
+using System.Xml;
 using System.Xml.Linq;
+using System.Xml.Serialization;
 using Encoder = System.Drawing.Imaging.Encoder;
 
 namespace Fb2Kindle 
 {
+    [Serializable]
+    public class DefaultOptions
+    {
+        public DefaultOptions()
+        {
+            DropCap = "АБВГДЕЖЗИКЛМНОПРСТУФХЦЧЩШЭЮЯ";
+        }
+
+        public bool deleteOrigin { get; set; }
+        public bool noBig { get; set; }
+        public bool noChapters { get; set; }
+        public bool nh { get; set; }
+        public bool noImages { get; set; }
+        public bool ntoc { get; set; }
+        public bool nstitle { get; set; }
+        public bool ntitle0 { get; set; }
+        public bool dztitle { get; set; } //del zero title
+        public string defaultCSS { get; set; }
+        public string DropCap { get; set; }
+        public bool ContentOf { get; set; }
+        public bool nbox { get; set; } //note box
+        [XmlIgnore]
+        public bool save { get; set; }
+        [XmlIgnore]
+        public bool all { get; set; }
+    }
+
+    public class SectionInfo
+    {
+        public int Val1 { get; set; }
+        public int Val2 { get; set; }
+        public int Val3 { get; set; }
+    }
+
+    public class DataItem
+    {
+        public string Name { get; set; }
+        public string Value { get; set; }
+
+        public DataItem()
+        {
+        }
+
+        public DataItem(string name, string value)
+        {
+            Name = name;
+            Value = value;
+        }
+    }
+
     public static class Common
     {
         public static string CodStr(string str)
@@ -198,22 +251,22 @@ namespace Fb2Kindle
         public static void ShowHelpText()
         {
             Console.WriteLine();
-            Console.WriteLine(Assembly.GetExecutingAssembly().GetName().Name + " <book.fb2> [-css <styles.css>] [-d] [-nb] [-nch] [-nh] [-ni]");
+            Console.WriteLine(Assembly.GetExecutingAssembly().GetName().Name + " <book.fb2> [-css <styles.css>] [-d] [-nh] [-nb] [-nch] [-ni]");
             Console.WriteLine();
-            Console.WriteLine("<book.fb2>: входной файл формата fb2");
-            Console.WriteLine("-css <styles.css>: использование файла стилей <MyStyles.css> при конвертации");
-            Console.WriteLine("-d: удалить входной файл формата fb2");
-            Console.WriteLine("-nb: без буквицы");
-            Console.WriteLine("-nch: без разбивки на главы");
-            Console.WriteLine("-nh: без переносов слов");
-            Console.WriteLine("-ni: без картинок");
-            Console.WriteLine("-ntoc: без оглавления");
-            Console.WriteLine("-nbox: сноски в тексте");
-            Console.WriteLine("-nstitle: без информации о книге");
-            Console.WriteLine("-ntitle0: без разрыва после описания книги");
-            Console.WriteLine("-dztitle: удалять пустой заголовок");
-            Console.WriteLine("-save: сохранить параметры запуска");
-            Console.WriteLine("-a: все файлы в текущей папке");
+            Console.WriteLine("<book.fb2>: input fb2 file");
+            Console.WriteLine("-css <styles.css>: styles used in destination book");
+            Console.WriteLine("-d: delete source file after convertion");
+            Console.WriteLine("-nb: no big letters at the chapter start");
+            Console.WriteLine("-nch: no chapters");
+            Console.WriteLine("-nh: no words breaking");
+            Console.WriteLine("-ni: no images");
+            Console.WriteLine("-ntoc: no table of content");
+            Console.WriteLine("-nbox: notes in the text");
+            Console.WriteLine("-nstitle: no title page");
+            Console.WriteLine("-ntitle0: skip title separation");
+            Console.WriteLine("-dztitle: skip empty header");
+            Console.WriteLine("-save: save parameters to be used at the next start");
+            Console.WriteLine("-a: process all files in current folder");
             Console.WriteLine();
         }
 
@@ -245,9 +298,6 @@ namespace Fb2Kindle
             var copyright = GetAttribute<AssemblyCopyrightAttribute>(assembly);
             if (copyright != null)
                 Console.WriteLine(copyright.Copyright);
-//            var description = GetAttribute<AssemblyDescriptionAttribute>(assembly);
-//            if (description != null)
-//                Console.WriteLine(description.Description);
             var ver = Assembly.GetExecutingAssembly().GetName().Version;
             Console.WriteLine("Version: " + ver + "; Build time: " + GetBuildTime(ver).ToString("yyyy/MM/dd HH:mm:ss"));
             Console.WriteLine();
@@ -257,17 +307,17 @@ namespace Fb2Kindle
         {
             if (!File.Exists(tempDir + @"\kindlegen.exe"))
             {
-                Console.WriteLine("!!!Не найден kindlegen.exe, конвертация в mobi невозможна!!!");
+                Console.WriteLine("kindlegen.exe not found");
                 Directory.Delete(tempDir, true);
                 return false;
             }
-            Console.Write("Конвертируем в mobi(KF8)...");
+            Console.Write("Creating mobi (KF8)...");
             var startInfo = new ProcessStartInfo { FileName = tempDir + @"\kindlegen.exe", Arguments = "\"" + tempDir + @"\" + bookName + ".opf\"", WindowStyle = ProcessWindowStyle.Hidden };
             var process2 = Process.Start(startInfo);
             process2.WaitForExit();
             if (process2.ExitCode == 2)
             {
-                Console.WriteLine("Error: Не удалось сконвертировать в mobi");
+                Console.WriteLine("Error converting to mobi");
                 return false;
             }
             
@@ -282,7 +332,7 @@ namespace Fb2Kindle
                 versionNumber++;
             }
             File.Move(tempDir + @"\" + bookName + ".mobi", Path.Combine(resultPath, resultName) + ".mobi");
-            Console.WriteLine("(Ok)");
+            Console.WriteLine("(OK)");
             return true;
         }
 
@@ -335,14 +385,14 @@ namespace Fb2Kindle
         public static bool ExtractImages(XElement book, string tempDir, string images)
         {
             if (book == null) return true;
-            Console.Write("Извлекаем картинки...");
+            Console.Write("Extracting images...");
             foreach (var img in book.Elements("binary"))
             {
                 var filePath = String.Format("{0}\\{1}\\{2}", tempDir, images, img.Attribute("id").Value);
                 File.WriteAllBytes(filePath, Convert.FromBase64String(img.Value));
             }
             CompressImagesInFolder(tempDir + "\\images");
-            Console.WriteLine("(Ok)");
+            Console.WriteLine("(OK)");
             return true;
         }
 
@@ -400,21 +450,126 @@ namespace Fb2Kindle
             return null;
         }
 
-        public static XElement AddAuthorInfo(XElement avtorbook)
+        public static XElement AddAuthorsInfo(IEnumerable<XElement> avtorbook)
         {
             var element2 = new XElement("h2");
-            element2.Add(XHelper.Value(avtorbook.Elements("last-name")));
-            element2.Add(new XElement("br"));
-            element2.Add(XHelper.Value(avtorbook.Elements("first-name")));
-            element2.Add(new XElement("br"));
-            element2.Add(XHelper.Value(avtorbook.Elements("middle-name")));
-            element2.Add(new XElement("br"));
+            foreach (var ai in avtorbook)
+            {
+                element2.Add(Value(ai.Elements("last-name")));
+                element2.Add(new XElement("br"));
+                element2.Add(Value(ai.Elements("first-name")));
+                element2.Add(new XElement("br"));
+                element2.Add(Value(ai.Elements("middle-name")));
+                element2.Add(new XElement("br"));
+            }
             return element2;
         }
 
         public static string TabRep(string Str)
         {
             return Str.Replace(Convert.ToChar(160).ToString(), "&nbsp;").Replace(Convert.ToChar(0xad).ToString(), "&shy;");
+        }
+
+        public static void CreateTitlePage(XElement element, string folder)
+        {
+            var linkEl = new XElement("link");
+            linkEl.Add(new XAttribute("type", "text/css"));
+            linkEl.Add(new XAttribute("href", "book.css"));
+            linkEl.Add(new XAttribute("rel", "Stylesheet"));
+            var headEl = new XElement("head");
+            headEl.Add(linkEl);
+            var content = new XElement("html");
+            content.Add(headEl);
+            headEl = new XElement("body");
+            linkEl = new XElement("div");
+            linkEl.Add(new XAttribute("class", "supertitle"));
+            linkEl.Add(new XAttribute("align", "center"));
+            linkEl.Add(new XAttribute("id", "booktitle"));
+            linkEl.Add(AddAuthorsInfo(element.Elements("description").Elements("title-info").Elements("author")));
+            linkEl.Add(new XElement("p", String.Format("{0} {1}", AttributeValue(element.Elements("description").Elements("title-info").Elements("sequence"), "name"), AttributeValue(element.Elements("description").Elements("title-info").Elements("sequence"), "number"))));
+            linkEl.Add(new XElement("br"));
+            var pEl = new XElement("p");
+            pEl.Add(new XAttribute("class", "text-name"));
+            pEl.Add(Value(element.Elements("description").Elements("title-info").Elements("book-title")));
+            linkEl.Add(pEl);
+            linkEl.Add(new XElement("br"));
+            linkEl.Add(new XElement("p", Value(element.Elements("description").Elements("title-info").Elements("annotation"))));
+            linkEl.Add(new XElement("br"));
+            linkEl.Add(new XElement("br"));
+            linkEl.Add(new XElement("p", Value(element.Elements("description").Elements("publish-info").Elements("publisher"))));
+            linkEl.Add(new XElement("p", Value(element.Elements("description").Elements("publish-info").Elements("city"))));
+            linkEl.Add(new XElement("p", Value(element.Elements("description").Elements("publish-info").Elements("year"))));
+            linkEl.Add(new XElement("br"));
+            linkEl.Add(new XElement("br"));
+            linkEl.Add(new XElement("br"));
+            linkEl.Add(new XElement("p", "Kindle version created by © Fb2Kindle"));
+            linkEl.Add(new XElement("p", DateTime.Now.ToLongDateString()));
+            linkEl.Add(new XElement("p", "Copyright © Sergey Egoshin (egoshin.sergey@gmail.com)"));
+            linkEl.Add(new XElement("br"));
+            headEl.Add(linkEl);
+            content.Add(headEl);
+            content.Save(folder + @"\booktitle.html");
+        }
+
+        public static string Value(IEnumerable<XElement> source)
+        {
+            foreach (var element in source)
+                return element.Value;
+            return null;
+        }
+
+        public static string AttributeValue(XElement source, XName name)
+        {
+            return (string) source.Attribute(name);
+        }
+
+        public static string AttributeValue(IEnumerable<XElement> source, XName name)
+        {
+            foreach (var element in source)
+                return (string) element.Attribute(name);
+            return null;
+        }
+
+        public static XAttribute CreateAttribute(XName name, object value)
+        {
+            return value == null ? null : new XAttribute(name, value);
+        }
+
+        public static void WriteObjectToFile(string filePath, object value, bool useFormatting = false)
+        {
+            if (value == null) return;
+            var builder = new StringBuilder();
+            var xmlFormatting = new XmlWriterSettings { OmitXmlDeclaration = true };
+            if (useFormatting)
+            {
+                xmlFormatting.ConformanceLevel = ConformanceLevel.Document;
+                xmlFormatting.Indent = true;
+                xmlFormatting.NewLineOnAttributes = true;
+            }
+            using (Stream file = File.OpenWrite(filePath))
+            {
+                var ns = new XmlSerializerNamespaces();
+                ns.Add("", "");
+                new XmlSerializer(value.GetType()).Serialize(file, value, ns);
+            }
+        }
+
+        public static T ReadObjectFromFile<T>(string fileName) where T : class
+        {
+            try
+            {
+                if (!File.Exists(fileName))
+                    return null;
+                using (Stream file = File.OpenRead(fileName))
+                {
+                    var serializer = new XmlSerializer(typeof(T));
+                    return (T)serializer.Deserialize(file);
+                }
+            }
+            catch (SerializationException)
+            {
+                return null;
+            }
         }
     }
 }
