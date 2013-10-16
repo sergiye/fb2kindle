@@ -122,8 +122,7 @@ namespace Fb2Kindle
                 if (!_currentSettings.nh)
                     bodyStr = Common.GipherHTML(bodyStr);
                 htmlContent = htmlContent.Insert(htmlContent.IndexOf("<body>") + 6, bodyStr).Replace("<sectio1", "<div class=\"book\"").Replace("</sectio1>", "</div>");
-                htmlContent = Common.AddEncodingToXml(htmlContent);
-                File.WriteAllText(_tempDir + @"\" + htmlFile, htmlContent);
+                Common.SaveWithEncoding(_tempDir + @"\" + htmlFile, htmlContent);
             }
             else
             {
@@ -533,12 +532,12 @@ namespace Fb2Kindle
                     var list = element.Elements("body").ElementAtOrDefault(i).Descendants("section").ToList();
                     if (list.Count > 0)
                     {
-                        for (var idx = 0; idx < list.Count; idx++)
+                        foreach (var t in list)
                         {
                             var di = new DataItem();
                             if (_currentSettings.nbox)
                             {
-                                var list2 = list[idx].Descendants("p").ToList();
+                                var list2 = t.Descendants("p").ToList();
                                 var boldBox = "<b>";
                                 for (var idx2 = 0; idx2 < list2.Count; idx2++)
                                 {
@@ -554,7 +553,7 @@ namespace Fb2Kindle
                             {
                                 di.Name = bodyName + ".html";
                             }
-                            di.Value = Common.AttributeValue(list[idx], "id");
+                            di.Value = Common.AttributeValue(t, "id");
                             notesList.Add(di);
                         }
                     }
@@ -571,12 +570,10 @@ namespace Fb2Kindle
                         headEl = new XElement("body");
                         headEl.Add(element.Elements("body").ElementAtOrDefault(i).Nodes());
                         packEl.Add(headEl);
-                        var element9 = packEl;
-                        var htmltxt = Common.FormatToHTML(element9.ToString());
+                        var htmltxt = Common.FormatToHTML(packEl.ToString());
                         if (!_currentSettings.nh)
                             htmltxt = Common.GipherHTML(htmltxt);
-                        htmltxt = Common.AddEncodingToXml(htmltxt);
-                        File.WriteAllText(_tempDir + @"\" + bodyName + ".html", htmltxt);
+                        Common.SaveWithEncoding(_tempDir + @"\" + bodyName + ".html", htmltxt);
                         flag13 = true;
                     }
                 }
