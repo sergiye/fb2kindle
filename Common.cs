@@ -336,18 +336,19 @@ namespace Fb2Kindle
             return true;
         }
 
-        public static string AddEncodingToXml(string text)
+        public static void SaveWithEncoding(string filePath, string text)
         {
-            return "<?xml version=\"1.0\" encoding=\"utf-8\"?>" + text;
+            File.WriteAllText(filePath, text, Encoding.UTF8);
+//            File.WriteAllText(filePath, "<?xml version=\"1.0\" encoding=\"utf-8\"?>" + text, Encoding.UTF8);
         }
 
         public static void SaveElementToFile(string elementData, string bodyContent, bool noBookFlag, string folder, int bookNum)
         {
-            var text = AddEncodingToXml(elementData);
+            var text = elementData;
             text = text.Insert(text.IndexOf("<body>") + 6, bodyContent);
             text = text.Replace("<sectio1", noBookFlag ? "<div class=\"nobook\"" : "<div class=\"book\"");
             text = text.Replace("</sectio1>", "</div>");
-            File.WriteAllText(folder + @"\book" + bookNum + ".html", text);
+            SaveWithEncoding(folder + @"\book" + bookNum + ".html", text);
         }
 
         public static string GetScriptFromResource(string resourceName)
