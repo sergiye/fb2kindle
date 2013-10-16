@@ -293,15 +293,14 @@ namespace Fb2Kindle
         {
 //            Console.Clear();
             var assembly = Assembly.GetExecutingAssembly();
-            Console.WriteLine(assembly.GetName().Name);
+            var ver = Assembly.GetExecutingAssembly().GetName().Version;
+            Console.WriteLine(assembly.GetName().Name + " Version: " + ver.ToString(3) + "; Build time: " + GetBuildTime(ver).ToString("yyyy/MM/dd HH:mm:ss"));
             var title = GetAttribute<AssemblyTitleAttribute>(assembly);
             if (title != null)
                 Console.WriteLine(title.Title);
-            var copyright = GetAttribute<AssemblyCopyrightAttribute>(assembly);
-            if (copyright != null)
-                Console.WriteLine(copyright.Copyright);
-            var ver = Assembly.GetExecutingAssembly().GetName().Version;
-            Console.WriteLine("Version: " + ver + "; Build time: " + GetBuildTime(ver).ToString("yyyy/MM/dd HH:mm:ss"));
+//            var copyright = GetAttribute<AssemblyCopyrightAttribute>(assembly);
+//            if (copyright != null)
+//                Console.WriteLine(copyright.Copyright);
             Console.WriteLine();
         }
 

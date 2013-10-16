@@ -9,9 +9,11 @@ for /R "%fb2folder%\" %%a in ("*.fb2.zip") do "%~dp07za.exe" e "%%~a" -y -o"%%~d
 for /R "%fb2folder%\" %%a in ("*.fb2.zip") do del /f /q "%%~a"
 
 ::Для работы на киндле
-GOTO Kindle
+::GOTO Kindle
+
 ::SET /P mode=Enter 'a' if you start it from Kindle: 
 ::IF "%mode%"=="a" GOTO Kindle
+
 ::Сконвертировать
 for /R "%fb2folder%\" %%a in ("*.fb2") do "%~dp0Fb2Kindle.exe" "%%~a" -css styles.css -d -nh
 GOTO End
