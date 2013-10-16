@@ -6,6 +6,7 @@ using System.Drawing.Imaging;
 using System.IO;
 using System.Reflection;
 using System.Text;
+using System.Xml.Linq;
 using Encoder = System.Drawing.Imaging.Encoder;
 
 namespace Fb2Kindle 
@@ -331,12 +332,15 @@ namespace Fb2Kindle
             }
         }
 
-        public static bool ExtractImages(FictionBookBinary[] binary, string tempDir, string images)
+        public static bool ExtractImages(XElement book, string tempDir, string images)
         {
-            if (binary == null || binary.Length == 0) return true;
+            if (book == null) return true;
             Console.Write("Извлекаем картинки...");
-            foreach (var img in binary)
-                File.WriteAllBytes(string.Format("{0}\\{1}\\{2}", tempDir, images, img.id), img.Value);
+            foreach (var img in book.Elements("binary"))
+            {
+                var filePath = String.Format("{0}\\{1}\\{2}", tempDir, images, img.Attribute("id").Value);
+                File.WriteAllBytes(filePath, Convert.FromBase64String(img.Value));
+            }
             CompressImagesInFolder(tempDir + "\\images");
             Console.WriteLine("(Ok)");
             return true;
@@ -394,6 +398,23 @@ namespace Fb2Kindle
                 if (codecs[i].FilenameExtension.ToLower().Contains(extension))
                     return codecs[i];
             return null;
+        }
+
+        public static XElement AddAuthorInfo(XElement avtorbook)
+        {
+            var element2 = new XElement("h2");
+            element2.Add(XHelper.Value(avtorbook.Elements("last-name")));
+            element2.Add(new XElement("br"));
+            element2.Add(XHelper.Value(avtorbook.Elements("first-name")));
+            element2.Add(new XElement("br"));
+            element2.Add(XHelper.Value(avtorbook.Elements("middle-name")));
+            element2.Add(new XElement("br"));
+            return element2;
+        }
+
+        public static string TabRep(string Str)
+        {
+            return Str.Replace(Convert.ToChar(160).ToString(), "&nbsp;").Replace(Convert.ToChar(0xad).ToString(), "&shy;");
         }
     }
 }
