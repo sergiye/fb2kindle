@@ -95,7 +95,7 @@ namespace Fb2Kindle
                 var conv = new Convertor(currentSettings, executingPath, defaultCss);
                 if (currentSettings.all)
                 {
-                    var files = Directory.GetFiles(executingPath, "*.fb2");
+                    var files = Directory.GetFiles(executingPath, "*.fb2", SearchOption.AllDirectories);
                     if (files.Length == 0)
                         Console.WriteLine("No fb2 files found");
                     foreach (var file in files)

@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.Serialization;
 using System.Text;
@@ -67,16 +68,6 @@ namespace Fb2Kindle
     public static class Common
     {
         public const string ImagesFolderName = "images";
-
-        public static string CodStr(string str)
-        {
-            return String.IsNullOrEmpty(str) ? str : Convert.ToBase64String(Encoding.Unicode.GetBytes(str));
-        }
-
-        public static string DeCodStr(string str)
-        {
-            return String.IsNullOrEmpty(str) ? str : Encoding.Unicode.GetString(Convert.FromBase64String(str));
-        }
 
         public static string FormatToHTML(string htmltxt2)
         {
@@ -472,7 +463,7 @@ namespace Fb2Kindle
             return Str.Replace(Convert.ToChar(160).ToString(), "&nbsp;").Replace(Convert.ToChar(0xad).ToString(), "&shy;");
         }
 
-        public static void CreateTitlePage(XElement element, string folder)
+        public static void CreateTitlePage(XElement book, string folder)
         {
             var linkEl = new XElement("link");
             linkEl.Add(new XAttribute("type", "text/css"));
@@ -487,20 +478,20 @@ namespace Fb2Kindle
             linkEl.Add(new XAttribute("class", "supertitle"));
             linkEl.Add(new XAttribute("align", "center"));
             linkEl.Add(new XAttribute("id", "booktitle"));
-            linkEl.Add(AddAuthorsInfo(element.Elements("description").Elements("title-info").Elements("author")));
-            linkEl.Add(new XElement("p", String.Format("{0} {1}", AttributeValue(element.Elements("description").Elements("title-info").Elements("sequence"), "name"), AttributeValue(element.Elements("description").Elements("title-info").Elements("sequence"), "number"))));
+            linkEl.Add(AddAuthorsInfo(book.Elements("description").Elements("title-info").Elements("author")));
+            linkEl.Add(new XElement("p", String.Format("{0} {1}", AttributeValue(book.Elements("description").Elements("title-info").Elements("sequence"), "name"), AttributeValue(book.Elements("description").Elements("title-info").Elements("sequence"), "number"))));
             linkEl.Add(new XElement("br"));
             var pEl = new XElement("p");
             pEl.Add(new XAttribute("class", "text-name"));
-            pEl.Add(Value(element.Elements("description").Elements("title-info").Elements("book-title")));
+            pEl.Add(Value(book.Elements("description").Elements("title-info").Elements("book-title")));
             linkEl.Add(pEl);
             linkEl.Add(new XElement("br"));
-            linkEl.Add(new XElement("p", Value(element.Elements("description").Elements("title-info").Elements("annotation"))));
+            linkEl.Add(new XElement("p", Value(book.Elements("description").Elements("title-info").Elements("annotation"))));
             linkEl.Add(new XElement("br"));
             linkEl.Add(new XElement("br"));
-            linkEl.Add(new XElement("p", Value(element.Elements("description").Elements("publish-info").Elements("publisher"))));
-            linkEl.Add(new XElement("p", Value(element.Elements("description").Elements("publish-info").Elements("city"))));
-            linkEl.Add(new XElement("p", Value(element.Elements("description").Elements("publish-info").Elements("year"))));
+            linkEl.Add(new XElement("p", Value(book.Elements("description").Elements("publish-info").Elements("publisher"))));
+            linkEl.Add(new XElement("p", Value(book.Elements("description").Elements("publish-info").Elements("city"))));
+            linkEl.Add(new XElement("p", Value(book.Elements("description").Elements("publish-info").Elements("year"))));
             linkEl.Add(new XElement("br"));
             linkEl.Add(new XElement("br"));
             linkEl.Add(new XElement("br"));
@@ -574,49 +565,33 @@ namespace Fb2Kindle
             }
         }
 
-        public static string UpdateImages(string allText, bool imagesPrepared)
+        public static void UpdateImages(XElement book, bool imagesPrepared)
         {
-            var startIndex = allText.IndexOf("<image");
-            var num12 = allText.Length - 1;
-            while (startIndex > 0)
+            var list = book.Descendants("image");
+            foreach (var element in list)
             {
-                var imgSrc = "";
-                var oldValue = "<image";
-                var num42 = num12;
-                char ch;
-                for (var k = startIndex + 6; k <= num42; k++)
-                {
-                    ch = allText[k];
-                    if (ch == '>')
-                    {
-                        oldValue = oldValue + ch;
-                        break;
-                    }
-                    oldValue = oldValue + ch;
-                }
-                string newValue;
                 if (imagesPrepared)
                 {
-                    var idx = oldValue.IndexOf("#");
-                    if (idx != -1)
+                    var src = element.Attribute("href").Value;
+                    element.Name = "div";
+                    element.Attributes().Remove();
+                    element.RemoveNodes();
+                    if (!String.IsNullOrEmpty(src))
                     {
-                        var length = oldValue.Length;
-                        for (var i = idx + 1; i <= length; i++)
-                        {
-                            ch = oldValue[i];
-                            if (ch == '\"')
-                                break;
-                            imgSrc = imgSrc + ch;
-                        }
+                        src = src.Replace("#", "");
+                        element.SetAttributeValue("class", "image");
+                        var imgEl = new XElement("img");
+                        imgEl.SetAttributeValue("src", ImagesFolderName + "/" + src);
+                        element.Add(imgEl);
                     }
-                    newValue = "<div class=\"image\"><img src=\"" + ImagesFolderName + "/" + imgSrc + "\"/></div>";
                 }
                 else
-                    newValue = " ";
-                allText = allText.Replace(oldValue, newValue);
-                startIndex = allText.IndexOf("<image", startIndex);
+                {
+                    element.Name = "div";
+                    element.Attributes().Remove();
+                    element.RemoveNodes();
+                }
             }
-            return allText;
         }
 
         public static string ReplaceSomeTags(string bodyStr)
@@ -641,6 +616,28 @@ namespace Fb2Kindle
                            Replace("<titl9", "<div class = \"title\"><div class = \"title9\"").Replace("</titl9>", "</div></div>").
                            Replace("<body", "<sectio1").Replace("</body>", "</sectio1>").
                            Replace("<titl0", "<div class = \"title\"><div class = \"title0\"").Replace("</titl0>", "</div></div>");
+        }
+
+        public static void CreateNoteBox(XElement book, int i, string bodyName, string folder, bool nh)
+        {
+            if (book == null) return;
+            var packEl = new XElement("html");
+            var headEl = new XElement("head");
+            var linkEl = new XElement("link");
+            linkEl.Add(new XAttribute("type", "text/css"));
+            linkEl.Add(new XAttribute("href", "book.css"));
+            linkEl.Add(new XAttribute("rel", "Stylesheet"));
+            headEl.Add(linkEl);
+            packEl.Add(headEl);
+            headEl = new XElement("body");
+            var body = book.Elements("body").ElementAtOrDefault(i);
+            if (body != null)
+                headEl.Add(body.Nodes());
+            packEl.Add(headEl);
+            var htmltxt = FormatToHTML(packEl.ToString());
+            if (!nh)
+                htmltxt = GipherHTML(htmltxt);
+            SaveWithEncoding(folder + @"\" + bodyName + ".html", htmltxt);
         }
     }
 }
