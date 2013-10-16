@@ -49,7 +49,7 @@ namespace Fb2Kindle
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Error: Неизвестный формат файла: " + ex.Message);
+                Console.WriteLine("Unknown file format: " + ex.Message);
                 return false;
             }
             //create temp working folder
@@ -82,22 +82,22 @@ namespace Fb2Kindle
                     var str34 = titles[index].Value;
                     var str35 = titles[index].Name;
                     var navPoint = new XElement("navPoint");
-                    navPoint.Add(XHelper.CreateAttribute("id", "navpoint-" + (index + 2).ToString()));
-                    navPoint.Add(XHelper.CreateAttribute("playOrder", (index + 2).ToString()));
+                    navPoint.Add(Common.CreateAttribute("id", "navpoint-" + (index + 2).ToString()));
+                    navPoint.Add(Common.CreateAttribute("playOrder", (index + 2).ToString()));
                     var navLabel = new XElement("navLabel");
                     var textEl = new XElement("text");
                     textEl.Add(str34);
                     navLabel.Add(textEl);
                     navPoint.Add(navLabel);
                     navLabel = new XElement("content");
-                    navLabel.Add(XHelper.CreateAttribute("src", htmlFile + "#" + str35));
+                    navLabel.Add(Common.CreateAttribute("src", htmlFile + "#" + str35));
                     navPoint.Add(navLabel);
                     ncxElement.Elements("navMap").First().Add(navPoint);
                     if (!_currentSettings.ntoc)
                     {
                         navPoint = new XElement("li");
                         navLabel = new XElement("a");
-                        navLabel.Add(XHelper.CreateAttribute("href", htmlFile + "#" + str35));
+                        navLabel.Add(Common.CreateAttribute("href", htmlFile + "#" + str35));
                         navLabel.Add(str34);
                         navPoint.Add(navLabel);
                         element5.Elements("body").First().Elements("ul").First().Add(navPoint);
@@ -107,7 +107,7 @@ namespace Fb2Kindle
                 var itemEl = new XElement("item");
                 itemEl.Add(new XAttribute("id", "text"));
                 itemEl.Add(new XAttribute("media-type", "text/x-oeb1-document"));
-                itemEl.Add(XHelper.CreateAttribute("href", htmlFile));
+                itemEl.Add(Common.CreateAttribute("href", htmlFile));
                 itemEl.Add("");
                 packElement.Elements("manifest").First().Add(itemEl);
                 itemEl = new XElement("itemref");
@@ -116,7 +116,7 @@ namespace Fb2Kindle
                 itemEl = new XElement("reference");
                 itemEl.Add(new XAttribute("type", "text"));
                 itemEl.Add(new XAttribute("title", "Book"));
-                itemEl.Add(XHelper.CreateAttribute("href", htmlFile));
+                itemEl.Add(Common.CreateAttribute("href", htmlFile));
                 packElement.Elements("guide").First().Add(itemEl);
                 bodyStr = Common.TabRep(bodyStr);
                 if (!_currentSettings.nh)
@@ -132,8 +132,8 @@ namespace Fb2Kindle
             if (!_currentSettings.ntoc && _currentSettings.ContentOf)
             {
                 var navPoint = new XElement("navPoint");
-                navPoint.Add(XHelper.CreateAttribute("id", "navpoint-" + (index + 2).ToString()));
-                navPoint.Add(XHelper.CreateAttribute("playOrder", (index + 2).ToString()));
+                navPoint.Add(Common.CreateAttribute("id", "navpoint-" + (index + 2).ToString()));
+                navPoint.Add(Common.CreateAttribute("playOrder", (index + 2).ToString()));
                 var navLabel = new XElement("navLabel");
                 var textEl = new XElement("text");
                 textEl.Add("Contents");
@@ -163,31 +163,31 @@ namespace Fb2Kindle
                 foreach (var item in notesList2)
                 {
                     var itemEl = new XElement("item");
-                    itemEl.Add(XHelper.CreateAttribute("id", item.Value));
+                    itemEl.Add(Common.CreateAttribute("id", item.Value));
                     itemEl.Add(new XAttribute("media-type", "text/x-oeb1-document"));
-                    itemEl.Add(XHelper.CreateAttribute("href", item.Name));
+                    itemEl.Add(Common.CreateAttribute("href", item.Name));
                     itemEl.Add("");
                     packElement.Elements("manifest").First().Add(itemEl);
                     itemEl = new XElement("itemref");
-                    itemEl.Add(XHelper.CreateAttribute("idref", item.Value));
+                    itemEl.Add(Common.CreateAttribute("idref", item.Value));
                     packElement.Elements("spine").First().Add(itemEl);
                     itemEl = new XElement("navPoint");
-                    itemEl.Add(XHelper.CreateAttribute("id", "navpoint-" + item.Value));
-                    itemEl.Add(XHelper.CreateAttribute("playOrder", num9));
+                    itemEl.Add(Common.CreateAttribute("id", "navpoint-" + item.Value));
+                    itemEl.Add(Common.CreateAttribute("playOrder", num9));
                     var navLabel = new XElement("navLabel");
                     var textEl = new XElement("text");
                     textEl.Add(item.Value);
                     navLabel.Add(textEl);
                     itemEl.Add(navLabel);
                     navLabel = new XElement("content");
-                    navLabel.Add(XHelper.CreateAttribute("src", item.Name));
+                    navLabel.Add(Common.CreateAttribute("src", item.Name));
                     itemEl.Add(navLabel);
                     ncxElement.Elements("navMap").First().Add(itemEl);
                     if (!_currentSettings.ntoc)
                     {
                         itemEl = new XElement("li");
                         navLabel = new XElement("a");
-                        navLabel.Add(XHelper.CreateAttribute("href", item.Name));
+                        navLabel.Add(Common.CreateAttribute("href", item.Name));
                         navLabel.Add(item.Value);
                         itemEl.Add(navLabel);
                         element5.Elements("body").First().Elements("ul").First().Add(itemEl);
@@ -218,14 +218,14 @@ namespace Fb2Kindle
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Ошибка очистки временной папки: " + ex.Message);
+                Console.WriteLine("Error clearing temp folder: " + ex.Message);
             }
             return result;
         }
 
         private int CreateChapters(string bodyStr, XElement element2, XElement element3, List<DataItem> titles, XElement ncxElement, XElement element5, ref int index)
         {
-            Console.Write("Разбиваем на главы...");
+            Console.Write("Chapters creation...");
             var bookNum = 0;
             var num16 = bodyStr.IndexOf("<sectio1", 2);
             var num17 = bodyStr.IndexOf("</sectio1>");
@@ -269,13 +269,13 @@ namespace Fb2Kindle
                                 bodyContent = Common.GipherHTML(bodyContent);
                             Common.SaveElementToFile(element2.ToString(), bodyContent, noBookFlag, _tempDir, bookNum);
                             var itemEl = new XElement("item");
-                            itemEl.Add(XHelper.CreateAttribute("id", "text" + bookNum));
+                            itemEl.Add(Common.CreateAttribute("id", "text" + bookNum));
                             itemEl.Add(new XAttribute("media-type", "text/x-oeb1-document"));
-                            itemEl.Add(XHelper.CreateAttribute("href", "book" + bookNum + ".html"));
+                            itemEl.Add(Common.CreateAttribute("href", "book" + bookNum + ".html"));
                             itemEl.Add("");
                             element3.Elements("manifest").First().Add(itemEl);
                             itemEl = new XElement("itemref");
-                            itemEl.Add(XHelper.CreateAttribute("idref", "text" + bookNum));
+                            itemEl.Add(Common.CreateAttribute("idref", "text" + bookNum));
                             element3.Elements("spine").First().Add(itemEl);
                             index = 0;
                             while (index < titles.Count)
@@ -285,22 +285,22 @@ namespace Fb2Kindle
                                 if (bodyContent.IndexOf("id=\"" + str35 + "\"") != -1)
                                 {
                                     itemEl = new XElement("navPoint");
-                                    itemEl.Add(XHelper.CreateAttribute("id", "navpoint-" + num9));
-                                    itemEl.Add(XHelper.CreateAttribute("playOrder", num9));
+                                    itemEl.Add(Common.CreateAttribute("id", "navpoint-" + num9));
+                                    itemEl.Add(Common.CreateAttribute("playOrder", num9));
                                     var element14 = new XElement("navLabel");
                                     var element13 = new XElement("text");
                                     element13.Add(str34);
                                     element14.Add(element13);
                                     itemEl.Add(element14);
                                     element14 = new XElement("content");
-                                    element14.Add(XHelper.CreateAttribute("src", "book" + bookNum + ".html#" + str35));
+                                    element14.Add(Common.CreateAttribute("src", "book" + bookNum + ".html#" + str35));
                                     itemEl.Add(element14);
                                     ncxElement.Elements("navMap").First().Add(itemEl);
                                     if (!_currentSettings.ntoc)
                                     {
                                         itemEl = new XElement("li");
                                         element14 = new XElement("a");
-                                        element14.Add(XHelper.CreateAttribute("href", "book" + bookNum + ".html#" + str35));
+                                        element14.Add(Common.CreateAttribute("href", "book" + bookNum + ".html#" + str35));
                                         element14.Add(str34);
                                         itemEl.Add(element14);
                                         element5.Elements("body").First().Elements("ul").First().Add(itemEl);
@@ -347,44 +347,42 @@ namespace Fb2Kindle
                             Common.SaveElementToFile(element2.ToString(), bodyContent, noBookFlag, _tempDir, bookNum);
 
                             var itemEl = new XElement("item");
-                            itemEl.Add(XHelper.CreateAttribute("id", "text" + bookNum));
+                            itemEl.Add(Common.CreateAttribute("id", "text" + bookNum));
                             itemEl.Add(new XAttribute("media-type", "text/x-oeb1-document"));
-                            itemEl.Add(XHelper.CreateAttribute("href", "book" + bookNum + ".html"));
+                            itemEl.Add(Common.CreateAttribute("href", "book" + bookNum + ".html"));
                             itemEl.Add("");
                             element3.Elements("manifest").First().Add(itemEl);
                             itemEl = new XElement("itemref");
-                            itemEl.Add(XHelper.CreateAttribute("idref", "text" + bookNum));
+                            itemEl.Add(Common.CreateAttribute("idref", "text" + bookNum));
                             element3.Elements("spine").First().Add(itemEl);
                             for (index = 0; index < titles.Count; index++)
                             {
                                 var str34 = titles[index].Value;
                                 var str35 = titles[index].Name;
-                                if (bodyContent.IndexOf("id=\"" + str35 + "\"") != -1)
-                                {
-                                    itemEl = new XElement("navPoint");
-                                    itemEl.Add(XHelper.CreateAttribute("id", "navpoint-" + num9));
-                                    itemEl.Add(XHelper.CreateAttribute("playOrder", num9));
-                                    var navLabel = new XElement("navLabel");
-                                    var textEl = new XElement("text");
-                                    textEl.Add(str34);
-                                    navLabel.Add(textEl);
-                                    itemEl.Add(navLabel);
-                                    navLabel = new XElement("content");
-                                    navLabel.Add(XHelper.CreateAttribute("src", "book" + bookNum + ".html#" + str35));
-                                    itemEl.Add(navLabel);
-                                    ncxElement.Elements("navMap").First().Add(itemEl);
+                                if (bodyContent.IndexOf("id=\"" + str35 + "\"") == -1) continue;
+                                itemEl = new XElement("navPoint");
+                                itemEl.Add(Common.CreateAttribute("id", "navpoint-" + num9));
+                                itemEl.Add(Common.CreateAttribute("playOrder", num9));
+                                var navLabel = new XElement("navLabel");
+                                var textEl = new XElement("text");
+                                textEl.Add(str34);
+                                navLabel.Add(textEl);
+                                itemEl.Add(navLabel);
+                                navLabel = new XElement("content");
+                                navLabel.Add(Common.CreateAttribute("src", "book" + bookNum + ".html#" + str35));
+                                itemEl.Add(navLabel);
+                                ncxElement.Elements("navMap").First().Add(itemEl);
 
-                                    if (!_currentSettings.ntoc)
-                                    {
-                                        itemEl = new XElement("li");
-                                        navLabel = new XElement("a");
-                                        navLabel.Add(XHelper.CreateAttribute("href", "book" + bookNum + ".html#" + str35));
-                                        navLabel.Add(str34);
-                                        itemEl.Add(navLabel);
-                                        element5.Elements("body").First().Elements("ul").First().Add(itemEl);
-                                    }
-                                    num9++;
+                                if (!_currentSettings.ntoc)
+                                {
+                                    itemEl = new XElement("li");
+                                    navLabel = new XElement("a");
+                                    navLabel.Add(Common.CreateAttribute("href", "book" + bookNum + ".html#" + str35));
+                                    navLabel.Add(str34);
+                                    itemEl.Add(navLabel);
+                                    element5.Elements("body").First().Elements("ul").First().Add(itemEl);
                                 }
+                                num9++;
                             }
                         }
                     }
@@ -401,9 +399,9 @@ namespace Fb2Kindle
             var referenceEl = new XElement("reference");
             referenceEl.Add(new XAttribute("type", "text"));
             referenceEl.Add(new XAttribute("title", "Book"));
-            referenceEl.Add(XHelper.CreateAttribute("href", "book0.html"));
+            referenceEl.Add(Common.CreateAttribute("href", "book0.html"));
             element3.Elements("guide").First().Add(referenceEl);
-            Console.WriteLine("(Ok)");
+            Console.WriteLine("(OK)");
             return num9;
         }
 
@@ -419,9 +417,8 @@ namespace Fb2Kindle
             num9 = 0;
             var num = element.Elements("body").Count();
             if (!_currentSettings.nstitle)
-            {
-                CreateTitlePage(element);
-            }
+                Common.CreateTitlePage(element, _tempDir);
+
             htmlElement = new XElement("html");
             var linkEl = new XElement("link");
             linkEl.Add(new XAttribute("type", "text/css"));
@@ -429,7 +426,7 @@ namespace Fb2Kindle
             linkEl.Add(new XAttribute("rel", "Stylesheet"));
             htmlElement.Add(new XElement("head", linkEl));
             htmlElement.Add(new XElement("body", ""));
-            var str20 = XHelper.Value(element.Elements("description").First().Elements("title-info").First().Elements("lang"));
+            var str20 = Common.Value(element.Elements("description").First().Elements("title-info").First().Elements("lang"));
             if (String.IsNullOrEmpty(str20))
                 str20 = "ru";
             var packEl = new XElement("package");
@@ -447,19 +444,19 @@ namespace Fb2Kindle
 
             var nsHttp = XNamespace.Get("http://");
             var content = new XElement(nsHttp.GetName("Title"));
-            content.Add(XHelper.Value(element.Elements("description").Elements("title-info").Elements("book-title")));
+            content.Add(Common.Value(element.Elements("description").Elements("title-info").Elements("book-title")));
             linkEl.Add(content);
             content = new XElement(nsHttp.GetName("Language"));
             content.Add(str20);
             linkEl.Add(content);
             content = new XElement(nsHttp.GetName("Creator"));
-            content.Add(XHelper.Value(element.Elements("description").Elements("title-info").Elements("author").First().Elements("last-name")) + " " + XHelper.Value(element.Elements("description").Elements("title-info").Elements("author").First().Elements("first-name")) + " " + XHelper.Value(element.Elements("description").Elements("title-info").Elements("author").First().Elements("middle-name")));
+            content.Add(Common.Value(element.Elements("description").Elements("title-info").Elements("author").First().Elements("last-name")) + " " + Common.Value(element.Elements("description").Elements("title-info").Elements("author").First().Elements("first-name")) + " " + Common.Value(element.Elements("description").Elements("title-info").Elements("author").First().Elements("middle-name")));
             linkEl.Add(content);
             content = new XElement(nsHttp.GetName("Publisher"));
-            content.Add(XHelper.Value(element.Elements("description").Elements("publish-info").Elements("publisher")));
+            content.Add(Common.Value(element.Elements("description").Elements("publish-info").Elements("publisher")));
             linkEl.Add(content);
             content = new XElement(nsHttp.GetName("date"));
-            content.Add(XHelper.Value(element.Elements("description").Elements("publish-info").Elements("year")));
+            content.Add(Common.Value(element.Elements("description").Elements("publish-info").Elements("year")));
             linkEl.Add(content);
             content = new XElement("x-metadata");
             content.Add("");
@@ -515,7 +512,7 @@ namespace Fb2Kindle
                 packEl.Add(new XAttribute("href", "toc.html"));
                 packElement.Elements("guide").First().Add(packEl);
             }
-            var str3 = XHelper.AttributeValue(element.Elements("description").Elements("title-info").Elements("coverpage").Elements("div").Elements("img"), "src");
+            var str3 = Common.AttributeValue(element.Elements("description").Elements("title-info").Elements("coverpage").Elements("div").Elements("img"), "src");
             if (!string.IsNullOrEmpty(str3))
             {
                 packEl = new XElement("EmbeddedCover");
@@ -530,7 +527,7 @@ namespace Fb2Kindle
             {
                 for (var i = 1; i < num; i++)
                 {
-                    var bodyName = XHelper.AttributeValue(element.Elements("body").ElementAtOrDefault(i), "name");
+                    var bodyName = Common.AttributeValue(element.Elements("body").ElementAtOrDefault(i), "name");
                     if (string.IsNullOrEmpty(bodyName)) continue;
                     notesList2.Add(new DataItem(bodyName + ".html", bodyName));
                     var list = element.Elements("body").ElementAtOrDefault(i).Descendants("section").ToList();
@@ -557,7 +554,7 @@ namespace Fb2Kindle
                             {
                                 di.Name = bodyName + ".html";
                             }
-                            di.Value = XHelper.AttributeValue(list[idx], "id");
+                            di.Value = Common.AttributeValue(list[idx], "id");
                             notesList.Add(di);
                         }
                     }
@@ -894,7 +891,7 @@ namespace Fb2Kindle
                               Replace("<titl9", "<div class = \"title\"><div class = \"title9\"").Replace("</titl9>", "</div></div>").
                               Replace("<body", "<sectio1").Replace("</body>", "</sectio1>").
                               Replace("<titl0", "<div class = \"title\"><div class = \"title0\"").Replace("</titl0>", "</div></div>");
-            Console.WriteLine("(Ok)");
+            Console.WriteLine("(OK)");
             return element5;
         }
 
@@ -941,49 +938,6 @@ namespace Fb2Kindle
                 startIndex = allText.IndexOf("<image", startIndex);
             }
             return allText;
-        }
-
-        private void CreateTitlePage(XElement element)
-        {
-            var linkEl = new XElement("link");
-            linkEl.Add(new XAttribute("type", "text/css"));
-            linkEl.Add(new XAttribute("href", "book.css"));
-            linkEl.Add(new XAttribute("rel", "Stylesheet"));
-            var headEl = new XElement("head");
-            headEl.Add(linkEl);
-            var content = new XElement("html");
-            content.Add(headEl);
-            headEl = new XElement("body");
-            linkEl = new XElement("div");
-            linkEl.Add(new XAttribute("class", "supertitle"));
-            linkEl.Add(new XAttribute("align", "center"));
-            linkEl.Add(new XAttribute("id", "booktitle"));
-            linkEl.Add(element.Elements("description").Elements("title-info").Elements("author").Select(Common.AddAuthorInfo));
-            var pEl = new XElement("p");
-            pEl.Add(XHelper.AttributeValue(element.Elements("description").Elements("title-info").Elements("sequence"), "name") + " " + XHelper.AttributeValue(element.Elements("description").Elements("title-info").Elements("sequence"), "number"));
-            linkEl.Add(pEl);
-            linkEl.Add(new XElement("br"));
-            pEl = new XElement("p");
-            pEl.Add(new XAttribute("class", "text-name"));
-            pEl.Add(XHelper.Value(element.Elements("description").Elements("title-info").Elements("book-title")));
-            linkEl.Add(pEl);
-            linkEl.Add(new XElement("br"));
-            linkEl.Add(new XElement("p", XHelper.Value(element.Elements("description").Elements("title-info").Elements("annotation"))));
-            linkEl.Add(new XElement("br"));
-            linkEl.Add(new XElement("br"));
-            linkEl.Add(new XElement("p", XHelper.Value(element.Elements("description").Elements("publish-info").Elements("publisher"))));
-            linkEl.Add(new XElement("p", XHelper.Value(element.Elements("description").Elements("publish-info").Elements("city"))));
-            linkEl.Add(new XElement("p", XHelper.Value(element.Elements("description").Elements("publish-info").Elements("year"))));
-            linkEl.Add(new XElement("br"));
-            linkEl.Add(new XElement("br"));
-            linkEl.Add(new XElement("br"));
-            linkEl.Add(new XElement("p", "Kindle version created by © Fb2Kindle"));
-            linkEl.Add(new XElement("p", DateTime.Now.ToLongDateString()));
-            linkEl.Add(new XElement("p", "Copyright © Sergey Egoshin (egoshin.sergey@gmail.com)"));
-            linkEl.Add(new XElement("br"));
-            headEl.Add(linkEl);
-            content.Add(headEl);
-            content.Save(_tempDir + @"\booktitle.html");
         }
     }
 }
