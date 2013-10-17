@@ -13,15 +13,15 @@ namespace Fb2Kindle
             var wait = false;
             try
             {
-                Common.ShowMainInfo();
+                Convertor.ShowMainInfo();
                 if (args.Length == 0)
                 {
-                    Common.ShowHelpText();
+                    Convertor.ShowHelpText();
                     return;
                 }
                 var executingPath = Path.GetDirectoryName(Application.ExecutablePath);
                 var settingsFile = executingPath + @"\config.xml";
-                var currentSettings = Common.ReadObjectFromFile<DefaultOptions>(settingsFile) ?? new DefaultOptions();
+                var currentSettings = Convertor.ReadObjectFromFile<DefaultOptions>(settingsFile) ?? new DefaultOptions();
                 var bookPath = string.Empty;
                 for (var j = 0; j < args.Length; j++)
                 {
@@ -61,6 +61,9 @@ namespace Fb2Kindle
                         case "-r":
                             currentSettings.recursive = true;
                             break;
+                        case "-c":
+                            currentSettings.compression = true;
+                            break;
                         default:
                             if (j == 0)
                                 bookPath = args[j];
@@ -68,7 +71,7 @@ namespace Fb2Kindle
                     }
                 }
                 if (currentSettings.save)
-                    Common.WriteObjectToFile(settingsFile, currentSettings, true);
+                    Convertor.WriteObjectToFile(settingsFile, currentSettings, true);
 
                 string defaultCss = null;
                 if (File.Exists(currentSettings.defaultCSS))
@@ -77,7 +80,7 @@ namespace Fb2Kindle
                 {
                     if (!string.IsNullOrEmpty(currentSettings.defaultCSS))
                         Console.WriteLine("Styles file not found: " + currentSettings.defaultCSS);
-                    defaultCss = Common.GetScriptFromResource("defstyles.css");
+                    defaultCss = Convertor.GetScriptFromResource("defstyles.css");
                 }
 
                 var conv = new Convertor(currentSettings, executingPath, defaultCss);
