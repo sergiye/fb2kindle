@@ -58,6 +58,9 @@ namespace Fb2Kindle
                         case "-a":
                             currentSettings.all = true;
                             break;
+                        case "-r":
+                            currentSettings.recursive = true;
+                            break;
                         default:
                             if (j == 0)
                                 bookPath = args[j];
@@ -80,7 +83,8 @@ namespace Fb2Kindle
                 var conv = new Convertor(currentSettings, executingPath, defaultCss);
                 if (currentSettings.all)
                 {
-                    var files = Directory.GetFiles(executingPath, "*.fb2", SearchOption.AllDirectories);
+                    var searchOptions = currentSettings.recursive ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
+                    var files = Directory.GetFiles(executingPath, "*.fb2", searchOptions);
                     if (files.Length == 0)
                         Console.WriteLine("No fb2 files found");
                     foreach (var file in files)
