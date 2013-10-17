@@ -27,6 +27,7 @@ namespace Fb2Kindle
         private XElement _opfFile;
         private XElement _tocEl;
         private XElement _htmlEl;
+        private List<DataItem> _notesList;
         private DefaultOptions _currentSettings { get; set; }
 
         public Convertor(DefaultOptions currentSettings, string workingFolder, string defaultCSS)
@@ -52,13 +53,8 @@ namespace Fb2Kindle
                     Directory.CreateDirectory(_tempDir + @"\fonts");
                     CopyDirectory(_workingFolder + @"\fonts", _tempDir + @"\fonts", true);
                 }
+                File.WriteAllText(_tempDir + @"\book.css", _defaultCSS);
                 imagesPrepared = !_currentSettings.noImages && ExtractImages(_book, _tempDir, ImagesFolderName);
-
-                List<DataItem> notesList2;
-                List<DataItem> titles;
-                string bodyStr;
-                bool notesCreated;
-                int playOrder;
 
                 _htmlEl = InitEmptyHtmlDoc();
                 _opfFile = GetEmptyPackage(_book);
@@ -75,15 +71,19 @@ namespace Fb2Kindle
                     AddTocToPack(_opfFile);
                 }
 
-                ConvertToHtml(_book, out playOrder, out notesList2, out bodyStr, out notesCreated, out titles);
+                string bodyStr;
+                bool notesCreated;
+                var playOrder = 0;
+
+                var titles = ConvertToHtml(out bodyStr);
                 if (_currentSettings.nch)
                     CreateSingleBook(bookName + ".html", titles, bodyStr);
                 else
                     playOrder = CreateChapters(bodyStr, titles);
 
-                if (notesCreated)
+                if (_notesList != null)
                 {
-                    foreach (var item in notesList2)
+                    foreach (var item in _notesList)
                     {
                         AddPackNoteItem(item, _opfFile, false);
                         AddNcxNoteItem(item, playOrder, _ncxElement);
@@ -92,7 +92,6 @@ namespace Fb2Kindle
                         playOrder++;
                     }
                 }
-                File.WriteAllText(_tempDir + @"\book.css", _defaultCSS);
 
                 _opfFile.Save(_tempDir + @"\" + bookName + ".opf");
                 _opfFile.RemoveAll();
@@ -118,7 +117,7 @@ namespace Fb2Kindle
             }
             finally
             {
-                if (!Debugger.IsAttached)
+//                if (!Debugger.IsAttached)
                     ClearTempFolder();
                 Console.WriteLine();
             }
@@ -174,7 +173,7 @@ namespace Fb2Kindle
             _opfFile.Elements("spine").First().Add(itemEl);
             itemEl = new XElement("reference");
             itemEl.Add(new XAttribute("type", "text"));
-            itemEl.Add(new XAttribute("title", "Заглавие"));
+            itemEl.Add(new XAttribute("title", "Название"));
             itemEl.Add(new XAttribute("href", htmlFile));
             _opfFile.Elements("guide").First().Add(itemEl);
 
@@ -317,193 +316,66 @@ namespace Fb2Kindle
             return num9;
         }
 
-        public void ConvertToHtml(XElement book, out int playOrder, out List<DataItem> notesList2, out string bodyStr, out bool notesCreated, out List<DataItem> titles)
+        public List<DataItem> ConvertToHtml(out string bodyStr)
         {
             Console.Write("FB2 to HTML...");
             const string str = "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧЩШЬЪЫЭЮЯQWERTYUIOPASDFGHJKLZXCVBNM";
-            CreateTitlePage(book, _tempDir);
+            CreateTitlePage(_book, _tempDir);
 
             var notesList = new List<DataItem>();
-            notesList2 = new List<DataItem>();
-            notesCreated = false;
             var bodies = new List<XElement>();
-            bodies.AddRange(book.Elements("body"));
+            bodies.AddRange(_book.Elements("body"));
             if (bodies.Count() > 1)
             {
+                _notesList = new List<DataItem>();
                 for (var i = 1; i < bodies.Count; i++)
                 {
                     var bodyName = (string)bodies[i].Attribute("name");
                     if (String.IsNullOrEmpty(bodyName)) continue;
-                    notesList2.Add(new DataItem(bodyName + ".html", bodyName));
+                    _notesList.Add(new DataItem(bodyName + ".html", bodyName));
                     var list = bodies[i].Descendants("section").ToList();
                     if (list.Count > 0)
                         foreach (var t in list)
                             notesList.Add(new DataItem(bodyName + ".html", "#" + (string)t.Attribute("id")));
-                    CreateNoteBox(book, i, bodyName, _tempDir);
-                    notesCreated = true;
+                    CreateNoteBox(_book, i, bodyName, _tempDir);
                 }
             }
+            bodies[0].Name = "sectio1";
+            var titles = new List<DataItem>();
+            var idx = 0;
+            {
+                var ts = bodies[0].Descendants("title");
+                foreach (var t in ts)
+                {
+                    if (!string.IsNullOrEmpty(t.Value))
+                        titles.Add(new DataItem(string.Format("title{0}", idx + 2), t.Value.Trim()));
+                    t.Name = "div";
+                    t.SetAttributeValue("class", "title");
+                    var inner = new XElement("div");
+                    inner.SetAttributeValue("class", idx == 0 ? "title0" : "title1");
+                    inner.SetAttributeValue("id", string.Format("title{0}", idx + 2));
+                    inner.Add(t.Nodes());
+                    t.RemoveNodes();
+                    t.Add(inner);
+                    idx++;
+                }
+            }
+            var els = bodies[0].Descendants("section");
+            foreach (var el in els)
+                el.Name = "sectio1";
+            els = bodies[0].Descendants("stanza");
+            foreach (var el in els)
+            {
+                el.Name = "br";
+                var parent = el.Parent;
+                if (parent == null) continue;
+                parent.Add(el.Nodes());
+                el.RemoveAll();
+                parent.Add(new XElement("br"));
+            }
+            ReplaceSomeTags(bodies[0]);
             bodyStr = UpdateATags(bodies[0], notesList);
-
-
-//            var sections = bodies[0].Descendants("section");
-//            foreach (var section in sections)
-//            {
-//                section.Name = "sectio1";
-//            }
-
-            var number = 1;
-            var numArray = new List<SectionInfo>();
-            var startIndex = bodyStr.IndexOf("<section");
-            var endIndex = bodyStr.IndexOf("</section>");
-            while (endIndex > 0)
-            {
-                var si = new SectionInfo();
-                if ((startIndex < endIndex) & (startIndex != -1))
-                {
-                    si.Val1 = number;
-                    si.Val2 = startIndex;
-                    si.Val3 = 1;
-                    bodyStr = bodyStr.Remove(startIndex, 8).Insert(startIndex, "<sectio1");
-                    number++;
-                }
-                else
-                {
-                    number--;
-                    si.Val1 = number;
-                    si.Val2 = endIndex;
-                    si.Val3 = -1;
-                    bodyStr = bodyStr.Remove(endIndex, 10).Insert(endIndex, "</sectio1>");
-                }
-                if (startIndex != -1)
-                {
-                    startIndex = bodyStr.IndexOf("<section", startIndex);
-                }
-                endIndex = bodyStr.IndexOf("</section>", endIndex);
-                numArray.Add(si);
-            }
-            startIndex = bodyStr.IndexOf("<title");
-            endIndex = bodyStr.IndexOf("</title>");
-            while (startIndex > 0)
-            {
-                number = 0;
-                for (var i = 0; i < numArray.Count - 1; i++)
-                {
-                    if ((startIndex <= numArray[i].Val2) || (startIndex >= numArray[i + 1].Val2)) continue;
-                    number = numArray[i].Val1;
-                    break;
-                }
-                if (number > 9)
-                    number = 9;
-                if (number < 0)
-                    number = 0;
-                bodyStr = bodyStr.Remove(startIndex, 6).Insert(startIndex, "<titl" + number).Remove(endIndex, 8).Insert(endIndex, "</titl" + number + ">");
-                startIndex = bodyStr.IndexOf("<title", endIndex);
-                endIndex = bodyStr.IndexOf("</title>", endIndex);
-            }
-
-            playOrder = 0;
-            var titleIdx = 1;
-            var prevTag = "";
-            var specTag = false;
-            var tagClosed = true;
-            titles = new List<DataItem>();
-            var index = bodyStr.IndexOf("<");
-            while (index > -1)
-            {
-                playOrder = index;
-                var ch = bodyStr[index];
-                var curTag = "";
-                while (ch != '>')
-                {
-                    ch = bodyStr[index];
-                    index++;
-                    curTag = curTag + ch;
-                }
-                if (curTag.Contains("<titl") || curTag.Contains("<epigraph") || curTag.Contains("<subtitle") || curTag.Contains("<div") ||
-                    curTag.Contains("<poem") || curTag.Contains("<cite"))
-                {
-                    specTag = false;
-                }
-                if (curTag.Contains("<p ") || curTag.Contains("<p>"))
-                {
-                    if (!_currentSettings.noBig)
-                    {
-                        if (prevTag.Equals("</titl0>") || prevTag.Equals("</titl1>") || prevTag.Equals("</titl2>") || prevTag.Equals("</titl3>") ||
-                            prevTag.Equals("</titl4>") || prevTag.Equals("</titl5>") || prevTag.Equals("</titl6>") || prevTag.Equals("</titl7>") ||
-                            prevTag.Equals("</titl8>") || prevTag.Equals("</titl9>") || prevTag.Equals("</titl1>") || prevTag.Equals("</subtitle>") || prevTag.Equals("</epigraph>"))
-                        {
-                            specTag = true;
-                            while (ch != '<')
-                            {
-                                ch = bodyStr[index];
-                                if (ch != ' ')
-                                {
-                                    if (str.IndexOf(ch) != -1)
-                                    {
-                                        bodyStr = bodyStr.Remove(index, 1).Insert(index, "<span class=\"dropcaps\">" + ch + "</span>").Insert(playOrder + 2, " style=\"text-indent:0px;\"");
-                                    }
-                                    break;
-                                }
-                                index++;
-                            }
-                        }
-                        else if (specTag)
-                        {
-                            while (ch != '<')
-                            {
-                                ch = bodyStr[index];
-                                if (ch != ' ')
-                                {
-                                    if (str.IndexOf(ch) != -1)
-                                        bodyStr = bodyStr.Remove(index, 1).Insert(index, "<span class=\"dropcaps2\">" + ch + "</span>");
-                                    break;
-                                }
-                                index++;
-                            }
-                        }
-                    }
-                }
-                else if (curTag.Contains("<titl"))
-                {
-                    titleIdx++;
-                    bodyStr = bodyStr.Insert(playOrder + 6, " id=\"title" + titleIdx + "\"");
-                    index = bodyStr.IndexOf(">", index);
-                    startIndex = bodyStr.IndexOf("</titl", index);
-                    var substring = bodyStr.Substring(index + 1, (startIndex - index) - 1);
-                    var buf1 = "";
-                    var buf2 = "";
-                    foreach (var t in substring)
-                    {
-                        switch (t)
-                        {
-                            case '<':
-                                tagClosed = false;
-                                buf2 = "";
-                                break;
-                            case '>':
-                                if (buf2 == "/p")
-                                    buf1 = buf1 + " ";
-                                tagClosed = true;
-                                break;
-                            default:
-                                if (tagClosed)
-                                    buf1 = buf1 + t;
-                                else
-                                    buf2 = buf2 + t;
-                                break;
-                        }
-                    }
-                    titles.Add(new DataItem("title" + titleIdx, buf1));
-                }
-                if (curTag.Equals("</div>") || curTag.Equals("</cite>") || curTag.Equals("</poem>"))
-                    specTag = true;
-                if (!curTag.Equals("<empty-line/>") && !curTag.Equals("<empty-line />"))
-                    prevTag = curTag;
-                index = bodyStr.IndexOf("<", index);
-            }
-            bodyStr = ReplaceSomeTags(bodyStr);
-            Console.WriteLine("(OK)");
+            return titles;
         }
 
         private void AddTocToNcx()
@@ -721,7 +593,7 @@ namespace Fb2Kindle
                         var parList = new List<EncoderParameter>
                             {
                                 new EncoderParameter(Encoder.Quality, 50L), 
-                                new EncoderParameter(Encoder.ColorDepth, 8L)
+//                                new EncoderParameter(Encoder.ColorDepth, 8L)
                             };
                         var encoderParams = new EncoderParameters(parList.Count);
                         for (var i = 0; i < parList.Count; i++ )
@@ -754,11 +626,11 @@ namespace Fb2Kindle
             var element2 = new XElement("h2");
             foreach (var ai in avtorbook)
             {
-                element2.Add((object) Value(ai.Elements("last-name")));
+                element2.Add(Value(ai.Elements("last-name")));
                 element2.Add(new XElement("br"));
-                element2.Add((object) Value(ai.Elements("first-name")));
+                element2.Add(Value(ai.Elements("first-name")));
                 element2.Add(new XElement("br"));
-                element2.Add((object) Value(ai.Elements("middle-name")));
+                element2.Add(Value(ai.Elements("middle-name")));
                 element2.Add(new XElement("br"));
             }
             return element2;
@@ -789,7 +661,7 @@ namespace Fb2Kindle
             linkEl.Add(new XElement("br"));
             var pEl = new XElement("p");
             pEl.Add(new XAttribute("class", "text-name"));
-            pEl.Add((object) Value(book.Elements("description").Elements("title-info").Elements("book-title")));
+            pEl.Add(Value(book.Elements("description").Elements("title-info").Elements("book-title")));
             linkEl.Add(pEl);
             linkEl.Add(new XElement("br"));
             linkEl.Add(new XElement("p", Value(book.Elements("description").Elements("title-info").Elements("annotation"))));
@@ -894,28 +766,17 @@ namespace Fb2Kindle
             }
         }
 
-        public static string ReplaceSomeTags(string bodyStr)
+        public static void ReplaceSomeTags(XElement el)
         {
-            return bodyStr.Replace("<text-author>", "<p class=\"text-author\">").Replace("</text-author>", "</p>").
-                           Replace("<empty-line />", "<br/>").Replace("<epigraph ", "<div class = \"epigraph\" ").
-                           Replace("<epigraph>", "<div class = \"epigraph\">").Replace("</epigraph>", "</div>").
-                           Replace("<empty-line/>", "<br/>").Replace("<subtitle ", "<div class = \"subtitle\" ").
-                           Replace("<subtitle>", "<div class = \"subtitle\">").Replace("<cite ", "<div class = \"cite\" ").
-                           Replace("<cite>", "<div class = \"cite\">").Replace("</cite>", "</div>").Replace("</subtitle>", "</div>").
-                           Replace("<emphasis>", "<i>").Replace("</emphasis>", "</i>").Replace("<strong>", "<b>").
-                           Replace("</strong>", "</b>").Replace("<poem", "<div class=\"poem\"").Replace("</poem>", "</div>").
-                           Replace("<stanza>", "<br/>").Replace("</stanza>", "<br/>").Replace("<v>", "<p>").Replace("</v>", "</p>").
-                           Replace("<titl1", "<div class = \"title\"><div class = \"title1\"").Replace("</titl1>", "</div></div>").
-                           Replace("<titl2", "<div class = \"title\"><div class = \"title2\"").Replace("</titl2>", "</div></div>").
-                           Replace("<titl3", "<div class = \"title\"><div class = \"title3\"").Replace("</titl3>", "</div></div>").
-                           Replace("<titl4", "<div class = \"title\"><div class = \"title4\"").Replace("</titl4>", "</div></div>").
-                           Replace("<titl5", "<div class = \"title\"><div class = \"title5\"").Replace("</titl5>", "</div></div>").
-                           Replace("<titl6", "<div class = \"title\"><div class = \"title6\"").Replace("</titl6>", "</div></div>").
-                           Replace("<titl7", "<div class = \"title\"><div class = \"title7\"").Replace("</titl7>", "</div></div>").
-                           Replace("<titl8", "<div class = \"title\"><div class = \"title8\"").Replace("</titl8>", "</div></div>").
-                           Replace("<titl9", "<div class = \"title\"><div class = \"title9\"").Replace("</titl9>", "</div></div>").
-                           Replace("<body", "<sectio1").Replace("</body>", "</sectio1>").
-                           Replace("<titl0", "<div class = \"title\"><div class = \"title0\"").Replace("</titl0>", "</div></div>");
+            RenameTags(el, "text-author", "p", "text-author");
+            RenameTags(el, "empty-line", "br");
+            RenameTags(el, "emphasis", "i");
+            RenameTags(el, "strong", "b");
+            RenameTags(el, "v", "p");
+            RenameTags(el, "epigraph", "div", "epigraph");
+            RenameTags(el, "subtitle", "div", "subtitle");
+            RenameTags(el, "cite", "div", "cite");
+            RenameTags(el, "poem", "div", "poem");
         }
 
         public static void CreateNoteBox(XElement book, int i, string bodyName, string folder)
@@ -935,7 +796,6 @@ namespace Fb2Kindle
                 headEl.Add(body.Nodes());
             packEl.Add(headEl);
             FormatToHTML(packEl);
-            //SaveWithEncoding(folder + @"\" + bodyName + ".html", packEl.ToString());
             packEl.Save(folder + @"\" + bodyName + ".html");
             packEl.RemoveAll();
         }
@@ -992,8 +852,6 @@ namespace Fb2Kindle
             Console.WriteLine("Processing: " + bookName);
             try
             {
-//                var xmlDoc = new XmlDocument();
-//                xmlDoc.Load(bookPath);
                 XElement book;
                 using (Stream file = File.OpenRead(bookPath))
                 {
@@ -1165,6 +1023,8 @@ namespace Fb2Kindle
         }
     }
 
+    #region subclasses
+
     [Serializable]
     public class DefaultOptions
     {
@@ -1209,4 +1069,6 @@ namespace Fb2Kindle
             Value = value;
         }
     }
+
+    #endregion subclasses
 }
