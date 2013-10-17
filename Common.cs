@@ -484,21 +484,7 @@ namespace Fb2Kindle
 
         public static XElement CreateEmptyToc()
         {
-//            if () //this part in prev version was skipped
-//            {
-//                packEl = new XElement("navPoint");
-//                packEl.Add(new XAttribute("id", "navpoint-1"));
-//                packEl.Add(new XAttribute("playOrder", "1"));
-//                headEl = new XElement("navLabel");
-//                linkEl = new XElement("text");
-//                linkEl.Add("Содержание");
-//                headEl.Add(linkEl);
-//                packEl.Add(headEl);
-//                headEl = new XElement("content");
-//                headEl.Add(new XAttribute("src", "toc.html#toc"));
-//                packEl.Add(headEl);
-//            }
-            var packEl = new XElement("html");
+            var toc = new XElement("html");
             var headEl = new XElement("head");
             var linkEl = new XElement("title");
             linkEl.Add("Содержание");
@@ -508,7 +494,7 @@ namespace Fb2Kindle
             linkEl.Add(new XAttribute("href", "book.css"));
             linkEl.Add(new XAttribute("rel", "Stylesheet"));
             headEl.Add(linkEl);
-            packEl.Add(headEl);
+            toc.Add(headEl);
             headEl = new XElement("body");
             linkEl = new XElement("div");
             linkEl.Add(new XAttribute("class", "title"));
@@ -521,8 +507,8 @@ namespace Fb2Kindle
             linkEl = new XElement("ul");
             linkEl.Add("");
             headEl.Add(linkEl);
-            packEl.Add(headEl);
-            return packEl;
+            toc.Add(headEl);
+            return toc;
         }
 
         public static string UpdateATags(XElement body, List<DataItem> notesList)
@@ -649,61 +635,51 @@ namespace Fb2Kindle
             packElement.Elements("guide").First().Add(packEl);
         }
 
-        public static void AddCoverImage(XElement packElement, string imgSrc)
+        public static void AddCoverImage(XElement ncxElement, XElement packElement, string imgSrc)
         {
+            var packEl = new XElement("navPoint");
+            packEl.Add(new XAttribute("id", "navpoint-0"));
+            packEl.Add(new XAttribute("playOrder", "0"));
+            var headEl = new XElement("navLabel");
+            headEl.Add(new XElement("text", "Обложка"));
+            packEl.Add(headEl);
+            headEl = new XElement("content");
+            headEl.Add(new XAttribute("src", "booktitle.html#booktitle"));
+            packEl.Add(headEl);
+            ncxElement.Elements("navMap").First().Add(packEl);
+
             if (String.IsNullOrEmpty(imgSrc)) return;
             var coverEl = new XElement("EmbeddedCover");
             coverEl.Add(imgSrc);
             packElement.Elements("metadata").First().Elements("dc-metadata").First().Elements("x-metadata").First().Add(coverEl);
         }
 
-        public static void AddDefaultToc(XElement packElement)
+        public static void AddTocToNcx(int playOrder, XElement ncxElement)
+        {
+            var navPoint = new XElement("navPoint");
+            navPoint.Add(new XAttribute("id", "navpoint-" + playOrder.ToString()));
+            navPoint.Add(new XAttribute("playOrder", playOrder.ToString()));
+            navPoint.Add(new XElement("navLabel", new XElement("text", "Содержание")));
+            navPoint.Add(new XElement("content", new XAttribute("src", "toc.html#toc")));
+            ncxElement.Elements("navMap").First().Add(navPoint);
+        }
+
+        public static void AddTocToPack(XElement packElement, string id)
         {
             var packEl = new XElement("item");
-            packEl.Add(new XAttribute("id", "content"));
+            packEl.Add(new XAttribute("id", id));
             packEl.Add(new XAttribute("media-type", "text/x-oeb1-document"));
             packEl.Add(new XAttribute("href", "toc.html"));
             packEl.Add("");
             packElement.Elements("manifest").First().Add(packEl);
             packEl = new XElement("itemref");
-            packEl.Add(new XAttribute("idref", "content"));
+            packEl.Add(new XAttribute("idref", id));
             packElement.Elements("spine").First().Add(packEl);
             packEl = new XElement("reference");
             packEl.Add(new XAttribute("type", "toc"));
             packEl.Add(new XAttribute("title", "Содержание"));
             packEl.Add(new XAttribute("href", "toc.html"));
             packElement.Elements("guide").First().Add(packEl);
-        }
-
-        public static void AddTocToTheEnd(int playOrder, XElement ncxElement, XElement packElement)
-        {
-            var navPoint = new XElement("navPoint");
-            navPoint.Add(new XAttribute("id", "navpoint-" + playOrder.ToString()));
-            navPoint.Add(new XAttribute("playOrder", playOrder.ToString()));
-            var navLabel = new XElement("navLabel");
-            var textEl = new XElement("text");
-            textEl.Add("Contents");
-            navLabel.Add(textEl);
-            navPoint.Add(navLabel);
-            navLabel = new XElement("content");
-            navLabel.Add(new XAttribute("src", "toc.html#toc"));
-            navPoint.Add(navLabel);
-            ncxElement.Elements("navMap").First().Add(navPoint);
-
-            navPoint = new XElement("item");
-            navPoint.Add(new XAttribute("id", "content2"));
-            navPoint.Add(new XAttribute("media-type", "text/x-oeb1-document"));
-            navPoint.Add(new XAttribute("href", "toc.html"));
-            navPoint.Add("");
-            packElement.Elements("manifest").First().Add(navPoint);
-            navPoint = new XElement("itemref");
-            navPoint.Add(new XAttribute("idref", "content"));
-            packElement.Elements("spine").First().Add(navPoint);
-            navPoint = new XElement("reference");
-            navPoint.Add(new XAttribute("type", "toc"));
-            navPoint.Add(new XAttribute("title", "Содержание"));
-            navPoint.Add(new XAttribute("href", "toc.html"));
-            packElement.Elements("guide").First().Add(navPoint);
         }
 
         public static void AddTocNoteItem(DataItem item, XElement tocEl)

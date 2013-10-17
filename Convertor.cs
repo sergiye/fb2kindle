@@ -48,13 +48,7 @@ namespace Fb2Kindle
 
                 var packElement = Common.GetEmptyPackage(book);
                 Common.AddTitleToPackage(packElement);
-                if (!_currentSettings.ntoc)
-                    Common.AddDefaultToc(packElement);
-
                 Common.UpdateImages(book, imagesPrepared);
-
-                var imgSrc = Common.AttributeValue(book.Elements("description").Elements("title-info").Elements("coverpage").Elements("div").Elements("img"), "src");
-                Common.AddCoverImage(packElement, imgSrc);
 
                 var ncxElement = new XElement("ncx");
                 ncxElement.Add(new XElement("head", ""));
@@ -62,21 +56,16 @@ namespace Fb2Kindle
                 ncxElement.Add(new XElement("navMap", ""));
                 //if (!_currentSettings.nstitle)
                 {
-                    var packEl = new XElement("navPoint");
-                    packEl.Add(new XAttribute("id", "navpoint-0"));
-                    packEl.Add(new XAttribute("playOrder", "0"));
-                    var headEl = new XElement("navLabel");
-                    headEl.Add(new XElement("text", "Обложка"));
-                    packEl.Add(headEl);
-                    headEl = new XElement("content");
-                    headEl.Add(new XAttribute("src", "booktitle.html#booktitle"));
-                    packEl.Add(headEl);
-                    ncxElement.Elements("navMap").First().Add(packEl);
+                    var imgSrc = Common.AttributeValue(book.Elements("description").Elements("title-info").Elements("coverpage").Elements("div").Elements("img"), "src");
+                    Common.AddCoverImage(ncxElement, packElement, imgSrc);
                 }
 
                 var tocEl = Common.CreateEmptyToc();
                 if (!_currentSettings.ntoc)
-                    ncxElement.Elements("navMap").First().Add(tocEl);
+                {
+                    Common.AddTocToNcx(1, ncxElement);
+                    Common.AddTocToPack(packElement, "content");
+                }
 
                 var htmlElement = new XElement("html");
                 var linkEl = new XElement("link");
@@ -92,9 +81,6 @@ namespace Fb2Kindle
                 else
                     playOrder = CreateChapters(bodyStr, htmlElement, packElement, titles, ncxElement, tocEl);
 
-                if (!_currentSettings.ntoc)
-                    Common.AddTocToTheEnd(titles.Count + 1, ncxElement, packElement);
-
                 if (notesCreated)
                 {
                     foreach (var item in notesList2)
@@ -107,6 +93,12 @@ namespace Fb2Kindle
                     }
                 }
                 File.WriteAllText(_tempDir + @"\book.css", _defaultCSS);
+        
+                if (!_currentSettings.ntoc)
+                {
+                    Common.AddTocToPack(packElement, "content2");
+                    //Common.AddTocToNcx(titles.Count + 1, ncxElement);
+                }
 
                 packElement.Save(_tempDir + @"\" + bookName + ".opf");
                 packElement.RemoveAll();
@@ -119,6 +111,7 @@ namespace Fb2Kindle
                     tocEl.Save(_tempDir + @"\toc.html");
                     tocEl.RemoveAll();
                 }
+
                 var result = Common.CreateMobi(_tempDir, bookName, bookPath);
                 if (result && _currentSettings.deleteOrigin)
                     File.Delete(bookPath);
@@ -141,27 +134,7 @@ namespace Fb2Kindle
             var i = 0;
             while (i < titles.Count)
             {
-                var navPoint = new XElement("navPoint");
-                navPoint.Add(new XAttribute("id", "navpoint-" + (i + 2).ToString()));
-                navPoint.Add(new XAttribute("playOrder", (i + 2).ToString()));
-                var navLabel = new XElement("navLabel");
-                var textEl = new XElement("text");
-                textEl.Add(titles[i].Value);
-                navLabel.Add(textEl);
-                navPoint.Add(navLabel);
-                navLabel = new XElement("content");
-                navLabel.Add(new XAttribute("src", htmlFile + "#" + titles[i].Name));
-                navPoint.Add(navLabel);
-                ncxElement.Elements("navMap").First().Add(navPoint);
-                if (!_currentSettings.ntoc)
-                {
-                    navPoint = new XElement("li");
-                    navLabel = new XElement("a");
-                    navLabel.Add(new XAttribute("href", htmlFile + "#" + titles[i].Name));
-                    navLabel.Add(titles[i].Value);
-                    navPoint.Add(navLabel);
-                    tocEl.Elements("body").First().Elements("ul").First().Add(navPoint);
-                }
+                AddTitleToToc(htmlFile, titles, ncxElement, tocEl, i);
                 i++;
             }
             var itemEl = new XElement("item");
@@ -182,6 +155,28 @@ namespace Fb2Kindle
             var htmlContent = htmlElement.ToString();
             htmlContent = htmlContent.Insert(htmlContent.IndexOf("<body>") + 6, bodyStr).Replace("<sectio1", "<div class=\"book\"").Replace("</sectio1>", "</div>");
             Common.SaveWithEncoding(_tempDir + @"\" + htmlFile, htmlContent);
+        }
+
+        private void AddTitleToToc(string htmlFile, List<DataItem> titles, XElement ncxElement, XElement tocEl, int i)
+        {
+            var navPoint = new XElement("navPoint");
+            navPoint.Add(new XAttribute("id", "navpoint-" + (i + 2).ToString()));
+            navPoint.Add(new XAttribute("playOrder", (i + 2).ToString()));
+            var navLabel = new XElement("navLabel");
+            navLabel.Add(new XElement("text", titles[i].Value));
+            navPoint.Add(navLabel);
+            navLabel = new XElement("content");
+            navLabel.Add(new XAttribute("src", htmlFile + "#" + titles[i].Name));
+            navPoint.Add(navLabel);
+            ncxElement.Elements("navMap").First().Add(navPoint);
+        
+            if (_currentSettings.ntoc) return;
+            navPoint = new XElement("li");
+            navLabel = new XElement("a");
+            navLabel.Add(new XAttribute("href", htmlFile + "#" + titles[i].Name));
+            navLabel.Add(titles[i].Value);
+            navPoint.Add(navLabel);
+            tocEl.Elements("body").First().Elements("ul").First().Add(navPoint);
         }
 
         private void ClearTempFolder()
@@ -234,27 +229,7 @@ namespace Fb2Kindle
                         {
                             if (bodyContent.IndexOf(string.Format("id=\"{0}\"", titles[i].Name)) != -1)
                             {
-                                itemEl = new XElement("navPoint");
-                                itemEl.Add(new XAttribute("id", "navpoint-" + num9));
-                                itemEl.Add(new XAttribute("playOrder", num9));
-                                var element14 = new XElement("navLabel");
-                                var element13 = new XElement("text");
-                                element13.Add(titles[i].Value);
-                                element14.Add(element13);
-                                itemEl.Add(element14);
-                                element14 = new XElement("content");
-                                element14.Add(new XAttribute("src", string.Format("book{0}.html#{1}", bookNum, titles[i].Name)));
-                                itemEl.Add(element14);
-                                ncxElement.Elements("navMap").First().Add(itemEl);
-                                if (!_currentSettings.ntoc)
-                                {
-                                    itemEl = new XElement("li");
-                                    element14 = new XElement("a");
-                                    element14.Add(new XAttribute("href", string.Format("book{0}.html#{1}", bookNum, titles[i].Name)));
-                                    element14.Add(titles[i].Value);
-                                    itemEl.Add(element14);
-                                    tocEl.Elements("body").First().Elements("ul").First().Add(itemEl);
-                                }
+                                AddTitleToToc(string.Format("book{0}.html", bookNum), titles, ncxElement, tocEl, i);
                                 num9++;
                             }
                             i++;
