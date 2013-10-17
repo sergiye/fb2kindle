@@ -31,6 +31,7 @@ namespace Fb2Kindle
         public string defaultCSS { get; set; }
         public string DropCap { get; set; }
         public bool all { get; set; }
+        public bool recursive { get; set; }
         [XmlIgnore]
         public bool save { get; set; }
     }
@@ -108,6 +109,7 @@ namespace Fb2Kindle
             Console.WriteLine("-ntoc: no table of content");
             Console.WriteLine("-save: save parameters to be used at the next start");
             Console.WriteLine("-a: process all files in current folder");
+            Console.WriteLine("-r: process files in subfolders (work with -a key)");
             Console.WriteLine("-w: wait for key press on finish");
             Console.WriteLine();
         }
@@ -139,9 +141,6 @@ namespace Fb2Kindle
             var title = GetAttribute<AssemblyTitleAttribute>(assembly);
             if (title != null)
                 Console.WriteLine(title.Title);
-//            var copyright = GetAttribute<AssemblyCopyrightAttribute>(assembly);
-//            if (copyright != null)
-//                Console.WriteLine(copyright.Copyright);
             Console.WriteLine();
         }
 
@@ -154,7 +153,7 @@ namespace Fb2Kindle
                 return false;
             }
             Console.Write("Creating mobi (KF8)...");
-            var startInfo = new ProcessStartInfo { FileName = tempDir + @"\kindlegen.exe", Arguments = "\"" + tempDir + @"\" + bookName + ".opf\"", WindowStyle = ProcessWindowStyle.Hidden };
+            var startInfo = new ProcessStartInfo { FileName = tempDir + @"\kindlegen.exe", Arguments = string.Format("\"{0}\\{1}.opf\"", tempDir, bookName), WindowStyle = ProcessWindowStyle.Hidden };
             var process2 = Process.Start(startInfo);
             process2.WaitForExit();
             if (process2.ExitCode == 2)
@@ -485,11 +484,10 @@ namespace Fb2Kindle
         public static XElement CreateEmptyToc()
         {
             var toc = new XElement("html");
+            toc.Add(new XAttribute("type", "toc"));
             var headEl = new XElement("head");
-            var linkEl = new XElement("title");
-            linkEl.Add("Содержание");
-            headEl.Add(linkEl);
-            linkEl = new XElement("link");
+            headEl.Add(new XElement("title", "Содержание"));
+            var linkEl = new XElement("link");
             linkEl.Add(new XAttribute("type", "text/css"));
             linkEl.Add(new XAttribute("href", "book.css"));
             linkEl.Add(new XAttribute("rel", "Stylesheet"));
@@ -611,31 +609,29 @@ namespace Fb2Kindle
             headEl.Add(new XAttribute("toc", "ncx"));
             headEl.Add("");
             packEl.Add(headEl);
-            headEl = new XElement("guide");
-            headEl.Add("");
-            packEl.Add(headEl);
+            packEl.Add(new XElement("guide", ""));
             return packEl;
         }
 
-        public static void AddTitleToPackage(XElement packElement)
+        public static void AddTitleToPackage(XElement opfFile)
         {
             var packEl = new XElement("item");
             packEl.Add(new XAttribute("id", "booktitle"));
             packEl.Add(new XAttribute("media-type", "text/x-oeb1-document"));
             packEl.Add(new XAttribute("href", "booktitle.html"));
             packEl.Add("");
-            packElement.Elements("manifest").First().Add(packEl);
+            opfFile.Elements("manifest").First().Add(packEl);
             packEl = new XElement("itemref");
             packEl.Add(new XAttribute("idref", "booktitle"));
-            packElement.Elements("spine").First().Add(packEl);
+            opfFile.Elements("spine").First().Add(packEl);
             packEl = new XElement("reference");
             packEl.Add(new XAttribute("type", "start"));
             packEl.Add(new XAttribute("title", "Заглавие"));
             packEl.Add(new XAttribute("href", "booktitle.html"));
-            packElement.Elements("guide").First().Add(packEl);
+            opfFile.Elements("guide").First().Add(packEl);
         }
 
-        public static void AddCoverImage(XElement ncxElement, XElement packElement, string imgSrc)
+        public static void AddCoverImage(XElement ncxElement, XElement opfFile, string imgSrc)
         {
             var packEl = new XElement("navPoint");
             packEl.Add(new XAttribute("id", "navpoint-0"));
@@ -651,7 +647,7 @@ namespace Fb2Kindle
             if (String.IsNullOrEmpty(imgSrc)) return;
             var coverEl = new XElement("EmbeddedCover");
             coverEl.Add(imgSrc);
-            packElement.Elements("metadata").First().Elements("dc-metadata").First().Elements("x-metadata").First().Add(coverEl);
+            opfFile.Elements("metadata").First().Elements("dc-metadata").First().Elements("x-metadata").First().Add(coverEl);
         }
 
         public static void AddTocToNcx(int playOrder, XElement ncxElement)
@@ -664,22 +660,22 @@ namespace Fb2Kindle
             ncxElement.Elements("navMap").First().Add(navPoint);
         }
 
-        public static void AddTocToPack(XElement packElement, string id)
+        public static void AddTocToPack(XElement opfFile)
         {
             var packEl = new XElement("item");
-            packEl.Add(new XAttribute("id", id));
+            packEl.Add(new XAttribute("id", "toc"));
             packEl.Add(new XAttribute("media-type", "text/x-oeb1-document"));
             packEl.Add(new XAttribute("href", "toc.html"));
             packEl.Add("");
-            packElement.Elements("manifest").First().Add(packEl);
+            opfFile.Elements("manifest").First().Add(packEl);
             packEl = new XElement("itemref");
-            packEl.Add(new XAttribute("idref", id));
-            packElement.Elements("spine").First().Add(packEl);
+            packEl.Add(new XAttribute("idref", "toc"));
+            opfFile.Elements("spine").First().Add(packEl);
             packEl = new XElement("reference");
             packEl.Add(new XAttribute("type", "toc"));
             packEl.Add(new XAttribute("title", "Содержание"));
             packEl.Add(new XAttribute("href", "toc.html"));
-            packElement.Elements("guide").First().Add(packEl);
+            opfFile.Elements("guide").First().Add(packEl);
         }
 
         public static void AddTocNoteItem(DataItem item, XElement tocEl)
@@ -708,17 +704,26 @@ namespace Fb2Kindle
             ncxElement.Elements("navMap").First().Add(itemEl);
         }
 
-        public static void AddPackNoteItem(DataItem item, XElement packElement)
+        public static void AddPackNoteItem(DataItem item, XElement opfFile, bool addToc)
         {
             var itemEl = new XElement("item");
             itemEl.Add(new XAttribute("id", item.Value));
             itemEl.Add(new XAttribute("media-type", "text/x-oeb1-document"));
             itemEl.Add(new XAttribute("href", item.Name));
             itemEl.Add("");
-            packElement.Elements("manifest").First().Add(itemEl);
+            opfFile.Elements("manifest").First().Add(itemEl);
             itemEl = new XElement("itemref");
             itemEl.Add(new XAttribute("idref", item.Value));
-            packElement.Elements("spine").First().Add(itemEl);
+            opfFile.Elements("spine").First().Add(itemEl);
+
+            if (addToc)
+            {
+                itemEl = new XElement("reference");
+                itemEl.Add(new XAttribute("type", "text"));
+                itemEl.Add(new XAttribute("title", item.Value));
+                itemEl.Add(new XAttribute("href", item.Name));
+                opfFile.Elements("guide").First().Add(itemEl);
+            }
         }
     }
 }

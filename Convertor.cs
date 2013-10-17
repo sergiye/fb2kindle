@@ -46,8 +46,8 @@ namespace Fb2Kindle
                 bool notesCreated;
                 int playOrder;
 
-                var packElement = Common.GetEmptyPackage(book);
-                Common.AddTitleToPackage(packElement);
+                var opfFile = Common.GetEmptyPackage(book);
+                Common.AddTitleToPackage(opfFile);
                 Common.UpdateImages(book, imagesPrepared);
 
                 var ncxElement = new XElement("ncx");
@@ -57,14 +57,14 @@ namespace Fb2Kindle
                 //if (!_currentSettings.nstitle)
                 {
                     var imgSrc = Common.AttributeValue(book.Elements("description").Elements("title-info").Elements("coverpage").Elements("div").Elements("img"), "src");
-                    Common.AddCoverImage(ncxElement, packElement, imgSrc);
+                    Common.AddCoverImage(ncxElement, opfFile, imgSrc);
                 }
 
                 var tocEl = Common.CreateEmptyToc();
                 if (!_currentSettings.ntoc)
                 {
                     Common.AddTocToNcx(1, ncxElement);
-                    Common.AddTocToPack(packElement, "content");
+                    Common.AddTocToPack(opfFile);
                 }
 
                 var htmlElement = new XElement("html");
@@ -77,15 +77,15 @@ namespace Fb2Kindle
            
                 ConvertToHtml(book, out playOrder, out notesList2, out bodyStr, out notesCreated, out titles);
                 if (_currentSettings.nch)
-                    CreateSingleBook(bookName + ".html", titles, ncxElement, tocEl, packElement, bodyStr, htmlElement);
+                    CreateSingleBook(bookName + ".html", titles, ncxElement, tocEl, opfFile, bodyStr, htmlElement);
                 else
-                    playOrder = CreateChapters(bodyStr, htmlElement, packElement, titles, ncxElement, tocEl);
+                    playOrder = CreateChapters(bodyStr, htmlElement, opfFile, titles, ncxElement, tocEl);
 
                 if (notesCreated)
                 {
                     foreach (var item in notesList2)
                     {
-                        Common.AddPackNoteItem(item, packElement);
+                        Common.AddPackNoteItem(item, opfFile, false);
                         Common.AddNcxNoteItem(item, playOrder, ncxElement);
                         if (!_currentSettings.ntoc)
                             Common.AddTocNoteItem(item, tocEl);
@@ -94,16 +94,10 @@ namespace Fb2Kindle
                 }
                 File.WriteAllText(_tempDir + @"\book.css", _defaultCSS);
         
-                if (!_currentSettings.ntoc)
-                {
-                    Common.AddTocToPack(packElement, "content2");
-                    //Common.AddTocToNcx(titles.Count + 1, ncxElement);
-                }
+                opfFile.Save(_tempDir + @"\" + bookName + ".opf");
+                opfFile.RemoveAll();
 
-                packElement.Save(_tempDir + @"\" + bookName + ".opf");
-                packElement.RemoveAll();
-
-                ncxElement.Save(_tempDir + @"\toc.ncx");
+//                ncxElement.Save(_tempDir + @"\toc.ncx");
                 ncxElement.RemoveAll();
 
                 if (!_currentSettings.ntoc)
@@ -124,12 +118,12 @@ namespace Fb2Kindle
             }
             finally
             {
-                ClearTempFolder();
+                //ClearTempFolder();
                 Console.WriteLine();
             }
         }
 
-        public void CreateSingleBook(string htmlFile, List<DataItem> titles, XElement ncxElement, XElement tocEl, XElement packElement, string bodyStr, XElement htmlElement)
+        public void CreateSingleBook(string htmlFile, List<DataItem> titles, XElement ncxElement, XElement tocEl, XElement opfFile, string bodyStr, XElement htmlElement)
         {
             var i = 0;
             while (i < titles.Count)
@@ -142,15 +136,15 @@ namespace Fb2Kindle
             itemEl.Add(new XAttribute("media-type", "text/x-oeb1-document"));
             itemEl.Add(new XAttribute("href", htmlFile));
             itemEl.Add("");
-            packElement.Elements("manifest").First().Add(itemEl);
+            opfFile.Elements("manifest").First().Add(itemEl);
             itemEl = new XElement("itemref");
             itemEl.Add(new XAttribute("idref", "text"));
-            packElement.Elements("spine").First().Add(itemEl);
+            opfFile.Elements("spine").First().Add(itemEl);
             itemEl = new XElement("reference");
             itemEl.Add(new XAttribute("type", "text"));
             itemEl.Add(new XAttribute("title", "Начало"));
             itemEl.Add(new XAttribute("href", htmlFile));
-            packElement.Elements("guide").First().Add(itemEl);
+            opfFile.Elements("guide").First().Add(itemEl);
             bodyStr = Common.TabRep(bodyStr);
             var htmlContent = htmlElement.ToString();
             htmlContent = htmlContent.Insert(htmlContent.IndexOf("<body>") + 6, bodyStr).Replace("<sectio1", "<div class=\"book\"").Replace("</sectio1>", "</div>");
@@ -173,6 +167,7 @@ namespace Fb2Kindle
             if (_currentSettings.ntoc) return;
             navPoint = new XElement("li");
             navLabel = new XElement("a");
+//            navLabel.Add(new XAttribute("type", "toc"));
             navLabel.Add(new XAttribute("href", htmlFile + "#" + titles[i].Name));
             navLabel.Add(titles[i].Value);
             navPoint.Add(navLabel);
@@ -191,7 +186,7 @@ namespace Fb2Kindle
             }
         }
 
-        private int CreateChapters(string bodyStr, XElement element2, XElement packElement, List<DataItem> titles, XElement ncxElement, XElement tocEl)
+        private int CreateChapters(string bodyStr, XElement element2, XElement opfFile, List<DataItem> titles, XElement ncxElement, XElement tocEl)
         {
             Console.Write("Chapters creation...");
             var bookNum = 0;
@@ -220,10 +215,10 @@ namespace Fb2Kindle
                         itemEl.Add(new XAttribute("media-type", "text/x-oeb1-document"));
                         itemEl.Add(new XAttribute("href", "book" + bookNum + ".html"));
                         itemEl.Add("");
-                        packElement.Elements("manifest").First().Add(itemEl);
+                        opfFile.Elements("manifest").First().Add(itemEl);
                         itemEl = new XElement("itemref");
                         itemEl.Add(new XAttribute("idref", "text" + bookNum));
-                        packElement.Elements("spine").First().Add(itemEl);
+                        opfFile.Elements("spine").First().Add(itemEl);
                         var i = 0;
                         while (i < titles.Count)
                         {
@@ -255,10 +250,10 @@ namespace Fb2Kindle
                         itemEl.Add(new XAttribute("media-type", "text/x-oeb1-document"));
                         itemEl.Add(new XAttribute("href", "book" + bookNum + ".html"));
                         itemEl.Add("");
-                        packElement.Elements("manifest").First().Add(itemEl);
+                        opfFile.Elements("manifest").First().Add(itemEl);
                         itemEl = new XElement("itemref");
                         itemEl.Add(new XAttribute("idref", "text" + bookNum));
-                        packElement.Elements("spine").First().Add(itemEl);
+                        opfFile.Elements("spine").First().Add(itemEl);
                         for (var i = 0; i < titles.Count; i++)
                         {
                             var str34 = titles[i].Value;
@@ -298,11 +293,11 @@ namespace Fb2Kindle
                     bookNum++;
                 }
             }
-            var referenceEl = new XElement("reference");
-            referenceEl.Add(new XAttribute("type", "text"));
-            referenceEl.Add(new XAttribute("title", "Начало"));
-            referenceEl.Add(new XAttribute("href", "book0.html"));
-            packElement.Elements("guide").First().Add(referenceEl);
+//            var referenceEl = new XElement("reference");
+//            referenceEl.Add(new XAttribute("type", "text"));
+//            referenceEl.Add(new XAttribute("title", "Начало"));
+//            referenceEl.Add(new XAttribute("href", "book0.html"));
+//            opfFile.Elements("guide").First().Add(referenceEl);
             Console.WriteLine("(OK)");
             return num9;
         }
