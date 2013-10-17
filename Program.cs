@@ -41,16 +41,13 @@ namespace Fb2Kindle
                             currentSettings.noBig = true;
                             break;
                         case "-nch":
-                            currentSettings.noChapters = true;
+                            currentSettings.nch = true;
                             break;
                         case "-ni":
                             currentSettings.noImages = true;
                             break;
                         case "-ntoc":
                             currentSettings.ntoc = true;
-                            break;
-                        case "-nbox":
-                            currentSettings.nbox = true;
                             break;
                         case "-save":
                             currentSettings.save = true;

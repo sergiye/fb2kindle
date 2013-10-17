@@ -25,17 +25,14 @@ namespace Fb2Kindle
 
         public bool deleteOrigin { get; set; }
         public bool noBig { get; set; }
-        public bool noChapters { get; set; }
+        public bool nch { get; set; }
         public bool noImages { get; set; }
         public bool ntoc { get; set; }
         public string defaultCSS { get; set; }
         public string DropCap { get; set; }
-        public bool ContentOf { get; set; }
-        public bool nbox { get; set; } //note box
+        public bool all { get; set; }
         [XmlIgnore]
         public bool save { get; set; }
-        [XmlIgnore]
-        public bool all { get; set; }
     }
 
     public class SectionInfo
@@ -65,36 +62,22 @@ namespace Fb2Kindle
     {
         public const string ImagesFolderName = "images";
 
-        public static string FormatToHTML(string htmltxt2)
+        public static void FormatToHTML(XElement book)
         {
-            htmltxt2 = htmltxt2.Replace("<text-author>", "<p class=\"text-author\">");
-            htmltxt2 = htmltxt2.Replace("</text-author>", "</p>");
-            htmltxt2 = htmltxt2.Replace("<empty-line />", "<br/>");
-            htmltxt2 = htmltxt2.Replace("<epigraph ", "<div class = \"epigraph\" ");
-            htmltxt2 = htmltxt2.Replace("<epigraph>", "<div class = \"epigraph\">");
-            htmltxt2 = htmltxt2.Replace("</epigraph>", "</div>");
-            htmltxt2 = htmltxt2.Replace("<empty-line/>", "<br/>");
-            htmltxt2 = htmltxt2.Replace("<subtitle ", "<div class = \"subtitle\" ");
-            htmltxt2 = htmltxt2.Replace("<subtitle>", "<div class = \"subtitle\">");
-            htmltxt2 = htmltxt2.Replace("</subtitle>", "</div>");
-            htmltxt2 = htmltxt2.Replace("<cite ", "<div class = \"cite\" ");
-            htmltxt2 = htmltxt2.Replace("<cite>", "<div class = \"cite\">");
-            htmltxt2 = htmltxt2.Replace("</cite>", "</div>");
-            htmltxt2 = htmltxt2.Replace("<emphasis>", "<i>");
-            htmltxt2 = htmltxt2.Replace("</emphasis>", "</i>");
-            htmltxt2 = htmltxt2.Replace("<strong>", "<b>");
-            htmltxt2 = htmltxt2.Replace("</strong>", "</b>");
-            htmltxt2 = htmltxt2.Replace("<poem", "<div class=\"poem\"");
-            htmltxt2 = htmltxt2.Replace("</poem>", "</div>");
-            htmltxt2 = htmltxt2.Replace("<stanza>", "<br/>");
-            htmltxt2 = htmltxt2.Replace("</stanza>", "<br/>");
-            htmltxt2 = htmltxt2.Replace("<v>", "<p>");
-            htmltxt2 = htmltxt2.Replace("</v>", "</p>");
-            htmltxt2 = htmltxt2.Replace("<title", "<div class = \"subtitle\"");
-            htmltxt2 = htmltxt2.Replace("</title>", "</div>");
-            return htmltxt2;
+            RenameTags(book, "text-author", "P", "text-author");
+            RenameTags(book, "empty-line", "br");
+            RenameTags(book, "epigraph", "div", "epigraph");
+            RenameTags(book, "epigraph", "div", "epigraph");
+            RenameTags(book, "subtitle", "div", "subtitle");
+            RenameTags(book, "cite", "div", "cite");
+            RenameTags(book, "emphasis", "i");
+            RenameTags(book, "strong", "b");
+            RenameTags(book, "poem", "div", "poem");
+            RenameTags(book, "stanza", "br");
+            RenameTags(book, "v", "p");
+            RenameTags(book, "title", "div", "subtitle");
         }
-
+  
         public static void CopyDirectory(string sourceDirName, string destDirName, bool copySubDirs)
         {
             var dir = new DirectoryInfo(sourceDirName);
@@ -114,7 +97,7 @@ namespace Fb2Kindle
         public static void ShowHelpText()
         {
             Console.WriteLine();
-            Console.WriteLine(Assembly.GetExecutingAssembly().GetName().Name + " <book.fb2> [-css <styles.css>] [-d] [-nh] [-nb] [-nch] [-ni]");
+            Console.WriteLine(Assembly.GetExecutingAssembly().GetName().Name + " <book.fb2> [-css <styles.css>] [-d] [-nb] [-nch] [-ni]");
             Console.WriteLine();
             Console.WriteLine("<book.fb2>: input fb2 file");
             Console.WriteLine("-css <styles.css>: styles used in destination book");
@@ -123,9 +106,9 @@ namespace Fb2Kindle
             Console.WriteLine("-nch: no chapters");
             Console.WriteLine("-ni: no images");
             Console.WriteLine("-ntoc: no table of content");
-            Console.WriteLine("-nbox: notes in the text");
             Console.WriteLine("-save: save parameters to be used at the next start");
             Console.WriteLine("-a: process all files in current folder");
+            Console.WriteLine("-w: wait for key press on finish");
             Console.WriteLine();
         }
 
@@ -161,7 +144,7 @@ namespace Fb2Kindle
             Console.WriteLine();
         }
 
-        public static bool CreateMobi(string executingPath, string tempDir, string bookName, string parentPath, bool deleteOrigin, string bookPath)
+        public static bool CreateMobi(string tempDir, string bookName, string bookPath)
         {
             if (!File.Exists(tempDir + @"\kindlegen.exe"))
             {
@@ -179,8 +162,6 @@ namespace Fb2Kindle
                 return false;
             }
             
-            if (deleteOrigin)
-                File.Delete(bookPath);
             var versionNumber = 1;
             var resultPath = Path.GetDirectoryName(bookPath);
             var resultName = bookName;
@@ -377,21 +358,11 @@ namespace Fb2Kindle
             return null;
         }
 
-        public static string AttributeValue(XElement source, XName name)
-        {
-            return (string) source.Attribute(name);
-        }
-
         public static string AttributeValue(IEnumerable<XElement> source, XName name)
         {
             foreach (var element in source)
                 return (string) element.Attribute(name);
             return null;
-        }
-
-        public static XAttribute CreateAttribute(XName name, object value)
-        {
-            return value == null ? null : new XAttribute(name, value);
         }
 
         public static void WriteObjectToFile(string filePath, object value, bool useFormatting = false)
@@ -431,32 +402,36 @@ namespace Fb2Kindle
             }
         }
 
-        public static void UpdateImages(XElement book, bool imagesPrepared)
+        public static XElement[] RenameTags(XElement root, string tagName, string newName, string css = null,bool clearData = false)
         {
-            var list = book.Descendants("image");
+            var list = root.Descendants(tagName).ToArray();
             foreach (var element in list)
             {
-                if (imagesPrepared)
+                element.Name = newName;
+                if (clearData)
                 {
-                    var src = element.Attribute("href").Value;
-                    element.Name = "div";
-                    element.Attributes().Remove();
-                    element.RemoveNodes();
-                    if (!String.IsNullOrEmpty(src))
-                    {
-                        src = src.Replace("#", "");
-                        element.SetAttributeValue("class", "image");
-                        var imgEl = new XElement("img");
-                        imgEl.SetAttributeValue("src", ImagesFolderName + "/" + src);
-                        element.Add(imgEl);
-                    }
-                }
-                else
-                {
-                    element.Name = "div";
                     element.Attributes().Remove();
                     element.RemoveNodes();
                 }
+                if (!String.IsNullOrEmpty(css))
+                    element.SetAttributeValue("class", css);
+            }
+            return list;
+        }
+
+        public static void UpdateImages(XElement book, bool imagesPrepared)
+        {
+            var list = RenameTags(book, "image", "div", "image");
+            foreach (var element in list)
+            {
+                if (!imagesPrepared) continue;
+                var src = element.Attribute("href").Value;
+                element.RemoveAll();
+                if (String.IsNullOrEmpty(src)) continue;
+                src = src.Replace("#", "");
+                var imgEl = new XElement("img");
+                imgEl.SetAttributeValue("src", ImagesFolderName + "/" + src);
+                element.Add(imgEl);
             }
         }
 
@@ -500,8 +475,201 @@ namespace Fb2Kindle
             if (body != null)
                 headEl.Add(body.Nodes());
             packEl.Add(headEl);
-            var htmltxt = FormatToHTML(packEl.ToString());
-            SaveWithEncoding(folder + @"\" + bodyName + ".html", htmltxt);
+            FormatToHTML(packEl);
+            //SaveWithEncoding(folder + @"\" + bodyName + ".html", packEl.ToString());
+            packEl.Save(folder + @"\" + bodyName + ".html");
+            packEl.RemoveAll();
+        }
+
+        public static XElement CreateEmptyToc()
+        {
+//            if () //this part in prev version was skipped
+//            {
+//                packEl = new XElement("navPoint");
+//                packEl.Add(new XAttribute("id", "navpoint-1"));
+//                packEl.Add(new XAttribute("playOrder", "1"));
+//                headEl = new XElement("navLabel");
+//                linkEl = new XElement("text");
+//                linkEl.Add("Содержание");
+//                headEl.Add(linkEl);
+//                packEl.Add(headEl);
+//                headEl = new XElement("content");
+//                headEl.Add(new XAttribute("src", "toc.html#toc"));
+//                packEl.Add(headEl);
+//            }
+            var packEl = new XElement("html");
+            var headEl = new XElement("head");
+            var linkEl = new XElement("title");
+            linkEl.Add("Содержание");
+            headEl.Add(linkEl);
+            linkEl = new XElement("link");
+            linkEl.Add(new XAttribute("type", "text/css"));
+            linkEl.Add(new XAttribute("href", "book.css"));
+            linkEl.Add(new XAttribute("rel", "Stylesheet"));
+            headEl.Add(linkEl);
+            packEl.Add(headEl);
+            headEl = new XElement("body");
+            linkEl = new XElement("div");
+            linkEl.Add(new XAttribute("class", "title"));
+            var content = new XElement("div");
+            content.Add(new XAttribute("class", "title1"));
+            content.Add(new XAttribute("id", "toc"));
+            content.Add(new XElement("p", "Содержание"));
+            linkEl.Add(content);
+            headEl.Add(linkEl);
+            linkEl = new XElement("ul");
+            linkEl.Add("");
+            headEl.Add(linkEl);
+            packEl.Add(headEl);
+            return packEl;
+        }
+
+        public static string UpdateATags(XElement body, List<DataItem> notesList)
+        {
+            foreach (var a in body.Descendants("a"))
+            {
+                var src = a.Attribute("href").Value;
+                if (String.IsNullOrEmpty(src)) continue;
+                foreach (var note in notesList)
+                {
+                    if (!src.Equals(note.Value, StringComparison.OrdinalIgnoreCase)) continue;
+                    var value = a.Value;
+                    a.RemoveAll();
+                    a.SetAttributeValue("href", note.Name + src);
+                    a.Add(new XElement("sup", value));
+                    break;
+                }
+            }
+            return body.ToString();
+        }
+
+        public static XElement LoadBookWithoutNs(string bookPath, string bookName)
+        {
+            Console.WriteLine("Processing: " + bookName);
+            try
+            {
+                XElement book;
+                using (Stream file = File.OpenRead(bookPath))
+                {
+                    book = XElement.Load(file);
+                }
+                XNamespace ns = "";
+                foreach (var el in book.DescendantsAndSelf())
+                {
+                    el.Name = ns.GetName(el.Name.LocalName);
+                    var atList = el.Attributes().ToList();
+                    el.Attributes().Remove();
+                    foreach (var at in atList)
+                        el.Add(new XAttribute(ns.GetName(at.Name.LocalName), at.Value));
+                }
+                book = new XElement("book", book.Elements("description"), book.Elements("body"), book.Elements("binary"));
+                return book;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Unknown file format: " + ex.Message);
+                return null;
+            }
+        }
+
+        public static XElement GetEmptyPackage(XElement book)
+        {
+            var packEl = new XElement("package");
+            var linkEl = new XElement("meta");
+            linkEl.Add(new XAttribute("name", "zero-gutter"));
+            linkEl.Add(new XAttribute("content", "true"));
+            var headEl = new XElement("metadata");
+            headEl.Add(linkEl);
+            linkEl = new XElement("meta");
+            linkEl.Add(new XAttribute("name", "zero-margin"));
+            linkEl.Add(new XAttribute("content", "true"));
+            headEl.Add(linkEl);
+            linkEl = new XElement("dc-metadata");
+            linkEl.Add(new XAttribute(XNamespace.Get("http://www.w3.org/2000/xmlns/").GetName("dc"), "http://"));
+
+            var nsHttp = XNamespace.Get("http://");
+            var content = new XElement(nsHttp.GetName("Title"));
+            content.Add(Value(book.Elements("description").Elements("title-info").Elements("book-title")));
+            linkEl.Add(content);
+            content = new XElement(nsHttp.GetName("Language"));
+            var bookLang = Value(book.Elements("description").First().Elements("title-info").First().Elements("lang"));
+            if (String.IsNullOrEmpty(bookLang))
+                bookLang = "ru";
+            content.Add(bookLang);
+            linkEl.Add(content);
+            content = new XElement(nsHttp.GetName("Creator"));
+            content.Add(Value(book.Elements("description").Elements("title-info").Elements("author").First().Elements("last-name")) + " " + Value(book.Elements("description").Elements("title-info").Elements("author").First().Elements("first-name")) + " " + Value(book.Elements("description").Elements("title-info").Elements("author").First().Elements("middle-name")));
+            linkEl.Add(content);
+            content = new XElement(nsHttp.GetName("Publisher"));
+            content.Add(Value(book.Elements("description").Elements("publish-info").Elements("publisher")));
+            linkEl.Add(content);
+            content = new XElement(nsHttp.GetName("date"));
+            content.Add(Value(book.Elements("description").Elements("publish-info").Elements("year")));
+            linkEl.Add(content);
+            content = new XElement("x-metadata");
+            content.Add("");
+            linkEl.Add(content);
+            headEl.Add(linkEl);
+            packEl.Add(headEl);
+            headEl = new XElement("manifest");
+            linkEl = new XElement("item");
+            linkEl.Add(new XAttribute("id", "ncx"));
+            linkEl.Add(new XAttribute("media-type", "application/x-dtbncx+xml"));
+            linkEl.Add(new XAttribute("href", "toc.ncx"));
+            headEl.Add(linkEl);
+            packEl.Add(headEl);
+            headEl = new XElement("spine");
+            headEl.Add(new XAttribute("toc", "ncx"));
+            headEl.Add("");
+            packEl.Add(headEl);
+            headEl = new XElement("guide");
+            headEl.Add("");
+            packEl.Add(headEl);
+            return packEl;
+        }
+
+        public static void AddTitleToPackage(XElement packElement)
+        {
+            var packEl = new XElement("item");
+            packEl.Add(new XAttribute("id", "booktitle"));
+            packEl.Add(new XAttribute("media-type", "text/x-oeb1-document"));
+            packEl.Add(new XAttribute("href", "booktitle.html"));
+            packEl.Add("");
+            packElement.Elements("manifest").First().Add(packEl);
+            packEl = new XElement("itemref");
+            packEl.Add(new XAttribute("idref", "booktitle"));
+            packElement.Elements("spine").First().Add(packEl);
+            packEl = new XElement("reference");
+            packEl.Add(new XAttribute("type", "start"));
+            packEl.Add(new XAttribute("title", "Заглавие"));
+            packEl.Add(new XAttribute("href", "booktitle.html"));
+            packElement.Elements("guide").First().Add(packEl);
+        }
+
+        public static void AddCoverImage(XElement packElement, string imgSrc)
+        {
+            if (String.IsNullOrEmpty(imgSrc)) return;
+            var coverEl = new XElement("EmbeddedCover");
+            coverEl.Add(imgSrc);
+            packElement.Elements("metadata").First().Elements("dc-metadata").First().Elements("x-metadata").First().Add(coverEl);
+        }
+
+        public static void AddDefaultToc(XElement packElement)
+        {
+            var packEl = new XElement("item");
+            packEl.Add(new XAttribute("id", "content"));
+            packEl.Add(new XAttribute("media-type", "text/x-oeb1-document"));
+            packEl.Add(new XAttribute("href", "toc.html"));
+            packEl.Add("");
+            packElement.Elements("manifest").First().Add(packEl);
+            packEl = new XElement("itemref");
+            packEl.Add(new XAttribute("idref", "content"));
+            packElement.Elements("spine").First().Add(packEl);
+            packEl = new XElement("reference");
+            packEl.Add(new XAttribute("type", "toc"));
+            packEl.Add(new XAttribute("title", "Содержание"));
+            packEl.Add(new XAttribute("href", "toc.html"));
+            packElement.Elements("guide").First().Add(packEl);
         }
     }
 }
