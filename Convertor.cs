@@ -56,8 +56,6 @@ namespace Fb2Kindle
                 var imgSrc = Common.AttributeValue(book.Elements("description").Elements("title-info").Elements("coverpage").Elements("div").Elements("img"), "src");
                 Common.AddCoverImage(packElement, imgSrc);
 
-                ConvertToHtml(book, out playOrder, out notesList2, out bodyStr, out notesCreated, out titles);
-
                 var ncxElement = new XElement("ncx");
                 ncxElement.Add(new XElement("head", ""));
                 ncxElement.Add(new XElement("docTitle", new XElement("text", "KF8")));
@@ -76,7 +74,6 @@ namespace Fb2Kindle
                     ncxElement.Elements("navMap").First().Add(packEl);
                 }
 
-
                 var tocEl = Common.CreateEmptyToc();
                 if (!_currentSettings.ntoc)
                     ncxElement.Elements("navMap").First().Add(tocEl);
@@ -88,81 +85,24 @@ namespace Fb2Kindle
                 linkEl.Add(new XAttribute("rel", "Stylesheet"));
                 htmlElement.Add(new XElement("head", linkEl));
                 htmlElement.Add(new XElement("body", ""));
-
+           
+                ConvertToHtml(book, out playOrder, out notesList2, out bodyStr, out notesCreated, out titles);
                 if (_currentSettings.nch)
-                {
                     CreateSingleBook(bookName + ".html", titles, ncxElement, tocEl, packElement, bodyStr, htmlElement);
-                }
                 else
-                {
                     playOrder = CreateChapters(bodyStr, htmlElement, packElement, titles, ncxElement, tocEl);
-                }
-                if (!_currentSettings.ntoc)
-                {
-                    var navPoint = new XElement("navPoint");
-                    navPoint.Add(new XAttribute("id", "navpoint-" + (titles.Count + 1).ToString()));
-                    navPoint.Add(new XAttribute("playOrder", (titles.Count + 1).ToString()));
-                    var navLabel = new XElement("navLabel");
-                    var textEl = new XElement("text");
-                    textEl.Add("Contents");
-                    navLabel.Add(textEl);
-                    navPoint.Add(navLabel);
-                    navLabel = new XElement("content");
-                    navLabel.Add(new XAttribute("src", "toc.html#toc"));
-                    navPoint.Add(navLabel);
-                    ncxElement.Elements("navMap").First().Add(navPoint);
 
-                    navPoint = new XElement("item");
-                    navPoint.Add(new XAttribute("id", "content2"));
-                    navPoint.Add(new XAttribute("media-type", "text/x-oeb1-document"));
-                    navPoint.Add(new XAttribute("href", "toc.html"));
-                    navPoint.Add("");
-                    packElement.Elements("manifest").First().Add(navPoint);
-                    navPoint = new XElement("itemref");
-                    navPoint.Add(new XAttribute("idref", "content"));
-                    packElement.Elements("spine").First().Add(navPoint);
-                    navPoint = new XElement("reference");
-                    navPoint.Add(new XAttribute("type", "toc"));
-                    navPoint.Add(new XAttribute("title", "Содержание"));
-                    navPoint.Add(new XAttribute("href", "toc.html"));
-                    packElement.Elements("guide").First().Add(navPoint);
-                }
+                if (!_currentSettings.ntoc)
+                    Common.AddTocToTheEnd(titles.Count + 1, ncxElement, packElement);
+
                 if (notesCreated)
                 {
                     foreach (var item in notesList2)
                     {
-                        var itemEl = new XElement("item");
-                        itemEl.Add(new XAttribute("id", item.Value));
-                        itemEl.Add(new XAttribute("media-type", "text/x-oeb1-document"));
-                        itemEl.Add(new XAttribute("href", item.Name));
-                        itemEl.Add("");
-                        packElement.Elements("manifest").First().Add(itemEl);
-                        itemEl = new XElement("itemref");
-                        itemEl.Add(new XAttribute("idref", item.Value));
-                        packElement.Elements("spine").First().Add(itemEl);
-
-                        itemEl = new XElement("navPoint");
-                        itemEl.Add(new XAttribute("id", "navpoint-" + item.Value));
-                        itemEl.Add(new XAttribute("playOrder", playOrder));
-                        var navLabel = new XElement("navLabel");
-                        var textEl = new XElement("text");
-                        textEl.Add(item.Value);
-                        navLabel.Add(textEl);
-                        itemEl.Add(navLabel);
-                        navLabel = new XElement("content");
-                        navLabel.Add(new XAttribute("src", item.Name));
-                        itemEl.Add(navLabel);
-                        ncxElement.Elements("navMap").First().Add(itemEl);
-
+                        Common.AddPackNoteItem(item, packElement);
+                        Common.AddNcxNoteItem(item, playOrder, ncxElement);
                         if (!_currentSettings.ntoc)
-                        {
-                            itemEl = new XElement("li");
-                            navLabel = new XElement("a");
-                            navLabel.Add(new XAttribute("href", item.Name));
-                            navLabel.Add(item.Value);
-                            itemEl.Add(navLabel);
-                            tocEl.Elements("body").First().Elements("ul").First().Add(itemEl);
-                        }
+                            Common.AddTocNoteItem(item, tocEl);
                         playOrder++;
                     }
                 }
@@ -192,6 +132,7 @@ namespace Fb2Kindle
             finally
             {
                 ClearTempFolder();
+                Console.WriteLine();
             }
         }
 

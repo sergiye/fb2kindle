@@ -132,6 +132,7 @@ namespace Fb2Kindle
         public static void ShowMainInfo()
         {
 //            Console.Clear();
+            Console.WriteLine();
             var assembly = Assembly.GetExecutingAssembly();
             var ver = Assembly.GetExecutingAssembly().GetName().Version;
             Console.WriteLine(assembly.GetName().Name + " Version: " + ver.ToString(3) + "; Build time: " + GetBuildTime(ver).ToString("yyyy/MM/dd HH:mm:ss"));
@@ -548,10 +549,12 @@ namespace Fb2Kindle
             Console.WriteLine("Processing: " + bookName);
             try
             {
+//                var xmlDoc = new XmlDocument();
+//                xmlDoc.Load(bookPath);
                 XElement book;
                 using (Stream file = File.OpenRead(bookPath))
                 {
-                    book = XElement.Load(file);
+                    book = XElement.Load(file, LoadOptions.PreserveWhitespace);
                 }
                 XNamespace ns = "";
                 foreach (var el in book.DescendantsAndSelf())
@@ -670,6 +673,76 @@ namespace Fb2Kindle
             packEl.Add(new XAttribute("title", "Содержание"));
             packEl.Add(new XAttribute("href", "toc.html"));
             packElement.Elements("guide").First().Add(packEl);
+        }
+
+        public static void AddTocToTheEnd(int playOrder, XElement ncxElement, XElement packElement)
+        {
+            var navPoint = new XElement("navPoint");
+            navPoint.Add(new XAttribute("id", "navpoint-" + playOrder.ToString()));
+            navPoint.Add(new XAttribute("playOrder", playOrder.ToString()));
+            var navLabel = new XElement("navLabel");
+            var textEl = new XElement("text");
+            textEl.Add("Contents");
+            navLabel.Add(textEl);
+            navPoint.Add(navLabel);
+            navLabel = new XElement("content");
+            navLabel.Add(new XAttribute("src", "toc.html#toc"));
+            navPoint.Add(navLabel);
+            ncxElement.Elements("navMap").First().Add(navPoint);
+
+            navPoint = new XElement("item");
+            navPoint.Add(new XAttribute("id", "content2"));
+            navPoint.Add(new XAttribute("media-type", "text/x-oeb1-document"));
+            navPoint.Add(new XAttribute("href", "toc.html"));
+            navPoint.Add("");
+            packElement.Elements("manifest").First().Add(navPoint);
+            navPoint = new XElement("itemref");
+            navPoint.Add(new XAttribute("idref", "content"));
+            packElement.Elements("spine").First().Add(navPoint);
+            navPoint = new XElement("reference");
+            navPoint.Add(new XAttribute("type", "toc"));
+            navPoint.Add(new XAttribute("title", "Содержание"));
+            navPoint.Add(new XAttribute("href", "toc.html"));
+            packElement.Elements("guide").First().Add(navPoint);
+        }
+
+        public static void AddTocNoteItem(DataItem item, XElement tocEl)
+        {
+            var itemEl = new XElement("li");
+            var navLabel = new XElement("a");
+            navLabel.Add(new XAttribute("href", item.Name));
+            navLabel.Add(item.Value);
+            itemEl.Add(navLabel);
+            tocEl.Elements("body").First().Elements("ul").First().Add(itemEl);
+        }
+
+        public static void AddNcxNoteItem(DataItem item, int playOrder, XElement ncxElement)
+        {
+            var itemEl = new XElement("navPoint");
+            itemEl.Add(new XAttribute("id", "navpoint-" + item.Value));
+            itemEl.Add(new XAttribute("playOrder", playOrder));
+            var navLabel = new XElement("navLabel");
+            var textEl = new XElement("text");
+            textEl.Add(item.Value);
+            navLabel.Add(textEl);
+            itemEl.Add(navLabel);
+            navLabel = new XElement("content");
+            navLabel.Add(new XAttribute("src", item.Name));
+            itemEl.Add(navLabel);
+            ncxElement.Elements("navMap").First().Add(itemEl);
+        }
+
+        public static void AddPackNoteItem(DataItem item, XElement packElement)
+        {
+            var itemEl = new XElement("item");
+            itemEl.Add(new XAttribute("id", item.Value));
+            itemEl.Add(new XAttribute("media-type", "text/x-oeb1-document"));
+            itemEl.Add(new XAttribute("href", item.Name));
+            itemEl.Add("");
+            packElement.Elements("manifest").First().Add(itemEl);
+            itemEl = new XElement("itemref");
+            itemEl.Add(new XAttribute("idref", item.Value));
+            packElement.Elements("spine").First().Add(itemEl);
         }
     }
 }
