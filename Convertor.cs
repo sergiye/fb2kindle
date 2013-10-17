@@ -28,6 +28,7 @@ namespace Fb2Kindle
         private XElement _tocEl;
         private XElement _htmlEl;
         private List<DataItem> _notesList;
+        private List<DataItem> _titles;
         private DefaultOptions _currentSettings { get; set; }
 
         public Convertor(DefaultOptions currentSettings, string workingFolder, string defaultCSS)
@@ -75,16 +76,18 @@ namespace Fb2Kindle
                 bool notesCreated;
                 var playOrder = 0;
 
-                var titles = ConvertToHtml(out bodyStr);
+                var bodyEl = ConvertToHtml();
+
                 if (_currentSettings.nch)
-                    CreateSingleBook(bookName + ".html", titles, bodyStr);
+                    CreateSingleBook(bookName + ".html", bodyEl);
                 else
-                    playOrder = CreateChapters(bodyStr, titles);
+                    playOrder = CreateChapters(bodyEl);
 
                 if (_notesList != null)
                 {
                     foreach (var item in _notesList)
                     {
+                        if (item.Value.StartsWith("#")) continue;
                         AddPackNoteItem(item, _opfFile, false);
                         AddNcxNoteItem(item, playOrder, _ncxElement);
                         if (!_currentSettings.ntoc)
@@ -154,14 +157,10 @@ namespace Fb2Kindle
             return ncxElement;
         }
 
-        public void CreateSingleBook(string htmlFile, List<DataItem> titles, string bodyStr)
+        public void CreateSingleBook(string htmlFile, XElement bodyEl)
         {
-            var i = 0;
-            while (i < titles.Count)
-            {
-                AddTitleToToc(titles[i].Value, htmlFile + "#" + titles[i].Name, i);
-                i++;
-            }
+            for (var i = 0; i < _titles.Count; i++)
+                AddTitleToToc(_titles[i].Value, htmlFile + "#" + _titles[i].Name, i);
             var itemEl = new XElement("item");
             itemEl.Add(new XAttribute("id", "text"));
             itemEl.Add(new XAttribute("media-type", "text/x-oeb1-document"));
@@ -176,11 +175,9 @@ namespace Fb2Kindle
             itemEl.Add(new XAttribute("title", "Название"));
             itemEl.Add(new XAttribute("href", htmlFile));
             _opfFile.Elements("guide").First().Add(itemEl);
-
-            bodyStr = TabRep(bodyStr);
-            var htmlContent = _htmlEl.ToString();
-            htmlContent = htmlContent.Insert(htmlContent.IndexOf("<body>") + 6, bodyStr).Replace("<sectio1", "<div class=\"book\"").Replace("</sectio1>", "</div>");
-            SaveWithEncoding(_tempDir + @"\" + htmlFile, htmlContent);
+            _htmlEl.Elements("body").First().Add(bodyEl);
+            RenameTags(_htmlEl, "section", "div", "book");
+            _htmlEl.Save(_tempDir + @"\" + htmlFile);
         }
 
         private void AddTitleToToc(string title, string path, int i)
@@ -225,12 +222,13 @@ namespace Fb2Kindle
             }
         }
 
-        private int CreateChapters(string bodyStr, List<DataItem> titles)
+        private int CreateChapters(XElement bodyEl)
         {
             Console.Write("Chapters creation...");
+            var bodyStr = bodyEl.ToString();
             var bookNum = 0;
-            var startIdx = bodyStr.IndexOf("<sectio1", 2);
-            var endIdx = bodyStr.IndexOf("</sectio1>");
+            var startIdx = bodyStr.IndexOf("<section", 2);
+            var endIdx = bodyStr.IndexOf("</section>");
             var start = 0;
             var str40 = "";
             var flag17 = false;
@@ -243,11 +241,10 @@ namespace Fb2Kindle
                 {
                     if (!flag17)
                     {
-                        bodyContent = bodyStr.Substring(start, startIdx - start) + "</sectio1>";
+                        bodyContent = bodyStr.Substring(start, startIdx - start) + "</section>";
                         noBookFlag = !XElement.Parse(bodyContent).Elements("p").Any();
                         bodyContent = str40 + bodyContent;
                         str40 = "";
-                        bodyContent = TabRep(bodyContent);
                         SaveElementToFile(_htmlEl.ToString(), bodyContent, noBookFlag, _tempDir, bookNum);
                         var itemEl = new XElement("item");
                         itemEl.Add(new XAttribute("id", "text" + bookNum));
@@ -259,18 +256,18 @@ namespace Fb2Kindle
                         itemEl.Add(new XAttribute("idref", "text" + bookNum));
                         _opfFile.Elements("spine").First().Add(itemEl);
                         var i = 0;
-                        while (i < titles.Count)
+                        while (i < _titles.Count)
                         {
-                            if (bodyContent.IndexOf(String.Format("id=\"{0}\"", titles[i].Name)) != -1)
+                            if (bodyContent.IndexOf(String.Format("id=\"{0}\"", _titles[i].Name)) != -1)
                             {
-                                AddTitleToToc(titles[i].Value, String.Format("book{0}.html#{1}", bookNum, titles[i].Name), i);
+                                AddTitleToToc(_titles[i].Value, String.Format("book{0}.html#{1}", bookNum, _titles[i].Name), i);
                                 num9++;
                             }
                             i++;
                         }
                     }
                     start = startIdx;
-                    startIdx = bodyStr.IndexOf("<sectio1", (startIdx + 1));
+                    startIdx = bodyStr.IndexOf("<section", (startIdx + 1));
                     flag17 = false;
                 }
                 else
@@ -281,7 +278,6 @@ namespace Fb2Kindle
                         noBookFlag = !XElement.Parse(bodyContent).Elements("p").Any();
                         bodyContent = str40 + bodyContent;
                         str40 = "";
-                        bodyContent = TabRep(bodyContent);
                         SaveElementToFile(_htmlEl.ToString(), bodyContent, noBookFlag, _tempDir, bookNum);
 
                         var itemEl = new XElement("item");
@@ -293,19 +289,19 @@ namespace Fb2Kindle
                         itemEl = new XElement("itemref");
                         itemEl.Add(new XAttribute("idref", "text" + bookNum));
                         _opfFile.Elements("spine").First().Add(itemEl);
-                        for (var i = 0; i < titles.Count; i++)
+                        for (var i = 0; i < _titles.Count; i++)
                         {
-                            if (bodyContent.IndexOf("id=\"" + titles[i].Name + "\"") == -1) continue;
+                            if (bodyContent.IndexOf("id=\"" + _titles[i].Name + "\"") == -1) continue;
                             if (!_currentSettings.ntoc)
                             {
-                                AddTitleToToc(titles[i].Value, String.Format("book{0}.html#{1}", bookNum, titles[i].Name), num9);
+                                AddTitleToToc(_titles[i].Value, String.Format("book{0}.html#{1}", bookNum, _titles[i].Name), num9);
                             }
                             num9++;
                         }
                     }
                     flag17 = true;
                     start = endIdx;
-                    endIdx = bodyStr.IndexOf("</sectio1>", (endIdx + 1));
+                    endIdx = bodyStr.IndexOf("</section>", (endIdx + 1));
                 }
                 if (!flag17)
                 {
@@ -316,39 +312,44 @@ namespace Fb2Kindle
             return num9;
         }
 
-        public List<DataItem> ConvertToHtml(out string bodyStr)
+        public XElement ConvertToHtml()
         {
             Console.Write("FB2 to HTML...");
             const string str = "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧЩШЬЪЫЭЮЯQWERTYUIOPASDFGHJKLZXCVBNM";
             CreateTitlePage(_book, _tempDir);
 
-            var notesList = new List<DataItem>();
             var bodies = new List<XElement>();
             bodies.AddRange(_book.Elements("body"));
-            if (bodies.Count() > 1)
+            _notesList = new List<DataItem>();
+            for (var i = 1; i < bodies.Count; i++)
             {
-                _notesList = new List<DataItem>();
-                for (var i = 1; i < bodies.Count; i++)
-                {
-                    var bodyName = (string)bodies[i].Attribute("name");
-                    if (String.IsNullOrEmpty(bodyName)) continue;
-                    _notesList.Add(new DataItem(bodyName + ".html", bodyName));
-                    var list = bodies[i].Descendants("section").ToList();
-                    if (list.Count > 0)
-                        foreach (var t in list)
-                            notesList.Add(new DataItem(bodyName + ".html", "#" + (string)t.Attribute("id")));
-                    CreateNoteBox(_book, i, bodyName, _tempDir);
-                }
+                var bodyName = (string)bodies[i].Attribute("name");
+                if (String.IsNullOrEmpty(bodyName)) continue;
+                _notesList.Add(new DataItem(bodyName + ".html", bodyName));
+                var list = bodies[i].Descendants("section").ToList();
+                if (list.Count > 0)
+                    foreach (var t in list)
+                        _notesList.Add(new DataItem(bodyName + ".html", "#" + (string)t.Attribute("id")));
+                CreateNoteBox(_book, i, bodyName, _tempDir);
             }
-            bodies[0].Name = "sectio1";
-            var titles = new List<DataItem>();
+
+            var body = _book.Elements("body").First();
+            body.Name = "section";
+//            bodies[0].SetAttributeValue("class", "book");
+//            var els = bodies[0].Descendants("section");
+//            foreach (var el in els)
+//            {
+//                el.Name = "div";
+//                el.SetAttributeValue("class", "book");
+//            }
+            _titles = new List<DataItem>();
             var idx = 0;
             {
-                var ts = bodies[0].Descendants("title");
+                var ts = body.Descendants("title");
                 foreach (var t in ts)
                 {
                     if (!string.IsNullOrEmpty(t.Value))
-                        titles.Add(new DataItem(string.Format("title{0}", idx + 2), t.Value.Trim()));
+                        _titles.Add(new DataItem(string.Format("title{0}", idx + 2), t.Value.Trim()));
                     t.Name = "div";
                     t.SetAttributeValue("class", "title");
                     var inner = new XElement("div");
@@ -360,10 +361,7 @@ namespace Fb2Kindle
                     idx++;
                 }
             }
-            var els = bodies[0].Descendants("section");
-            foreach (var el in els)
-                el.Name = "sectio1";
-            els = bodies[0].Descendants("stanza");
+            var els = body.Descendants("stanza");
             foreach (var el in els)
             {
                 el.Name = "br";
@@ -373,9 +371,10 @@ namespace Fb2Kindle
                 el.RemoveAll();
                 parent.Add(new XElement("br"));
             }
-            ReplaceSomeTags(bodies[0]);
-            bodyStr = UpdateATags(bodies[0], notesList);
-            return titles;
+            ReplaceSomeTags(body);
+            UpdateATags(body);
+            Console.WriteLine("(OK)");
+            return body;
         }
 
         private void AddTocToNcx()
@@ -515,9 +514,8 @@ namespace Fb2Kindle
         public static void SaveElementToFile(string elementData, string bodyContent, bool noBookFlag, string folder, int bookNum)
         {
             var text = elementData;
+            //text = text.Replace(Convert.ToChar(160).ToString(), "&nbsp;").Replace(Convert.ToChar(0xad).ToString(), "&shy;");
             text = text.Insert(text.IndexOf("<body>") + 6, bodyContent);
-            text = text.Replace("<sectio1", noBookFlag ? "<div class=\"nobook\"" : "<div class=\"book\"");
-            text = text.Replace("</sectio1>", "</div>");
             SaveWithEncoding(folder + @"\book" + bookNum + ".html", text);
         }
 
@@ -634,11 +632,6 @@ namespace Fb2Kindle
                 element2.Add(new XElement("br"));
             }
             return element2;
-        }
-
-        public static string TabRep(string Str)
-        {
-            return Str.Replace(Convert.ToChar(160).ToString(), "&nbsp;").Replace(Convert.ToChar(0xad).ToString(), "&shy;");
         }
 
         public static void CreateTitlePage(XElement book, string folder)
@@ -828,13 +821,13 @@ namespace Fb2Kindle
             return toc;
         }
 
-        public static string UpdateATags(XElement body, List<DataItem> notesList)
+        public string UpdateATags(XElement body)
         {
             foreach (var a in body.Descendants("a"))
             {
                 var src = a.Attribute("href").Value;
                 if (String.IsNullOrEmpty(src)) continue;
-                foreach (var note in notesList)
+                foreach (var note in _notesList)
                 {
                     if (!src.Equals(note.Value, StringComparison.OrdinalIgnoreCase)) continue;
                     var value = a.Value;
