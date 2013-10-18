@@ -51,12 +51,12 @@ namespace Fb2Kindle
         {
             try
             {
-                var bookName = Path.GetFileNameWithoutExtension(bookPath);
+                var bookName = Path.GetFileNameWithoutExtension(bookPath).Trim();
                 Console.WriteLine("Processing: " + bookName);
                 _book = LoadBookWithoutNs(bookPath);
                 if (_book == null) return false;
                 //create temp working folder
-                _tempDir = PrepareTempFolder(bookName, ImagesFolderName, _workingFolder);
+                _tempDir = PrepareTempFolder(bookName, ImagesFolderName);
                 if (_defaultCss.Contains("src: url(\"fonts/") && Directory.Exists(_workingFolder + @"\fonts"))
                 {
                     Directory.CreateDirectory(_tempDir + @"\fonts");
@@ -110,15 +110,15 @@ namespace Fb2Kindle
 
                 ProcessAllData();
 
-                _opfFile.Save(_tempDir + @"\" + bookName + ".opf");
+                SaveXmlToFile(_opfFile, _tempDir + @"\" + bookName + ".opf");
                 _opfFile.RemoveAll();
 
                 if (!_currentSettings.ntoc)
                 {
-                    _ncxElement.Save(_tempDir + @"\toc.ncx");
+                    SaveXmlToFile(_ncxElement, _tempDir + @"\toc.ncx");
                     _ncxElement.RemoveAll();
 
-                    _tocEl.Save(_tempDir + @"\toc.html");
+                    SaveXmlToFile(_tocEl, _tempDir + @"\toc.html");
                     _tocEl.RemoveAll();
                 }
 
@@ -161,10 +161,12 @@ namespace Fb2Kindle
                     AddPackItem(item.Name, item.Href);
                     AddGuideItem(item.Name, item.Href);
                     AddNcxItem(playOrder, item.Name, item.Href);
+                    playOrder++;
                 }
-                if (!_currentSettings.ntoc)
+                if (_currentSettings.ntoc) continue;
+                if (subItem)
                 {
-                    if (subItem)
+                    if (_currentSettings.addNotesToToc)
                     {
                         var si = prevMenuEl.Elements("ul").FirstOrDefault();
                         if (si == null)
@@ -174,14 +176,13 @@ namespace Fb2Kindle
                         }
                         si.Add(GetListItem(item.Name, item.Href));
                     }
-                    else
-                    {
-                        var li = GetListItem(item.Name, item.Href);
-                        tocStart.Add(li);
-                        prevMenuEl = li;
-                    }
                 }
-                playOrder++;
+                else
+                {
+                    var li = GetListItem(item.Name, item.Href);
+                    tocStart.Add(li);
+                    prevMenuEl = li;
+                }
             }
         }
 
@@ -252,8 +253,13 @@ namespace Fb2Kindle
                 if (list.Count > 0)
                     foreach (var t in list)
                     {
-                        var noteTitle = t.Elements("title").First().Value.Trim();
-                        _notesList.Add(new LinkItem(string.IsNullOrEmpty(noteTitle) ? (string) t.Attribute("id") : noteTitle, bodyName + ".html#" + (string) t.Attribute("id")));
+                        var noteId = (string) t.Attribute("id");
+                        var noteTitle = Value(t.Elements("title"));
+                        if (string.IsNullOrEmpty(noteTitle))
+                            noteTitle = Value(t.Elements("p"));
+                        if (string.IsNullOrEmpty(noteTitle))
+                            noteTitle = noteId;
+                        _notesList.Add(new LinkItem(noteTitle, bodyName + ".html#" + noteId));
                     }
                 CreateNoteBox(_book, i, bodyName, _tempDir);
             }
@@ -315,11 +321,7 @@ namespace Fb2Kindle
                 SaveAsHtmlBook(body, _tempDir + @"\" + htmlFile);
             }
             else
-            {
-                Console.Write("Chapters creation...");
                 playOrder = SaveSubSections(body, 0, _tocEl.Elements("body").First().Elements("ul").First());
-                Console.WriteLine("(OK)");
-            }
             AddNotesList(playOrder, _notesList);
             Console.WriteLine("(OK)");
         }
@@ -358,15 +360,13 @@ namespace Fb2Kindle
             return true;
         }
 
-        private static string PrepareTempFolder(string bookName, string images, string executingPath)
+        private static string PrepareTempFolder(string bookName, string images)
         {
             var tempDir = Path.Combine(Path.GetTempPath(), bookName);
             if (!Directory.Exists(tempDir))
                 Directory.CreateDirectory(tempDir);
             if (!Directory.Exists(tempDir + @"\" + images))
                 Directory.CreateDirectory(tempDir + @"\" + images);
-//            if (Directory.Exists(executingPath + @"\" + images))
-//                CopyDirectory(executingPath + @"\" + images, tempDir + @"\" + images, true);
             GetFileFromResource("kindlegen.exe", tempDir + "\\kindlegen.exe");
             return tempDir;
         }
@@ -376,9 +376,9 @@ namespace Fb2Kindle
             var element2 = new XElement("h2");
             foreach (var ai in avtorbook)
             {
-                element2.Add(Value(ai.Elements("last-name")));
+                element2.Add(Value(ai.Elements("last-name"), "Неизвестный"));
                 element2.Add(new XElement("br"));
-                element2.Add(Value(ai.Elements("first-name")));
+                element2.Add(Value(ai.Elements("first-name"), "Безымян"));
                 element2.Add(new XElement("br"));
                 element2.Add(Value(ai.Elements("middle-name")));
                 element2.Add(new XElement("br"));
@@ -402,11 +402,12 @@ namespace Fb2Kindle
             linkEl.Add(new XAttribute("align", "center"));
             linkEl.Add(new XAttribute("id", "booktitle"));
             linkEl.Add(AddAuthorsInfo(book.Elements("description").Elements("title-info").Elements("author")));
-            linkEl.Add(new XElement("p", String.Format("{0} {1}", AttributeValue(book.Elements("description").Elements("title-info").Elements("sequence"), "name"), AttributeValue(book.Elements("description").Elements("title-info").Elements("sequence"), "number"))));
+            linkEl.Add(new XElement("p", String.Format("{0} {1}", AttributeValue(book.Elements("description").Elements("title-info").Elements("sequence"), "name"), 
+                AttributeValue(book.Elements("description").Elements("title-info").Elements("sequence"), "number"))));
             linkEl.Add(new XElement("br"));
             var pEl = new XElement("p");
             pEl.Add(new XAttribute("class", "text-name"));
-            pEl.Add(Value(book.Elements("description").Elements("title-info").Elements("book-title")));
+            pEl.Add(Value(book.Elements("description").Elements("title-info").Elements("book-title"), "Книга"));
             linkEl.Add(pEl);
             linkEl.Add(new XElement("br"));
             linkEl.Add(new XElement("p", Value(book.Elements("description").Elements("title-info").Elements("annotation"))));
@@ -424,7 +425,7 @@ namespace Fb2Kindle
             linkEl.Add(new XElement("br"));
             headEl.Add(linkEl);
             content.Add(headEl);
-            content.Save(folder + @"\booktitle.html");
+            SaveXmlToFile(content, folder + @"\booktitle.html");
         }
 
         private static void CreateNoteBox(XElement book, int i, string bodyName, string folder)
@@ -444,7 +445,7 @@ namespace Fb2Kindle
                 headEl.Add(body.Nodes());
             packEl.Add(headEl);
             ConvertTagsToHTML(packEl);
-            packEl.Save(folder + @"\" + bodyName + ".html");
+            SaveXmlToFile(packEl, string.Format("{0}\\{1}.html", folder, bodyName));
             packEl.RemoveAll();
         }
 
@@ -556,21 +557,29 @@ namespace Fb2Kindle
                     var fileBytes = Convert.FromBase64String(binEl.Value);
                     if (contentType == "image/jpeg")
                     {
-                        using (Stream str = new MemoryStream(fileBytes))
+                        try
                         {
-                            using (var img = Image.FromStream(str))
+                            using (Stream str = new MemoryStream(fileBytes))
                             {
-                                var parList = new List<EncoderParameter>
+                                using (var img = Image.FromStream(str))
+                                {
+                                    var parList = new List<EncoderParameter>
                                     {
                                         new EncoderParameter(Encoder.Quality, 50L), 
                                         //new EncoderParameter(Encoder.ColorDepth, 8L)
                                     };
-                                var encoderParams = new EncoderParameters(parList.Count);
-                                for (var i = 0; i < parList.Count; i++)
-                                    encoderParams.Param[i] = parList[i];
-                                var codec = GetEncoderInfo(Path.GetExtension(file));
-                                img.Save(file, codec, encoderParams);
+                                    var encoderParams = new EncoderParameters(parList.Count);
+                                    for (var i = 0; i < parList.Count; i++)
+                                        encoderParams.Param[i] = parList[i];
+                                    var codec = GetEncoderInfo(Path.GetExtension(file));
+                                    img.Save(file, codec, encoderParams);
+                                }
                             }
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine("Error compressing image: " + ex.Message);
+                            File.WriteAllBytes(file, fileBytes);
                         }
                     }
                     else
@@ -597,14 +606,21 @@ namespace Fb2Kindle
             return null;
         }
 
-        private static string Value(IEnumerable<XElement> source)
+        private static string Value(IEnumerable<XElement> source, string defaultResult = null)
         {
-            return source.Select(element => element.Value).FirstOrDefault();
+            var value = source.Select(element => element.Value).FirstOrDefault();
+            if (value == null || string.IsNullOrEmpty(value.Trim()))
+                return defaultResult;
+            return value.Trim();
         }
 
-        private static string AttributeValue(IEnumerable<XElement> source, XName name)
+        private static string AttributeValue(IEnumerable<XElement> source, XName name, string defaultResult = null)
         {
-            return source.Select(element => (string) element.Attribute(name)).FirstOrDefault();
+            var value = source.Select(element => (string)element.Attribute(name)).FirstOrDefault();
+            if (value == null || string.IsNullOrEmpty(value.Trim()))
+                return defaultResult;
+            return value.Trim();
+
         }
 
         private static XElement[] RenameTags(XElement root, string tagName, string newName, string className = null, bool clearData = false)
@@ -682,13 +698,18 @@ namespace Fb2Kindle
             return doc;
         }
 
-        private void SaveAsHtmlBook(XElement bodyEl, string fileName, string style = "book")
+        private static void SaveAsHtmlBook(XElement bodyEl, string fileName, string style = "book")
         {
             var htmlDoc = InitEmptyHtmlDoc();
             htmlDoc.Elements("body").First().Add(bodyEl);
             RenameTags(htmlDoc, "section", "div", style);
-            htmlDoc.Save(fileName);
+            SaveXmlToFile(htmlDoc, fileName);
             htmlDoc.RemoveAll();
+        }
+
+        private static void SaveXmlToFile(XElement xml, string file)
+        {
+            xml.Save(file, SaveOptions.DisableFormatting);
         }
 
         private static XElement GetEmptyPackage(XElement book)
@@ -708,7 +729,7 @@ namespace Fb2Kindle
 
             var nsHttp = XNamespace.Get("http://");
             var content = new XElement(nsHttp.GetName("Title"));
-            content.Add(Value(book.Elements("description").Elements("title-info").Elements("book-title")));
+            content.Add(Value(book.Elements("description").Elements("title-info").Elements("book-title"), "Книга"));
             linkEl.Add(content);
             content = new XElement(nsHttp.GetName("Language"));
             var bookLang = Value(book.Elements("description").First().Elements("title-info").First().Elements("lang"));
@@ -717,7 +738,7 @@ namespace Fb2Kindle
             content.Add(bookLang);
             linkEl.Add(content);
             content = new XElement(nsHttp.GetName("Creator"));
-            content.Add(Value(book.Elements("description").Elements("title-info").Elements("author").First().Elements("last-name")) + " " + Value(book.Elements("description").Elements("title-info").Elements("author").First().Elements("first-name")) + " " + Value(book.Elements("description").Elements("title-info").Elements("author").First().Elements("middle-name")));
+            content.Add(Value(book.Elements("description").Elements("title-info").Elements("author").First().Elements("last-name"), "Вася") + " " + Value(book.Elements("description").Elements("title-info").Elements("author").First().Elements("first-name")) + " " + Value(book.Elements("description").Elements("title-info").Elements("author").First().Elements("middle-name")));
             linkEl.Add(content);
             content = new XElement(nsHttp.GetName("Publisher"));
             content.Add(Value(book.Elements("description").Elements("publish-info").Elements("publisher")));
@@ -825,6 +846,7 @@ namespace Fb2Kindle
         public bool nch { get; set; }
         public bool noImages { get; set; }
         public bool ntoc { get; set; }
+        public bool addNotesToToc { get; set; }
         public string defaultCSS { get; set; }
         public string DropCap { get; set; }
         public bool all { get; set; }
