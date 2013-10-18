@@ -1,22 +1,72 @@
 ﻿using System;
 using System.IO;
-using System.Text;
+using System.Reflection;
 using System.Windows.Forms;
 
 namespace Fb2Kindle
 {
     class Program
     {
+        public static void ShowHelpText()
+        {
+            Console.WriteLine();
+            Console.WriteLine(Assembly.GetExecutingAssembly().GetName().Name + " <book.fb2> [-css <styles.css>] [-d] [-nb] [-nch] [-ni]");
+            Console.WriteLine();
+            Console.WriteLine("<book.fb2>: input fb2 file");
+            Console.WriteLine("-css <styles.css>: styles used in destination book");
+            Console.WriteLine("-d: delete source file after convertion");
+            Console.WriteLine("-nb: no big letters at the chapter start");
+            Console.WriteLine("-nch: no chapters");
+            Console.WriteLine("-ni: no images");
+            Console.WriteLine("-ntoc: no table of content");
+            Console.WriteLine("-c: use compression (slow)");
+            Console.WriteLine("-save: save parameters to be used at the next start");
+            Console.WriteLine("-a: process all files in current folder");
+            Console.WriteLine("-r: process files in subfolders (work with -a key)");
+            Console.WriteLine("-w: wait for key press on finish");
+            Console.WriteLine();
+        }
+
+        public static void ShowMainInfo()
+        {
+            //            Console.Clear();
+            Console.WriteLine();
+            var assembly = Assembly.GetExecutingAssembly();
+            var ver = Assembly.GetExecutingAssembly().GetName().Version;
+            Console.WriteLine(assembly.GetName().Name + " Version: " + ver.ToString(3) + "; Build time: " + GetBuildTime(ver).ToString("yyyy/MM/dd HH:mm:ss"));
+            var title = GetAttribute<AssemblyTitleAttribute>(assembly);
+            if (title != null)
+                Console.WriteLine(title.Title);
+            Console.WriteLine();
+        }
+
+        private static DateTime GetBuildTime(Version ver)
+        {
+            var buildTime = new DateTime(2000, 1, 1).AddDays(ver.Build).AddSeconds(ver.Revision * 2);
+            if (TimeZone.IsDaylightSavingTime(DateTime.Now, TimeZone.CurrentTimeZone.GetDaylightChanges(DateTime.Now.Year)))
+                buildTime = buildTime.AddHours(1);
+            return buildTime;
+        }
+
+        private static T GetAttribute<T>(ICustomAttributeProvider assembly, bool inherit = false) where T : Attribute
+        {
+            var attr = assembly.GetCustomAttributes(typeof(T), inherit);
+            foreach (var o in attr)
+                if (o is T)
+                    return o as T;
+            return null;
+        }
+
         [STAThread]
         public static void Main(string[] args)
         {
             var wait = false;
             try
             {
-                Convertor.ShowMainInfo();
+                ShowMainInfo();
                 if (args.Length == 0)
                 {
-                    Convertor.ShowHelpText();
+                    ShowHelpText();
                     return;
                 }
                 var executingPath = Path.GetDirectoryName(Application.ExecutablePath);
@@ -73,17 +123,7 @@ namespace Fb2Kindle
                 if (currentSettings.save)
                     Convertor.WriteObjectToFile(settingsFile, currentSettings, true);
 
-                string defaultCss = null;
-                if (File.Exists(currentSettings.defaultCSS))
-                    defaultCss = File.ReadAllText(currentSettings.defaultCSS, Encoding.UTF8);
-                if (string.IsNullOrEmpty(defaultCss))
-                {
-                    if (!string.IsNullOrEmpty(currentSettings.defaultCSS))
-                        Console.WriteLine("Styles file not found: " + currentSettings.defaultCSS);
-                    defaultCss = Convertor.GetScriptFromResource("defstyles.css");
-                }
-
-                var conv = new Convertor(currentSettings, executingPath, defaultCss);
+                var conv = new Convertor(currentSettings, executingPath);
                 if (currentSettings.all)
                 {
                     var searchOptions = currentSettings.recursive ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
