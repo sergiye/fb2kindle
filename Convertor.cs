@@ -260,9 +260,8 @@ namespace Fb2Kindle
                             noteTitle = noteId;
                         _notesList.Add(new KeyValuePair<string, string>(noteTitle, bodyName + ".html#" + noteId));
                     }
-                ConvertTagsToHTML(bodies[i]);
+                ConvertTagsToHTML(bodies[i], true);
                 SaveAsHtmlBook(bodies[i], _tempDir + @"\" + bodyName + ".html");
-                //CreateNoteBox(bodies[i], bodyName, _tempDir);
             }
 
             var body = _book.Elements("body").First();
@@ -427,25 +426,6 @@ namespace Fb2Kindle
             headEl.Add(linkEl);
             content.Add(headEl);
             SaveXmlToFile(content, folder + @"\booktitle.html");
-        }
-
-        private static void CreateNoteBox(XElement body, string bodyName, string folder)
-        {
-            if (body == null) return;
-            var packEl = new XElement("html");
-            var headEl = new XElement("head");
-            var linkEl = new XElement("link");
-            linkEl.Add(new XAttribute("type", "text/css"));
-            linkEl.Add(new XAttribute("href", "book.css"));
-            linkEl.Add(new XAttribute("rel", "Stylesheet"));
-            headEl.Add(linkEl);
-            packEl.Add(headEl);
-            headEl = new XElement("body");
-            headEl.Add(body.Nodes());
-            packEl.Add(headEl);
-            ConvertTagsToHTML(packEl);
-            SaveXmlToFile(packEl, string.Format("{0}\\{1}.html", folder, bodyName));
-            packEl.RemoveAll();
         }
 
         private static void AddCoverImage(XElement opfFile, string imgSrc)
@@ -642,7 +622,7 @@ namespace Fb2Kindle
                 element.SetAttributeValue("class", className);
         }
 
-        private static void ConvertTagsToHTML(XElement book)
+        private static void ConvertTagsToHTML(XElement book, bool full = false)
         {
             RenameTags(book, "text-author", "P", "text-author");
             RenameTags(book, "empty-line", "br");
@@ -652,9 +632,10 @@ namespace Fb2Kindle
             RenameTags(book, "emphasis", "i");
             RenameTags(book, "strong", "b");
             RenameTags(book, "poem", "div", "poem");
-//            RenameTags(book, "stanza", "br");
             RenameTags(book, "v", "p");
-//            RenameTags(book, "title", "div", "subtitle");
+            if (!full) return;
+            RenameTags(book, "stanza", "br");
+            RenameTags(book, "title", "div", "subtitle");
         }
 
         private static XElement LoadBookWithoutNs(string bookPath)
@@ -838,7 +819,7 @@ namespace Fb2Kindle
         public DefaultOptions()
         {
             DropCap = "АБВГДЕЖЗИКЛМНОПРСТУФХЦЧЩШЭЮЯ";
-            addNotesToToc = true;
+//            addNotesToToc = true;
         }
 
         public bool deleteOrigin { get; set; }
