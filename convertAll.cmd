@@ -8,18 +8,18 @@ for /R "%fb2folder%\" %%a in ("*.fb2.zip") do "%~dp07za.exe" e "%%~a" -y -o"%%~d
 ::Удалить архивы
 for /R "%fb2folder%\" %%a in ("*.fb2.zip") do del /f /q "%%~a"
 
-::Для работы на киндле
-::GOTO Kindle
-
 ::SET /P mode=Enter 'a' if you start it from Kindle: 
 ::IF "%mode%"=="a" GOTO Kindle
+
+::Для работы на киндле
+::GOTO Kindle
 
 ::Сконвертировать
 for /R "%fb2folder%\" %%a in ("*.fb2") do "%~dp0Fb2Kindle.exe" "%%~a" -css styles.css -d
 GOTO End
 :Kindle
 ::Сконвертировать
-for /R "%fb2folder%\" %%a in ("*.fb2") do "%~dp0Fb2Kindle.exe" "%%~a" -d -nh
+for /R "%fb2folder%\" %%a in ("*.fb2") do "%~dp0Fb2Kindle.exe" "%%~a" -d -nb
 move /Y "%fb2folder%\*.mobi" ..\documents
 :End
 
