@@ -108,7 +108,7 @@ namespace Fb2Kindle
                     _tocEl.RemoveAll();
                 }
 
-                var result = CreateMobi(_tempDir, bookName, bookPath, _currentSettings.compression);
+                var result = CreateMobi(_tempDir, bookName, bookPath);
                 if (result && _currentSettings.deleteOrigin)
                     File.Delete(bookPath);
                 return result;
@@ -228,7 +228,6 @@ namespace Fb2Kindle
         private void ProcessAllData()
         {
             Console.Write("FB2 to HTML...");
-            const string str = "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧЩШЬЪЫЭЮЯQWERTYUIOPASDFGHJKLZXCVBNM";
 
             CreateTitlePage(_book, _tempDir);
 
@@ -318,7 +317,7 @@ namespace Fb2Kindle
             Console.WriteLine("(OK)");
         }
 
-        private static void SetBigFirstLetters(XElement body)
+        private void SetBigFirstLetters(XElement body)
         {
             var sections = body.Descendants("section");
             foreach (var sec in sections)
@@ -338,7 +337,8 @@ namespace Fb2Kindle
                                 continue;
                             pVal = pVal.Trim();
                             var firstSymbol = pVal.Substring(0, 1);
-
+                            if (!_currentSettings.DropCap.Contains(firstSymbol))
+                                continue;
                             t.RemoveAll();
                             var span = new XElement("span", firstSymbol);
                             if (newPart)
@@ -359,7 +359,7 @@ namespace Fb2Kindle
             }
         }
 
-        private static bool CreateMobi(string tempDir, string bookName, string bookPath, bool compress)
+        private bool CreateMobi(string tempDir, string bookName, string bookPath)
         {
             if (!File.Exists(tempDir + @"\kindlegen.exe"))
             {
@@ -367,14 +367,25 @@ namespace Fb2Kindle
                 Directory.Delete(tempDir, true);
                 return false;
             }
-            Console.Write("Creating mobi (KF8)...");
+            Console.WriteLine("Creating mobi (KF8)...");
             var args = String.Format("\"{0}\\{1}.opf\"", tempDir, bookName);
-            if (compress)
+            if (_currentSettings.compression)
                 args += " -c2";
-            var startInfo = new ProcessStartInfo { FileName = tempDir + @"\kindlegen.exe", Arguments = args, WindowStyle = ProcessWindowStyle.Hidden };
-            var process2 = Process.Start(startInfo);
-            process2.WaitForExit();
-            if (process2.ExitCode == 2)
+            var startInfo = new ProcessStartInfo
+                {
+                    FileName = tempDir + @"\kindlegen.exe", 
+                    Arguments = args,
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    CreateNoWindow = true,
+                    //WindowStyle = ProcessWindowStyle.Hidden
+                };
+            var process = Process.Start(startInfo);
+            if (_currentSettings.detailedOutput)
+                while (!process.StandardOutput.EndOfStream)
+                    Console.WriteLine(process.StandardOutput.ReadLine());
+            process.WaitForExit();
+            if (process.ExitCode == 2)
             {
                 Console.WriteLine("Error converting to mobi");
                 return false;
@@ -389,7 +400,8 @@ namespace Fb2Kindle
                 versionNumber++;
             }
             File.Move(tempDir + @"\" + bookName + ".mobi", Path.Combine(resultPath, resultName) + ".mobi");
-            Console.WriteLine("(OK)");
+            if (!_currentSettings.detailedOutput)
+                Console.WriteLine("(OK)");
             return true;
         }
 
@@ -836,7 +848,7 @@ namespace Fb2Kindle
     {
         public DefaultOptions()
         {
-            DropCap = "АБВГДЕЖЗИКЛМНОПРСТУФХЦЧЩШЭЮЯ";
+            DropCap = "АБВГДЕЖЗИКЛМНОПРСТУФХЦЧЩШЭЮЯ"; //"АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧЩШЬЪЫЭЮЯQWERTYUIOPASDFGHJKLZXCVBNM";
         }
 
         public bool deleteOrigin { get; set; }
@@ -849,6 +861,7 @@ namespace Fb2Kindle
         public bool all { get; set; }
         public bool recursive { get; set; }
         public bool compression { get; set; }
+        public bool detailedOutput { get; set; }
         [XmlIgnore]
         public bool save { get; set; }
     }
