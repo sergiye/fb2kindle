@@ -258,6 +258,9 @@ namespace Fb2Kindle
 
             var body = _book.Elements("body").First();
             body.Name = "section";
+            if (!_currentSettings.noBig)
+                SetBigFirstLetters(body);
+
             if (_currentSettings.nch)
             {
                 var i = 0;
@@ -313,6 +316,47 @@ namespace Fb2Kindle
                 SaveSubSections(body, 0, _tocEl.Descendants("ul").First());
             AddNotesList(_notesList);
             Console.WriteLine("(OK)");
+        }
+
+        private static void SetBigFirstLetters(XElement body)
+        {
+            var sections = body.Descendants("section");
+            foreach (var sec in sections)
+            {
+                var newPart = true;
+                foreach (var t in sec.Elements())
+                {
+                    switch (t.Name.ToString())
+                    {
+                        case "title":
+                        case "subtitle":
+                            newPart = true;
+                            break;
+                        case "p":
+                            var pVal = t.Value;
+                            if (string.IsNullOrEmpty(pVal))
+                                continue;
+                            pVal = pVal.Trim();
+                            var firstSymbol = pVal.Substring(0, 1);
+
+                            t.RemoveAll();
+                            var span = new XElement("span", firstSymbol);
+                            if (newPart)
+                            {
+                                t.SetAttributeValue("style", "text-indent:0px;");
+                                span.SetAttributeValue("class", "dropcaps");
+                                newPart = false;
+                            }
+                            else
+                                span.SetAttributeValue("class", "dropcaps2");
+                            t.Add(span);
+                            t.Add(pVal.Substring(1));
+                            break;
+                        default:
+                            continue;
+                    }
+                }
+            }
         }
 
         private static bool CreateMobi(string tempDir, string bookName, string bookPath, bool compress)
