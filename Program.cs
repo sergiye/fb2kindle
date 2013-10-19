@@ -10,7 +10,7 @@ namespace Fb2Kindle
         public static void ShowHelpText()
         {
             Console.WriteLine();
-            Console.WriteLine(Assembly.GetExecutingAssembly().GetName().Name + " <book.fb2> [-css <styles.css>] [-d] [-nb] [-nch] [-ni]");
+            Console.WriteLine(Assembly.GetExecutingAssembly().GetName().Name + " <book.fb2> [-css <styles.css>] [-d] [-nb] [-ni]");
             Console.WriteLine();
             Console.WriteLine("<book.fb2>: input fb2 file");
             Console.WriteLine("-css <styles.css>: styles used in destination book");
@@ -20,6 +20,7 @@ namespace Fb2Kindle
             Console.WriteLine("-ni: no images");
             Console.WriteLine("-ntoc: no table of content");
             Console.WriteLine("-c: use compression (slow)");
+            Console.WriteLine("-o: show detailed output");
             Console.WriteLine("-save: save parameters to be used at the next start");
             Console.WriteLine("-a: process all files in current folder");
             Console.WriteLine("-r: process files in subfolders (work with -a key)");
@@ -113,6 +114,9 @@ namespace Fb2Kindle
                             break;
                         case "-c":
                             currentSettings.compression = true;
+                            break;
+                        case "-o":
+                            currentSettings.detailedOutput = true;
                             break;
                         default:
                             if (j == 0)

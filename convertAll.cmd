@@ -14,12 +14,15 @@ for /R "%fb2folder%\" %%a in ("*.fb2.zip") do del /f /q "%%~a"
 ::Для работы на киндле
 ::GOTO Kindle
 
+::Сконвертировать с оформлением (больше размер)
+Fb2Kindle.exe -a -r -css styles.css -d -c -o
+
 ::Сконвертировать
-for /R "%fb2folder%\" %%a in ("*.fb2") do "%~dp0Fb2Kindle.exe" "%%~a" -css styles.css -d
+::Fb2Kindle.exe -a -r -nb -d -c -o
+
 GOTO End
 :Kindle
-::Сконвертировать
-for /R "%fb2folder%\" %%a in ("*.fb2") do "%~dp0Fb2Kindle.exe" "%%~a" -d -nb
+Fb2Kindle.exe -a -r -nb -d -o
 move /Y "%fb2folder%\*.mobi" ..\documents
 :End
 
