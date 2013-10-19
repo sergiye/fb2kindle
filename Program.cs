@@ -21,6 +21,7 @@ namespace Fb2Kindle
             Console.WriteLine("-ntoc: no table of content");
             Console.WriteLine("-c: use compression (slow)");
             Console.WriteLine("-o: show detailed output");
+            Console.WriteLine("-s: add sequence and number to title");
             Console.WriteLine("-save: save parameters to be used at the next start");
             Console.WriteLine("-a: process all files in current folder");
             Console.WriteLine("-r: process files in subfolders (work with -a key)");
@@ -33,20 +34,12 @@ namespace Fb2Kindle
             //            Console.Clear();
             Console.WriteLine();
             var assembly = Assembly.GetExecutingAssembly();
-            var ver = Assembly.GetExecutingAssembly().GetName().Version;
-            Console.WriteLine(assembly.GetName().Name + " Version: " + ver.ToString(3) + "; Build time: " + GetBuildTime(ver).ToString("yyyy/MM/dd HH:mm:ss"));
+            var ver = assembly.GetName().Version;
+            Console.WriteLine(assembly.GetName().Name + " Version: " + ver.ToString(3) + "; Build time: " + Convertor.GetBuildTime(ver).ToString("yyyy/MM/dd HH:mm:ss"));
             var title = GetAttribute<AssemblyTitleAttribute>(assembly);
             if (title != null)
                 Console.WriteLine(title.Title);
             Console.WriteLine();
-        }
-
-        private static DateTime GetBuildTime(Version ver)
-        {
-            var buildTime = new DateTime(2000, 1, 1).AddDays(ver.Build).AddSeconds(ver.Revision * 2);
-            if (TimeZone.IsDaylightSavingTime(DateTime.Now, TimeZone.CurrentTimeZone.GetDaylightChanges(DateTime.Now.Year)))
-                buildTime = buildTime.AddHours(1);
-            return buildTime;
         }
 
         private static T GetAttribute<T>(ICustomAttributeProvider assembly, bool inherit = false) where T : Attribute
@@ -65,64 +58,30 @@ namespace Fb2Kindle
             try
             {
                 ShowMainInfo();
-                if (args.Length == 0)
-                {
-                    ShowHelpText();
-                    return;
-                }
+
                 var executingPath = Path.GetDirectoryName(Application.ExecutablePath);
                 var settingsFile = executingPath + @"\config.xml";
                 var currentSettings = Convertor.ReadObjectFromFile<DefaultOptions>(settingsFile) ?? new DefaultOptions();
                 var bookPath = string.Empty;
-                for (var j = 0; j < args.Length; j++)
+
+                if (args.Length == 0)
                 {
-                    switch (args[j].ToLower().Trim())
+                    Console.Write("Process all files with default settings? Enter 'y' to continue: ");
+                    if (Console.ReadLine() != "y")
                     {
-                        case "-css":
-                            if (args.Length > (j + 1))
-                            {
-                                currentSettings.defaultCSS = args[j + 1];
-                                j++;
-                            }
-                            break;
-                        case "-d":
-                            currentSettings.deleteOrigin = true;
-                            break;
-                        case "-nb":
-                            currentSettings.noBig = true;
-                            break;
-                        case "-nch":
-                            currentSettings.nch = true;
-                            break;
-                        case "-ni":
-                            currentSettings.noImages = true;
-                            break;
-                        case "-ntoc":
-                            currentSettings.ntoc = true;
-                            break;
-                        case "-save":
-                            currentSettings.save = true;
-                            break;
-                        case "-w":
-                            wait = true;
-                            break;
-                        case "-a":
-                            currentSettings.all = true;
-                            break;
-                        case "-r":
-                            currentSettings.recursive = true;
-                            break;
-                        case "-c":
-                            currentSettings.compression = true;
-                            break;
-                        case "-o":
-                            currentSettings.detailedOutput = true;
-                            break;
-                        default:
-                            if (j == 0)
-                                bookPath = args[j];
-                            break;
+                        ShowHelpText();
+                        return;
                     }
+                    currentSettings.all = true;
+                    currentSettings.recursive = true;
+                    currentSettings.noBig = true;
+                    currentSettings.addSequence = true;
+                    currentSettings.detailedOutput = true;
+                    wait = true;
+                }
+                else
+                {
+                    wait = ParseInputParameters(args, currentSettings, ref bookPath);
                 }
                 if (currentSettings.save)
                     Convertor.WriteObjectToFile(settingsFile, currentSettings, true);
@@ -160,6 +119,65 @@ namespace Fb2Kindle
                 Console.WriteLine("Press any key to continue...");
                 Console.ReadKey();
             }
+        }
+
+        private static bool ParseInputParameters(string[] args, DefaultOptions currentSettings, ref string bookPath)
+        {
+            var wait = false;
+            for (var j = 0; j < args.Length; j++)
+            {
+                switch (args[j].ToLower().Trim())
+                {
+                    case "-css":
+                        if (args.Length > (j + 1))
+                        {
+                            currentSettings.defaultCSS = args[j + 1];
+                            j++;
+                        }
+                        break;
+                    case "-d":
+                        currentSettings.deleteOrigin = true;
+                        break;
+                    case "-nb":
+                        currentSettings.noBig = true;
+                        break;
+                    case "-nch":
+                        currentSettings.nch = true;
+                        break;
+                    case "-ni":
+                        currentSettings.noImages = true;
+                        break;
+                    case "-ntoc":
+                        currentSettings.ntoc = true;
+                        break;
+                    case "-save":
+                        currentSettings.save = true;
+                        break;
+                    case "-w":
+                        wait = true;
+                        break;
+                    case "-a":
+                        currentSettings.all = true;
+                        break;
+                    case "-r":
+                        currentSettings.recursive = true;
+                        break;
+                    case "-c":
+                        currentSettings.compression = true;
+                        break;
+                    case "-o":
+                        currentSettings.detailedOutput = true;
+                        break;
+                    case "-s":
+                        currentSettings.addSequence = true;
+                        break;
+                    default:
+                        if (j == 0)
+                            bookPath = args[j];
+                        break;
+                }
+            }
+            return wait;
         }
     }
 }
