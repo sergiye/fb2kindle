@@ -2,14 +2,19 @@ p
 {
 margin-bottom: 3pt; 
 margin-top: 3pt;
+margin-left: -20px;
+margin-right: -20px;
+font-size: 110%;
 }
 p.text-name
 {
+text-indent:0px;
 font-size: 150%;
 font-weight:bolder;
 }
 p.text-author
 {
+text-indent:0px;
 font-style:italic;
 font-weight:bold;
 text-align:right;
@@ -22,6 +27,11 @@ text-align:center;
 div.book
 {
 text-indent:35px;
+padding-bottom: 50px;
+}
+div.nobook
+{
+text-indent:0px;
 }
 div.title
 {
