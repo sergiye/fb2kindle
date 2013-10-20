@@ -35,20 +35,11 @@ namespace Fb2Kindle
             Console.WriteLine();
             var assembly = Assembly.GetExecutingAssembly();
             var ver = assembly.GetName().Version;
-            Console.WriteLine(assembly.GetName().Name + " Version: " + ver.ToString(3) + "; Build time: " + Convertor.GetBuildTime(ver).ToString("yyyy/MM/dd HH:mm:ss"));
-            var title = GetAttribute<AssemblyTitleAttribute>(assembly);
+            Console.WriteLine(assembly.GetName().Name + " Version: " + ver.ToString(3) + "; Build time: " + Util.GetBuildTime(ver).ToString("yyyy/MM/dd HH:mm:ss"));
+            var title = Util.GetAttribute<AssemblyTitleAttribute>(assembly);
             if (title != null)
                 Console.WriteLine(title.Title);
             Console.WriteLine();
-        }
-
-        private static T GetAttribute<T>(ICustomAttributeProvider assembly, bool inherit = false) where T : Attribute
-        {
-            var attr = assembly.GetCustomAttributes(typeof(T), inherit);
-            foreach (var o in attr)
-                if (o is T)
-                    return o as T;
-            return null;
         }
 
         [STAThread]
@@ -61,7 +52,7 @@ namespace Fb2Kindle
 
                 var executingPath = Path.GetDirectoryName(Application.ExecutablePath);
                 var settingsFile = executingPath + @"\config.xml";
-                var currentSettings = Convertor.ReadObjectFromFile<DefaultOptions>(settingsFile) ?? new DefaultOptions();
+                var currentSettings = Util.ReadObjectFromFile<DefaultOptions>(settingsFile) ?? new DefaultOptions();
                 var bookPath = string.Empty;
 
                 if (args.Length == 0)
@@ -84,7 +75,7 @@ namespace Fb2Kindle
                     wait = ParseInputParameters(args, currentSettings, ref bookPath);
                 }
                 if (currentSettings.save)
-                    Convertor.WriteObjectToFile(settingsFile, currentSettings, true);
+                    Util.WriteObjectToFile(settingsFile, currentSettings, true);
 
                 var conv = new Convertor(currentSettings, executingPath);
                 if (currentSettings.all)
