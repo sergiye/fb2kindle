@@ -1,93 +1,16 @@
-p
-{
-margin-bottom: 3pt; 
-margin-top: 3pt;
-margin-left: -20px;
-margin-right: -20px;
-font-size: 110%;
-}
-p.text-name
-{
-text-indent:0px;
-font-size: 150%;
-font-weight:bolder;
-}
-p.text-author
-{
-text-indent:0px;
-font-style:italic;
-font-weight:bold;
-text-align:right;
-}
-div.image
-{
-text-indent:0px;
-text-align:center;
-}
-div.book
-{
-text-indent:35px;
-padding-bottom: 50px;
-}
-div.nobook
-{
-text-indent:0px;
-}
-div.title
-{
-font-size: 130%;
-text-align:center;
-font-weight:bold;
-page-break-before : always;
-}
-div.epigraph
-{
-font-style:italic;
-margin-left : 25%;
-}
-div.supertitle
-{
-text-align:center;
-}
-div.subtitle
-{
-font-style:italic;
-font-weight: bold;
-text-align:center;
-}
-div.cite
-{
-font-style:italic;
-font-size: 90%;
-}
-div.poem
-{
-text-indent:0px;
-font-style:italic;
-text-align:center;
-}
-div.note
-{
-font-style:italic;
-font-size: 80%;
-}
-span.dropcaps
-{
-float: left;
-font-size: 4em;
-margin-bottom:-0.3em;
-}
-span.dropcaps2
-{
-text-shadow:1px 1px #505050;
-}
-ul
-{
-text-align:left;
-font-style:italic;
-}
-sup
-{
-font-size: 60%;
-color:#555555;
-}
+p{margin-bottom: 3pt; margin-top: 3pt;margin-left: -20px;margin-right: -20px;font-size: 110%;}
+p.text-name{text-indent:0px;font-size: 150%;font-weight:bolder;}
+p.text-author{text-indent:0px;font-style:italic;font-weight:bold;text-align:right;}
+div.image{text-indent:0px;text-align:center;}
+div.book{text-indent:35px;padding-bottom: 50px;page-break-before : always;}
+div.title{font-size: 130%;text-align:center;font-weight:bold;}
+div.epigraph{font-style:italic;margin-left : 25%;width:50%}
+div.supertitle{text-align:center;}
+div.subtitle{font-style:italic;font-weight: bold;text-align:center;}
+div.cite{font-style:italic;font-size: 90%;}
+div.poem{text-indent:0px;font-style:italic;text-align:center;}
+div.note{font-style:italic;font-size: 80%;}
+span.dc{float: left;font-size: 4em;margin-bottom:-0.3em;}
+span.dc2{text-shadow:1px 1px #505050;}
+ul{text-align:left;font-style:italic;}
+sup{font-size: 60%;color:#555555;}

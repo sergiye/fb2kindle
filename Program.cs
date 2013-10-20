@@ -72,7 +72,6 @@ namespace Fb2Kindle
                     currentSettings.recursive = true;
                     currentSettings.noBig = true;
                     currentSettings.addSequence = true;
-                    currentSettings.ntoc = true;
                 }
                 else
                 {
