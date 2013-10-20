@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using System.Xml.Serialization;
 using Encoder = System.Drawing.Imaging.Encoder;
@@ -17,7 +18,7 @@ namespace Fb2Kindle
     {
         private const string ImagesFolderName = "image";
         private const string NcxName = "toc.ncx";
-
+        private const string DropCap = "АБВГДЕЖЗИКЛМНОПРСТУФХЦЧЩШЭЮЯ"; //"АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧЩШЬЪЫЭЮЯQWERTYUIOPASDFGHJKLZXCVBNM";
         private string _tempDir;
         private readonly string _workingFolder;
         private readonly string _defaultCss;
@@ -27,7 +28,6 @@ namespace Fb2Kindle
         private XElement _book;
         private XElement _opfFile;
         private XElement _tocEl;
-        private readonly string _kindleGenPath;
         private DefaultOptions _currentSettings { get; set; }
 
         #region public
@@ -36,6 +36,7 @@ namespace Fb2Kindle
         {
             _currentSettings = currentSettings;
             _workingFolder = workingFolder;
+
             _addGuideLine = addGuideLine;
             _addNotesToToc = addNotesToToc;
             _detailedOutput = detailedOutput;
@@ -43,14 +44,12 @@ namespace Fb2Kindle
             if (File.Exists(currentSettings.defaultCSS))
                 _defaultCss = File.ReadAllText(currentSettings.defaultCSS, Encoding.UTF8);
 
-            if (!String.IsNullOrEmpty(_defaultCss)) return;
-            if (!String.IsNullOrEmpty(currentSettings.defaultCSS))
-                Console.WriteLine("Styles file not found: " + currentSettings.defaultCSS);
-            _defaultCss = Util.GetScriptFromResource("defstyles.css");
-
-            _kindleGenPath = _workingFolder + "\\kindlegen.exe";
-            if (!File.Exists(_kindleGenPath))
-                Util.GetFileFromResource("kindlegen.exe", _kindleGenPath);
+            if (String.IsNullOrEmpty(_defaultCss))
+            {
+                if (!String.IsNullOrEmpty(currentSettings.defaultCSS))
+                    Console.WriteLine("Styles file not found: " + currentSettings.defaultCSS);
+                _defaultCss = Util.GetScriptFromResource("defstyles.css");
+            }
         }
 
         public bool ConvertBook(string bookPath)
@@ -106,7 +105,7 @@ namespace Fb2Kindle
                 SaveXmlToFile(_opfFile, _tempDir + @"\" + bookName + ".opf");
                 _opfFile.RemoveAll();
 
-                var result = CreateMobi(_tempDir, bookName, bookPath);
+                var result = CreateMobi(_workingFolder, _tempDir, bookName, bookPath, _currentSettings.compression, _detailedOutput);
                 if (result && _currentSettings.deleteOrigin)
                     File.Delete(bookPath);
                 return result;
@@ -299,7 +298,7 @@ namespace Fb2Kindle
 
             var body = _book.Elements("body").First();
             body.Name = "section";
-            if (!_currentSettings.noBig)
+            if (_defaultCss.Contains("span.dc{"))
                 SetBigFirstLetters(body);
 
             if (_currentSettings.nch)
@@ -368,6 +367,7 @@ namespace Fb2Kindle
 
         private void SetBigFirstLetters(XElement body)
         {
+            var regex = new Regex(@"^<p>(\w{1})([\w]+.+?)</p>$");
             var sections = body.Descendants("section");
             foreach (var sec in sections)
             {
@@ -381,25 +381,30 @@ namespace Fb2Kindle
                             newPart = true;
                             break;
                         case "p":
-                            var pVal = t.Value;
-                            if (String.IsNullOrEmpty(pVal))
+                            if (t.IsEmpty) continue;
+                            var pVal = t.ToString().Trim().Replace("\r", "").Replace("\n", "");
+                            var matches = regex.Matches(pVal);
+                            if (matches.Count <= 0 || matches[0].Groups.Count != 3)
                                 continue;
-                            pVal = pVal.Trim();
-                            var firstSymbol = pVal.Substring(0, 1);
-                            if (!_currentSettings.DropCap.Contains(firstSymbol))
+                            var firstSymbol = matches[0].Groups[1].Value;
+                            if (!DropCap.Contains(firstSymbol))
+                            {
+                                newPart = false;
                                 continue;
+                            }
                             t.RemoveAll();
+                            var newEl = XElement.Parse("<p>" + matches[0].Groups[2].Value + "</p>");
                             var span = new XElement("span", firstSymbol);
                             if (newPart)
                             {
-                                t.SetAttributeValue("style", "text-indent:0px;");
+                                newEl.SetAttributeValue("style", "text-indent:0px;");
                                 span.SetAttributeValue("class", "dc");
                                 newPart = false;
                             }
                             else
                                 span.SetAttributeValue("class", "dc2");
-                            t.Add(span);
-                            t.Add(pVal.Substring(1));
+                            newEl.AddFirst(span);
+                            t.ReplaceWith(newEl);
                             break;
                         default:
                             continue;
@@ -408,19 +413,21 @@ namespace Fb2Kindle
             }
         }
 
-        private bool CreateMobi(string tempDir, string bookName, string bookPath)
+        private static bool CreateMobi(string workFolder, string tempDir, string bookName, string bookPath, bool compress, bool showOutput)
         {
             Console.WriteLine("Creating mobi (KF8)...");
+            var _kindleGenPath = string.Format("{0}\\kindlegen.exe", workFolder);
             if (!File.Exists(_kindleGenPath))
             {
-                Console.WriteLine("kindlegen not found");
-                return false;
+                _kindleGenPath = string.Format("{0}\\kindlegen.exe", tempDir);
+                Util.GetFileFromResource("kindlegen.exe", _kindleGenPath);
             }
+
             var args = String.Format("\"{0}\\{1}.opf\"", tempDir, bookName);
-            if (_currentSettings.compression)
+            if (compress)
                 args += " -c2";
 
-            var res = Util.StartProcess(_kindleGenPath, args, _detailedOutput);
+            var res = Util.StartProcess(_kindleGenPath, args, showOutput);
             if (res == 2)
             {
                 Console.WriteLine("Error converting to mobi");
@@ -436,7 +443,7 @@ namespace Fb2Kindle
                 versionNumber++;
             }
             File.Move(tempDir + @"\" + bookName + ".mobi", Path.Combine(resultPath, resultName) + ".mobi");
-            if (!_detailedOutput)
+            if (!showOutput)
                 Console.WriteLine("(OK)");
             return true;
         }
@@ -737,18 +744,11 @@ namespace Fb2Kindle
     [Serializable]
     public class DefaultOptions
     {
-        public DefaultOptions()
-        {
-            DropCap = "АБВГДЕЖЗИКЛМНОПРСТУФХЦЧЩШЭЮЯ"; //"АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧЩШЬЪЫЭЮЯQWERTYUIOPASDFGHJKLZXCVBNM";
-        }
-
         public bool deleteOrigin { get; set; }
-        public bool noBig { get; set; }
         public bool nch { get; set; }
         public bool noImages { get; set; }
         public bool ntoc { get; set; }
         public string defaultCSS { get; set; }
-        public string DropCap { get; set; }
         public bool all { get; set; }
         public bool recursive { get; set; }
         public bool compression { get; set; }

@@ -1,20 +1,25 @@
 @font-face{font-family: "dropcaps";src: url("fonts/Lombardina-Initial-One.ttf");}
 @font-face{font-family: "Title";src: url("fonts/Edisson.ttf");}
+@font-face{font-family: "paragraph";src: url("fonts/DroidSerif-Regular.ttf");}
+@font-face{font-family: "paragraph";src: url("fonts/DroidSerif-Bold.ttf");font-weight: bold;}
+@font-face{font-family: "paragraph";src: url("fonts/DroidSerif-Italic.ttf");font-style: italic, oblique;}
+@font-face{font-family: "paragraph";src: url("fonts/DroidSerif-BoldItalic.ttf");font-weight: bold;font-style: italic, oblique;}
 p{margin-bottom: 3pt; margin-top: 3pt;margin-left: -20px;margin-right: -20px;font-size: 110%;}
-p.text-name{text-indent:0px;text-shadow:3px 3px #000000;font-size: 200%;font-weight:bolder;}
+p.text-name{text-indent:0px;font-size: 200%;font-weight:bolder;}
 p.text-author{text-indent:0px;font-style:italic;font-weight:bold;text-align:right;}
 div.image{text-indent:0px;text-align:center;}
-div.book{text-indent:35px;padding-bottom: 50px;}
+div.book{font-family: "paragraph";text-indent:35px;padding-bottom: 50px;}
+div.nobook{text-indent:0px;font-family: "paragraph";}
 div.title{-webkit-hyphens: none;font-family: "title";padding-bottom: 28px;margin-bottom: 30px; text-indent:0px;}
-div.title0{font-family: "title";text-shadow:2px 2px #C0C0C0;font-weight:bolder;text-align:center;text-indent:0px;font-size: 200%;padding-top: 28px;}
-div.title1{font-family: "title";text-shadow:2px 2px #C0C0C0;font-weight:bolder;text-align:center;text-indent:0px;font-size: 180%;padding-top: 28px;}
-div.epigraph{text-indent:0px;font-style:italic;margin-left : 25%;}
-div.supertitle{text-indent:0px;}
-div.subtitle{font-style:italic;font-weight: bold;text-align:center;font-size: 100%;text-shadow:2px 2px #C0C0C0;text-indent:0px;}
+div.title0{font-family: "title";font-weight:bolder;text-align:center;text-indent:0px;font-size: 200%;padding-top: 28px;}
+div.title1{font-family: "title";font-weight:bolder;text-align:center;text-indent:0px;font-size: 180%;padding-top: 28px;}
+div.epigraph{text-indent:0px;font-family: "paragraph";font-style:italic;margin-left : 25%;}
+div.supertitle{font-family: "paragraph";text-indent:0px;}
+div.subtitle{font-family: "paragraph";font-style:italic;font-weight: bold;text-align:center;font-size: 100%;text-indent:0px;}
 div.cite{text-indent:0px;font-style:italic;font-size: 90%;}
 div.poem{text-indent:0px;font-style:italic;text-align:center;}
-div.note{font-style:italic;font-size: 80%;}
 span.dc{font-family: "dropcaps";float: left;font-size: 4em;margin-bottom:-0.3em;}
-span.dc{text-shadow:1px 1px #505050;}
-ul{text-align:left;font-style:italic;}
+span.dc2{text-shadow:1px 1px #505050;}
+i{font-style:italic;margin-left : 25%;width: 80%;}
+ul{font-family: "paragraph";text-align:left;font-style:italic;}
 sup{font-size: 60%;color:#555555;}
