@@ -2,27 +2,25 @@
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
-using System.Windows.Forms;
 
 namespace Fb2Kindle
 {
     class Program
     {
-        public static void ShowHelpText()
+        public static void ShowHelpText(Assembly asm)
         {
             Console.WriteLine();
-            Console.WriteLine(Assembly.GetExecutingAssembly().GetName().Name + " <book.fb2> [-css <styles.css>] [-d] [-nb] [-ni]");
+            Console.WriteLine(asm.GetName().Name + " <book.fb2> [-css <styles.css>] [-d] [-nb] [-ni]");
             Console.WriteLine();
             Console.WriteLine("<book.fb2>: input fb2 file");
             Console.WriteLine("-css <styles.css>: styles used in destination book");
             Console.WriteLine("-d: delete source file after convertion");
-            Console.WriteLine("-nb: no big letters at the chapter start");
-            Console.WriteLine("-nch: no chapters");
-            Console.WriteLine("-ni: no images");
-            Console.WriteLine("-ntoc: no table of content");
             Console.WriteLine("-c: use compression (slow)");
             Console.WriteLine("-o: hide detailed output");
             Console.WriteLine("-s: add sequence and number to title");
+            Console.WriteLine("-ni: no images");
+            Console.WriteLine("-ntoc: no table of content");
+            Console.WriteLine("-nch: no chapters");
             Console.WriteLine("-save: save parameters to be used at the next start");
             Console.WriteLine("-a: process all files in current folder");
             Console.WriteLine("-r: process files in subfolders (work with -a key)");
@@ -30,14 +28,13 @@ namespace Fb2Kindle
             Console.WriteLine();
         }
 
-        public static void ShowMainInfo()
+        public static void ShowMainInfo(Assembly asm)
         {
             //            Console.Clear();
             Console.WriteLine();
-            var assembly = Assembly.GetExecutingAssembly();
-            var ver = assembly.GetName().Version;
-            Console.WriteLine(assembly.GetName().Name + " Version: " + ver.ToString(3) + "; Build time: " + Util.GetBuildTime(ver).ToString("yyyy/MM/dd HH:mm:ss"));
-            var title = Util.GetAttribute<AssemblyTitleAttribute>(assembly);
+            var ver = asm.GetName().Version;
+            Console.WriteLine(asm.GetName().Name + " Version: " + ver.ToString(3) + "; Build time: " + Util.GetBuildTime(ver).ToString("yyyy/MM/dd HH:mm:ss"));
+            var title = Util.GetAttribute<AssemblyTitleAttribute>(asm);
             if (title != null)
                 Console.WriteLine(title.Title);
             Console.WriteLine();
@@ -50,9 +47,10 @@ namespace Fb2Kindle
             var detailedOutput = true;
             try
             {
-                ShowMainInfo();
+                var asm = Assembly.GetExecutingAssembly();
+                ShowMainInfo(asm);
 
-                var executingPath = Path.GetDirectoryName(Application.ExecutablePath);
+                var executingPath = Path.GetDirectoryName(asm.Location);
                 var settingsFile = executingPath + @"\config.xml";
                 var currentSettings = Util.ReadObjectFromFile<DefaultOptions>(settingsFile) ?? new DefaultOptions();
                 var bookPath = string.Empty;
@@ -64,14 +62,13 @@ namespace Fb2Kindle
                         Console.Write("Process all files with default settings? Enter 'y' to continue: ");
                         if (Console.ReadLine() != "y")
                         {
-                            ShowHelpText();
+                            ShowHelpText(asm);
                             return;
                         }
                         wait = true;
                     }
                     currentSettings.all = true;
                     currentSettings.recursive = true;
-                    currentSettings.noBig = true;
                     //currentSettings.addSequence = true;
                 }
                 else
@@ -89,9 +86,6 @@ namespace Fb2Kindle
                                 break;
                             case "-d":
                                 currentSettings.deleteOrigin = true;
-                                break;
-                            case "-nb":
-                                currentSettings.noBig = true;
                                 break;
                             case "-nch":
                                 currentSettings.nch = true;
