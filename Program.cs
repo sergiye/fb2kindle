@@ -66,13 +66,13 @@ namespace Fb2Kindle
                             ShowHelpText();
                             return;
                         }
+                        wait = true;
                     }
                     currentSettings.all = true;
                     currentSettings.recursive = true;
                     currentSettings.noBig = true;
                     currentSettings.addSequence = true;
                     currentSettings.ntoc = true;
-                    wait = !Debugger.IsAttached;
                 }
                 else
                 {

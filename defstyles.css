@@ -38,6 +38,7 @@ div.title
 font-size: 130%;
 text-align:center;
 font-weight:bold;
+page-break-before : always;
 }
 div.epigraph
 {
