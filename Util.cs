@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
@@ -159,6 +160,25 @@ namespace Fb2Kindle
             }
             if (!String.IsNullOrEmpty(className))
                 element.SetAttributeValue("class", className);
+        }
+
+        public static int StartProcess(string fileName, string args, bool addToConsole)
+        {
+            var startInfo = new ProcessStartInfo
+            {
+                FileName = fileName,
+                Arguments = args,
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                CreateNoWindow = true,
+                //WindowStyle = ProcessWindowStyle.Hidden
+            };
+            var process = Process.Start(startInfo);
+            if (addToConsole)
+                while (!process.StandardOutput.EndOfStream)
+                    Console.WriteLine(process.StandardOutput.ReadLine());
+            process.WaitForExit();
+            return process.ExitCode;
         }
     }
 }

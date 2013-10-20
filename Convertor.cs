@@ -24,6 +24,7 @@ namespace Fb2Kindle
         private XElement _book;
         private XElement _opfFile;
         private XElement _tocEl;
+        private readonly string _kindleGenPath;
         private DefaultOptions _currentSettings { get; set; }
 
         #region public
@@ -41,6 +42,10 @@ namespace Fb2Kindle
             if (!String.IsNullOrEmpty(currentSettings.defaultCSS))
                 Console.WriteLine("Styles file not found: " + currentSettings.defaultCSS);
             _defaultCss = Util.GetScriptFromResource("defstyles.css");
+
+            _kindleGenPath = _workingFolder + "\\kindlegen.exe";
+            if (!File.Exists(_kindleGenPath))
+                Util.GetFileFromResource("kindlegen.exe", _kindleGenPath);
         }
 
         public bool ConvertBook(string bookPath)
@@ -52,7 +57,10 @@ namespace Fb2Kindle
                 _book = LoadBookWithoutNs(bookPath);
                 if (_book == null) return false;
                 //create temp working folder
-                _tempDir = PrepareTempFolder(bookName, ImagesFolderName);
+                _tempDir = Path.Combine(Path.GetTempPath(), bookName);
+                if (!Directory.Exists(_tempDir))
+                    Directory.CreateDirectory(_tempDir);
+
                 if (_defaultCss.Contains("src: url(\"fonts/") && Directory.Exists(_workingFolder + @"\fonts"))
                 {
                     Directory.CreateDirectory(_tempDir + @"\fonts");
@@ -65,7 +73,7 @@ namespace Fb2Kindle
                 _tocEl = GetEmptyToc();
 
                 AddPackItem("ncx", "toc.ncx", "application/x-dtbncx+xml", false);
-                AddPackItem("booktitle", "booktitle.html", "title-page");
+                AddPackItem("booktitle", "booktitle.html");
                 AddGuideItem("Title", "booktitle.html", "title-page");
 
                 if (!_currentSettings.ntoc)
@@ -147,7 +155,8 @@ namespace Fb2Kindle
             ncx.Add(new XElement("docTitle", new XElement("text", bookName)));
             ncx.Add(new XElement("navMap", ""));
             AddNcxItem(ncx, 0, "Обложка", "booktitle.html#booktitle");
-            AddNcxItem(ncx, 1, "Содержание", "toc.html#toc");
+            if (!_currentSettings.ntoc)
+                AddNcxItem(ncx, 1, "Содержание", "toc.html#toc");
             var tocItems = _tocEl.Descendants("a");
             var playOrder = 2;
             foreach (var a in tocItems)
@@ -371,31 +380,18 @@ namespace Fb2Kindle
 
         private bool CreateMobi(string tempDir, string bookName, string bookPath)
         {
-            if (!File.Exists(tempDir + @"\kindlegen.exe"))
+            Console.WriteLine("Creating mobi (KF8)...");
+            if (!File.Exists(_kindleGenPath))
             {
-                Console.WriteLine("kindlegen.exe not found");
-                Directory.Delete(tempDir, true);
+                Console.WriteLine("kindlegen not found");
                 return false;
             }
-            Console.WriteLine("Creating mobi (KF8)...");
             var args = String.Format("\"{0}\\{1}.opf\"", tempDir, bookName);
             if (_currentSettings.compression)
                 args += " -c2";
-            var startInfo = new ProcessStartInfo
-                {
-                    FileName = tempDir + @"\kindlegen.exe", 
-                    Arguments = args,
-                    UseShellExecute = false,
-                    RedirectStandardOutput = true,
-                    CreateNoWindow = true,
-                    //WindowStyle = ProcessWindowStyle.Hidden
-                };
-            var process = Process.Start(startInfo);
-            if (_currentSettings.detailedOutput)
-                while (!process.StandardOutput.EndOfStream)
-                    Console.WriteLine(process.StandardOutput.ReadLine());
-            process.WaitForExit();
-            if (process.ExitCode == 2)
+
+            var res = Util.StartProcess(_kindleGenPath, args, _currentSettings.detailedOutput);
+            if (res == 2)
             {
                 Console.WriteLine("Error converting to mobi");
                 return false;
@@ -413,17 +409,6 @@ namespace Fb2Kindle
             if (!_currentSettings.detailedOutput)
                 Console.WriteLine("(OK)");
             return true;
-        }
-
-        private static string PrepareTempFolder(string bookName, string images)
-        {
-            var tempDir = Path.Combine(Path.GetTempPath(), bookName);
-            if (!Directory.Exists(tempDir))
-                Directory.CreateDirectory(tempDir);
-            if (!Directory.Exists(tempDir + @"\" + images))
-                Directory.CreateDirectory(tempDir + @"\" + images);
-            Util.GetFileFromResource("kindlegen.exe", tempDir + "\\kindlegen.exe");
-            return tempDir;
         }
 
         private static XElement AddAuthorsInfo(IEnumerable<XElement> avtorbook)
@@ -494,6 +479,8 @@ namespace Fb2Kindle
         {
             if (book == null) return true;
             Console.Write("Extracting images...");
+            if (!Directory.Exists(tempDir + @"\" + ImagesFolderName))
+                Directory.CreateDirectory(tempDir + @"\" + ImagesFolderName);
             foreach (var binEl in book.Elements("binary"))
             {
                 try
@@ -718,7 +705,7 @@ namespace Fb2Kindle
         private static void AddNcxItem(XElement ncx, int playOrder, string label, string href)
         {
             var navPoint = new XElement("navPoint");
-            navPoint.Add(new XAttribute("id", "navpoint-" + playOrder));
+            navPoint.Add(new XAttribute("id", "np-" + playOrder));
             navPoint.Add(new XAttribute("playOrder", playOrder.ToString()));
             navPoint.Add(new XElement("navLabel", new XElement("text", label)));
             navPoint.Add(new XElement("content", new XAttribute("src", href)));
@@ -735,6 +722,7 @@ namespace Fb2Kindle
     {
         public DefaultOptions()
         {
+            detailedOutput = true;
             DropCap = "АБВГДЕЖЗИКЛМНОПРСТУФХЦЧЩШЭЮЯ"; //"АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧЩШЬЪЫЭЮЯQWERTYUIOPASDFGHJKLZXCVBNM";
         }
 
