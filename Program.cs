@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using System.Windows.Forms;
@@ -20,7 +21,7 @@ namespace Fb2Kindle
             Console.WriteLine("-ni: no images");
             Console.WriteLine("-ntoc: no table of content");
             Console.WriteLine("-c: use compression (slow)");
-            Console.WriteLine("-o: show detailed output");
+            Console.WriteLine("-o: hide detailed output");
             Console.WriteLine("-s: add sequence and number to title");
             Console.WriteLine("-save: save parameters to be used at the next start");
             Console.WriteLine("-a: process all files in current folder");
@@ -57,18 +58,21 @@ namespace Fb2Kindle
 
                 if (args.Length == 0)
                 {
-                    Console.Write("Process all files with default settings? Enter 'y' to continue: ");
-                    if (Console.ReadLine() != "y")
+                    if (!Debugger.IsAttached)
                     {
-                        ShowHelpText();
-                        return;
+                        Console.Write("Process all files with default settings? Enter 'y' to continue: ");
+                        if (Console.ReadLine() != "y")
+                        {
+                            ShowHelpText();
+                            return;
+                        }
                     }
                     currentSettings.all = true;
                     currentSettings.recursive = true;
                     currentSettings.noBig = true;
                     currentSettings.addSequence = true;
-                    currentSettings.detailedOutput = true;
-                    wait = true;
+                    currentSettings.ntoc = true;
+                    wait = !Debugger.IsAttached;
                 }
                 else
                 {
@@ -157,7 +161,7 @@ namespace Fb2Kindle
                         currentSettings.compression = true;
                         break;
                     case "-o":
-                        currentSettings.detailedOutput = true;
+                        currentSettings.detailedOutput = false;
                         break;
                     case "-s":
                         currentSettings.addSequence = true;
