@@ -22,6 +22,8 @@ namespace Fb2Kindle
         private readonly string _workingFolder;
         private readonly string _defaultCss;
         private readonly bool _addGuideLine;
+        private readonly bool _addNotesToToc;
+        private readonly bool _detailedOutput;
         private XElement _book;
         private XElement _opfFile;
         private XElement _tocEl;
@@ -30,11 +32,13 @@ namespace Fb2Kindle
 
         #region public
 
-        public Convertor(DefaultOptions currentSettings, string workingFolder, bool addGuideLine = false)
+        public Convertor(DefaultOptions currentSettings, string workingFolder, bool detailedOutput = true, bool addGuideLine = false, bool addNotesToToc = false)
         {
             _currentSettings = currentSettings;
             _workingFolder = workingFolder;
             _addGuideLine = addGuideLine;
+            _addNotesToToc = addNotesToToc;
+            _detailedOutput = detailedOutput;
 
             if (File.Exists(currentSettings.defaultCSS))
                 _defaultCss = File.ReadAllText(currentSettings.defaultCSS, Encoding.UTF8);
@@ -204,7 +208,7 @@ namespace Fb2Kindle
                 }
                 else
                 {
-                    if (!_currentSettings.addNotesToToc) continue;
+                    if (!_addNotesToToc) continue;
                     var si = prevMenuEl.Descendants("ul").FirstOrDefault();
                     if (si == null)
                     {
@@ -231,7 +235,13 @@ namespace Fb2Kindle
             if (t != null && !String.IsNullOrEmpty(t.Value))
             {
                 Util.RenameTag(t, "div", "title");
-                t.SetAttributeValue("id", String.Format("title{0}", bookNum + 2));
+                var inner = new XElement("div");
+                inner.SetAttributeValue("class", bookNum == 0 ? "title0" : "title1");
+                inner.SetAttributeValue("id", String.Format("title{0}", bookNum + 2));
+                inner.Add(t.Nodes());
+                t.RemoveNodes();
+                t.Add(inner);
+                //t.SetAttributeValue("id", String.Format("title{0}", bookNum + 2));
                 toc = AddTitleToToc(t.Value.Trim(), String.Format("i{0}.html#{1}", bookNum,
                     String.Format("title{0}", bookNum + 2)), toc);
                 if (section.Parent != null)
@@ -301,7 +311,13 @@ namespace Fb2Kindle
                     if (!String.IsNullOrEmpty(t.Value))
                         AddTitleToToc(t.Value.Trim(), "i.html#" + String.Format("title{0}", i + 2), _tocEl.Descendants("ul").First());
                     Util.RenameTag(t, "div", "title");
-                    t.SetAttributeValue("id", String.Format("title{0}", i + 2));
+                    var inner = new XElement("div");
+                    inner.SetAttributeValue("class", i == 0 ? "title0" : "title1");
+                    inner.SetAttributeValue("id", String.Format("title{0}", i + 2));
+                    inner.Add(t.Nodes());
+                    t.RemoveNodes();
+                    t.Add(inner);
+                    //t.SetAttributeValue("id", String.Format("title{0}", i + 2));
                     i++;
                 }
             }
@@ -404,7 +420,7 @@ namespace Fb2Kindle
             if (_currentSettings.compression)
                 args += " -c2";
 
-            var res = Util.StartProcess(_kindleGenPath, args, _currentSettings.detailedOutput);
+            var res = Util.StartProcess(_kindleGenPath, args, _detailedOutput);
             if (res == 2)
             {
                 Console.WriteLine("Error converting to mobi");
@@ -420,7 +436,7 @@ namespace Fb2Kindle
                 versionNumber++;
             }
             File.Move(tempDir + @"\" + bookName + ".mobi", Path.Combine(resultPath, resultName) + ".mobi");
-            if (!_currentSettings.detailedOutput)
+            if (!_detailedOutput)
                 Console.WriteLine("(OK)");
             return true;
         }
@@ -723,7 +739,6 @@ namespace Fb2Kindle
     {
         public DefaultOptions()
         {
-            detailedOutput = true;
             DropCap = "АБВГДЕЖЗИКЛМНОПРСТУФХЦЧЩШЭЮЯ"; //"АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧЩШЬЪЫЭЮЯQWERTYUIOPASDFGHJKLZXCVBNM";
         }
 
@@ -737,9 +752,7 @@ namespace Fb2Kindle
         public bool all { get; set; }
         public bool recursive { get; set; }
         public bool compression { get; set; }
-        public bool detailedOutput { get; set; }
         public bool addSequence { get; set; }
-        public bool addNotesToToc { get; set; }
         [XmlIgnore]
         public bool save { get; set; }
     }

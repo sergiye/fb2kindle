@@ -47,6 +47,7 @@ namespace Fb2Kindle
         public static void Main(string[] args)
         {
             var wait = false;
+            var detailedOutput = true;
             try
             {
                 ShowMainInfo();
@@ -71,16 +72,68 @@ namespace Fb2Kindle
                     currentSettings.all = true;
                     currentSettings.recursive = true;
                     currentSettings.noBig = true;
-                    currentSettings.addSequence = true;
+                    //currentSettings.addSequence = true;
                 }
                 else
                 {
-                    wait = ParseInputParameters(args, currentSettings, ref bookPath);
+                    for (var j = 0; j < args.Length; j++)
+                    {
+                        switch (args[j].ToLower().Trim())
+                        {
+                            case "-css":
+                                if (args.Length > (j + 1))
+                                {
+                                    currentSettings.defaultCSS = args[j + 1];
+                                    j++;
+                                }
+                                break;
+                            case "-d":
+                                currentSettings.deleteOrigin = true;
+                                break;
+                            case "-nb":
+                                currentSettings.noBig = true;
+                                break;
+                            case "-nch":
+                                currentSettings.nch = true;
+                                break;
+                            case "-ni":
+                                currentSettings.noImages = true;
+                                break;
+                            case "-ntoc":
+                                currentSettings.ntoc = true;
+                                break;
+                            case "-save":
+                                currentSettings.save = true;
+                                break;
+                            case "-w":
+                                wait = true;
+                                break;
+                            case "-a":
+                                currentSettings.all = true;
+                                break;
+                            case "-r":
+                                currentSettings.recursive = true;
+                                break;
+                            case "-c":
+                                currentSettings.compression = true;
+                                break;
+                            case "-o":
+                                detailedOutput = false;
+                                break;
+                            case "-s":
+                                currentSettings.addSequence = true;
+                                break;
+                            default:
+                                if (j == 0)
+                                    bookPath = args[j];
+                                break;
+                        }
+                    }
                 }
                 if (currentSettings.save)
                     Util.WriteObjectToFile(settingsFile, currentSettings, true);
 
-                var conv = new Convertor(currentSettings, executingPath);
+                var conv = new Convertor(currentSettings, executingPath, detailedOutput);
                 if (currentSettings.all)
                 {
                     var searchOptions = currentSettings.recursive ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
@@ -113,65 +166,6 @@ namespace Fb2Kindle
                 Console.WriteLine("Press any key to continue...");
                 Console.ReadKey();
             }
-        }
-
-        private static bool ParseInputParameters(string[] args, DefaultOptions currentSettings, ref string bookPath)
-        {
-            var wait = false;
-            for (var j = 0; j < args.Length; j++)
-            {
-                switch (args[j].ToLower().Trim())
-                {
-                    case "-css":
-                        if (args.Length > (j + 1))
-                        {
-                            currentSettings.defaultCSS = args[j + 1];
-                            j++;
-                        }
-                        break;
-                    case "-d":
-                        currentSettings.deleteOrigin = true;
-                        break;
-                    case "-nb":
-                        currentSettings.noBig = true;
-                        break;
-                    case "-nch":
-                        currentSettings.nch = true;
-                        break;
-                    case "-ni":
-                        currentSettings.noImages = true;
-                        break;
-                    case "-ntoc":
-                        currentSettings.ntoc = true;
-                        break;
-                    case "-save":
-                        currentSettings.save = true;
-                        break;
-                    case "-w":
-                        wait = true;
-                        break;
-                    case "-a":
-                        currentSettings.all = true;
-                        break;
-                    case "-r":
-                        currentSettings.recursive = true;
-                        break;
-                    case "-c":
-                        currentSettings.compression = true;
-                        break;
-                    case "-o":
-                        currentSettings.detailedOutput = false;
-                        break;
-                    case "-s":
-                        currentSettings.addSequence = true;
-                        break;
-                    default:
-                        if (j == 0)
-                            bookPath = args[j];
-                        break;
-                }
-            }
-            return wait;
         }
     }
 }
