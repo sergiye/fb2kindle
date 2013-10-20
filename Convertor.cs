@@ -15,7 +15,8 @@ namespace Fb2Kindle
 {
     class Convertor
     {
-        private const string ImagesFolderName = "images";
+        private const string ImagesFolderName = "image";
+        private const string NcxName = "toc.ncx";
 
         private string _tempDir;
         private readonly string _workingFolder;
@@ -72,7 +73,7 @@ namespace Fb2Kindle
                 _opfFile = GetEmptyPackage(_book, _currentSettings.addSequence);
                 _tocEl = GetEmptyToc();
 
-                AddPackItem("ncx", "toc.ncx", "application/x-dtbncx+xml", false);
+                AddPackItem("ncx", NcxName, "application/x-dtbncx+xml", false);
                 AddPackItem("booktitle", "booktitle.html");
                 AddGuideItem("Title", "booktitle.html", "title-page");
 
@@ -116,7 +117,7 @@ namespace Fb2Kindle
                 SaveXmlToFile(_opfFile, _tempDir + @"\" + bookName + ".opf");
                 _opfFile.RemoveAll();
 
-                PrepareNcxFile(bookName);
+                CreateNcxFile(_tocEl, bookName, _tempDir, _currentSettings.ntoc);
                 if (!_currentSettings.ntoc)
                 {
                     SaveXmlToFile(_tocEl, _tempDir + @"\toc.html");
@@ -137,8 +138,7 @@ namespace Fb2Kindle
             {
                 try
                 {
-                    if (!Debugger.IsAttached)
-                        Directory.Delete(_tempDir, true);
+                    Directory.Delete(_tempDir, true);
                 }
                 catch (Exception ex)
                 {
@@ -148,22 +148,43 @@ namespace Fb2Kindle
             }
         }
 
-        private void PrepareNcxFile(string bookName)
+        #region ncx
+
+        private static void AddNcxItem(XElement navMap, int playOrder, string label, string href)
+        {
+            var navPoint = new XElement("navPoint");
+            navPoint.Add(new XAttribute("id", "p_" + playOrder));
+            navPoint.Add(new XAttribute("playOrder", playOrder.ToString()));
+            navPoint.Add(new XElement("navLabel", new XElement("text", label)));
+            navPoint.Add(new XElement("content", new XAttribute("src", href)));
+            navMap.Add(navPoint);
+        }
+
+        private static void CreateNcxFile(XElement toc, string bookName, string folder, bool addToc)
         {
             var ncx = new XElement("ncx");
-            ncx.Add(new XElement("head", ""));
+            var head = new XElement("head", "");
+            head.Add(new XElement("meta", new XAttribute("name", "dtb:uid"), new XAttribute("content", "BookId")));
+            head.Add(new XElement("meta", new XAttribute("name", "dtb:depth"), new XAttribute("content", "1")));
+            head.Add(new XElement("meta", new XAttribute("name", "dtb:totalPageCount"), new XAttribute("content", "0")));
+            head.Add(new XElement("meta", new XAttribute("name", "dtb:maxPageNumber"), new XAttribute("content", "0")));
+            ncx.Add(head);
             ncx.Add(new XElement("docTitle", new XElement("text", bookName)));
-            ncx.Add(new XElement("navMap", ""));
-            AddNcxItem(ncx, 0, "Обложка", "booktitle.html#booktitle");
-            if (!_currentSettings.ntoc)
-                AddNcxItem(ncx, 1, "Содержание", "toc.html#toc");
-            var tocItems = _tocEl.Descendants("a");
+            ncx.Add(new XElement("docAuthor", new XElement("text", "fb2Kindle")));
+            var navMap = new XElement("navMap", "");
+            AddNcxItem(navMap, 0, "Обложка", "booktitle.html#booktitle");
+            if (!addToc)
+                AddNcxItem(navMap, 1, "Содержание", "toc.html#toc");
+            var tocItems = toc.Descendants("a");
             var playOrder = 2;
             foreach (var a in tocItems)
-                AddNcxItem(ncx, playOrder++, a.Value, (string) a.Attribute("href"));
-            SaveXmlToFile(ncx, _tempDir + @"\toc.ncx");
+                AddNcxItem(navMap, playOrder++, a.Value, (string)a.Attribute("href"));
+            ncx.Add(navMap);
+            SaveXmlToFile(ncx, folder + "\\" + NcxName);
             ncx.RemoveAll();
         }
+
+        #endregion ncx
 
         #endregion public
 
@@ -183,16 +204,14 @@ namespace Fb2Kindle
                 }
                 else
                 {
-                    if (_currentSettings.addNotesToToc)
+                    if (!_currentSettings.addNotesToToc) continue;
+                    var si = prevMenuEl.Descendants("ul").FirstOrDefault();
+                    if (si == null)
                     {
-                        var si = prevMenuEl.Descendants("ul").FirstOrDefault();
-                        if (si == null)
-                        {
-                            si = new XElement("ul");
-                            prevMenuEl.Add(si);
-                        }
-                        si.Add(GetListItem(item.Key, item.Value));
+                        si = new XElement("ul");
+                        prevMenuEl.Add(si);
                     }
+                    si.Add(GetListItem(item.Key, item.Value));
                 }
             }
         }
@@ -249,12 +268,11 @@ namespace Fb2Kindle
 
             CreateTitlePage(_book, _tempDir);
 
-            var bodies = new List<XElement>();
-            bodies.AddRange(_book.Elements("body"));
             var _notesList = new List<KeyValuePair<string, string>>();
-            for (var i = 1; i < bodies.Count; i++)
+            var bodies = _book.Elements("body").ToArray();
+            for (var i = 1; i < bodies.Length; i++)
             {
-                var bodyName = (string) bodies[i].Attribute("name");
+                var bodyName = (string)bodies[i].Attribute("name");
                 if (String.IsNullOrEmpty(bodyName)) continue;
                 _notesList.Add(new KeyValuePair<string, string>(bodyName, bodyName + ".html"));
                 var list = bodies[i].Descendants("section").ToList();
@@ -269,6 +287,7 @@ namespace Fb2Kindle
                             noteTitle = noteId;
                         _notesList.Add(new KeyValuePair<string, string>(noteTitle, bodyName + ".html#" + noteId));
                     }
+                bodies[i].Name = "section";
                 ConvertTagsToHTML(bodies[i], true);
                 SaveAsHtmlBook(bodies[i], _tempDir + @"\" + bodyName + ".html");
             }
@@ -307,7 +326,24 @@ namespace Fb2Kindle
                 parent.Add(new XElement("br"));
             }
             ConvertTagsToHTML(body);
-            //UpdateATags
+            UpdateNotesRefs(body, _notesList);
+
+            if (_currentSettings.nch)
+            {
+                const string htmlFile = "book.html";
+                AddPackItem("text", htmlFile);
+                AddGuideItem("Book", htmlFile, "start");
+                SaveAsHtmlBook(body, _tempDir + @"\" + htmlFile);
+            }
+            else
+                SaveSubSections(body, 0, _tocEl.Descendants("ul").First());
+
+            AddNotesList(_notesList);
+            Console.WriteLine("(OK)");
+        }
+
+        private static void UpdateNotesRefs(XElement body, List<KeyValuePair<string, string>> _notesList)
+        {
             foreach (var a in body.Descendants("a"))
             {
                 var src = a.Attribute("href").Value;
@@ -322,18 +358,6 @@ namespace Fb2Kindle
                     break;
                 }
             }
-
-            if (_currentSettings.nch)
-            {
-                const string htmlFile = "book.html";
-                AddPackItem("text", htmlFile);
-                AddGuideItem("Book", htmlFile, "start");
-                SaveAsHtmlBook(body, _tempDir + @"\" + htmlFile);
-            }
-            else
-                SaveSubSections(body, 0, _tocEl.Descendants("ul").First());
-            AddNotesList(_notesList);
-            Console.WriteLine("(OK)");
         }
 
         private void SetBigFirstLetters(XElement body)
@@ -700,16 +724,6 @@ namespace Fb2Kindle
                 _opfFile.Add(guide);
             }
             guide.Add(itemEl);
-        }
-
-        private static void AddNcxItem(XElement ncx, int playOrder, string label, string href)
-        {
-            var navPoint = new XElement("navPoint");
-            navPoint.Add(new XAttribute("id", "np-" + playOrder));
-            navPoint.Add(new XAttribute("playOrder", playOrder.ToString()));
-            navPoint.Add(new XElement("navLabel", new XElement("text", label)));
-            navPoint.Add(new XElement("content", new XAttribute("src", href)));
-            ncx.Elements("navMap").First().Add(navPoint);
         }
 
         #endregion helper methods
