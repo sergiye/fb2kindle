@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
+using System.Text;
 
 namespace Fb2Kindle
 {
@@ -54,6 +55,7 @@ namespace Fb2Kindle
                 var settingsFile = executingPath + @"\config.xml";
                 var currentSettings = Util.ReadObjectFromFile<DefaultOptions>(settingsFile) ?? new DefaultOptions();
                 var bookPath = string.Empty;
+                string cssStyles = null;
 
                 if (args.Length == 0)
                 {
@@ -80,7 +82,20 @@ namespace Fb2Kindle
                             case "-css":
                                 if (args.Length > (j + 1))
                                 {
-                                    currentSettings.defaultCSS = args[j + 1];
+                                    var cssFile = args[j + 1];
+                                    if (!File.Exists(cssFile))
+                                        cssFile = executingPath + "\\" + cssFile;
+                                    if (!File.Exists(cssFile))
+                                    {
+                                        Console.WriteLine("css styles file not found");
+                                        return;
+                                    }
+                                    cssStyles = File.ReadAllText(cssFile, Encoding.UTF8);
+                                    if (String.IsNullOrEmpty(cssStyles))
+                                    {
+                                        Console.WriteLine("css styles file is empty");
+                                        return;
+                                    }
                                     j++;
                                 }
                                 break;
@@ -126,8 +141,7 @@ namespace Fb2Kindle
                 }
                 if (currentSettings.save)
                     Util.WriteObjectToFile(settingsFile, currentSettings, true);
-
-                var conv = new Convertor(currentSettings, executingPath, detailedOutput);
+                var conv = new Convertor(currentSettings, executingPath, cssStyles, detailedOutput);
                 if (currentSettings.all)
                 {
                     var searchOptions = currentSettings.recursive ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
