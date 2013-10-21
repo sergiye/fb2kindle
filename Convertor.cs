@@ -367,7 +367,7 @@ namespace Fb2Kindle
 
         private void SetBigFirstLetters(XElement body)
         {
-            var regex = new Regex(@"^<p>(\w{1})([\w]+.+?)</p>$");
+            var regex = new Regex(@"^<p>(\w{1})([\s\w]+.+?)</p>$");
             var sections = body.Descendants("section");
             foreach (var sec in sections)
             {
@@ -381,11 +381,14 @@ namespace Fb2Kindle
                             newPart = true;
                             break;
                         case "p":
-                            if (t.IsEmpty) continue;
+                            if (t.IsEmpty || t.HasAttributes) continue;
                             var pVal = t.ToString().Trim().Replace("\r", "").Replace("\n", "");
                             var matches = regex.Matches(pVal);
                             if (matches.Count <= 0 || matches[0].Groups.Count != 3)
+                            {
+                                newPart = false; 
                                 continue;
+                            }
                             var firstSymbol = matches[0].Groups[1].Value;
                             if (!DropCap.Contains(firstSymbol))
                             {
@@ -406,8 +409,6 @@ namespace Fb2Kindle
                             newEl.AddFirst(span);
                             t.ReplaceWith(newEl);
                             break;
-                        default:
-                            continue;
                     }
                 }
             }
