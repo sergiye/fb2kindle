@@ -741,8 +741,6 @@ namespace Fb2Kindle
         public bool nch { get; set; }
         public bool noImages { get; set; }
         public bool ntoc { get; set; }
-        public bool all { get; set; }
-        public bool recursive { get; set; }
         public bool compression { get; set; }
         public bool addSequence { get; set; }
         [XmlIgnore]

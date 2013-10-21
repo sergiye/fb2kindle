@@ -45,6 +45,8 @@ namespace Fb2Kindle
         public static void Main(string[] args)
         {
             var wait = false;
+            var all = false;
+            var recursive = false;
             var detailedOutput = true;
             try
             {
@@ -69,8 +71,8 @@ namespace Fb2Kindle
                         }
                         wait = true;
                     }
-                    currentSettings.all = true;
-                    currentSettings.recursive = true;
+                    all = true;
+                    recursive = true;
                     //currentSettings.addSequence = true;
                 }
                 else
@@ -118,10 +120,10 @@ namespace Fb2Kindle
                                 wait = true;
                                 break;
                             case "-a":
-                                currentSettings.all = true;
+                                all = true;
                                 break;
                             case "-r":
-                                currentSettings.recursive = true;
+                                recursive = true;
                                 break;
                             case "-c":
                                 currentSettings.compression = true;
@@ -142,9 +144,9 @@ namespace Fb2Kindle
                 if (currentSettings.save)
                     Util.WriteObjectToFile(settingsFile, currentSettings, true);
                 var conv = new Convertor(currentSettings, executingPath, cssStyles, detailedOutput);
-                if (currentSettings.all)
+                if (all)
                 {
-                    var searchOptions = currentSettings.recursive ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
+                    var searchOptions = recursive ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
                     var files = Directory.GetFiles(executingPath, "*.fb2", searchOptions);
                     if (files.Length == 0)
                         Console.WriteLine("No fb2 files found");
