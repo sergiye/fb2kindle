@@ -6,7 +6,6 @@ using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using System.Xml.Serialization;
@@ -32,7 +31,7 @@ namespace Fb2Kindle
 
         #region public
 
-        public Convertor(DefaultOptions currentSettings, string workingFolder, bool detailedOutput = true, bool addGuideLine = false, bool addNotesToToc = false)
+        public Convertor(DefaultOptions currentSettings, string workingFolder, string css, bool detailedOutput = true, bool addGuideLine = false, bool addNotesToToc = false)
         {
             _currentSettings = currentSettings;
             _workingFolder = workingFolder;
@@ -40,16 +39,9 @@ namespace Fb2Kindle
             _addGuideLine = addGuideLine;
             _addNotesToToc = addNotesToToc;
             _detailedOutput = detailedOutput;
-
-            if (File.Exists(currentSettings.defaultCSS))
-                _defaultCss = File.ReadAllText(currentSettings.defaultCSS, Encoding.UTF8);
-
+            _defaultCss = css;
             if (String.IsNullOrEmpty(_defaultCss))
-            {
-                if (!String.IsNullOrEmpty(currentSettings.defaultCSS))
-                    Console.WriteLine("Styles file not found: " + currentSettings.defaultCSS);
                 _defaultCss = Util.GetScriptFromResource("defstyles.css");
-            }
         }
 
         public bool ConvertBook(string bookPath)
@@ -749,7 +741,6 @@ namespace Fb2Kindle
         public bool nch { get; set; }
         public bool noImages { get; set; }
         public bool ntoc { get; set; }
-        public string defaultCSS { get; set; }
         public bool all { get; set; }
         public bool recursive { get; set; }
         public bool compression { get; set; }
