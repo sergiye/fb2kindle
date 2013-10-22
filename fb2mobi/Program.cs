@@ -17,7 +17,7 @@ namespace fb2mobi
         private static void print_usage()
         {
             Console.WriteLine("Usage: fb2mobi <file.fb2> [<output.mobi>] [{-,/,--}param]");
-            Console.WriteLine("  -nc \t No compress output file. Increase speed and size :-)");
+            Console.WriteLine("  -c \t Ñompress output file. Decrease size and speed :-)");
             Console.WriteLine("  -v0 \t Suppress verbose.");
             Console.WriteLine("  -v1 \t Suppress verbose. Only output file name.");
             Worker.print_usage();
@@ -113,7 +113,7 @@ namespace fb2mobi
 
             // RUN KINDLEGEN
             var process = new Process {StartInfo = {UseShellExecute = false, RedirectStandardOutput = true, RedirectStandardError = true, CreateNoWindow = true, FileName = kindlegen}};
-            var KindleGenArguments = CommandLine["nc"] == "true" ? " -c0" : " -c2";
+            var KindleGenArguments = CommandLine["c"] != "true" ? " -c0" : " -c2";
             KindleGenArguments += " \"" + sp.getWorkDir() + sp.getBookName(".opf") + "\"";
             process.StartInfo.Arguments = KindleGenArguments;
             process.Start();
