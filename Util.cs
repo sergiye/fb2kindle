@@ -74,19 +74,20 @@ namespace Fb2Kindle
             }
         }
 
-        public static void GetFileFromResource(string resourceName, string filename)
+        public static bool GetFileFromResource(string resourceName, string filename)
         {
             var assembly = Assembly.GetExecutingAssembly();
             var scriptsPath = String.Format("{0}.{1}", assembly.GetTypes()[0].Namespace, resourceName);
             using (var stream = assembly.GetManifestResourceStream(scriptsPath))
             {
-                if (stream == null) return;
+                if (stream == null) return false;
                 using (Stream file = File.OpenWrite(filename))
                 {
                     var buffer = new byte[8 * 1024];
                     int len;
                     while ((len = stream.Read(buffer, 0, buffer.Length)) > 0)
                         file.Write(buffer, 0, len);
+                    return true;
                 }
             }
         }
