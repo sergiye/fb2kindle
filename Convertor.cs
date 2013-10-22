@@ -411,7 +411,11 @@ namespace Fb2Kindle
             if (!File.Exists(_kindleGenPath))
             {
                 _kindleGenPath = string.Format("{0}\\kindlegen.exe", tempDir);
-                Util.GetFileFromResource("kindlegen.exe", _kindleGenPath);
+                if (!Util.GetFileFromResource("kindlegen.exe", _kindleGenPath))
+                {
+                    Console.WriteLine("kindlegen.exe not found");
+                    return false;
+                }
             }
 
             var args = String.Format("\"{0}\\{1}.opf\"", tempDir, bookName);

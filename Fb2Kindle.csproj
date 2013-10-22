@@ -72,6 +72,7 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
+    <None Include="Fb2KindleAll.cmd" />
     <None Include="fonts\DroidSerif-Bold.ttf">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

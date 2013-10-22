@@ -72,9 +72,6 @@
     <Compile Include="Worker.cs" />
   </ItemGroup>
   <ItemGroup>
-    <BaseApplicationManifest Include="Properties\app.manifest" />
-  </ItemGroup>
-  <ItemGroup>
     <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
       <Visible>False</Visible>
       <ProductName>Профиль клиента .NET Framework</ProductName>
@@ -111,9 +108,9 @@
     <Content Include="FB2_2_xhtml.xsl">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="readme.html">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="fb2mobiAll.cmd" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
