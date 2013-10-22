@@ -5,6 +5,8 @@ using System.Reflection;
 
 namespace fb2mobi
 {
+    //based on https://code.google.com/p/fb2mobi/source/checkout
+
     internal class FB2mobiMain
     {
         private const string kindlegen = "kindlegen.exe";
