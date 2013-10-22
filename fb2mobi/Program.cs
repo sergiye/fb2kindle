@@ -10,15 +10,14 @@ namespace fb2mobi
     internal class FB2mobiMain
     {
         private const string kindlegen = "kindlegen.exe";
-        private const string opfxsl = "FB2_2_opf.xsl";
-        private const string bodyxsl = "FB2_2_xhtml.xsl";
-        private const string ncxxsl = "FB2_2_ncx.xsl";
+        private const string opfxsl = "opf.xsl";
+        private const string bodyxsl = "xhtml.xsl";
+        private const string ncxxsl = "ncx.xsl";
 
         private static void print_usage()
         {
             Console.WriteLine("Usage: fb2mobi <file.fb2> [<output.mobi>] [{-,/,--}param]");
             Console.WriteLine("  -nc \t No compress output file. Increase speed and size :-)");
-            Console.WriteLine("  -cl \t Clean output dir after convert.");
             Console.WriteLine("  -v0 \t Suppress verbose.");
             Console.WriteLine("  -v1 \t Suppress verbose. Only output file name.");
             Worker.print_usage();
@@ -134,19 +133,13 @@ namespace fb2mobi
             if (File.Exists(sp.getWorkDir() + bookname))
             {
                 File.Move(sp.getWorkDir() + bookname, sp.getOutputDir() + bookname);
-
-                if (CommandLine["cl"] == "true")
+                try
                 {
-                    try
-                    {
-                        Directory.Delete(sp.getWorkDir(), true);
-                    }
-                    catch (Exception)
-                    {
-                    }
+                    Directory.Delete(sp.getWorkDir(), true);
                 }
-                else if (verbose)
-                    Console.WriteLine("Output: " + sp.getWorkDir());
+                catch (Exception)
+                {
+                }
 
                 if (verbose)
                     Console.WriteLine("Book: " + sp.getOutputDir() + bookname);
