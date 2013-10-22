@@ -11,11 +11,11 @@ namespace Fb2Kindle
         public static void ShowHelpText(Assembly asm)
         {
             Console.WriteLine();
-            Console.WriteLine(asm.GetName().Name + " <book.fb2> [-css <styles.css>] [-d] [-nb] [-ni]");
+            Console.WriteLine(asm.GetName().Name + " <path> [-css <styles.css>] [-d] [-ni]");
             Console.WriteLine();
-            Console.WriteLine("<book.fb2>: input fb2 file");
+            Console.WriteLine("<path>: input fb2 file or files mask (ex: *.fb2) or path to *fb2 files");
             Console.WriteLine("-css <styles.css>: styles used in destination book");
-            Console.WriteLine("-d: delete source file after convertion");
+            Console.WriteLine("-d: delete source file after successful convertion");
             Console.WriteLine("-c: use compression (slow)");
             Console.WriteLine("-o: hide detailed output");
             Console.WriteLine("-s: add sequence and number to title");
@@ -23,7 +23,7 @@ namespace Fb2Kindle
             Console.WriteLine("-ntoc: no table of content");
             Console.WriteLine("-nch: no chapters");
             Console.WriteLine("-save: save parameters to be used at the next start");
-            Console.WriteLine("-a: process all files in current folder");
+            Console.WriteLine("-a: all fb2 books in app folder");
             Console.WriteLine("-r: process files in subfolders (work with -a key)");
             Console.WriteLine("-w: wait for key press on finish");
             Console.WriteLine();
@@ -44,8 +44,9 @@ namespace Fb2Kindle
         [STAThread]
         public static void Main(string[] args)
         {
+            const string allBooksPattern = "*.fb2";
             var wait = false;
-            var all = false;
+            var save = false;
             var recursive = false;
             var detailedOutput = true;
             try
@@ -53,8 +54,8 @@ namespace Fb2Kindle
                 var asm = Assembly.GetExecutingAssembly();
                 ShowMainInfo(asm);
 
-                var executingPath = Path.GetDirectoryName(asm.Location);
-                var settingsFile = executingPath + @"\config.xml";
+                var appPath = Util.GetAppPath();
+                var settingsFile = appPath + @"\config.xml";
                 var currentSettings = Util.ReadObjectFromFile<DefaultOptions>(settingsFile) ?? new DefaultOptions();
                 var bookPath = string.Empty;
                 string cssStyles = null;
@@ -71,7 +72,7 @@ namespace Fb2Kindle
                         }
                         wait = true;
                     }
-                    all = true;
+                    bookPath = allBooksPattern;
                     recursive = true;
                     //currentSettings.addSequence = true;
                 }
@@ -81,12 +82,30 @@ namespace Fb2Kindle
                     {
                         switch (args[j].ToLower().Trim())
                         {
+                            case "-nch":
+                                currentSettings.nch = true;
+                                break;
+                            case "-ni":
+                                currentSettings.noImages = true;
+                                break;
+                            case "-ntoc":
+                                currentSettings.ntoc = true;
+                                break;
+                            case "-c":
+                                currentSettings.compression = true;
+                                break;
+                            case "-s":
+                                currentSettings.addSequence = true;
+                                break;
+                            case "-d":
+                                currentSettings.deleteOrigin = true;
+                                break;
                             case "-css":
                                 if (args.Length > (j + 1))
                                 {
                                     var cssFile = args[j + 1];
                                     if (!File.Exists(cssFile))
-                                        cssFile = executingPath + "\\" + cssFile;
+                                        cssFile = appPath + "\\" + cssFile;
                                     if (!File.Exists(cssFile))
                                     {
                                         Console.WriteLine("css styles file not found");
@@ -101,38 +120,20 @@ namespace Fb2Kindle
                                     j++;
                                 }
                                 break;
-                            case "-d":
-                                currentSettings.deleteOrigin = true;
-                                break;
-                            case "-nch":
-                                currentSettings.nch = true;
-                                break;
-                            case "-ni":
-                                currentSettings.noImages = true;
-                                break;
-                            case "-ntoc":
-                                currentSettings.ntoc = true;
-                                break;
                             case "-save":
-                                currentSettings.save = true;
+                                save = true;
                                 break;
                             case "-w":
                                 wait = true;
                                 break;
-                            case "-a":
-                                all = true;
-                                break;
                             case "-r":
                                 recursive = true;
                                 break;
-                            case "-c":
-                                currentSettings.compression = true;
+                            case "-a":
+                                bookPath = allBooksPattern;
                                 break;
                             case "-o":
                                 detailedOutput = false;
-                                break;
-                            case "-s":
-                                currentSettings.addSequence = true;
                                 break;
                             default:
                                 if (j == 0)
@@ -141,30 +142,28 @@ namespace Fb2Kindle
                         }
                     }
                 }
-                if (currentSettings.save)
+                if (string.IsNullOrEmpty(bookPath))
+                {
+                    Console.WriteLine("No input file");
+                    return;
+                }
+                if (save)
                     Util.WriteObjectToFile(settingsFile, currentSettings, true);
-                var conv = new Convertor(currentSettings, executingPath, cssStyles, detailedOutput);
-                if (all)
-                {
-                    var searchOptions = recursive ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
-                    var files = Directory.GetFiles(executingPath, "*.fb2", searchOptions);
-                    if (files.Length == 0)
-                        Console.WriteLine("No fb2 files found");
-                    foreach (var file in files)
-                        conv.ConvertBook(file);
-                }
+
+                var workPath = Path.GetDirectoryName(bookPath);
+                if (string.IsNullOrEmpty(workPath))
+                    workPath = appPath;
                 else
-                {
-                    if (string.IsNullOrEmpty(bookPath) || !File.Exists(bookPath))
-                    {
-                        if (string.IsNullOrEmpty(bookPath))
-                            Console.WriteLine("No input file");
-                        else
-                            Console.WriteLine("File not found: " + bookPath);
-                    }
-                    else
-                        conv.ConvertBook(bookPath);
-                }
+                    bookPath = Path.GetFileName(bookPath);
+                if (string.IsNullOrEmpty(bookPath))
+                    bookPath = allBooksPattern;
+                var searchOptions = recursive ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
+                var files = Directory.GetFiles(workPath, bookPath, searchOptions);
+                if (files.Length == 0)
+                    Console.WriteLine("No fb2 files found");
+                var conv = new Convertor(currentSettings, cssStyles, detailedOutput);
+                foreach (var file in files)
+                    conv.ConvertBook(file);
             }
             catch (Exception ex)
             {

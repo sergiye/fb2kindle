@@ -8,7 +8,6 @@ using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
-using System.Xml.Serialization;
 using Encoder = System.Drawing.Imaging.Encoder;
 
 namespace Fb2Kindle
@@ -31,11 +30,10 @@ namespace Fb2Kindle
 
         #region public
 
-        public Convertor(DefaultOptions currentSettings, string workingFolder, string css, bool detailedOutput = true, bool addGuideLine = false, bool addNotesToToc = false)
+        public Convertor(DefaultOptions currentSettings, string css, bool detailedOutput = true, bool addGuideLine = false, bool addNotesToToc = false)
         {
             _currentSettings = currentSettings;
-            _workingFolder = workingFolder;
-
+            _workingFolder = Util.GetAppPath();
             _addGuideLine = addGuideLine;
             _addNotesToToc = addNotesToToc;
             _detailedOutput = detailedOutput;
@@ -116,8 +114,8 @@ namespace Fb2Kindle
                 catch (Exception ex)
                 {
                     Console.WriteLine("Error clearing temp folder: " + ex.Message);
+                    Console.WriteLine();
                 }
-                Console.WriteLine();
             }
         }
 
@@ -743,8 +741,6 @@ namespace Fb2Kindle
         public bool ntoc { get; set; }
         public bool compression { get; set; }
         public bool addSequence { get; set; }
-        [XmlIgnore]
-        public bool save { get; set; }
     }
 
     #endregion subclasses

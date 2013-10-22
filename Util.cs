@@ -91,6 +91,11 @@ namespace Fb2Kindle
             }
         }
 
+        public static string GetAppPath()
+        {
+            return Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+        }
+
         public static void CopyDirectory(string sourceDirName, string destDirName, bool copySubDirs)
         {
             var dir = new DirectoryInfo(sourceDirName);
