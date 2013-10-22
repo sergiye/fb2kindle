@@ -28,7 +28,7 @@ namespace fb2mobi
 
             var inputFileDir = Path.GetDirectoryName(inputFile_);
             var outputFileDir = inputFileDir;
-            var bookname = "";
+            var bookname = string.Empty;
 
             // first. get a book file name from explicit output file
             var of = arguments_[1];
@@ -53,16 +53,16 @@ namespace fb2mobi
                 catch (Exception)
                 {
                     outputFileDir = inputFileDir;
-                    bookname = "";
+                    bookname = string.Empty;
                 }
             }
 
             // get a book file name from input file name or from book title
-            if (bookname.Length == 0)
+            if (string.IsNullOrEmpty(bookname))
             {
                 bookname = Path.GetFileNameWithoutExtension(inputFile_);
 
-                if (arguments_["us"] != "true")
+                if (arguments_["us"] == "true")
                 {
                     try
                     {
@@ -90,7 +90,7 @@ namespace fb2mobi
                     bookname = transliteName(bookname);
             }
 
-            if (bookname.Length == 0)
+            if (string.IsNullOrEmpty(bookname))
                 bookname = "fb2mobi";
 
             char[] trimchars = {'\\'};
@@ -131,7 +131,7 @@ namespace fb2mobi
 
         public static void print_usage()
         {
-            Console.WriteLine("  -us\t Use source file name as output.");
+            Console.WriteLine("  -us\t Use source book name as output file name.");
             Console.WriteLine("  -nt\t No translite output file name.");
         }
 
