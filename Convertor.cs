@@ -39,10 +39,7 @@ namespace Fb2Kindle
             _detailedOutput = detailedOutput;
             _defaultCss = css;
             if (String.IsNullOrEmpty(_defaultCss))
-            {
                 _defaultCss = Util.GetScriptFromResource("defstyles.css");
-                Console.WriteLine("Css: " + _defaultCss);
-            }
         }
 
         internal bool ConvertBook(string bookPath)
