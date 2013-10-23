@@ -8,7 +8,7 @@ namespace Fb2Kindle
 {
     class Program
     {
-        public static void ShowHelpText(Assembly asm)
+        private static void ShowHelpText(Assembly asm)
         {
             Console.WriteLine();
             Console.WriteLine(asm.GetName().Name + " <path> [-css <styles.css>] [-d] [-ni]");
@@ -29,7 +29,7 @@ namespace Fb2Kindle
             Console.WriteLine();
         }
 
-        public static void ShowMainInfo(Assembly asm)
+        private static void ShowMainInfo(Assembly asm)
         {
             //            Console.Clear();
             Console.WriteLine();

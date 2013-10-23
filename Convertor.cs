@@ -30,7 +30,7 @@ namespace Fb2Kindle
 
         #region public
 
-        public Convertor(DefaultOptions currentSettings, string css, bool detailedOutput = true, bool addGuideLine = false, bool addNotesToToc = false)
+        internal Convertor(DefaultOptions currentSettings, string css, bool detailedOutput = true, bool addGuideLine = false, bool addNotesToToc = false)
         {
             _currentSettings = currentSettings;
             _workingFolder = Util.GetAppPath();
@@ -39,10 +39,13 @@ namespace Fb2Kindle
             _detailedOutput = detailedOutput;
             _defaultCss = css;
             if (String.IsNullOrEmpty(_defaultCss))
+            {
                 _defaultCss = Util.GetScriptFromResource("defstyles.css");
+                Console.WriteLine("Css: " + _defaultCss);
+            }
         }
 
-        public bool ConvertBook(string bookPath)
+        internal bool ConvertBook(string bookPath)
         {
             try
             {
@@ -737,7 +740,7 @@ namespace Fb2Kindle
     #region subclasses
 
     [Serializable]
-    public class DefaultOptions
+    internal class DefaultOptions
     {
         public bool deleteOrigin { get; set; }
         public bool nch { get; set; }

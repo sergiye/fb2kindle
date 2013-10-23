@@ -67,6 +67,7 @@
     <EmbeddedResource Include="defstyles.css" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="kindlegen.exe" />
     <Content Include="styles.css">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
