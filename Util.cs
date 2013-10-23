@@ -14,7 +14,7 @@ namespace Fb2Kindle
 {
     public static class Util
     {
-        public static T GetAttribute<T>(ICustomAttributeProvider assembly, bool inherit = false) where T : Attribute
+        internal static T GetAttribute<T>(ICustomAttributeProvider assembly, bool inherit = false) where T : Attribute
         {
             var attr = assembly.GetCustomAttributes(typeof(T), inherit);
             foreach (var o in attr)
@@ -23,7 +23,7 @@ namespace Fb2Kindle
             return null;
         }
 
-        public static void WriteObjectToFile(string filePath, object value, bool useFormatting = false)
+        internal static void WriteObjectToFile(string filePath, object value, bool useFormatting = false)
         {
             if (value == null) return;
             var xmlFormatting = new XmlWriterSettings { OmitXmlDeclaration = true };
@@ -41,7 +41,7 @@ namespace Fb2Kindle
             }
         }
 
-        public static T ReadObjectFromFile<T>(string fileName) where T : class
+        internal static T ReadObjectFromFile<T>(string fileName) where T : class
         {
             try
             {
@@ -59,26 +59,20 @@ namespace Fb2Kindle
             }
         }
 
-        public static string GetScriptFromResource(string resourceName)
+        internal static string GetScriptFromResource(string resourceName)
         {
-            var assembly = Assembly.GetExecutingAssembly();
-            var scriptsPath = String.Format("{0}.{1}", assembly.GetTypes()[0].Namespace, resourceName);
-            using (var stream = assembly.GetManifestResourceStream(scriptsPath))
+            using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(String.Format("Fb2Kindle.{0}", resourceName)))
             {
                 if (stream != null)
                     using (var reader = new StreamReader(stream))
-                    {
                         return reader.ReadToEnd();
-                    }
                 return null;
             }
         }
 
-        public static bool GetFileFromResource(string resourceName, string filename)
+        internal static bool GetFileFromResource(string resourceName, string filename)
         {
-            var assembly = Assembly.GetExecutingAssembly();
-            var scriptsPath = String.Format("{0}.{1}", assembly.GetTypes()[0].Namespace, resourceName);
-            using (var stream = assembly.GetManifestResourceStream(scriptsPath))
+            using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(String.Format("Fb2Kindle.{0}", resourceName)))
             {
                 if (stream == null) return false;
                 using (Stream file = File.OpenWrite(filename))
@@ -92,12 +86,12 @@ namespace Fb2Kindle
             }
         }
 
-        public static string GetAppPath()
+        internal static string GetAppPath()
         {
             return Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
         }
 
-        public static void CopyDirectory(string sourceDirName, string destDirName, bool copySubDirs)
+        internal static void CopyDirectory(string sourceDirName, string destDirName, bool copySubDirs)
         {
             var dir = new DirectoryInfo(sourceDirName);
             var dirs = dir.GetDirectories();
@@ -113,7 +107,7 @@ namespace Fb2Kindle
                 CopyDirectory(subdir.FullName, Path.Combine(destDirName, subdir.Name), true);
         }
 
-        public static ImageCodecInfo GetEncoderInfo(string extension)
+        internal static ImageCodecInfo GetEncoderInfo(string extension)
         {
             extension = extension.ToLower();
             var codecs = ImageCodecInfo.GetImageEncoders();
@@ -123,7 +117,7 @@ namespace Fb2Kindle
             return null;
         }
 
-        public static string Value(IEnumerable<XElement> source, string defaultResult = null)
+        internal static string Value(IEnumerable<XElement> source, string defaultResult = null)
         {
             var value = source.Select(element => element.Value).FirstOrDefault();
             if (value == null || String.IsNullOrEmpty(value.Trim()))
@@ -131,7 +125,7 @@ namespace Fb2Kindle
             return value.Trim();
         }
 
-        public static string AttributeValue(IEnumerable<XElement> source, XName name, string defaultResult = null)
+        internal static string AttributeValue(IEnumerable<XElement> source, XName name, string defaultResult = null)
         {
             var value = source.Select(element => (string)element.Attribute(name)).FirstOrDefault();
             if (value == null || String.IsNullOrEmpty(value.Trim()))
@@ -140,7 +134,7 @@ namespace Fb2Kindle
 
         }
 
-        public static DateTime GetBuildTime(Version ver)
+        internal static DateTime GetBuildTime(Version ver)
         {
             var buildTime = new DateTime(2000, 1, 1).AddDays(ver.Build).AddSeconds(ver.Revision * 2);
             if (TimeZone.IsDaylightSavingTime(DateTime.Now, TimeZone.CurrentTimeZone.GetDaylightChanges(DateTime.Now.Year)))
@@ -148,7 +142,7 @@ namespace Fb2Kindle
             return buildTime;
         }
 
-        public static XElement[] RenameTags(XElement root, string tagName, string newName, string className = null, bool clearData = false)
+        internal static XElement[] RenameTags(XElement root, string tagName, string newName, string className = null, bool clearData = false)
         {
             var list = root.Descendants(tagName).ToArray();
             foreach (var element in list)
@@ -156,7 +150,7 @@ namespace Fb2Kindle
             return list;
         }
 
-        public static void RenameTag(XElement element, string newName, string className = null, bool clearData = false)
+        internal static void RenameTag(XElement element, string newName, string className = null, bool clearData = false)
         {
             element.Name = newName;
             if (clearData)
@@ -168,7 +162,7 @@ namespace Fb2Kindle
                 element.SetAttributeValue("class", className);
         }
 
-        public static int StartProcess(string fileName, string args, bool addToConsole)
+        internal static int StartProcess(string fileName, string args, bool addToConsole)
         {
             var startInfo = new ProcessStartInfo
             {
