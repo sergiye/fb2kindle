@@ -12,7 +12,7 @@ using System.Xml.Serialization;
 
 namespace Fb2Kindle
 {
-    public static class Util
+    internal static class Util
     {
         internal static T GetAttribute<T>(ICustomAttributeProvider assembly, bool inherit = false) where T : Attribute
         {
