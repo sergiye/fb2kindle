@@ -12,8 +12,19 @@ using Encoder = System.Drawing.Imaging.Encoder;
 
 namespace Fb2Kindle
 {
-    class Convertor
+    internal class Convertor
     {
+        [Serializable]
+        internal class DefaultOptions
+        {
+            public bool d { get; set; }
+            public bool nch { get; set; }
+            public bool ni { get; set; }
+            public bool ntoc { get; set; }
+            public bool c { get; set; }
+            public bool s { get; set; }
+        }
+
         private const string ImagesFolderName = "image";
         private const string NcxName = "toc.ncx";
         private const string DropCap = "АБВГДЕЖЗИКЛМНОПРСТУФХЦЧЩШЭЮЯ"; //"АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧЩШЬЪЫЭЮЯQWERTYUIOPASDFGHJKLZXCVBNM";
@@ -63,12 +74,12 @@ namespace Fb2Kindle
                 File.WriteAllText(_tempDir + @"\book.css", _defaultCss);
 
                 //create instances
-                _opfFile = GetEmptyPackage(_book, _currentSettings.addSequence);
+                _opfFile = GetEmptyPackage(_book, _currentSettings.s);
                 _tocEl = GetEmptyToc();
 
                 AddPackItem("ncx", NcxName, "application/x-dtbncx+xml", false);
                 //update images (extract and rewrite hrefs
-                if (!_currentSettings.noImages && ProcessImages(_book, _tempDir, _currentSettings.noImages))
+                if (!_currentSettings.ni && ProcessImages(_book, _tempDir, _currentSettings.ni))
                 {
                     var imgSrc = Util.AttributeValue(_book.Elements("description").Elements("title-info").Elements("coverpage").Elements("div").Elements("img"), "src");
                     if (!String.IsNullOrEmpty(imgSrc))
@@ -95,8 +106,8 @@ namespace Fb2Kindle
                 SaveXmlToFile(_opfFile, _tempDir + @"\" + bookName + ".opf");
                 _opfFile.RemoveAll();
 
-                var result = CreateMobi(_workingFolder, _tempDir, bookName, bookPath, _currentSettings.compression, _detailedOutput);
-                if (result && _currentSettings.deleteOrigin)
+                var result = CreateMobi(_workingFolder, _tempDir, bookName, bookPath, _currentSettings.c, _detailedOutput);
+                if (result && _currentSettings.d)
                     File.Delete(bookPath);
                 return result;
             }
@@ -733,19 +744,4 @@ namespace Fb2Kindle
 
         #endregion helper methods
     }
-
-    #region subclasses
-
-    [Serializable]
-    internal class DefaultOptions
-    {
-        public bool deleteOrigin { get; set; }
-        public bool nch { get; set; }
-        public bool noImages { get; set; }
-        public bool ntoc { get; set; }
-        public bool compression { get; set; }
-        public bool addSequence { get; set; }
-    }
-
-    #endregion subclasses
 }

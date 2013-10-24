@@ -4,7 +4,7 @@ using System.Text.RegularExpressions;
 
 namespace fb2mobi
 {
-    public class Arguments
+    internal class Arguments
     {
         private readonly StringDictionary Named;
         private readonly StringCollection Unnamed;
@@ -14,7 +14,7 @@ namespace fb2mobi
         // Examples: 
         // -param1 value1 --param2 /param3:"Test-:-work" 
         //   /param4=happy -param5 '--=nice=--'
-        public Arguments(IEnumerable<string> Args)
+        internal Arguments(IEnumerable<string> Args)
         {
             Named = new StringDictionary();
             Unnamed = new StringCollection();
@@ -99,12 +99,12 @@ namespace fb2mobi
             }
         }
 
-        public string this[string Param]
+        internal string this[string Param]
         {
             get { return ( Named[Param] ?? ""); }
         }
 
-        public string this[int NParam]
+        internal string this[int NParam]
         {
             get { return NParam < Unnamed.Count ? (Unnamed[NParam]) : ""; }
         }

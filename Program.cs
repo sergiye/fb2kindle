@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using System.Text;
@@ -56,25 +55,19 @@ namespace Fb2Kindle
 
                 var appPath = Util.GetAppPath();
                 var settingsFile = appPath + @"\config.xml";
-                var currentSettings = Util.ReadObjectFromFile<DefaultOptions>(settingsFile) ?? new DefaultOptions();
+                var currentSettings = Util.ReadObjectFromFile<Convertor.DefaultOptions>(settingsFile) ?? new Convertor.DefaultOptions();
                 var bookPath = string.Empty;
                 string cssStyles = null;
 
                 if (args.Length == 0)
                 {
-                    if (!Debugger.IsAttached)
-                    {
-                        Console.Write("Process all files with default settings? Enter 'y' to continue: ");
-                        if (Console.ReadLine() != "y")
-                        {
-                            ShowHelpText(asm);
-                            return;
-                        }
-                        wait = true;
-                    }
+                    ShowHelpText(asm);
+                    Console.Write("Process all files with default parameters (-a -r -w)? Press 'Enter' to continue: ");
+                    if (Console.ReadKey().Key != ConsoleKey.Enter)
+                        return;
+                    wait = true;
                     bookPath = allBooksPattern;
                     recursive = true;
-                    //currentSettings.addSequence = true;
                 }
                 else
                 {
@@ -86,19 +79,19 @@ namespace Fb2Kindle
                                 currentSettings.nch = true;
                                 break;
                             case "-ni":
-                                currentSettings.noImages = true;
+                                currentSettings.ni = true;
                                 break;
                             case "-ntoc":
                                 currentSettings.ntoc = true;
                                 break;
                             case "-c":
-                                currentSettings.compression = true;
+                                currentSettings.c = true;
                                 break;
                             case "-s":
-                                currentSettings.addSequence = true;
+                                currentSettings.s = true;
                                 break;
                             case "-d":
-                                currentSettings.deleteOrigin = true;
+                                currentSettings.d = true;
                                 break;
                             case "-css":
                                 if (args.Length > (j + 1))
