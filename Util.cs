@@ -53,7 +53,7 @@ namespace Fb2Kindle
                     return (T)serializer.Deserialize(file);
                 }
             }
-            catch (SerializationException)
+            catch (Exception)
             {
                 return null;
             }
