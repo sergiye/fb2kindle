@@ -45,6 +45,7 @@ namespace Fb2Kindle
         {
             const string allBooksPattern = "*.fb2";
             var wait = false;
+            var join = false;
             var save = false;
             var recursive = false;
             var detailedOutput = true;
@@ -55,7 +56,7 @@ namespace Fb2Kindle
 
                 var appPath = Util.GetAppPath();
                 var settingsFile = appPath + @"\config.xml";
-                var currentSettings = Util.ReadObjectFromFile<Convertor.DefaultOptions>(settingsFile) ?? new Convertor.DefaultOptions();
+                var currentSettings = Util.ReadObjectFromFile<DefaultOptions>(settingsFile) ?? new DefaultOptions();
                 var bookPath = string.Empty;
                 string cssStyles = null;
 
@@ -125,6 +126,9 @@ namespace Fb2Kindle
                             case "-a":
                                 bookPath = allBooksPattern;
                                 break;
+                            case "-j":
+                                join = true;
+                                break;
                             case "-o":
                                 detailedOutput = false;
                                 break;
@@ -155,8 +159,11 @@ namespace Fb2Kindle
                 if (files.Length == 0)
                     Console.WriteLine("No fb2 files found");
                 var conv = new Convertor(currentSettings, cssStyles, detailedOutput);
-                foreach (var file in files)
-                    conv.ConvertBook(file);
+                if (join)
+                    conv.ConvertBookSequence(files);
+                else
+                    foreach (var file in files)
+                        conv.ConvertBook(file);
             }
             catch (Exception ex)
             {
