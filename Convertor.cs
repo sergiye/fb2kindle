@@ -89,6 +89,18 @@ namespace Fb2Kindle
                         CreateTitlePage(_book, _tempDir);
                     }
 
+                    //update images (extract and rewrite hrefs
+                    if (!_currentSettings.ni && ProcessImages(_book, _tempDir, _currentSettings.ni, idx) && idx == 0)
+                    {
+                        var imgSrc = Util.AttributeValue(_book.Elements("description").Elements("title-info").Elements("coverpage").Elements("div").Elements("img"), "src");
+                        if (!String.IsNullOrEmpty(imgSrc))
+                        {
+                            _opfFile.Elements("metadata").First().Elements("dc-metadata").First().Elements("x-metadata").First().Add(new XElement("EmbeddedCover", imgSrc));
+                            AddGuideItem("Cover", imgSrc, "cover");
+                        }
+                    }
+                
+
                     ProcessAllData(_book, _tempDir, idx);
                 }
 
@@ -213,9 +225,9 @@ namespace Fb2Kindle
             }
         }
 
-        private static bool ProcessImages(XElement book, string tempDir, bool removeImages = false)
+        private static bool ProcessImages(XElement book, string tempDir, bool removeImages = false, int idx = 0)
         {
-            var imagesCreated = !removeImages && ExtractImages(book, tempDir);
+            var imagesCreated = !removeImages && ExtractImages(book, tempDir, idx);
             var list = Util.RenameTags(book, "image", "div", "image");
             foreach (var element in list)
             {
@@ -228,7 +240,7 @@ namespace Fb2Kindle
                     if (String.IsNullOrEmpty(src)) continue;
                     src = src.Replace("#", "");
                     var imgEl = new XElement("img");
-                    imgEl.SetAttributeValue("src", ImagesFolderName + "/" + src);
+                    imgEl.SetAttributeValue("src", string.Format("{0}{1}/{2}", ImagesFolderName, idx, src));
                     element.Add(imgEl);
                 }
             }
@@ -601,17 +613,18 @@ namespace Fb2Kindle
 
         #region helper methods
 
-        private static bool ExtractImages(XElement book, string tempDir)
+        private static bool ExtractImages(XElement book, string tempDir, int idx)
         {
             if (book == null) return true;
+            var imagesFolder = string.Format("{0}\\{1}{2}", tempDir, ImagesFolderName, idx);
             Console.Write("Extracting images...");
-            if (!Directory.Exists(tempDir + @"\" + ImagesFolderName))
-                Directory.CreateDirectory(tempDir + @"\" + ImagesFolderName);
+            if (!Directory.Exists(imagesFolder))
+                Directory.CreateDirectory(imagesFolder);
             foreach (var binEl in book.Elements("binary"))
             {
                 try
                 {
-                    var file = String.Format("{0}\\{1}\\{2}", tempDir, ImagesFolderName, binEl.Attribute("id").Value);
+                    var file = String.Format("{0}\\{1}", imagesFolder, binEl.Attribute("id").Value);
                     var contentType = binEl.Attribute("content-type").Value;
                     var fileBytes = Convert.FromBase64String(binEl.Value);
                     if (contentType == "image/jpeg")
