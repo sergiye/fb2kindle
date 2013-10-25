@@ -154,16 +154,31 @@ namespace Fb2Kindle
                     bookPath = Path.GetFileName(bookPath);
                 if (string.IsNullOrEmpty(bookPath))
                     bookPath = allBooksPattern;
-                var searchOptions = recursive ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
-                var files = Directory.GetFiles(workPath, bookPath, searchOptions);
-                if (files.Length == 0)
-                    Console.WriteLine("No fb2 files found");
-                var conv = new Convertor(currentSettings, cssStyles, detailedOutput);
-                if (join)
-                    conv.ConvertBookSequence(files);
+                if (join && recursive)
+                {
+                    var folders = Directory.GetDirectories(workPath);
+                    foreach (var folder in folders)
+                    {
+                        var files = Directory.GetFiles(folder, bookPath, SearchOption.TopDirectoryOnly);
+                        if (files.Length == 0)
+                            Console.WriteLine("No fb2 files found");
+                        var conv = new Convertor(currentSettings, cssStyles, detailedOutput);
+                        conv.ConvertBookSequence(files);
+                    }
+                }
                 else
-                    foreach (var file in files)
-                        conv.ConvertBook(file);
+                {
+                    var searchOptions = recursive ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
+                    var files = Directory.GetFiles(workPath, bookPath, searchOptions);
+                    if (files.Length == 0)
+                        Console.WriteLine("No fb2 files found");
+                    var conv = new Convertor(currentSettings, cssStyles, detailedOutput);
+                    if (join)
+                        conv.ConvertBookSequence(files);
+                    else
+                        foreach (var file in files)
+                            conv.ConvertBook(file);
+                }
             }
             catch (Exception ex)
             {
