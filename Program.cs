@@ -154,31 +154,8 @@ namespace Fb2Kindle
                     bookPath = Path.GetFileName(bookPath);
                 if (string.IsNullOrEmpty(bookPath))
                     bookPath = allBooksPattern;
-                if (join && recursive)
-                {
-                    var folders = Directory.GetDirectories(workPath);
-                    foreach (var folder in folders)
-                    {
-                        var files = Directory.GetFiles(folder, bookPath, SearchOption.TopDirectoryOnly);
-                        if (files.Length == 0)
-                            Console.WriteLine("No fb2 files found");
-                        var conv = new Convertor(currentSettings, cssStyles, detailedOutput);
-                        conv.ConvertBookSequence(files);
-                    }
-                }
-                else
-                {
-                    var searchOptions = recursive ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
-                    var files = Directory.GetFiles(workPath, bookPath, searchOptions);
-                    if (files.Length == 0)
-                        Console.WriteLine("No fb2 files found");
-                    var conv = new Convertor(currentSettings, cssStyles, detailedOutput);
-                    if (join)
-                        conv.ConvertBookSequence(files);
-                    else
-                        foreach (var file in files)
-                            conv.ConvertBook(file);
-                }
+                var conv = new Convertor(currentSettings, cssStyles, detailedOutput);
+                ProcessFolder(conv, workPath, bookPath, recursive, join);
             }
             catch (Exception ex)
             {
@@ -190,6 +167,22 @@ namespace Fb2Kindle
                 Console.WriteLine("Press any key to continue...");
                 Console.ReadKey();
             }
+        }
+
+        private static void ProcessFolder(Convertor conv, string workPath, string searchMask, bool recursive, bool join)
+        {
+            var files = Directory.GetFiles(workPath, searchMask, SearchOption.TopDirectoryOnly);
+            if (files.Length > 0)
+            {
+                if (join)
+                    conv.ConvertBookSequence(files);
+                else
+                    foreach (var file in files)
+                        conv.ConvertBook(file);
+            }
+            if (!recursive) return;
+            foreach (var folder in Directory.GetDirectories(workPath))
+                ProcessFolder(conv, folder, searchMask, true, join);
         }
     }
 }
