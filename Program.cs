@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Text;
@@ -24,6 +25,7 @@ namespace Fb2Kindle
             Console.WriteLine("-save: save parameters to be used at the next start");
             Console.WriteLine("-a: all fb2 books in app folder");
             Console.WriteLine("-r: process files in subfolders (work with -a key)");
+            Console.WriteLine("-j: join files from each folder to the single book");
             Console.WriteLine("-w: wait for key press on finish");
             Console.WriteLine();
         }
@@ -171,9 +173,11 @@ namespace Fb2Kindle
 
         private static void ProcessFolder(Convertor conv, string workPath, string searchMask, bool recursive, bool join)
         {
-            var files = Directory.GetFiles(workPath, searchMask, SearchOption.TopDirectoryOnly);
-            if (files.Length > 0)
+            var files = new List<string>();
+            files.AddRange(Directory.GetFiles(workPath, searchMask, SearchOption.TopDirectoryOnly));
+            if (files.Count > 0)
             {
+                files.Sort();
                 if (join)
                     conv.ConvertBookSequence(files);
                 else
