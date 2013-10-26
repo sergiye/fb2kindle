@@ -179,7 +179,7 @@ namespace Fb2Kindle
             {
                 files.Sort();
                 if (join)
-                    conv.ConvertBookSequence(files);
+                    conv.ConvertBookSequence(files.ToArray());
                 else
                     foreach (var file in files)
                         conv.ConvertBook(file);
