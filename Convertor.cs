@@ -52,7 +52,8 @@ namespace Fb2Kindle
             try
             {
                 //create temp working folder
-                _tempDir = Path.Combine(Path.GetTempPath(), Environment.TickCount.ToString());
+                //_tempDir = Path.GetTempPath() + "\\"  + Environment.TickCount.ToString();
+                _tempDir = Path.GetTempPath() + "\\" + Guid.NewGuid().ToString();
                 if (!Directory.Exists(_tempDir))
                     Directory.CreateDirectory(_tempDir);
 
