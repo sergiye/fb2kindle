@@ -46,7 +46,7 @@ namespace Fb2Kindle
                 _defaultCss = Util.GetScriptFromResource("defstyles.css");
         }
 
-        internal bool ConvertBookSequence(string[] books)
+        internal bool ConvertBookSequence(string[] books, bool debug)
         {
             string _tempDir = null;
             try
@@ -90,7 +90,7 @@ namespace Fb2Kindle
                     CreateTitlePage(_book, _tempDir + "\\" + titlePageName + ".html");
                     var bookLi = GetListItem(GetTitle(_book), titlePageName + ".html");
                     bookLi.Add(new XElement("ul", ""));
-                    _tocEl.Elements("body").First().Add(bookLi);
+                    _tocEl.Elements("body").Elements("ul").First().Add(bookLi);
 
                     //update images (extract and rewrite refs)
                     if (ProcessImages(_book, string.Format("{0}\\image{1}", _tempDir, bookPostfix), _currentSettings.ni))
@@ -137,6 +137,7 @@ namespace Fb2Kindle
             }
             finally
             {
+                if (!debug)
                 try
                 {
                     if (_tempDir != null) Directory.Delete(_tempDir, true);
@@ -148,10 +149,10 @@ namespace Fb2Kindle
                 }
             }
         }
-        
-        internal bool ConvertBook(string bookPath)
+
+        internal bool ConvertBook(string bookPath, bool debug)
         {
-            return ConvertBookSequence(new[] {bookPath});
+            return ConvertBookSequence(new[] { bookPath }, debug);
         }
 
         private static bool ProcessImages(XElement book, string imagesFolder, bool removeImages)
@@ -693,6 +694,7 @@ namespace Fb2Kindle
             linkEl.Add(new XAttribute("id", "toc"));
             linkEl.Add(new XElement("p", "Содержание"));
             body.Add(linkEl);
+            body.Add(new XElement("ul", ""));
             return toc;
         }
 
