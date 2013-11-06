@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using System.Text;
@@ -51,6 +52,7 @@ namespace Fb2Kindle
             var save = false;
             var recursive = false;
             var detailedOutput = true;
+            var debug = Debugger.IsAttached;
             try
             {
                 var asm = Assembly.GetExecutingAssembly();
@@ -134,6 +136,9 @@ namespace Fb2Kindle
                             case "-o":
                                 detailedOutput = false;
                                 break;
+                            case "-nc":
+                                debug = true;
+                                break;
                             default:
                                 if (j == 0)
                                     bookPath = args[j];
@@ -157,7 +162,7 @@ namespace Fb2Kindle
                 if (string.IsNullOrEmpty(bookPath))
                     bookPath = allBooksPattern;
                 var conv = new Convertor(currentSettings, cssStyles, detailedOutput);
-                ProcessFolder(conv, workPath, bookPath, recursive, join);
+                ProcessFolder(conv, workPath, bookPath, recursive, join, debug);
             }
             catch (Exception ex)
             {
@@ -171,7 +176,7 @@ namespace Fb2Kindle
             }
         }
 
-        private static void ProcessFolder(Convertor conv, string workPath, string searchMask, bool recursive, bool join)
+        private static void ProcessFolder(Convertor conv, string workPath, string searchMask, bool recursive, bool join, bool debug)
         {
             var files = new List<string>();
             files.AddRange(Directory.GetFiles(workPath, searchMask, SearchOption.TopDirectoryOnly));
@@ -179,14 +184,14 @@ namespace Fb2Kindle
             {
                 files.Sort();
                 if (join)
-                    conv.ConvertBookSequence(files.ToArray());
+                    conv.ConvertBookSequence(files.ToArray(), debug);
                 else
                     foreach (var file in files)
-                        conv.ConvertBook(file);
+                        conv.ConvertBook(file, debug);
             }
             if (!recursive) return;
             foreach (var folder in Directory.GetDirectories(workPath))
-                ProcessFolder(conv, folder, searchMask, true, join);
+                ProcessFolder(conv, folder, searchMask, true, join, debug);
         }
     }
 }
