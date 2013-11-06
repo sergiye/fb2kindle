@@ -17,6 +17,7 @@ namespace LibCleaner
                 sql.Append(" join books b on b.id=f.id_book");
                 sql.Append(" join archives a on a.id=f.id_archive");
                 sql.Append(" where b.lang<>'ru' or b.file_type<>'fb2' or b.deleted=1");
+                sql.Append(" or b.genres='F1' or b.genres='F9' or b.genres='E1' or b.genres='E3' or b.genres='44' or b.genres='45'");
                 connection.Open();
                 using (var command = SqlHelper.GetCommand(sql.ToString(), connection))
                 {
