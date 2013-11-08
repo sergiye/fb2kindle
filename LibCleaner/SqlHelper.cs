@@ -9,15 +9,11 @@ namespace LibCleaner
 {
     public class SqlHelper
     {
-        public const string LOCATION_NAME_SEPARATOR = ";";
-        public const int LOCATION_TYPE_POINT = 12;
-        public static string ConnectionString { get; set; }
-        public static string ConnectionProvider { get; set; }
+        public static string DataBasePath { get; set; }
 
         public static SQLiteConnection GetConnection()
         {
-            var connection = new SQLiteConnection("Data Source = myrulib.db");
-            return connection;
+            return new SQLiteConnection(string.Format("Data Source={0}", DataBasePath));
         }
 
         public static IDbCommand GetCommand(string sqlString, IDbConnection cn)
