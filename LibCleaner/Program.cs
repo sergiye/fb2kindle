@@ -63,7 +63,7 @@ namespace LibCleaner
                 {
                     using (var reader = command.ExecuteReader())
                     {
-                        while (reader != null && reader.Read())
+                        while (reader.Read())
                         {
                             var archName = DBHelper.GetString(reader, "file_name");
                             var ai = archivesList.Find(f => f == archName);
@@ -87,13 +87,14 @@ namespace LibCleaner
                 sql.Append(" join books b on b.id=f.id_book");
                 sql.Append(" join archives a on a.id=f.id_archive");
                 sql.Append(" where b.lang<>'ru' or b.file_type<>'fb2' or b.deleted=1");
-                sql.Append(" or b.genres='F1' or b.genres='F9' or b.genres='E1' or b.genres='E3' or b.genres like '4%'");
+                sql.Append(" or b.genres='F9' or b.genres='E1' or b.genres='E3'");
+                //sql.Append(" or b.genres like '4%'");
                 connection.Open();
                 using (var command = SqlHelper.GetCommand(sql.ToString(), connection))
                 {
                     using (var reader = command.ExecuteReader())
                     {
-                        while (reader != null && reader.Read())
+                        while (reader.Read())
                         {
                             var archName = DBHelper.GetString(reader, "an");
                             var fileName = DBHelper.GetString(reader, "fn");
@@ -112,6 +113,7 @@ namespace LibCleaner
                 sql.Append(" join archives a on a.id=f.id_archive");
                 sql.Append(" join bookseq bs on bs.id_book=b.id");
                 sql.Append(" where (b.deleted is null or b.deleted<>1) and (bs.id_seq in ");
+                //Bash.org, газеты
                 sql.Append("(14437,15976,22715,7028,7083,8303,19890,28738,29139,");
                 //журнал Если
                 sql.Append("8361,8364,8431,8432,8434,11767,14485,14486,14487,14498,14499,14500,144501,144502,144503,144504,16384,16385,16429,18684,20833,24135,31331,");
@@ -120,7 +122,7 @@ namespace LibCleaner
                 {
                     using (var reader = command.ExecuteReader())
                     {
-                        while (reader != null && reader.Read())
+                        while (reader.Read())
                         {
                             var archName = DBHelper.GetString(reader, "an");
                             var fileName = DBHelper.GetString(reader, "fn");
