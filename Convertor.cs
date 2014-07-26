@@ -78,7 +78,7 @@ namespace Fb2Kindle
                     {
                         commonTitle = bookName;
                         //create instances
-                        _opfFile = GetEmptyPackage(_book, _currentSettings.s, true);
+                        _opfFile = GetEmptyPackage(_book, _currentSettings.s, books.Length > 1);
                         AddPackItem("ncx", NcxName, "application/x-dtbncx+xml", false);
                     }
 
