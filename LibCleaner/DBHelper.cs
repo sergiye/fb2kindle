@@ -43,7 +43,7 @@ namespace LibCleaner
         public static byte GetByte(IDataReader dr, int columnIndex, byte defaultValue)
         {
             return dr.IsDBNull(columnIndex) ? defaultValue : dr.GetByte(columnIndex);
-            return dr.IsDBNull(columnIndex) ? defaultValue : (byte) dr.GetDecimal(columnIndex);
+//            return dr.IsDBNull(columnIndex) ? defaultValue : (byte) dr.GetDecimal(columnIndex);
         }
 
         public static int GetInt(IDataReader dr, string fieldName)
@@ -59,7 +59,7 @@ namespace LibCleaner
         public static int GetInt(IDataReader dr, int columnIndex, int defaultValue)
         {
             return dr.IsDBNull(columnIndex) ? defaultValue : dr.GetInt32(columnIndex);
-            return dr.IsDBNull(columnIndex) ? defaultValue : (int) dr.GetDecimal(columnIndex);
+//            return dr.IsDBNull(columnIndex) ? defaultValue : (int) dr.GetDecimal(columnIndex);
         }
 
         public static short GetShort(IDataReader dr, string fieldName)
@@ -76,7 +76,7 @@ namespace LibCleaner
         public static double GetDouble(IDataReader dr, int columnIndex)
         {
             return dr.IsDBNull(columnIndex) ? 0 : dr.GetDouble(columnIndex);
-            return dr.IsDBNull(columnIndex) ? 0 : (double) dr.GetDecimal(columnIndex);
+//            return dr.IsDBNull(columnIndex) ? 0 : (double) dr.GetDecimal(columnIndex);
         }
 
         public static long GetBigint(IDataReader dr, string fieldName, long defaultValue)
@@ -110,7 +110,7 @@ namespace LibCleaner
         public static double GetDouble(IDataReader dr, int columnIndex, double defaultValue)
         {
             return dr.IsDBNull(columnIndex) ? defaultValue : dr.GetDouble(columnIndex);
-            return dr.IsDBNull(columnIndex) ? defaultValue : (double) dr.GetDecimal(columnIndex);
+//            return dr.IsDBNull(columnIndex) ? defaultValue : (double) dr.GetDecimal(columnIndex);
         }
 
         public static bool GetBoolean(IDataReader dr, string fieldName)
@@ -126,7 +126,7 @@ namespace LibCleaner
         public static bool GetBoolean(IDataReader dr, int columnIndex, bool defaultValue)
         {
             return dr.IsDBNull(columnIndex) ? defaultValue : dr.GetBoolean(columnIndex);
-            return dr.IsDBNull(columnIndex) ? defaultValue : dr.GetDecimal(columnIndex) == 1;
+//            return dr.IsDBNull(columnIndex) ? defaultValue : dr.GetDecimal(columnIndex) == 1;
         }
 
         public static Guid GetGuid(IDataReader dr, string fieldName)

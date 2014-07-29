@@ -10,18 +10,21 @@ namespace LibCleaner
     {
         private static string _archivesPath;
 
-        private static void ShowUsage()
+        private static void ShowUsage(string warning)
         {
+            if (!string.IsNullOrEmpty(warning))
+                Console.WriteLine(warning);
             Console.WriteLine("Usage: -d <database> -a <archives>");
+            Console.ReadLine();
         }
 
         static void Main(string[] args)
         {
-            if (args.Length == 0)
-            {
-                ShowUsage();
-                return;
-            }
+//            if (args.Length == 0)
+//            {
+//                ShowUsage("no parameters used");
+//                return;
+//            }
             var i = 0;
             while (i < args.Length)
             {
@@ -44,13 +47,36 @@ namespace LibCleaner
                 }
                 i++;
             }
-            if (string.IsNullOrEmpty(SqlHelper.DataBasePath) || string.IsNullOrEmpty(_archivesPath))
+
+            //try to use local db file
+            if (string.IsNullOrEmpty(SqlHelper.DataBasePath) || !File.Exists(SqlHelper.DataBasePath))
             {
-                ShowUsage();
+                SqlHelper.DataBasePath = Path.Combine(Environment.CurrentDirectory, "myrulib.db");
+            }
+            if (!File.Exists(SqlHelper.DataBasePath))
+            {
+                ShowUsage("Database file not found!");
                 return;
             }
 
-            Console.WriteLine("Refreshing DB data...");
+            //try to get archves folder from db
+            if (string.IsNullOrEmpty(_archivesPath) || !Directory.Exists(_archivesPath))
+            {
+                var dbPath = SqlHelper.GetScalarFromQuery("select text from params where id=9") as string;
+                if (dbPath != null)
+                {
+                    var dbFolder = Path.GetDirectoryName(SqlHelper.DataBasePath);
+                    if (dbFolder != null) 
+                        _archivesPath = Path.Combine(dbFolder, dbPath);
+                }
+            }
+            if (!Directory.Exists(_archivesPath))
+            {
+                ShowUsage("Archives folder not found!");
+                return;
+            }
+
+            Console.WriteLine("Loading DB: '{0}' archives: '{1}' ...", SqlHelper.DataBasePath, _archivesPath);
             var archivesList = new List<string>();//Directory.GetFiles(_archivesPath, "*.zip", SearchOption.TopDirectoryOnly)
             var di = new DirectoryInfo(_archivesPath);
             foreach (var fileInfo in di.GetFiles("*.zip", SearchOption.TopDirectoryOnly))
@@ -58,12 +84,11 @@ namespace LibCleaner
             var idsToRemove = "";
             using (var connection = SqlHelper.GetConnection())
             {
-                connection.Open();
                 using (var command = SqlHelper.GetCommand("select id, file_name from archives a", connection))
                 {
                     using (var reader = command.ExecuteReader())
                     {
-                        while (reader.Read())
+                        while (reader != null && reader.Read())
                         {
                             var archName = DBHelper.GetString(reader, "file_name");
                             var ai = archivesList.Find(f => f == archName);
@@ -89,12 +114,11 @@ namespace LibCleaner
                 sql.Append(" where b.lang<>'ru' or b.file_type<>'fb2' or b.deleted=1");
                 sql.Append(" or b.genres='F9' or b.genres='E1' or b.genres='E3'");
                 //sql.Append(" or b.genres like '4%'");
-                connection.Open();
                 using (var command = SqlHelper.GetCommand(sql.ToString(), connection))
                 {
                     using (var reader = command.ExecuteReader())
                     {
-                        while (reader.Read())
+                        while (reader != null && reader.Read())
                         {
                             var archName = DBHelper.GetString(reader, "an");
                             var fileName = DBHelper.GetString(reader, "fn");
@@ -122,7 +146,7 @@ namespace LibCleaner
                 {
                     using (var reader = command.ExecuteReader())
                     {
-                        while (reader.Read())
+                        while (reader != null && reader.Read())
                         {
                             var archName = DBHelper.GetString(reader, "an");
                             var fileName = DBHelper.GetString(reader, "fn");
