@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using Ionic.Zip;
+using Ionic.Zlib;
 
 namespace LibCleaner
 {
@@ -77,10 +79,8 @@ namespace LibCleaner
             }
 
             Console.WriteLine("Loading DB: '{0}' archives: '{1}' ...", SqlHelper.DataBasePath, _archivesPath);
-            var archivesList = new List<string>();//Directory.GetFiles(_archivesPath, "*.zip", SearchOption.TopDirectoryOnly)
-            var di = new DirectoryInfo(_archivesPath);
-            foreach (var fileInfo in di.GetFiles("*.zip", SearchOption.TopDirectoryOnly))
-                archivesList.Add(fileInfo.Name);
+            var archivesList = Directory.GetFiles(_archivesPath, "*.zip", SearchOption.TopDirectoryOnly);
+            //var archivesList = new DirectoryInfo(_archivesPath).GetFiles("*.zip", SearchOption.TopDirectoryOnly).Select(fileInfo => fileInfo.Name).ToList();
             var idsToRemove = "";
             using (var connection = SqlHelper.GetConnection())
             {
@@ -91,8 +91,10 @@ namespace LibCleaner
                         while (reader != null && reader.Read())
                         {
                             var archName = DBHelper.GetString(reader, "file_name");
-                            var ai = archivesList.Find(f => f == archName);
-                            if (ai == null)
+//                            var ai = archivesList.Find(f => f == archName);
+//                            if (ai == null)
+//                                idsToRemove += DBHelper.GetInt(reader, "id") + ",";
+                            if (archivesList.All(s => !s.EndsWith(archName)))
                                 idsToRemove += DBHelper.GetInt(reader, "id") + ",";
                         }
                     }
@@ -186,6 +188,7 @@ namespace LibCleaner
                     Console.WriteLine("Removed {0} files", removedCount);
                     if (removedCount <= 0) continue;
                     Console.Write("Saving archive...");
+                    zip.CompressionLevel = CompressionLevel.BestCompression;
                     zip.Save();
                     Console.WriteLine("Done");
                 }
