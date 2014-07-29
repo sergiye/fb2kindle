@@ -13,7 +13,9 @@ namespace LibCleaner
 
         public static SQLiteConnection GetConnection()
         {
-            return new SQLiteConnection(string.Format("Data Source={0}", DataBasePath));
+            var result = new SQLiteConnection(string.Format("Data Source={0}", DataBasePath));
+            result.Open();
+            return result;
         }
 
         public static IDbCommand GetCommand(string sqlString, IDbConnection cn)
@@ -54,7 +56,6 @@ namespace LibCleaner
         {
             using (IDbConnection cn = GetConnection())
             {
-                cn.Open();
                 using (var cmd = GetCommand(sqlString, cn))
                     cmd.ExecuteNonQuery();
             }
@@ -87,7 +88,6 @@ namespace LibCleaner
                     stringBuilder.AppendFormat("@{0}", values[i].Name);
                 }
                 stringBuilder.Append(")");
-                cn.Open();
                 using (var cmd = GetCommand(stringBuilder.ToString(), cn))
                 {
                     for (var i = 0; i < values.Length; i++)
@@ -118,7 +118,6 @@ namespace LibCleaner
                     stringBuilder.AppendFormat("{1}.{0}=@{0}", values[i].Name, tableName);
                 }
                 stringBuilder.AppendFormat(" WHERE {0}", whereCondition);
-                cn.Open();
                 using (var cmd = GetCommand(stringBuilder.ToString(), cn))
                 {
                     for (var i = 0; i < values.Length; i++)
@@ -144,7 +143,6 @@ namespace LibCleaner
                     stringBuilder.AppendFormat("{1}.{0}=@{0}", values[i].Name, tableName);
                 }
                 stringBuilder.AppendFormat(" WHERE {0}", whereCondition);
-                cn.Open();
                 using (var cmd = GetCommand(stringBuilder.ToString(), cn))
                 {
                     for (var i = 0; i < values.Length; i++)
@@ -170,11 +168,10 @@ namespace LibCleaner
             return GetScalarFromQuery(sql, new[] {parameters});
         }
 
-        public static object GetScalarFromQuery(string sql, QueryParameter[] parameters)
+        public static object GetScalarFromQuery(string sql, QueryParameter[] parameters = null)
         {
             using (IDbConnection cn = GetConnection())
             {
-                cn.Open();
                 var cmd = GetCommand(sql, cn);
                 if (parameters != null && parameters.Length > 0)
                     foreach (var _parameter in parameters)
