@@ -79,34 +79,10 @@ namespace LibCleaner
             }
 
             Console.WriteLine("Loading DB: '{0}' archives: '{1}' ...", SqlHelper.DataBasePath, _archivesPath);
-            var archivesList = Directory.GetFiles(_archivesPath, "*.zip", SearchOption.TopDirectoryOnly);
-            //var archivesList = new DirectoryInfo(_archivesPath).GetFiles("*.zip", SearchOption.TopDirectoryOnly).Select(fileInfo => fileInfo.Name).ToList();
-            var idsToRemove = "";
-            using (var connection = SqlHelper.GetConnection())
-            {
-                using (var command = SqlHelper.GetCommand("select id, file_name from archives a", connection))
-                {
-                    using (var reader = command.ExecuteReader())
-                    {
-                        while (reader != null && reader.Read())
-                        {
-                            var archName = DBHelper.GetString(reader, "file_name");
-//                            var ai = archivesList.Find(f => f == archName);
-//                            if (ai == null)
-//                                idsToRemove += DBHelper.GetInt(reader, "id") + ",";
-                            if (archivesList.All(s => !s.EndsWith(archName)))
-                                idsToRemove += DBHelper.GetInt(reader, "id") + ",";
-                        }
-                    }
-                }
-                idsToRemove = idsToRemove.TrimEnd(',');
-                SqlHelper.ExecuteNonQuery(string.Format("delete from archives where id in ({0})", idsToRemove));
-                SqlHelper.ExecuteNonQuery(string.Format("delete from files where id_archive in ({0})", idsToRemove));
-                //SqlHelper.ExecuteNonQuery("delete from files where id_archive not in (select id from archives)");
-            }
+            //RemoveMissingArchives();
 
             Console.WriteLine("Calculating DB stats...");
-            idsToRemove = "";
+            var idsToRemove = "";
             var filesData = new Dictionary<string, List<string>>();
             using (var connection = SqlHelper.GetConnection())
             {
@@ -194,6 +170,14 @@ namespace LibCleaner
                 }
             }
 
+            //CleanDatabaseRecords(idsToRemove);
+
+            Console.WriteLine("Press any key to continue...");
+            Console.ReadKey();
+        }
+
+        private static void CleanDatabaseRecords(string idsToRemove)
+        {
             Console.Write("Cleaning db tables...");
             SqlHelper.ExecuteNonQuery("delete from books where lang<>'ru' or file_type<>'fb2' or deleted=1");
             idsToRemove = idsToRemove.TrimEnd(',');
@@ -201,9 +185,35 @@ namespace LibCleaner
             SqlHelper.ExecuteNonQuery("delete from files where id_book not in (select id from books)");
             SqlHelper.ExecuteNonQuery("delete from bookseq where id_book not in (select id from books)");
             SqlHelper.ExecuteNonQuery("delete from sequences where id not in (select id_seq from bookseq)");
+        }
 
-            Console.WriteLine("Press any key to continue...");
-            Console.ReadKey();
+        private static void RemoveMissingArchives()
+        {
+            var archivesList = Directory.GetFiles(_archivesPath, "*.zip", SearchOption.TopDirectoryOnly);
+            //var archivesList = new DirectoryInfo(_archivesPath).GetFiles("*.zip", SearchOption.TopDirectoryOnly).Select(fileInfo => fileInfo.Name).ToList();
+            var idsToRemove = "";
+            using (var connection = SqlHelper.GetConnection())
+            {
+                using (var command = SqlHelper.GetCommand("select id, file_name from archives a", connection))
+                {
+                    using (var reader = command.ExecuteReader())
+                    {
+                        while (reader != null && reader.Read())
+                        {
+                            var archName = DBHelper.GetString(reader, "file_name");
+//                            var ai = archivesList.Find(f => f == archName);
+//                            if (ai == null)
+//                                idsToRemove += DBHelper.GetInt(reader, "id") + ",";
+                            if (archivesList.All(s => !s.EndsWith(archName)))
+                                idsToRemove += DBHelper.GetInt(reader, "id") + ",";
+                        }
+                    }
+                }
+                idsToRemove = idsToRemove.TrimEnd(',');
+                SqlHelper.ExecuteNonQuery(string.Format("delete from archives where id in ({0})", idsToRemove));
+                SqlHelper.ExecuteNonQuery(string.Format("delete from files where id_archive in ({0})", idsToRemove));
+                //SqlHelper.ExecuteNonQuery("delete from files where id_archive not in (select id from archives)");
+            }
         }
     }
 }
