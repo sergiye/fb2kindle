@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using Ionic.Zip;
 using Ionic.Zlib;
 
@@ -86,13 +85,13 @@ namespace LibCleaner
             var filesData = new Dictionary<string, List<string>>();
             using (var connection = SqlHelper.GetConnection())
             {
-                var sql = new StringBuilder("select a.file_name an, f.file_name fn from files f");
-                sql.Append(" join books b on b.id=f.id_book");
-                sql.Append(" join archives a on a.id=f.id_archive");
-                sql.Append(" where b.lang<>'ru' or b.file_type<>'fb2' or b.deleted=1");
-                sql.Append(" or b.genres='F9' or b.genres='E1' or b.genres='E3'");
-                //sql.Append(" or b.genres like '4%'");
-                using (var command = SqlHelper.GetCommand(sql.ToString(), connection))
+                var sql = @"select a.file_name an, f.file_name fn from files f
+                 join books b on b.id=f.id_book
+                 join archives a on a.id=f.id_archive
+                 where b.lang<>'ru' or b.file_type<>'fb2' " + //or b.deleted=1
+                 " or b.genres='F9' or b.genres='E1' or b.genres='E3'";
+                //or b.genres like '4%'");
+                using (var command = SqlHelper.GetCommand(sql, connection))
                 {
                     using (var reader = command.ExecuteReader())
                     {
@@ -109,18 +108,15 @@ namespace LibCleaner
                 }
 
                 //by sequence
-                sql.Clear();
-                sql.Append("select a.file_name an, f.file_name fn, b.id from files f");
-                sql.Append(" join books b on b.id=f.id_book");
-                sql.Append(" join archives a on a.id=f.id_archive");
-                sql.Append(" join bookseq bs on bs.id_book=b.id");
-                sql.Append(" where (b.deleted is null or b.deleted<>1) and (bs.id_seq in ");
-                //Bash.org, газеты
-                sql.Append("(14437,15976,22715,7028,7083,8303,19890,28738,29139,");
-                //журнал Если
-                sql.Append("8361,8364,8431,8432,8434,11767,14485,14486,14487,14498,14499,14500,144501,144502,144503,144504,16384,16385,16429,18684,20833,24135,31331,");
-                sql.Append("3586,10046,12755,31331,3944,4218,14644,31491,30658,25226,6771,27704,7542,8718,28888,15285,18684,15151,31459))");
-                using (var command = SqlHelper.GetCommand(sql.ToString(), connection))
+                sql = @"select a.file_name an, f.file_name fn, b.id from files f
+                    join books b on b.id=f.id_book
+                    join archives a on a.id=f.id_archive
+                    join bookseq bs on bs.id_book=b.id
+                    where (bs.id_seq in
+                    (14437,15976,22715,7028,7083,8303,19890,28738,29139,
+                    8361,8364,8431,8432,8434,11767,14485,14486,14487,14498,14499,14500,144501,144502,144503,144504,16384,16385,16429,18684,20833,24135,31331,
+                    3586,10046,12755,31331,3944,4218,14644,31491,30658,25226,6771,27704,7542,8718,28888,15285,18684,15151,31459))";
+                using (var command = SqlHelper.GetCommand(sql, connection))
                 {
                     using (var reader = command.ExecuteReader())
                     {
