@@ -88,8 +88,8 @@ namespace LibCleaner
                 var sql = @"select a.file_name an, f.file_name fn from files f
                  join books b on b.id=f.id_book
                  join archives a on a.id=f.id_archive
-                 where b.lang<>'ru' or b.file_type<>'fb2' " + //or b.deleted=1
-                 " or b.genres='F9' or b.genres='E1' or b.genres='E3'";
+                 where b.lang<>'ru' or b.file_type<>'fb2' or b.deleted=1
+                 or b.genres='F9' or b.genres='E1' or b.genres='E3'";
                 //or b.genres like '4%'");
                 using (var command = SqlHelper.GetCommand(sql, connection))
                 {
@@ -112,7 +112,7 @@ namespace LibCleaner
                     join books b on b.id=f.id_book
                     join archives a on a.id=f.id_archive
                     join bookseq bs on bs.id_book=b.id
-                    where (bs.id_seq in
+                    where (b.deleted<>1) and (bs.id_seq in
                     (14437,15976,22715,7028,7083,8303,19890,28738,29139,
                     8361,8364,8431,8432,8434,11767,14485,14486,14487,14498,14499,14500,144501,144502,144503,144504,16384,16385,16429,18684,20833,24135,31331,
                     3586,10046,12755,31331,3944,4218,14644,31491,30658,25226,6771,27704,7542,8718,28888,15285,18684,15151,31459))";
@@ -134,6 +134,7 @@ namespace LibCleaner
                 }
             }
             Console.WriteLine("Found {0} archives to proccess...", filesData.Count);
+            var totalRemoved = 0;
             foreach (var item in filesData)
             {
                 Console.WriteLine("Processing: " + item.Key);
@@ -148,11 +149,13 @@ namespace LibCleaner
                 {
                     foreach (var file in item.Value)
                     {
+                        totalRemoved ++;
                         if (!zip.ContainsEntry(file))
                         {
 //                            Console.WriteLine("File '{0}' not found in archive", file);
                             continue;
                         }
+                        //zip.getsize()
                         zip.RemoveEntry(file);
                         //Console.WriteLine("Removed: '{0}' from archive", file);
                         removedCount++;
@@ -167,6 +170,7 @@ namespace LibCleaner
             }
 
             //CleanDatabaseRecords(idsToRemove);
+            Console.WriteLine("Total removed {0} files", totalRemoved);
 
             Console.WriteLine("Press any key to continue...");
             Console.ReadKey();
