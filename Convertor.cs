@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using System.Xml;
 using System.Xml.Linq;
 
 namespace Fb2Kindle
@@ -568,11 +569,29 @@ namespace Fb2Kindle
             Util.RenameTags(book, "title", "div", "subtitle");
         }
 
+        static XDocument ReadXDocumentWithInvalidCharacters(string filename)
+        {
+            XDocument xDocument = null;
+
+            XmlReaderSettings xmlReaderSettings = new XmlReaderSettings { CheckCharacters = false };
+
+            using (XmlReader xmlReader = XmlReader.Create(filename, xmlReaderSettings))
+            {
+                // Load our XDocument
+                xmlReader.MoveToContent();
+                xDocument = XDocument.Load(xmlReader);
+            }
+
+            return xDocument;
+        }
+
         private static XElement LoadBookWithoutNs(string bookPath)
         {
             try
             {
                 XElement book;
+                //book = XDocument.Parse(File.ReadAllText(bookPath), LoadOptions.PreserveWhitespace).Root;
+                //book = ReadXDocumentWithInvalidCharacters(bookPath).Root;
                 using (Stream file = File.OpenRead(bookPath))
                 {
                     book = XElement.Load(file, LoadOptions.PreserveWhitespace);
