@@ -238,15 +238,24 @@ namespace LibCleaner
             return false;
         }
 
-        private static void CleanDatabaseRecords(string idsToRemove)
+        private static void CleanDatabaseRecords(string idsToRemove, bool remove = false)
         {
-            Console.Write("Cleaning db tables...");
-            SqlHelper.ExecuteNonQuery("delete from books where lang<>'ru' or file_type<>'fb2' or deleted=1");
             idsToRemove = idsToRemove.TrimEnd(',');
-            SqlHelper.ExecuteNonQuery(string.Format("delete from books where id in ({0})", idsToRemove));
-            SqlHelper.ExecuteNonQuery("delete from files where id_book not in (select id from books)");
-            SqlHelper.ExecuteNonQuery("delete from bookseq where id_book not in (select id from books)");
-            SqlHelper.ExecuteNonQuery("delete from sequences where id not in (select id_seq from bookseq)");
+            if (remove)
+            {
+                Console.Write("Cleaning db tables...");
+                SqlHelper.ExecuteNonQuery("delete from books where lang<>'ru' or file_type<>'fb2' or deleted=1");
+                SqlHelper.ExecuteNonQuery(string.Format("delete from books where id in ({0})", idsToRemove));
+                SqlHelper.ExecuteNonQuery("delete from files where id_book not in (select id from books)");
+                SqlHelper.ExecuteNonQuery("delete from bookseq where id_book not in (select id from books)");
+                SqlHelper.ExecuteNonQuery("delete from sequences where id not in (select id_seq from bookseq)");
+            }
+            else
+            {
+                Console.Write("Updating db tables...");
+                SqlHelper.ExecuteNonQuery("update books set deleted = 1 where lang<>'ru' or file_type<>'fb2'");
+                SqlHelper.ExecuteNonQuery(string.Format("update books set deleted = 1 where id in ({0})", idsToRemove));
+            }
         }
 
         private static void RemoveMissingArchives()
