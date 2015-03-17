@@ -89,8 +89,7 @@ namespace LibCleaner
                  join books b on b.id=f.id_book
                  join archives a on a.id=f.id_archive
                  where b.lang<>'ru' or b.file_type<>'fb2' or b.deleted=1
-                 or b.genres='F9' or b.genres='E1' or b.genres='E3'";
-                //or b.genres like '4%'");
+                 or b.genres='F9' or b.genres='E1' or b.genres='E3' or b.genres like '4%'";
                 using (var command = SqlHelper.GetCommand(sql, connection))
                 {
                     using (var reader = command.ExecuteReader())
