@@ -100,7 +100,7 @@ namespace LibCleaner
                 var sql = new StringBuilder(@"select a.file_name an, f.file_name fn, b.genres genres from files f
                     join books b on b.id=f.id_book
                     join archives a on a.id=f.id_archive
-                    where b.lang<>'ru' or b.file_type<>'fb2' or b.deleted=1");
+                    where b.genres like '%45%' ");
                 foreach (var genre in genresToRemove)
                     sql.Append(string.Format(" or b.genres like '%{0}%' ", genre));
                 using (var command = SqlHelper.GetCommand(sql.ToString(), connection))
@@ -113,14 +113,27 @@ namespace LibCleaner
                             var fileName = DBHelper.GetString(reader, "fn");
                             var genres = DBHelper.GetString(reader, "genres");
                             if (!CheckGenres(genres, genresToRemove)) continue;
-                            if (!filesData.ContainsKey(archName))
-                                filesData.Add(archName, new List<string> { fileName });
-                            else
-                                filesData[archName].Add(fileName);
+                            AddToRemovedFiles(filesData, archName, fileName);
                         }
                     }
                 }
-
+                //by wrong type, lang or removed
+                sql = new StringBuilder(@"select a.file_name an, f.file_name fn from files f
+                    join books b on b.id=f.id_book
+                    join archives a on a.id=f.id_archive
+                    where b.lang<>'ru' or b.file_type<>'fb2' or b.deleted=1");
+                using (var command = SqlHelper.GetCommand(sql.ToString(), connection))
+                {
+                    using (var reader = command.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            var archName = DBHelper.GetString(reader, "an");
+                            var fileName = DBHelper.GetString(reader, "fn");
+                            AddToRemovedFiles(filesData, archName, fileName);
+                        }
+                    }
+                }
                 //by sequence
                 sql = new StringBuilder(@"select a.file_name an, f.file_name fn, b.id from files f
                     join books b on b.id=f.id_book
@@ -138,20 +151,23 @@ namespace LibCleaner
                         {
                             var archName = DBHelper.GetString(reader, "an");
                             var fileName = DBHelper.GetString(reader, "fn");
-                            if (!filesData.ContainsKey(archName))
-                                filesData.Add(archName, new List<string> {fileName});
-                            else
-                            {
-                                if (filesData[archName].Contains(fileName))
-                                    continue;
-                                filesData[archName].Add(fileName);
-                            }
-                            idsToRemove += DBHelper.GetInt(reader, "id") + ",";
+                            if (AddToRemovedFiles(filesData, archName, fileName))
+                                idsToRemove += DBHelper.GetInt(reader, "id") + ",";
                         }
                     }
                 }
             }
             Console.WriteLine("Found {0} archives to proccess...", filesData.Count);
+
+            var totalToRemove = filesData.Sum(item => item.Value.Count);
+            Console.WriteLine("Found {0} files to remove...", totalToRemove);
+            Console.WriteLine("Press any key to continue or Esc to exit");
+            var key = Console.ReadKey();
+            if (key.Key == ConsoleKey.Escape)
+            {
+                return;
+            }
+
             var totalRemoved = 0;
             foreach (var item in filesData)
             {
@@ -194,6 +210,19 @@ namespace LibCleaner
             Console.ReadKey();
         }
 
+        private static bool AddToRemovedFiles(Dictionary<string, List<string>> filesData, string archName, string fileName)
+        {
+            if (!filesData.ContainsKey(archName))
+                filesData.Add(archName, new List<string> {fileName});
+            else
+            {
+                if (filesData[archName].Any(s => s.Equals(fileName, StringComparison.OrdinalIgnoreCase)))
+                    return false;
+                filesData[archName].Add(fileName);
+            }
+            return true;
+        }
+
         private static bool CheckGenres(string genres, List<string> genresToRemove)
         {
             var len = genres.Length;
@@ -203,7 +232,7 @@ namespace LibCleaner
             for (var i = 0; i < len / 2; i++)
             {
                 var item = genres.Substring(i*2, 2);
-                if (genresToRemove.Any(genre => genre.Equals(item, StringComparison.OrdinalIgnoreCase)))
+                if (genresToRemove.Any(s => s.Equals(item, StringComparison.OrdinalIgnoreCase)))
                     return true;
             }
             return false;
@@ -231,7 +260,7 @@ namespace LibCleaner
                 {
                     using (var reader = command.ExecuteReader())
                     {
-                        while (reader != null && reader.Read())
+                        while (reader.Read())
                         {
                             var archName = DBHelper.GetString(reader, "file_name");
 //                            var ai = archivesList.Find(f => f == archName);
