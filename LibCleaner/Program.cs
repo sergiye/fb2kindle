@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using Ionic.Zip;
 using Ionic.Zlib;
 
@@ -85,19 +86,33 @@ namespace LibCleaner
             var filesData = new Dictionary<string, List<string>>();
             using (var connection = SqlHelper.GetConnection())
             {
-                var sql = @"select a.file_name an, f.file_name fn from files f
-                 join books b on b.id=f.id_book
-                 join archives a on a.id=f.id_archive
-                 where b.lang<>'ru' or b.file_type<>'fb2' or b.deleted=1
-                 or b.genres='F9' or b.genres='E1' or b.genres='E3' or b.genres like '4%'";
-                using (var command = SqlHelper.GetCommand(sql, connection))
+                //e0,e1,e2,e3 = юмор
+                //96 - политика
+                //0c - о бизнесе популярно
+                //с1 - биографии и мемуары
+                //с2 - публицистика
+                //с3 - критика
+                //с4 - Искусство и Дизайн
+                //d2 = эзотерика
+                //45, f9 = эротика
+                var genresToRemove = new List<string> {"E0", "E1", "E2", "E3", "96", "D2", "0C", "C1", "C2", "C3", "C4", "F9", "45"};
+
+                var sql = new StringBuilder(@"select a.file_name an, f.file_name fn, b.genres genres from files f
+                    join books b on b.id=f.id_book
+                    join archives a on a.id=f.id_archive
+                    where b.lang<>'ru' or b.file_type<>'fb2' or b.deleted=1");
+                foreach (var genre in genresToRemove)
+                    sql.Append(string.Format(" or b.genres like '%{0}%' ", genre));
+                using (var command = SqlHelper.GetCommand(sql.ToString(), connection))
                 {
                     using (var reader = command.ExecuteReader())
                     {
-                        while (reader != null && reader.Read())
+                        while (reader.Read())
                         {
                             var archName = DBHelper.GetString(reader, "an");
                             var fileName = DBHelper.GetString(reader, "fn");
+                            var genres = DBHelper.GetString(reader, "genres");
+                            if (!CheckGenres(genres, genresToRemove)) continue;
                             if (!filesData.ContainsKey(archName))
                                 filesData.Add(archName, new List<string> { fileName });
                             else
@@ -107,26 +122,30 @@ namespace LibCleaner
                 }
 
                 //by sequence
-                sql = @"select a.file_name an, f.file_name fn, b.id from files f
+                sql = new StringBuilder(@"select a.file_name an, f.file_name fn, b.id from files f
                     join books b on b.id=f.id_book
                     join archives a on a.id=f.id_archive
                     join bookseq bs on bs.id_book=b.id
                     where (b.deleted<>1) and (bs.id_seq in
                     (14437,15976,22715,7028,7083,8303,19890,28738,29139,
                     8361,8364,8431,8432,8434,11767,14485,14486,14487,14498,14499,14500,144501,144502,144503,144504,16384,16385,16429,18684,20833,24135,31331,
-                    3586,10046,12755,31331,3944,4218,14644,31491,30658,25226,6771,27704,7542,8718,28888,15285,18684,15151,31459))";
-                using (var command = SqlHelper.GetCommand(sql, connection))
+                    3586,10046,12755,31331,3944,4218,14644,31491,30658,25226,6771,27704,7542,8718,28888,15285,18684,15151,31459))");
+                using (var command = SqlHelper.GetCommand(sql.ToString(), connection))
                 {
                     using (var reader = command.ExecuteReader())
                     {
-                        while (reader != null && reader.Read())
+                        while (reader.Read())
                         {
                             var archName = DBHelper.GetString(reader, "an");
                             var fileName = DBHelper.GetString(reader, "fn");
                             if (!filesData.ContainsKey(archName))
-                                filesData.Add(archName, new List<string> { fileName });
+                                filesData.Add(archName, new List<string> {fileName});
                             else
+                            {
+                                if (filesData[archName].Contains(fileName))
+                                    continue;
                                 filesData[archName].Add(fileName);
+                            }
                             idsToRemove += DBHelper.GetInt(reader, "id") + ",";
                         }
                     }
@@ -168,11 +187,26 @@ namespace LibCleaner
                 }
             }
 
-            //CleanDatabaseRecords(idsToRemove);
+            CleanDatabaseRecords(idsToRemove);
             Console.WriteLine("Total removed {0} files", totalRemoved);
 
             Console.WriteLine("Press any key to continue...");
             Console.ReadKey();
+        }
+
+        private static bool CheckGenres(string genres, List<string> genresToRemove)
+        {
+            var len = genres.Length;
+            if ((len % 2) != 0) return false;
+//            if (len == 2)
+//                return genresToRemove.Any(genre => genre.Equals(genres, StringComparison.OrdinalIgnoreCase));
+            for (var i = 0; i < len / 2; i++)
+            {
+                var item = genres.Substring(i*2, 2);
+                if (genresToRemove.Any(genre => genre.Equals(item, StringComparison.OrdinalIgnoreCase)))
+                    return true;
+            }
+            return false;
         }
 
         private static void CleanDatabaseRecords(string idsToRemove)
