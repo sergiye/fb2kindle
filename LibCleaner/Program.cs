@@ -10,6 +10,20 @@ namespace LibCleaner
 {
     class Program
     {
+        public class BookInfo
+        {
+            public int Id;
+            public string FileName;
+            public bool Deleted;
+
+            public BookInfo(int id, string fileName, bool deleted)
+            {
+                Id = id;
+                FileName = fileName;
+                Deleted = deleted;
+            }
+        }
+        
         private static string _archivesPath;
 
         private static void ShowUsage(string warning)
@@ -82,8 +96,7 @@ namespace LibCleaner
             //RemoveMissingArchives();
 
             Console.WriteLine("Calculating DB stats...");
-            var idsToRemove = "";
-            var filesData = new Dictionary<string, List<string>>();
+            var filesData = new Dictionary<string, List<BookInfo>>();
             using (var connection = SqlHelper.GetConnection())
             {
                 //e0,e1,e2,e3 = юмор
@@ -97,7 +110,7 @@ namespace LibCleaner
                 //45, f9 = эротика
                 var genresToRemove = new List<string> {"E0", "E1", "E2", "E3", "96", "D2", "0C", "C1", "C2", "C3", "C4", "F9", "45"};
 
-                var sql = new StringBuilder(@"select a.file_name an, f.file_name fn, b.genres genres from files f
+                var sql = new StringBuilder(@"select a.file_name an, f.file_name fn, b.genres genres, b.id, b.deleted from files f
                     join books b on b.id=f.id_book
                     join archives a on a.id=f.id_archive
                     where b.genres like '%45%' ");
@@ -111,14 +124,16 @@ namespace LibCleaner
                         {
                             var archName = DBHelper.GetString(reader, "an");
                             var fileName = DBHelper.GetString(reader, "fn");
+                            var id = DBHelper.GetInt(reader, "id");
+                            var deleted = DBHelper.GetBoolean(reader, "deleted");
                             var genres = DBHelper.GetString(reader, "genres");
                             if (!CheckGenres(genres, genresToRemove)) continue;
-                            AddToRemovedFiles(filesData, archName, fileName);
+                            AddToRemovedFiles(filesData, archName, new BookInfo(id, fileName, deleted));
                         }
                     }
                 }
                 //by wrong type, lang or removed
-                sql = new StringBuilder(@"select a.file_name an, f.file_name fn from files f
+                sql = new StringBuilder(@"select a.file_name an, f.file_name fn, b.id, b.deleted from files f
                     join books b on b.id=f.id_book
                     join archives a on a.id=f.id_archive
                     where b.lang<>'ru' or b.file_type<>'fb2' or b.deleted=1");
@@ -130,12 +145,14 @@ namespace LibCleaner
                         {
                             var archName = DBHelper.GetString(reader, "an");
                             var fileName = DBHelper.GetString(reader, "fn");
-                            AddToRemovedFiles(filesData, archName, fileName);
+                            var id = DBHelper.GetInt(reader, "id");
+                            var deleted = DBHelper.GetBoolean(reader, "deleted");
+                            AddToRemovedFiles(filesData, archName, new BookInfo(id, fileName, deleted));
                         }
                     }
                 }
                 //by sequence
-                sql = new StringBuilder(@"select a.file_name an, f.file_name fn, b.id from files f
+                sql = new StringBuilder(@"select a.file_name an, f.file_name fn, b.id, b.deleted from files f
                     join books b on b.id=f.id_book
                     join archives a on a.id=f.id_archive
                     join bookseq bs on bs.id_book=b.id
@@ -151,8 +168,9 @@ namespace LibCleaner
                         {
                             var archName = DBHelper.GetString(reader, "an");
                             var fileName = DBHelper.GetString(reader, "fn");
-                            if (AddToRemovedFiles(filesData, archName, fileName))
-                                idsToRemove += DBHelper.GetInt(reader, "id") + ",";
+                            var id = DBHelper.GetInt(reader, "id");
+                            var deleted = DBHelper.GetBoolean(reader, "deleted");
+                            AddToRemovedFiles(filesData, archName, new BookInfo(id, fileName, deleted));
                         }
                     }
                 }
@@ -183,14 +201,13 @@ namespace LibCleaner
                 {
                     foreach (var file in item.Value)
                     {
-                        totalRemoved ++;
-                        if (!zip.ContainsEntry(file))
+                        if (!zip.ContainsEntry(file.FileName))
                         {
 //                            Console.WriteLine("File '{0}' not found in archive", file);
                             continue;
                         }
                         //zip.getsize()
-                        zip.RemoveEntry(file);
+                        zip.RemoveEntry(file.FileName);
                         //Console.WriteLine("Removed: '{0}' from archive", file);
                         removedCount++;
                     }
@@ -201,24 +218,25 @@ namespace LibCleaner
                     zip.Save();
                     Console.WriteLine("Done");
                 }
+                totalRemoved += removedCount;
             }
 
-            CleanDatabaseRecords(idsToRemove);
+            CleanDatabaseRecords(filesData);
             Console.WriteLine("Total removed {0} files", totalRemoved);
 
             Console.WriteLine("Press any key to continue...");
             Console.ReadKey();
         }
 
-        private static bool AddToRemovedFiles(Dictionary<string, List<string>> filesData, string archName, string fileName)
+        private static bool AddToRemovedFiles(Dictionary<string, List<BookInfo>> filesData, string archName, BookInfo bookinfo)
         {
             if (!filesData.ContainsKey(archName))
-                filesData.Add(archName, new List<string> {fileName});
+                filesData.Add(archName, new List<BookInfo> { bookinfo });
             else
             {
-                if (filesData[archName].Any(s => s.Equals(fileName, StringComparison.OrdinalIgnoreCase)))
+                if (filesData[archName].Any(s => s.Id.Equals(bookinfo.Id)))
                     return false;
-                filesData[archName].Add(fileName);
+                filesData[archName].Add(bookinfo);
             }
             return true;
         }
@@ -238,23 +256,27 @@ namespace LibCleaner
             return false;
         }
 
-        private static void CleanDatabaseRecords(string idsToRemove, bool remove = false)
+        private static void CleanDatabaseRecords(Dictionary<string, List<BookInfo>> filesData, bool remove = false)
         {
-            idsToRemove = idsToRemove.TrimEnd(',');
+            Console.WriteLine("Updating db tables...");
+            var totalToUpdate = filesData.Sum(item => item.Value.Count(f=>!f.Deleted));
+            var updated = 0;
+            foreach (var item in filesData)
+            {
+                var ids = item.Value.Where(f=>!f.Deleted).Select(f => f.Id).ToArray();
+                if (ids.Length <= 0) continue;
+                SqlHelper.ExecuteNonQuery(string.Format("update books set deleted = 1 where id in ({0})", string.Join(",", ids)));
+                updated += ids.Length;
+                Console.WriteLine("Updated: {0} of {1} items", updated, totalToUpdate);
+            }
+            SqlHelper.ExecuteNonQuery("update books set deleted = 1 where lang<>'ru' or file_type<>'fb2'");
             if (remove)
             {
                 Console.Write("Cleaning db tables...");
                 SqlHelper.ExecuteNonQuery("delete from books where lang<>'ru' or file_type<>'fb2' or deleted=1");
-                SqlHelper.ExecuteNonQuery(string.Format("delete from books where id in ({0})", idsToRemove));
                 SqlHelper.ExecuteNonQuery("delete from files where id_book not in (select id from books)");
                 SqlHelper.ExecuteNonQuery("delete from bookseq where id_book not in (select id from books)");
                 SqlHelper.ExecuteNonQuery("delete from sequences where id not in (select id_seq from bookseq)");
-            }
-            else
-            {
-                Console.Write("Updating db tables...");
-                SqlHelper.ExecuteNonQuery("update books set deleted = 1 where lang<>'ru' or file_type<>'fb2'");
-                SqlHelper.ExecuteNonQuery(string.Format("update books set deleted = 1 where id in ({0})", idsToRemove));
             }
         }
 
