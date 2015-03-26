@@ -51,6 +51,7 @@
     <Compile Include="BookInfo.cs" />
     <Compile Include="Cleaner.cs" />
     <Compile Include="DBHelper.cs" />
+    <Compile Include="Genres.cs" />
     <Compile Include="SqlHelper.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

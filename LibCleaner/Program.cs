@@ -47,6 +47,8 @@ namespace LibCleaner
                 return;
             }
 
+            cleaner.PrepareStatistics();
+
             Console.WriteLine("Press any key to continue or Esc to exit");
             var key = Console.ReadKey();
             if (key.Key == ConsoleKey.Escape)
