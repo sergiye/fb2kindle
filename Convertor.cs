@@ -32,7 +32,7 @@ namespace Fb2Kindle
         private readonly bool _addGuideLine;
         private readonly bool _detailedOutput;
         private XElement _opfFile;
-        private DefaultOptions _currentSettings { get; set; }
+        private readonly DefaultOptions _currentSettings;
 
         #region public
 
@@ -49,37 +49,37 @@ namespace Fb2Kindle
 
         internal bool ConvertBookSequence(string[] books, bool debug)
         {
-            string _tempDir = null;
+            string tempDir = null;
             try
             {
                 //create temp working folder
                 //_tempDir = Path.GetTempPath() + "\\"  + Environment.TickCount.ToString();
-                _tempDir = Path.GetTempPath() + "\\" + Guid.NewGuid().ToString();
-                if (!Directory.Exists(_tempDir))
-                    Directory.CreateDirectory(_tempDir);
+                tempDir = Path.GetTempPath() + "\\" + Guid.NewGuid().ToString();
+                if (!Directory.Exists(tempDir))
+                    Directory.CreateDirectory(tempDir);
 
                 if (_defaultCss.Contains("src: url(\"fonts/") && Directory.Exists(_workingFolder + @"\fonts"))
                 {
-                    Directory.CreateDirectory(_tempDir + @"\fonts");
-                    Util.CopyDirectory(_workingFolder + @"\fonts", _tempDir + @"\fonts", true);
+                    Directory.CreateDirectory(tempDir + @"\fonts");
+                    Util.CopyDirectory(_workingFolder + @"\fonts", tempDir + @"\fonts", true);
                 }
-                File.WriteAllText(_tempDir + @"\book.css", _defaultCss);
+                File.WriteAllText(tempDir + @"\book.css", _defaultCss);
 
                 var commonTitle = string.Empty;
                 var coverDone = false;
-                var _tocEl = GetEmptyToc();
+                var tocEl = GetEmptyToc();
                 for (var idx = 0; idx < books.Length; idx++)
                 {
                     var bookName = Path.GetFileNameWithoutExtension(books[idx]).Trim();
                     Console.WriteLine("Processing: " + bookName);
-                    var _book = LoadBookWithoutNs(books[idx]);
-                    if (_book == null) return false;
+                    var book = LoadBookWithoutNs(books[idx]);
+                    if (book == null) return false;
 
                     if (idx == 0)
                     {
                         commonTitle = bookName;
                         //create instances
-                        _opfFile = GetEmptyPackage(_book, _currentSettings.s, books.Length > 1);
+                        _opfFile = GetEmptyPackage(book, _currentSettings.s, books.Length > 1);
                         AddPackItem("ncx", NcxName, "application/x-dtbncx+xml", false);
                     }
 
@@ -88,17 +88,17 @@ namespace Fb2Kindle
                     AddPackItem(titlePageName, titlePageName + ".html");
                     if (idx == 0)
                         AddGuideItem("Title", titlePageName + ".html", "start");
-                    CreateTitlePage(_book, _tempDir + "\\" + titlePageName + ".html");
-                    var bookLi = GetListItem(GetTitle(_book), titlePageName + ".html");
+                    CreateTitlePage(book, tempDir + "\\" + titlePageName + ".html");
+                    var bookLi = GetListItem(GetTitle(book), titlePageName + ".html");
                     bookLi.Add(new XElement("ul", ""));
-                    _tocEl.Elements("body").Elements("ul").First().Add(bookLi);
+                    tocEl.Elements("body").Elements("ul").First().Add(bookLi);
 
                     //update images (extract and rewrite refs)
-                    if (ProcessImages(_book, string.Format("{0}\\image{1}", _tempDir, bookPostfix), _currentSettings.ni))
+                    if (ProcessImages(book, string.Format("{0}\\image{1}", tempDir, bookPostfix), _currentSettings.ni))
                     {
                         if (!coverDone)
                         {
-                            var imgSrc = Util.AttributeValue(_book.Elements("description").Elements("title-info").Elements("coverpage").Elements("div").Elements("img"), "src");
+                            var imgSrc = Util.AttributeValue(book.Elements("description").Elements("title-info").Elements("coverpage").Elements("div").Elements("img"), "src");
                             if (!String.IsNullOrEmpty(imgSrc))
                             {
                                 _opfFile.Elements("metadata").First().Elements("dc-metadata").First().Elements("x-metadata").First().Add(new XElement("EmbeddedCover", imgSrc));
@@ -107,23 +107,23 @@ namespace Fb2Kindle
                             }
                         }
                     }
-                    ProcessAllData(_book, _tempDir, bookPostfix, bookLi);
+                    ProcessAllData(book, tempDir, bookPostfix, bookLi);
                 }
 
-                CreateNcxFile(_tocEl, commonTitle, _tempDir, _currentSettings.ntoc);
+                CreateNcxFile(tocEl, commonTitle, tempDir, _currentSettings.ntoc);
 
                 if (!_currentSettings.ntoc)
                 {
                     AddPackItem("content", "toc.html");
                     AddGuideItem("toc", "toc.html", "toc");
-                    SaveXmlToFile(_tocEl, _tempDir + @"\toc.html");
-                    _tocEl.RemoveAll();
+                    SaveXmlToFile(tocEl, tempDir + @"\toc.html");
+                    tocEl.RemoveAll();
                 }
 
-                SaveXmlToFile(_opfFile, _tempDir + @"\" + commonTitle + ".opf");
+                SaveXmlToFile(_opfFile, tempDir + @"\" + commonTitle + ".opf");
                 _opfFile.RemoveAll();
 
-                var result = CreateMobi(_workingFolder, _tempDir, commonTitle, books[0], _currentSettings.c, _detailedOutput);
+                var result = CreateMobi(_workingFolder, tempDir, commonTitle, books[0], _currentSettings.c, _detailedOutput);
                 if (result && _currentSettings.d)
                 {
                     foreach (var book in books)
@@ -141,7 +141,7 @@ namespace Fb2Kindle
                 if (!debug)
                 try
                 {
-                    if (_tempDir != null) Directory.Delete(_tempDir, true);
+                    if (tempDir != null) Directory.Delete(tempDir, true);
                 }
                 catch (Exception ex)
                 {
@@ -290,7 +290,7 @@ namespace Fb2Kindle
                     }
                 }
                 bodies[i].Name = "section";
-                ConvertTagsToHTML(bodies[i], true);
+                ConvertTagsToHtml(bodies[i], true);
                 SaveAsHtmlBook(bodies[i], bookDir + @"\" + resHtmlFileName);
 
                 additionalParts.Add(new KeyValuePair<string, string>(bodyName, resHtmlFileName));
@@ -329,7 +329,7 @@ namespace Fb2Kindle
                 el.RemoveAll();
                 parent.Add(new XElement("br"));
             }
-            ConvertTagsToHTML(bodies[0]);
+            ConvertTagsToHtml(bodies[0]);
             if (_currentSettings.nch)
             {
                 var htmlFile = string.Format("i{0}.html", postfix);
@@ -401,11 +401,11 @@ namespace Fb2Kindle
         private static bool CreateMobi(string workFolder, string tempDir, string bookName, string bookPath, bool compress, bool showOutput)
         {
             Console.WriteLine("Creating mobi (KF8)...");
-            var _kindleGenPath = string.Format("{0}\\kindlegen.exe", workFolder);
-            if (!File.Exists(_kindleGenPath))
+            var kindleGenPath = string.Format("{0}\\kindlegen.exe", workFolder);
+            if (!File.Exists(kindleGenPath))
             {
-                _kindleGenPath = string.Format("{0}\\kindlegen.exe", tempDir);
-                if (!Util.GetFileFromResource("kindlegen.exe", _kindleGenPath))
+                kindleGenPath = string.Format("{0}\\kindlegen.exe", tempDir);
+                if (!Util.GetFileFromResource("kindlegen.exe", kindleGenPath))
                 {
                     Console.WriteLine("kindlegen.exe not found");
                     return false;
@@ -416,7 +416,7 @@ namespace Fb2Kindle
             if (compress)
                 args += " -c2";
 
-            var res = Util.StartProcess(_kindleGenPath, args, showOutput);
+            var res = Util.StartProcess(kindleGenPath, args, showOutput);
             if (res == 2)
             {
                 Console.WriteLine("Error converting to mobi");
@@ -553,7 +553,7 @@ namespace Fb2Kindle
             return true;
         }
 
-        private static void ConvertTagsToHTML(XElement book, bool full = false)
+        private static void ConvertTagsToHtml(XElement book, bool full = false)
         {
             Util.RenameTags(book, "text-author", "P", "text-author");
             Util.RenameTags(book, "empty-line", "br");
@@ -571,7 +571,7 @@ namespace Fb2Kindle
 
         static XDocument ReadXDocumentWithInvalidCharacters(string filename)
         {
-            XDocument xDocument = null;
+            XDocument xDocument;
 
             XmlReaderSettings xmlReaderSettings = new XmlReaderSettings { CheckCharacters = false };
 

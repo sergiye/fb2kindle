@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using LibCleaner;
 
@@ -41,14 +42,13 @@ namespace LibraryCleaner
             if (newLine)
                 message += "\n";
             txtLog.AppendLine(message, txtLog.ForeColor);
+            txtLog.ScrollToCaret();
             Application.DoEvents();
         }
 
         private void btnBrowse_Click(object sender, EventArgs e)
         {
-            var dlg = new OpenFileDialog();
-            dlg.CheckFileExists = true;
-            dlg.Filter = "Database file (*.db)|*.db";
+            var dlg = new OpenFileDialog {CheckFileExists = true, Filter = "Database file (*.db)|*.db"};
             if (dlg.ShowDialog() != DialogResult.OK) return;
             txtDatabase.Text = dlg.FileName;
         }
@@ -80,7 +80,7 @@ namespace LibraryCleaner
                 _cleaner.RemoveForeign = cbxRemoveForeign.Checked;
                 _cleaner.RemoveDeleted = cbxRemoveDeleted.Checked;
                 _cleaner.RemoveMissingArchivesFromDb = cbxRemoveMissedArchives.Checked;
-
+                
                 if (!_cleaner.CheckParameters())
                 {
                     AddToLog("Please check input parameters and start again!");
@@ -88,7 +88,7 @@ namespace LibraryCleaner
                 }
 
                 _cleaner.PrepareStatistics();
-
+                
                 if (MessageBox.Show("Start database cleaning?", "Confirmation", MessageBoxButtons.YesNo,
                         MessageBoxIcon.Question) != DialogResult.Yes)
                     return;
