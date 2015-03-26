@@ -17,6 +17,7 @@ namespace LibCleaner
         public string ArchivesPath { get; set; }
         public bool RemoveDeleted { get; set; }
         public bool RemoveForeign { get; set; }
+        public bool RemoveMissingArchivesFromDb { get; set; }
         public string[] GenresToRemove { get; set; }
 
         public string DatabasePath
@@ -32,6 +33,7 @@ namespace LibCleaner
             ArchivesPath = archivesPath;
             RemoveForeign = true;
             RemoveDeleted = true;
+            RemoveMissingArchivesFromDb = true;
             GenresToRemove = GenresListContainer.GetDefaultItems().Where(f=>f.Selected).Select(f=>f.Code).ToArray();
             _seqToRemove = new List<int>
             {
@@ -93,7 +95,7 @@ namespace LibCleaner
         {
             _filesData = new Dictionary<string, List<BookInfo>>();
             UpdateState(string.Format("Loading DB: '{0}' archives: '{1}' ...", SqlHelper.DataBasePath, ArchivesPath));
-            UpdateArchivesOnDisk(false);
+            UpdateArchivesOnDisk(RemoveMissingArchivesFromDb);
 
             UpdateState("Calculating DB stats...");
             using (var connection = SqlHelper.GetConnection())
@@ -230,20 +232,18 @@ namespace LibCleaner
             UpdateState(string.Format("Total removed {0} files", totalRemoved));
         }
 
-        private bool AddToRemovedFiles(Dictionary<string, List<BookInfo>> filesData, string archName, BookInfo bookinfo)
+        private void AddToRemovedFiles(Dictionary<string, List<BookInfo>> filesData, string archName, BookInfo bookinfo)
         {
             if (!_archivesFound.Any(s => s.EndsWith(archName, StringComparison.OrdinalIgnoreCase)))
-                return false;
-
+                return;
             if (!filesData.ContainsKey(archName))
                 filesData.Add(archName, new List<BookInfo> { bookinfo });
             else
             {
                 if (filesData[archName].Any(s => s.Id.Equals(bookinfo.Id)))
-                    return false;
+                    return;
                 filesData[archName].Add(bookinfo);
             }
-            return true;
         }
 
         private bool CheckGenres(string genres, string[] genresToRemove)
@@ -287,7 +287,7 @@ namespace LibCleaner
             }
         }
 
-        private void UpdateArchivesOnDisk(bool removeFromDb = false)
+        private void UpdateArchivesOnDisk(bool removeFromDb)
         {
             _archivesFound = Directory.GetFiles(ArchivesPath, "*.zip", SearchOption.TopDirectoryOnly);
             //var archivesList = new DirectoryInfo(ArchivesPath).GetFiles("*.zip", SearchOption.TopDirectoryOnly).Select(fileInfo => fileInfo.Name).ToList();

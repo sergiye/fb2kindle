@@ -30,6 +30,7 @@
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.panSettings = new System.Windows.Forms.Panel();
+            this.cbxRemoveDeleted = new System.Windows.Forms.CheckBox();
             this.cbxRemoveForeign = new System.Windows.Forms.CheckBox();
             this.btnNoneGenres = new System.Windows.Forms.Button();
             this.btnAllGenres = new System.Windows.Forms.Button();
@@ -41,13 +42,14 @@
             this.lblDBPath = new System.Windows.Forms.Label();
             this.panLog = new System.Windows.Forms.Panel();
             this.txtLog = new LibraryCleaner.SimplTextBox();
-            this.cbxRemoveDeleted = new System.Windows.Forms.CheckBox();
+            this.cbxRemoveMissedArchives = new System.Windows.Forms.CheckBox();
             this.panSettings.SuspendLayout();
             this.panLog.SuspendLayout();
             this.SuspendLayout();
             // 
             // panSettings
             // 
+            this.panSettings.Controls.Add(this.cbxRemoveMissedArchives);
             this.panSettings.Controls.Add(this.cbxRemoveDeleted);
             this.panSettings.Controls.Add(this.cbxRemoveForeign);
             this.panSettings.Controls.Add(this.btnNoneGenres);
@@ -63,6 +65,18 @@
             this.panSettings.Name = "panSettings";
             this.panSettings.Size = new System.Drawing.Size(301, 362);
             this.panSettings.TabIndex = 0;
+            // 
+            // cbxRemoveDeleted
+            // 
+            this.cbxRemoveDeleted.AutoSize = true;
+            this.cbxRemoveDeleted.Checked = true;
+            this.cbxRemoveDeleted.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.cbxRemoveDeleted.Location = new System.Drawing.Point(12, 330);
+            this.cbxRemoveDeleted.Name = "cbxRemoveDeleted";
+            this.cbxRemoveDeleted.Size = new System.Drawing.Size(104, 17);
+            this.cbxRemoveDeleted.TabIndex = 9;
+            this.cbxRemoveDeleted.Text = "Remove deleted";
+            this.cbxRemoveDeleted.UseVisualStyleBackColor = true;
             // 
             // cbxRemoveForeign
             // 
@@ -178,17 +192,17 @@
             this.txtLog.TabIndex = 0;
             this.txtLog.Text = "";
             // 
-            // cbxRemoveDeleted
+            // cbxRemoveMissedArchives
             // 
-            this.cbxRemoveDeleted.AutoSize = true;
-            this.cbxRemoveDeleted.Checked = true;
-            this.cbxRemoveDeleted.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.cbxRemoveDeleted.Location = new System.Drawing.Point(12, 330);
-            this.cbxRemoveDeleted.Name = "cbxRemoveDeleted";
-            this.cbxRemoveDeleted.Size = new System.Drawing.Size(104, 17);
-            this.cbxRemoveDeleted.TabIndex = 9;
-            this.cbxRemoveDeleted.Text = "Remove deleted";
-            this.cbxRemoveDeleted.UseVisualStyleBackColor = true;
+            this.cbxRemoveMissedArchives.AutoSize = true;
+            this.cbxRemoveMissedArchives.Checked = true;
+            this.cbxRemoveMissedArchives.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.cbxRemoveMissedArchives.Location = new System.Drawing.Point(151, 307);
+            this.cbxRemoveMissedArchives.Name = "cbxRemoveMissedArchives";
+            this.cbxRemoveMissedArchives.Size = new System.Drawing.Size(146, 17);
+            this.cbxRemoveMissedArchives.TabIndex = 10;
+            this.cbxRemoveMissedArchives.Text = "Remove Missed Archives";
+            this.cbxRemoveMissedArchives.UseVisualStyleBackColor = true;
             // 
             // MainForm
             // 
@@ -225,6 +239,7 @@
         private System.Windows.Forms.Button btnAllGenres;
         private System.Windows.Forms.CheckBox cbxRemoveForeign;
         private System.Windows.Forms.CheckBox cbxRemoveDeleted;
+        private System.Windows.Forms.CheckBox cbxRemoveMissedArchives;
     }
 }
 

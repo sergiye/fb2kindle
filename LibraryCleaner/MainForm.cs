@@ -25,6 +25,7 @@ namespace LibraryCleaner
 
             cbxRemoveForeign.Checked = _cleaner.RemoveForeign;
             cbxRemoveDeleted.Checked = _cleaner.RemoveDeleted;
+            cbxRemoveMissedArchives.Checked = _cleaner.RemoveMissingArchivesFromDb;
         }
 
         #region GUI helper methods
@@ -68,28 +69,40 @@ namespace LibraryCleaner
 
         private void btnStart_Click(object sender, EventArgs e)
         {
-            //get selected genres list
-            var genresToRemove = clsGenres.CheckedItems.Cast<Genres>().Select(s => s.Code).ToArray();
-            _cleaner.GenresToRemove = genresToRemove;
-            _cleaner.DatabasePath = txtDatabase.Text;
-            _cleaner.RemoveForeign = cbxRemoveForeign.Checked;
-            _cleaner.RemoveDeleted = cbxRemoveDeleted.Checked;
-
-            if (!_cleaner.CheckParameters())
+            btnStart.Enabled = false;
+            Cursor = Cursors.WaitCursor;
+            try
             {
-                AddToLog("Please check input parameters and start again!");
-                return;
+                //get selected genres list
+                var genresToRemove = clsGenres.CheckedItems.Cast<Genres>().Select(s => s.Code).ToArray();
+                _cleaner.GenresToRemove = genresToRemove;
+                _cleaner.DatabasePath = txtDatabase.Text;
+                _cleaner.RemoveForeign = cbxRemoveForeign.Checked;
+                _cleaner.RemoveDeleted = cbxRemoveDeleted.Checked;
+                _cleaner.RemoveMissingArchivesFromDb = cbxRemoveMissedArchives.Checked;
+
+                if (!_cleaner.CheckParameters())
+                {
+                    AddToLog("Please check input parameters and start again!");
+                    return;
+                }
+
+                _cleaner.PrepareStatistics();
+
+                if (MessageBox.Show("Start database cleaning?", "Confirmation", MessageBoxButtons.YesNo,
+                        MessageBoxIcon.Question) != DialogResult.Yes)
+                    return;
+
+                _cleaner.Start();
+
+                AddToLog("Finished!");
             }
-
-            _cleaner.PrepareStatistics();
-
-            if (MessageBox.Show("Start database cleaning?", "Confirmation", MessageBoxButtons.YesNo,
-                    MessageBoxIcon.Question) != DialogResult.Yes)
-                return;
-
-            _cleaner.Start();
-
-            AddToLog("Finished!");
+            catch (Exception ex)
+            {
+                AddToLog(ex.Message);
+            }
+            btnStart.Enabled = true;
+            Cursor = Cursors.Default;
         }
     }
 }
