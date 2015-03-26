@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "fb2mobi", "fb2mobi\fb2mobi.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LibCleaner", "LibCleaner\LibCleaner.csproj", "{8D57FD38-FD64-4F51-AE87-43A59112B56B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LibraryCleaner", "LibraryCleaner\LibraryCleaner.csproj", "{C05615C3-7D1C-4A87-85AB-1250176CDCA9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -47,6 +49,16 @@ Global
 		{8D57FD38-FD64-4F51-AE87-43A59112B56B}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{8D57FD38-FD64-4F51-AE87-43A59112B56B}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{8D57FD38-FD64-4F51-AE87-43A59112B56B}.Release|x86.ActiveCfg = Release|Any CPU
+		{C05615C3-7D1C-4A87-85AB-1250176CDCA9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C05615C3-7D1C-4A87-85AB-1250176CDCA9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C05615C3-7D1C-4A87-85AB-1250176CDCA9}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{C05615C3-7D1C-4A87-85AB-1250176CDCA9}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{C05615C3-7D1C-4A87-85AB-1250176CDCA9}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{C05615C3-7D1C-4A87-85AB-1250176CDCA9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C05615C3-7D1C-4A87-85AB-1250176CDCA9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C05615C3-7D1C-4A87-85AB-1250176CDCA9}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{C05615C3-7D1C-4A87-85AB-1250176CDCA9}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{C05615C3-7D1C-4A87-85AB-1250176CDCA9}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
