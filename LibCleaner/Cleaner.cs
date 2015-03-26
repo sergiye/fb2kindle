@@ -10,15 +10,21 @@ namespace LibCleaner
 {
     public class Cleaner
     {
-        private string _archivesPath;
-        private Dictionary<string, List<BookInfo>>  _filesData;
+        private Dictionary<string, List<BookInfo>> _filesData;
+
+        public string ArchivesPath { get; set; }
+
+        public string DatabasePath
+        {
+            get { return SqlHelper.DataBasePath; }
+            set { SqlHelper.DataBasePath = value; }
+        }
 
         public event Action<string> OnStateChanged;
 
-        public Cleaner(string databasePath, string archivesPath)
+        public Cleaner(string archivesPath)
         {
-            _archivesPath = archivesPath;
-            SqlHelper.DataBasePath = databasePath;
+            ArchivesPath = archivesPath;
         }
 
         private void UpdateState(string state)
@@ -41,31 +47,29 @@ namespace LibCleaner
             }
 
             //try to get archves folder from db
-            if (string.IsNullOrEmpty(_archivesPath) || !Directory.Exists(_archivesPath))
+            if (string.IsNullOrEmpty(ArchivesPath) || !Directory.Exists(ArchivesPath))
             {
                 var dbPath = SqlHelper.GetScalarFromQuery("select text from params where id=9") as string;
                 if (dbPath != null)
                 {
                     var dbFolder = Path.GetDirectoryName(SqlHelper.DataBasePath);
                     if (dbFolder != null)
-                        _archivesPath = Path.Combine(dbFolder, dbPath);
+                        ArchivesPath = Path.Combine(dbFolder, dbPath);
                 }
             }
-            if (!Directory.Exists(_archivesPath))
+            if (!Directory.Exists(ArchivesPath))
             {
                 UpdateState("Archives folder not found!");
                 return false;
             }
-
-            PrepareStatistics();
             
             return true;
         }
 
-        private void PrepareStatistics()
+        public void PrepareStatistics()
         {
             _filesData = new Dictionary<string, List<BookInfo>>();
-            UpdateState(string.Format("Loading DB: '{0}' archives: '{1}' ...", SqlHelper.DataBasePath, _archivesPath));
+            UpdateState(string.Format("Loading DB: '{0}' archives: '{1}' ...", SqlHelper.DataBasePath, ArchivesPath));
             //RemoveMissingArchives();
 
             UpdateState("Calculating DB stats...");
@@ -249,7 +253,7 @@ namespace LibCleaner
             var totalRemoved = 0;
             foreach (var item in _filesData)
             {
-                var archPath = string.Format("{1}\\{0}", item.Key, _archivesPath);
+                var archPath = string.Format("{1}\\{0}", item.Key, ArchivesPath);
                 if (!File.Exists(archPath))
                 {
                     //UpdateState("File '{0}' not found", archPath);
@@ -339,8 +343,8 @@ namespace LibCleaner
 
         private void RemoveMissingArchives()
         {
-            var archivesList = Directory.GetFiles(_archivesPath, "*.zip", SearchOption.TopDirectoryOnly);
-            //var archivesList = new DirectoryInfo(_archivesPath).GetFiles("*.zip", SearchOption.TopDirectoryOnly).Select(fileInfo => fileInfo.Name).ToList();
+            var archivesList = Directory.GetFiles(ArchivesPath, "*.zip", SearchOption.TopDirectoryOnly);
+            //var archivesList = new DirectoryInfo(ArchivesPath).GetFiles("*.zip", SearchOption.TopDirectoryOnly).Select(fileInfo => fileInfo.Name).ToList();
             var idsToRemove = "";
             using (var connection = SqlHelper.GetConnection())
             {
