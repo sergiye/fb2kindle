@@ -48,6 +48,8 @@
     <Reference Include="System.XML" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BookInfo.cs" />
+    <Compile Include="Cleaner.cs" />
     <Compile Include="DBHelper.cs" />
     <Compile Include="SqlHelper.cs" />
     <Compile Include="Program.cs" />
