@@ -10,9 +10,16 @@ namespace LibCleaner
 {
     public class Cleaner
     {
+        private enum CleanActions
+        {
+            CalculateStats,
+            CompressLibrary
+        }
+
         private Dictionary<string, List<BookInfo>> _filesData;
         private readonly List<int> _seqToRemove;
         private string[] _archivesFound;
+//        private readonly CommonQueue<CleanActions> _internalTasks;
 
         public string ArchivesPath { get; set; }
         public bool RemoveDeleted { get; set; }
@@ -50,6 +57,9 @@ namespace LibCleaner
                 4908, //новинки  современника
                 4258, //сумерки
             };
+
+//            _internalTasks = new CommonQueue<CleanActions>();
+//            _internalTasks.OnExecuteTask += OnInternalTask;
         }
 
         private void UpdateState(string state)
@@ -87,11 +97,36 @@ namespace LibCleaner
                 UpdateState("Archives folder not found!");
                 return false;
             }
-            
+
             return true;
         }
 
+        private void OnInternalTask(CleanActions task)
+        {
+            switch (task)
+            {
+                case CleanActions.CalculateStats:
+                    CalculateStats();
+                    break;
+                case CleanActions.CompressLibrary:
+                    CompressLibrary();
+                    break;
+            }
+        }
+
         public void PrepareStatistics()
+        {
+            //_internalTasks.EnqueueTask(CleanActions.CalculateStats);
+            CalculateStats();
+        }
+
+        public void Start()
+        {
+            //_internalTasks.EnqueueTask(CleanActions.CompressLibrary);
+            CompressLibrary();
+        }
+
+        private void CalculateStats()
         {
             _filesData = new Dictionary<string, List<BookInfo>>();
             UpdateState(string.Format("Loading DB: '{0}' archives: '{1}' ...", SqlHelper.DataBasePath, ArchivesPath));
@@ -185,7 +220,7 @@ namespace LibCleaner
             UpdateState(string.Format("Found {0} files to remove...", totalToRemove));
         }
 
-        public void Start()
+        private void CompressLibrary()
         {
             if (_filesData == null || _filesData.Count == 0)
             {
