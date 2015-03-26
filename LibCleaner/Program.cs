@@ -37,7 +37,8 @@ namespace LibCleaner
                 i++;
             }
 
-            var cleaner = new Cleaner(databasePath, archivesPath);
+            var cleaner = new Cleaner(archivesPath);
+            cleaner.DatabasePath = databasePath;
             cleaner.OnStateChanged += Console.WriteLine;
             
             if (!cleaner.CheckParameters())
