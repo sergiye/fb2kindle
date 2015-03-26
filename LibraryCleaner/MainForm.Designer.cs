@@ -30,18 +30,30 @@
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.panSettings = new System.Windows.Forms.Panel();
+            this.cbxRemoveForeign = new System.Windows.Forms.CheckBox();
+            this.btnNoneGenres = new System.Windows.Forms.Button();
+            this.btnAllGenres = new System.Windows.Forms.Button();
+            this.lblGenres = new System.Windows.Forms.Label();
+            this.clsGenres = new System.Windows.Forms.CheckedListBox();
             this.btnBrowse = new System.Windows.Forms.Button();
             this.txtDatabase = new System.Windows.Forms.TextBox();
             this.btnStart = new System.Windows.Forms.Button();
             this.lblDBPath = new System.Windows.Forms.Label();
             this.panLog = new System.Windows.Forms.Panel();
             this.txtLog = new LibraryCleaner.SimplTextBox();
+            this.cbxRemoveDeleted = new System.Windows.Forms.CheckBox();
             this.panSettings.SuspendLayout();
             this.panLog.SuspendLayout();
             this.SuspendLayout();
             // 
             // panSettings
             // 
+            this.panSettings.Controls.Add(this.cbxRemoveDeleted);
+            this.panSettings.Controls.Add(this.cbxRemoveForeign);
+            this.panSettings.Controls.Add(this.btnNoneGenres);
+            this.panSettings.Controls.Add(this.btnAllGenres);
+            this.panSettings.Controls.Add(this.lblGenres);
+            this.panSettings.Controls.Add(this.clsGenres);
             this.panSettings.Controls.Add(this.btnBrowse);
             this.panSettings.Controls.Add(this.txtDatabase);
             this.panSettings.Controls.Add(this.btnStart);
@@ -51,6 +63,63 @@
             this.panSettings.Name = "panSettings";
             this.panSettings.Size = new System.Drawing.Size(301, 362);
             this.panSettings.TabIndex = 0;
+            // 
+            // cbxRemoveForeign
+            // 
+            this.cbxRemoveForeign.AutoSize = true;
+            this.cbxRemoveForeign.Checked = true;
+            this.cbxRemoveForeign.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.cbxRemoveForeign.Location = new System.Drawing.Point(12, 307);
+            this.cbxRemoveForeign.Name = "cbxRemoveForeign";
+            this.cbxRemoveForeign.Size = new System.Drawing.Size(133, 17);
+            this.cbxRemoveForeign.TabIndex = 8;
+            this.cbxRemoveForeign.Text = "Remove foreign books";
+            this.cbxRemoveForeign.UseVisualStyleBackColor = true;
+            // 
+            // btnNoneGenres
+            // 
+            this.btnNoneGenres.Location = new System.Drawing.Point(115, 62);
+            this.btnNoneGenres.Name = "btnNoneGenres";
+            this.btnNoneGenres.Size = new System.Drawing.Size(49, 23);
+            this.btnNoneGenres.TabIndex = 7;
+            this.btnNoneGenres.Text = "None";
+            this.btnNoneGenres.UseVisualStyleBackColor = true;
+            this.btnNoneGenres.Click += new System.EventHandler(this.btnNoneGenres_Click);
+            // 
+            // btnAllGenres
+            // 
+            this.btnAllGenres.Location = new System.Drawing.Point(60, 62);
+            this.btnAllGenres.Name = "btnAllGenres";
+            this.btnAllGenres.Size = new System.Drawing.Size(49, 23);
+            this.btnAllGenres.TabIndex = 6;
+            this.btnAllGenres.Text = "All";
+            this.btnAllGenres.UseVisualStyleBackColor = true;
+            this.btnAllGenres.Click += new System.EventHandler(this.btnAllGenres_Click);
+            // 
+            // lblGenres
+            // 
+            this.lblGenres.AutoSize = true;
+            this.lblGenres.Location = new System.Drawing.Point(13, 69);
+            this.lblGenres.Name = "lblGenres";
+            this.lblGenres.Size = new System.Drawing.Size(41, 13);
+            this.lblGenres.TabIndex = 5;
+            this.lblGenres.Text = "Genres";
+            // 
+            // clsGenres
+            // 
+            this.clsGenres.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.clsGenres.CheckOnClick = true;
+            this.clsGenres.FormattingEnabled = true;
+            this.clsGenres.Items.AddRange(new object[] {
+            "firest",
+            "second",
+            "last"});
+            this.clsGenres.Location = new System.Drawing.Point(3, 85);
+            this.clsGenres.Name = "clsGenres";
+            this.clsGenres.Size = new System.Drawing.Size(283, 214);
+            this.clsGenres.TabIndex = 4;
             // 
             // btnBrowse
             // 
@@ -109,6 +178,18 @@
             this.txtLog.TabIndex = 0;
             this.txtLog.Text = "";
             // 
+            // cbxRemoveDeleted
+            // 
+            this.cbxRemoveDeleted.AutoSize = true;
+            this.cbxRemoveDeleted.Checked = true;
+            this.cbxRemoveDeleted.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.cbxRemoveDeleted.Location = new System.Drawing.Point(12, 330);
+            this.cbxRemoveDeleted.Name = "cbxRemoveDeleted";
+            this.cbxRemoveDeleted.Size = new System.Drawing.Size(104, 17);
+            this.cbxRemoveDeleted.TabIndex = 9;
+            this.cbxRemoveDeleted.Text = "Remove deleted";
+            this.cbxRemoveDeleted.UseVisualStyleBackColor = true;
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -138,6 +219,12 @@
         private System.Windows.Forms.Button btnStart;
         private System.Windows.Forms.Label lblDBPath;
         private SimplTextBox txtLog;
+        private System.Windows.Forms.Label lblGenres;
+        private System.Windows.Forms.CheckedListBox clsGenres;
+        private System.Windows.Forms.Button btnNoneGenres;
+        private System.Windows.Forms.Button btnAllGenres;
+        private System.Windows.Forms.CheckBox cbxRemoveForeign;
+        private System.Windows.Forms.CheckBox cbxRemoveDeleted;
     }
 }
 
