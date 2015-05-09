@@ -53,6 +53,7 @@ namespace Fb2Kindle
             var recursive = false;
             var detailedOutput = true;
             var debug = Debugger.IsAttached;
+            var startedTime = DateTime.Now;
             try
             {
                 var asm = Assembly.GetExecutingAssembly();
@@ -168,11 +169,17 @@ namespace Fb2Kindle
             {
                 Console.WriteLine(ex.Message);
             }
-            if (wait)
+            finally
             {
+                var timeWasted = DateTime.Now - startedTime;
                 Console.WriteLine();
-                Console.WriteLine("Press any key to continue...");
-                Console.ReadKey();
+                Console.WriteLine("Time wasted: {0:G}", timeWasted);
+                if (wait)
+                {
+                    Console.WriteLine();
+                    Console.WriteLine("Press any key to continue...");
+                    Console.ReadKey();
+                }
             }
         }
 
