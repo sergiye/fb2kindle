@@ -18,6 +18,20 @@
         <option>transformxaml</option>
         <file dir="D:\Work\Fb2Kindle\bin" name="fb2mobi.exe" />
       </inputassembly>
+      <inputassembly refid="ea99834c-4d52-4ea8-94a1-89a017984600">
+        <option>honoroas</option>
+        <option>stripoa</option>
+        <option>library</option>
+        <option>transformxaml</option>
+        <file dir="D:\work\fb2kindle\bin" name="LibCleaner.exe" />
+      </inputassembly>
+      <inputassembly refid="69e7bf47-bdea-4754-b8bf-b7e2d9b47a95">
+        <option>honoroas</option>
+        <option>stripoa</option>
+        <option>library</option>
+        <option>transformxaml</option>
+        <file dir="D:\work\fb2kindle\bin" name="LibraryCleaner.exe" />
+      </inputassembly>
     </asmlist>
   </input>
   <output>
