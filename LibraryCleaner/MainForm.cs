@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using LibCleaner;
 
@@ -69,6 +68,7 @@ namespace LibraryCleaner
 
         private void btnStart_Click(object sender, EventArgs e)
         {
+            var startedTime = DateTime.Now;
             btnStart.Enabled = false;
             Cursor = Cursors.WaitCursor;
             try
@@ -80,7 +80,7 @@ namespace LibraryCleaner
                 _cleaner.RemoveForeign = cbxRemoveForeign.Checked;
                 _cleaner.RemoveDeleted = cbxRemoveDeleted.Checked;
                 _cleaner.RemoveMissingArchivesFromDb = cbxRemoveMissedArchives.Checked;
-                
+
                 if (!_cleaner.CheckParameters())
                 {
                     AddToLog("Please check input parameters and start again!");
@@ -88,9 +88,9 @@ namespace LibraryCleaner
                 }
 
                 _cleaner.PrepareStatistics();
-                
+
                 if (MessageBox.Show("Start database cleaning?", "Confirmation", MessageBoxButtons.YesNo,
-                        MessageBoxIcon.Question) != DialogResult.Yes)
+                    MessageBoxIcon.Question) != DialogResult.Yes)
                     return;
 
                 _cleaner.Start();
@@ -101,8 +101,13 @@ namespace LibraryCleaner
             {
                 AddToLog(ex.Message);
             }
-            btnStart.Enabled = true;
-            Cursor = Cursors.Default;
+            finally
+            {
+                var timeWasted = DateTime.Now - startedTime; 
+                AddToLog(string.Format("Time wasted: {0:G}", timeWasted));
+                btnStart.Enabled = true;
+                Cursor = Cursors.Default;
+            }
         }
     }
 }

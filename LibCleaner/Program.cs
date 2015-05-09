@@ -54,7 +54,11 @@ namespace LibCleaner
             if (key.Key == ConsoleKey.Escape)
                 return;
 
+            var startedTime = DateTime.Now;
             cleaner.Start();
+            var timeWasted = DateTime.Now - startedTime;
+            Console.WriteLine();
+            Console.WriteLine("Time wasted: {0:G}", timeWasted);
 
             Console.WriteLine("Press any key to continue...");
             Console.ReadKey();
