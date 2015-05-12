@@ -37,8 +37,7 @@ namespace LibCleaner
                 i++;
             }
 
-            var cleaner = new Cleaner(archivesPath);
-            cleaner.DatabasePath = databasePath;
+            var cleaner = new Cleaner(archivesPath) {DatabasePath = databasePath};
             cleaner.OnStateChanged += Console.WriteLine;
             
             if (!cleaner.CheckParameters())
@@ -47,21 +46,25 @@ namespace LibCleaner
                 return;
             }
 
-            cleaner.PrepareStatistics();
+            cleaner.PrepareStatistics(() =>
+            {
+                Console.WriteLine("Press any key to continue or Esc to exit");
+                var key = Console.ReadKey();
+                if (key.Key == ConsoleKey.Escape)
+                    return;
 
-            Console.WriteLine("Press any key to continue or Esc to exit");
-            var key = Console.ReadKey();
-            if (key.Key == ConsoleKey.Escape)
-                return;
+                var startedTime = DateTime.Now;
+                cleaner.Start(() =>
+                {
+                    var timeWasted = DateTime.Now - startedTime;
+                    Console.WriteLine();
+                    Console.WriteLine("Time wasted: {0:G}", timeWasted);
 
-            var startedTime = DateTime.Now;
-            cleaner.Start();
-            var timeWasted = DateTime.Now - startedTime;
-            Console.WriteLine();
-            Console.WriteLine("Time wasted: {0:G}", timeWasted);
-
-            Console.WriteLine("Press any key to continue...");
-            Console.ReadKey();
+                    Console.WriteLine("Press any key to continue...");
+                    Console.ReadKey();
+                    
+                });
+            });
         }
     }
 }

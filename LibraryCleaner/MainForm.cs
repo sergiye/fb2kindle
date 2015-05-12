@@ -87,27 +87,39 @@ namespace LibraryCleaner
                     return;
                 }
 
-                _cleaner.PrepareStatistics();
-
-                if (MessageBox.Show("Start database cleaning?", "Confirmation", MessageBoxButtons.YesNo,
-                    MessageBoxIcon.Question) != DialogResult.Yes)
-                    return;
-
-                _cleaner.Start();
-
-                AddToLog("Finished!");
+                _cleaner.PrepareStatistics(() =>
+                {
+                    if (MessageBox.Show("Start database cleaning?", "Confirmation", MessageBoxButtons.YesNo,
+                            MessageBoxIcon.Question) == DialogResult.Yes)
+                    {
+                        _cleaner.Start(() =>
+                        {
+                            AddToLog("Finished!");
+                            SetFinishedState(startedTime);
+                        });
+                    }
+                    else
+                        SetFinishedState(startedTime);
+                });
             }
             catch (Exception ex)
             {
                 AddToLog(ex.Message);
+                SetFinishedState(startedTime);
             }
-            finally
+        }
+
+        private void SetFinishedState(DateTime startedTime)
+        {
+            if (InvokeRequired)
             {
-                var timeWasted = DateTime.Now - startedTime; 
-                AddToLog(string.Format("Time wasted: {0:G}", timeWasted));
-                btnStart.Enabled = true;
-                Cursor = Cursors.Default;
+                Invoke(new Action<DateTime>(SetFinishedState), new object[] {startedTime});
+                return;
             }
+            var timeWasted = DateTime.Now - startedTime;
+            AddToLog(string.Format("Time wasted: {0:G}", timeWasted));
+            btnStart.Enabled = true;
+            Cursor = Cursors.Default;
         }
     }
 }
