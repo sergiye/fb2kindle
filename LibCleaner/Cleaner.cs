@@ -16,10 +16,22 @@ namespace LibCleaner
             CompressLibrary
         }
 
+        private class QueueTask
+        {
+            public CleanActions ActionType { get; private set; }
+            public Action OnActionFinish { get; private set; }
+
+            public QueueTask(CleanActions actionType, Action onActionFinish)
+            {
+                ActionType = actionType;
+                OnActionFinish = onActionFinish;
+            }
+        }
+
         private Dictionary<string, List<BookInfo>> _filesData;
         private readonly List<int> _seqToRemove;
         private string[] _archivesFound;
-//        private readonly CommonQueue<CleanActions> _internalTasks;
+        private readonly CommonQueue<QueueTask> _internalTasks;
 
         public string ArchivesPath { get; set; }
         public bool RemoveDeleted { get; set; }
@@ -58,8 +70,8 @@ namespace LibCleaner
                 4258, //сумерки
             };
 
-//            _internalTasks = new CommonQueue<CleanActions>();
-//            _internalTasks.OnExecuteTask += OnInternalTask;
+            _internalTasks = new CommonQueue<QueueTask>();
+            _internalTasks.OnExecuteTask += OnInternalTask;
         }
 
         private void UpdateState(string state)
@@ -101,29 +113,40 @@ namespace LibCleaner
             return true;
         }
 
-        private void OnInternalTask(CleanActions task)
+        private void OnInternalTask(QueueTask task)
         {
-            switch (task)
+            try
             {
-                case CleanActions.CalculateStats:
-                    CalculateStats();
-                    break;
-                case CleanActions.CompressLibrary:
-                    CompressLibrary();
-                    break;
+                switch (task.ActionType)
+                {
+                    case CleanActions.CalculateStats:
+                        CalculateStats();
+                        break;
+                    case CleanActions.CompressLibrary:
+                        CompressLibrary();
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
+                UpdateState(ex.Message);
+            }
+            finally
+            {
+                task.OnActionFinish();
             }
         }
 
-        public void PrepareStatistics()
+        public void PrepareStatistics(Action onTaskFinished)
         {
-            //_internalTasks.EnqueueTask(CleanActions.CalculateStats);
-            CalculateStats();
+            _internalTasks.EnqueueTask(new QueueTask(CleanActions.CalculateStats, onTaskFinished));
+            //CalculateStats();
         }
 
-        public void Start()
+        public void Start(Action onTaskFinished)
         {
-            //_internalTasks.EnqueueTask(CleanActions.CompressLibrary);
-            CompressLibrary();
+            _internalTasks.EnqueueTask(new QueueTask(CleanActions.CompressLibrary, onTaskFinished));
+            //CompressLibrary();
         }
 
         private void CalculateStats()
