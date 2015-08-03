@@ -123,6 +123,7 @@ namespace LibCleaner
                         CalculateStats();
                         break;
                     case CleanActions.CompressLibrary:
+                        OptimizeDatabase();
                         CompressLibrary();
                         break;
                 }
@@ -343,6 +344,18 @@ namespace LibCleaner
                 SqlHelper.ExecuteNonQuery("delete from bookseq where id_book not in (select id from books)");
                 SqlHelper.ExecuteNonQuery("delete from sequences where id not in (select id_seq from bookseq)");
             }
+        }
+
+        private void OptimizeDatabase()
+        {
+            UpdateState("Optimizing db tables...");
+            SqlHelper.ExecuteNonQuery("delete from archives where [file_name] not like '%fb2-%'");
+            SqlHelper.ExecuteNonQuery("delete from files where id_archive not in (select id from archives)");
+            
+//            SqlHelper.ExecuteNonQuery("delete from books where lang<>'ru' or file_type<>'fb2' or deleted=1");
+//            SqlHelper.ExecuteNonQuery("delete from files where id_book not in (select id from books)");
+//            SqlHelper.ExecuteNonQuery("delete from bookseq where id_book not in (select id from books)");
+//            SqlHelper.ExecuteNonQuery("delete from sequences where id not in (select id_seq from bookseq)");
         }
 
         private void UpdateArchivesOnDisk(bool removeFromDb)
