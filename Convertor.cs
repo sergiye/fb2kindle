@@ -70,14 +70,14 @@ namespace Fb2Kindle
                 var tocEl = GetEmptyToc();
                 for (var idx = 0; idx < books.Length; idx++)
                 {
-                    var bookName = Path.GetFileNameWithoutExtension(books[idx]).Trim();
-                    Console.WriteLine("Processing: " + bookName);
+                    var fileName = Path.GetFileNameWithoutExtension(books[idx]).Trim();
+                    Console.WriteLine("Processing: " + fileName);
                     var book = LoadBookWithoutNs(books[idx]);
                     if (book == null) return false;
 
                     if (idx == 0)
                     {
-                        commonTitle = bookName;
+                        commonTitle = fileName;
                         //create instances
                         _opfFile = GetEmptyPackage(book, _currentSettings.s, books.Length > 1);
                         AddPackItem("ncx", NcxName, "application/x-dtbncx+xml", false);
@@ -665,8 +665,13 @@ namespace Fb2Kindle
 
             var bookTitle = GetTitle(book);
             var seqName = Util.AttributeValue(book.Elements("description").Elements("title-info").Elements("sequence"), "name");
-            if (useSequenceNameOnly && !string.IsNullOrEmpty(seqName))
-                bookTitle = seqName;
+            if (useSequenceNameOnly)
+            {
+                 if (string.IsNullOrEmpty(seqName))
+                    bookTitle = "Сборник";
+                else
+                    bookTitle = seqName;
+            }
             else
             {
                 if (addSequenceToTitle)
