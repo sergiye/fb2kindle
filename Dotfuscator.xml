@@ -55,7 +55,6 @@
     </referencerulelist>
   </renaming>
   <sos mergeruntime="true">
-    <option>sendanalytics</option>
     <option>dontsendtamper</option>
   </sos>
   <smartobfuscation>
