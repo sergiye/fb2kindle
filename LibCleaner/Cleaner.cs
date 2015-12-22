@@ -45,7 +45,15 @@ namespace LibCleaner
             set { SqlHelper.DataBasePath = value; }
         }
 
-        public event Action<string> OnStateChanged;
+        public enum StateKind
+        {
+            Log,
+            Warning,
+            Error,
+            Message
+        }
+
+        public event Action<string, StateKind> OnStateChanged;
 
         public Cleaner(string archivesPath)
         {
@@ -74,10 +82,10 @@ namespace LibCleaner
             _internalTasks.OnExecuteTask += OnInternalTask;
         }
 
-        private void UpdateState(string state)
+        private void UpdateState(string state, StateKind kind)
         {
             if (OnStateChanged != null)
-                OnStateChanged(state);
+                OnStateChanged(state, kind);
         }
 
         public bool CheckParameters()
@@ -89,7 +97,7 @@ namespace LibCleaner
             }
             if (!File.Exists(SqlHelper.DataBasePath))
             {
-                UpdateState("Database file not found!");
+                UpdateState("Database file not found!", StateKind.Error);
                 return false;
             }
 
@@ -106,7 +114,7 @@ namespace LibCleaner
             }
             if (!Directory.Exists(ArchivesPath))
             {
-                UpdateState("Archives folder not found!");
+                UpdateState("Archives folder not found!", StateKind.Error);
                 return false;
             }
 
@@ -130,7 +138,7 @@ namespace LibCleaner
             }
             catch (Exception ex)
             {
-                UpdateState(ex.Message);
+                UpdateState(ex.Message, StateKind.Error);
             }
             finally
             {
@@ -153,10 +161,10 @@ namespace LibCleaner
         private void CalculateStats()
         {
             _filesData = new Dictionary<string, List<BookInfo>>();
-            UpdateState(string.Format("Loading DB: '{0}' archives: '{1}' ...", SqlHelper.DataBasePath, ArchivesPath));
+            UpdateState(string.Format("Loading DB: '{0}' archives: '{1}' ...", SqlHelper.DataBasePath, ArchivesPath), StateKind.Log);
             UpdateArchivesOnDisk(RemoveMissingArchivesFromDb);
 
-            UpdateState("Calculating DB stats...");
+            UpdateState("Calculating DB stats...", StateKind.Log);
             using (var connection = SqlHelper.GetConnection())
             {
                 //by wrong type, lang or removed
@@ -169,6 +177,7 @@ namespace LibCleaner
                 if (RemoveForeign)
                     sql.Append(" or b.lang<>'ru' ");
 
+                sql.Append(" order by a.file_name");
                 using (var command = SqlHelper.GetCommand(sql.ToString(), connection))
                 {
                     using (var reader = command.ExecuteReader())
@@ -195,6 +204,7 @@ namespace LibCleaner
                             ? string.Format(" where b.genres like '%{0}%' ", GenresToRemove[i])
                             : string.Format(" or b.genres like '%{0}%' ", GenresToRemove[i]));
                     }
+                    sql.Append(" order by a.file_name");
                     using (var command = SqlHelper.GetCommand(sql.ToString(), connection))
                     {
                         using (var reader = command.ExecuteReader())
@@ -222,6 +232,7 @@ namespace LibCleaner
                     where bs.id_seq in (");
                     sql.Append(string.Join(",", _seqToRemove));
                     sql.Append(")");
+                    sql.Append(" order by a.file_name");
                     using (var command = SqlHelper.GetCommand(sql.ToString(), connection))
                     {
                         using (var reader = command.ExecuteReader())
@@ -238,17 +249,24 @@ namespace LibCleaner
                     }
                 }
             }
-            UpdateState(string.Format("Found {0} archives to proccess...", _filesData.Count));
-
+            foreach (var archiveName in _archivesFound)
+            {
+                if (!_filesData.Keys.Any(f => archiveName.EndsWith(f, StringComparison.OrdinalIgnoreCase)))
+                {
+                    UpdateState(string.Format("Archive {0} not registered in DB", archiveName), StateKind.Warning);
+                }
+            }
+            UpdateState(string.Format("Found {0} archives to proccess...", _filesData.Count), StateKind.Message);
+            
             var totalToRemove = _filesData.Sum(item => item.Value.Count);
-            UpdateState(string.Format("Found {0} files to remove...", totalToRemove));
+            UpdateState(string.Format("Found {0} files to remove...", totalToRemove), StateKind.Message);
         }
 
         private void CompressLibrary()
         {
             if (_filesData == null || _filesData.Count == 0)
             {
-                UpdateState("Nothing to do!");
+                UpdateState("Nothing to do!", StateKind.Message);
                 return;
             }
 
@@ -261,7 +279,7 @@ namespace LibCleaner
                     //UpdateState("File '{0}' not found", archPath);
                     continue;
                 }
-                UpdateState("Processing: " + item.Key);
+                UpdateState("Processing: " + item.Key, StateKind.Log);
                 var removedCount = 0;
                 using (var zip = new ZipFile(archPath))
                 {
@@ -277,18 +295,18 @@ namespace LibCleaner
                         //UpdateState("Removed: '{0}' from archive", file);
                         removedCount++;
                     }
-                    UpdateState(string.Format("Removed {0} files", removedCount));
+                    UpdateState(string.Format("Removed {0} files", removedCount), StateKind.Message);
                     if (removedCount <= 0) continue;
-                    UpdateState("Saving archive...");
+                    UpdateState("Saving archive...", StateKind.Log);
                     zip.CompressionLevel = CompressionLevel.BestCompression;
                     zip.Save();
-                    UpdateState("Done");
+                    UpdateState("Done", StateKind.Log);
                 }
                 totalRemoved += removedCount;
             }
 
             CleanDatabaseRecords(_filesData);
-            UpdateState(string.Format("Total removed {0} files", totalRemoved));
+            UpdateState(string.Format("Total removed {0} files", totalRemoved), StateKind.Message);
         }
 
         private void AddToRemovedFiles(Dictionary<string, List<BookInfo>> filesData, string archName, BookInfo bookinfo)
@@ -322,7 +340,7 @@ namespace LibCleaner
 
         private void CleanDatabaseRecords(Dictionary<string, List<BookInfo>> filesData, bool remove = false)
         {
-            UpdateState("Updating db tables...");
+            UpdateState("Updating db tables...", StateKind.Log);
             //var totalToUpdate = _filesData.Sum(item => item.Value.Count(f=>!f.Deleted));
             //var updated = 0;
             foreach (var item in filesData)
@@ -338,7 +356,7 @@ namespace LibCleaner
                 SqlHelper.ExecuteNonQuery("update books set deleted = 1 where lang<>'ru'");
             if (remove)
             {
-                UpdateState("Cleaning db tables...");
+                UpdateState("Cleaning db tables...", StateKind.Log);
                 SqlHelper.ExecuteNonQuery("delete from books where lang<>'ru' or file_type<>'fb2' or deleted=1");
                 SqlHelper.ExecuteNonQuery("delete from files where id_book not in (select id from books)");
                 SqlHelper.ExecuteNonQuery("delete from bookseq where id_book not in (select id from books)");
@@ -348,7 +366,7 @@ namespace LibCleaner
 
         private void OptimizeDatabase()
         {
-            UpdateState("Optimizing db tables...");
+            UpdateState("Optimizing db tables...", StateKind.Log);
             SqlHelper.ExecuteNonQuery("delete from archives where [file_name] not like '%fb2-%'");
             SqlHelper.ExecuteNonQuery("delete from files where id_archive not in (select id from archives)");
             
@@ -362,7 +380,6 @@ namespace LibCleaner
         {
             _archivesFound = Directory.GetFiles(ArchivesPath, "*.zip", SearchOption.TopDirectoryOnly);
             //var archivesList = new DirectoryInfo(ArchivesPath).GetFiles("*.zip", SearchOption.TopDirectoryOnly).Select(fileInfo => fileInfo.Name).ToList();
-            if (!removeFromDb) return;
 
             var idsToRemove = "";
             using (var connection = SqlHelper.GetConnection())
@@ -378,10 +395,15 @@ namespace LibCleaner
                             //if (ai == null)
                             //    idsToRemove += DBHelper.GetInt(reader, "id") + ",";
                             if (_archivesFound.All(s => !s.EndsWith(archName, StringComparison.OrdinalIgnoreCase)))
+                            {
                                 idsToRemove += DBHelper.GetInt(reader, "id") + ",";
+                                UpdateState(string.Format("Archive '{0}' was not found in local folder", archName), StateKind.Warning);
+                            }
                         }
                     }
                 }
+
+                if (!removeFromDb) return;
                 idsToRemove = idsToRemove.TrimEnd(',');
                 SqlHelper.ExecuteNonQuery(string.Format("delete from archives where id in ({0})", idsToRemove));
                 SqlHelper.ExecuteNonQuery(string.Format("delete from files where id_archive in ({0})", idsToRemove));

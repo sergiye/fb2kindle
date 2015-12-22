@@ -30,69 +30,86 @@
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.panSettings = new System.Windows.Forms.Panel();
-            this.cbxRemoveDeleted = new System.Windows.Forms.CheckBox();
-            this.cbxRemoveForeign = new System.Windows.Forms.CheckBox();
+            this.clsGenres = new System.Windows.Forms.CheckedListBox();
+            this.panel2 = new System.Windows.Forms.Panel();
+            this.lblDBPath = new System.Windows.Forms.Label();
+            this.txtDatabase = new System.Windows.Forms.TextBox();
             this.btnNoneGenres = new System.Windows.Forms.Button();
+            this.btnBrowse = new System.Windows.Forms.Button();
             this.btnAllGenres = new System.Windows.Forms.Button();
             this.lblGenres = new System.Windows.Forms.Label();
-            this.clsGenres = new System.Windows.Forms.CheckedListBox();
-            this.btnBrowse = new System.Windows.Forms.Button();
-            this.txtDatabase = new System.Windows.Forms.TextBox();
+            this.panel1 = new System.Windows.Forms.Panel();
+            this.cbxRemoveForeign = new System.Windows.Forms.CheckBox();
+            this.cbxRemoveMissedArchives = new System.Windows.Forms.CheckBox();
             this.btnStart = new System.Windows.Forms.Button();
-            this.lblDBPath = new System.Windows.Forms.Label();
+            this.cbxRemoveDeleted = new System.Windows.Forms.CheckBox();
             this.panLog = new System.Windows.Forms.Panel();
             this.txtLog = new LibraryCleaner.SimplTextBox();
-            this.cbxRemoveMissedArchives = new System.Windows.Forms.CheckBox();
+            this.btnAnalyze = new System.Windows.Forms.Button();
             this.panSettings.SuspendLayout();
+            this.panel2.SuspendLayout();
+            this.panel1.SuspendLayout();
             this.panLog.SuspendLayout();
             this.SuspendLayout();
             // 
             // panSettings
             // 
-            this.panSettings.Controls.Add(this.cbxRemoveMissedArchives);
-            this.panSettings.Controls.Add(this.cbxRemoveDeleted);
-            this.panSettings.Controls.Add(this.cbxRemoveForeign);
-            this.panSettings.Controls.Add(this.btnNoneGenres);
-            this.panSettings.Controls.Add(this.btnAllGenres);
-            this.panSettings.Controls.Add(this.lblGenres);
             this.panSettings.Controls.Add(this.clsGenres);
-            this.panSettings.Controls.Add(this.btnBrowse);
-            this.panSettings.Controls.Add(this.txtDatabase);
-            this.panSettings.Controls.Add(this.btnStart);
-            this.panSettings.Controls.Add(this.lblDBPath);
+            this.panSettings.Controls.Add(this.panel2);
+            this.panSettings.Controls.Add(this.panel1);
             this.panSettings.Dock = System.Windows.Forms.DockStyle.Left;
             this.panSettings.Location = new System.Drawing.Point(0, 0);
             this.panSettings.Name = "panSettings";
-            this.panSettings.Size = new System.Drawing.Size(301, 362);
+            this.panSettings.Size = new System.Drawing.Size(239, 362);
             this.panSettings.TabIndex = 0;
             // 
-            // cbxRemoveDeleted
+            // clsGenres
             // 
-            this.cbxRemoveDeleted.AutoSize = true;
-            this.cbxRemoveDeleted.Checked = true;
-            this.cbxRemoveDeleted.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.cbxRemoveDeleted.Location = new System.Drawing.Point(12, 330);
-            this.cbxRemoveDeleted.Name = "cbxRemoveDeleted";
-            this.cbxRemoveDeleted.Size = new System.Drawing.Size(104, 17);
-            this.cbxRemoveDeleted.TabIndex = 9;
-            this.cbxRemoveDeleted.Text = "Remove deleted";
-            this.cbxRemoveDeleted.UseVisualStyleBackColor = true;
+            this.clsGenres.CheckOnClick = true;
+            this.clsGenres.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.clsGenres.FormattingEnabled = true;
+            this.clsGenres.Items.AddRange(new object[] {
+            "firest",
+            "second",
+            "last"});
+            this.clsGenres.Location = new System.Drawing.Point(0, 77);
+            this.clsGenres.Name = "clsGenres";
+            this.clsGenres.Size = new System.Drawing.Size(239, 214);
+            this.clsGenres.TabIndex = 4;
             // 
-            // cbxRemoveForeign
+            // panel2
             // 
-            this.cbxRemoveForeign.AutoSize = true;
-            this.cbxRemoveForeign.Checked = true;
-            this.cbxRemoveForeign.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.cbxRemoveForeign.Location = new System.Drawing.Point(12, 307);
-            this.cbxRemoveForeign.Name = "cbxRemoveForeign";
-            this.cbxRemoveForeign.Size = new System.Drawing.Size(133, 17);
-            this.cbxRemoveForeign.TabIndex = 8;
-            this.cbxRemoveForeign.Text = "Remove foreign books";
-            this.cbxRemoveForeign.UseVisualStyleBackColor = true;
+            this.panel2.Controls.Add(this.lblDBPath);
+            this.panel2.Controls.Add(this.txtDatabase);
+            this.panel2.Controls.Add(this.btnNoneGenres);
+            this.panel2.Controls.Add(this.btnBrowse);
+            this.panel2.Controls.Add(this.btnAllGenres);
+            this.panel2.Controls.Add(this.lblGenres);
+            this.panel2.Dock = System.Windows.Forms.DockStyle.Top;
+            this.panel2.Location = new System.Drawing.Point(0, 0);
+            this.panel2.Name = "panel2";
+            this.panel2.Size = new System.Drawing.Size(239, 77);
+            this.panel2.TabIndex = 12;
+            // 
+            // lblDBPath
+            // 
+            this.lblDBPath.AutoSize = true;
+            this.lblDBPath.Location = new System.Drawing.Point(9, 0);
+            this.lblDBPath.Name = "lblDBPath";
+            this.lblDBPath.Size = new System.Drawing.Size(53, 13);
+            this.lblDBPath.TabIndex = 0;
+            this.lblDBPath.Text = "Database";
+            // 
+            // txtDatabase
+            // 
+            this.txtDatabase.Location = new System.Drawing.Point(10, 21);
+            this.txtDatabase.Name = "txtDatabase";
+            this.txtDatabase.Size = new System.Drawing.Size(200, 20);
+            this.txtDatabase.TabIndex = 2;
             // 
             // btnNoneGenres
             // 
-            this.btnNoneGenres.Location = new System.Drawing.Point(115, 62);
+            this.btnNoneGenres.Location = new System.Drawing.Point(111, 47);
             this.btnNoneGenres.Name = "btnNoneGenres";
             this.btnNoneGenres.Size = new System.Drawing.Size(49, 23);
             this.btnNoneGenres.TabIndex = 7;
@@ -100,9 +117,19 @@
             this.btnNoneGenres.UseVisualStyleBackColor = true;
             this.btnNoneGenres.Click += new System.EventHandler(this.btnNoneGenres_Click);
             // 
+            // btnBrowse
+            // 
+            this.btnBrowse.Location = new System.Drawing.Point(213, 18);
+            this.btnBrowse.Name = "btnBrowse";
+            this.btnBrowse.Size = new System.Drawing.Size(23, 23);
+            this.btnBrowse.TabIndex = 3;
+            this.btnBrowse.Text = "...";
+            this.btnBrowse.UseVisualStyleBackColor = true;
+            this.btnBrowse.Click += new System.EventHandler(this.btnBrowse_Click);
+            // 
             // btnAllGenres
             // 
-            this.btnAllGenres.Location = new System.Drawing.Point(60, 62);
+            this.btnAllGenres.Location = new System.Drawing.Point(56, 47);
             this.btnAllGenres.Name = "btnAllGenres";
             this.btnAllGenres.Size = new System.Drawing.Size(49, 23);
             this.btnAllGenres.TabIndex = 6;
@@ -113,48 +140,52 @@
             // lblGenres
             // 
             this.lblGenres.AutoSize = true;
-            this.lblGenres.Location = new System.Drawing.Point(13, 69);
+            this.lblGenres.Location = new System.Drawing.Point(9, 54);
             this.lblGenres.Name = "lblGenres";
             this.lblGenres.Size = new System.Drawing.Size(41, 13);
             this.lblGenres.TabIndex = 5;
             this.lblGenres.Text = "Genres";
             // 
-            // clsGenres
+            // panel1
             // 
-            this.clsGenres.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.clsGenres.CheckOnClick = true;
-            this.clsGenres.FormattingEnabled = true;
-            this.clsGenres.Items.AddRange(new object[] {
-            "firest",
-            "second",
-            "last"});
-            this.clsGenres.Location = new System.Drawing.Point(3, 85);
-            this.clsGenres.Name = "clsGenres";
-            this.clsGenres.Size = new System.Drawing.Size(283, 214);
-            this.clsGenres.TabIndex = 4;
+            this.panel1.Controls.Add(this.btnAnalyze);
+            this.panel1.Controls.Add(this.cbxRemoveForeign);
+            this.panel1.Controls.Add(this.cbxRemoveMissedArchives);
+            this.panel1.Controls.Add(this.btnStart);
+            this.panel1.Controls.Add(this.cbxRemoveDeleted);
+            this.panel1.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.panel1.Location = new System.Drawing.Point(0, 291);
+            this.panel1.Name = "panel1";
+            this.panel1.Size = new System.Drawing.Size(239, 71);
+            this.panel1.TabIndex = 11;
             // 
-            // btnBrowse
+            // cbxRemoveForeign
             // 
-            this.btnBrowse.Location = new System.Drawing.Point(272, 33);
-            this.btnBrowse.Name = "btnBrowse";
-            this.btnBrowse.Size = new System.Drawing.Size(23, 23);
-            this.btnBrowse.TabIndex = 3;
-            this.btnBrowse.Text = "...";
-            this.btnBrowse.UseVisualStyleBackColor = true;
-            this.btnBrowse.Click += new System.EventHandler(this.btnBrowse_Click);
+            this.cbxRemoveForeign.AutoSize = true;
+            this.cbxRemoveForeign.Checked = true;
+            this.cbxRemoveForeign.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.cbxRemoveForeign.Location = new System.Drawing.Point(3, 3);
+            this.cbxRemoveForeign.Name = "cbxRemoveForeign";
+            this.cbxRemoveForeign.Size = new System.Drawing.Size(133, 17);
+            this.cbxRemoveForeign.TabIndex = 8;
+            this.cbxRemoveForeign.Text = "Remove foreign books";
+            this.cbxRemoveForeign.UseVisualStyleBackColor = true;
             // 
-            // txtDatabase
+            // cbxRemoveMissedArchives
             // 
-            this.txtDatabase.Location = new System.Drawing.Point(14, 36);
-            this.txtDatabase.Name = "txtDatabase";
-            this.txtDatabase.Size = new System.Drawing.Size(252, 20);
-            this.txtDatabase.TabIndex = 2;
+            this.cbxRemoveMissedArchives.AutoSize = true;
+            this.cbxRemoveMissedArchives.Checked = true;
+            this.cbxRemoveMissedArchives.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.cbxRemoveMissedArchives.Location = new System.Drawing.Point(3, 49);
+            this.cbxRemoveMissedArchives.Name = "cbxRemoveMissedArchives";
+            this.cbxRemoveMissedArchives.Size = new System.Drawing.Size(146, 17);
+            this.cbxRemoveMissedArchives.TabIndex = 10;
+            this.cbxRemoveMissedArchives.Text = "Remove Missed Archives";
+            this.cbxRemoveMissedArchives.UseVisualStyleBackColor = true;
             // 
             // btnStart
             // 
-            this.btnStart.Location = new System.Drawing.Point(220, 327);
+            this.btnStart.Location = new System.Drawing.Point(155, 42);
             this.btnStart.Name = "btnStart";
             this.btnStart.Size = new System.Drawing.Size(75, 23);
             this.btnStart.TabIndex = 1;
@@ -162,22 +193,25 @@
             this.btnStart.UseVisualStyleBackColor = true;
             this.btnStart.Click += new System.EventHandler(this.btnStart_Click);
             // 
-            // lblDBPath
+            // cbxRemoveDeleted
             // 
-            this.lblDBPath.AutoSize = true;
-            this.lblDBPath.Location = new System.Drawing.Point(13, 15);
-            this.lblDBPath.Name = "lblDBPath";
-            this.lblDBPath.Size = new System.Drawing.Size(53, 13);
-            this.lblDBPath.TabIndex = 0;
-            this.lblDBPath.Text = "Database";
+            this.cbxRemoveDeleted.AutoSize = true;
+            this.cbxRemoveDeleted.Checked = true;
+            this.cbxRemoveDeleted.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.cbxRemoveDeleted.Location = new System.Drawing.Point(3, 26);
+            this.cbxRemoveDeleted.Name = "cbxRemoveDeleted";
+            this.cbxRemoveDeleted.Size = new System.Drawing.Size(104, 17);
+            this.cbxRemoveDeleted.TabIndex = 9;
+            this.cbxRemoveDeleted.Text = "Remove deleted";
+            this.cbxRemoveDeleted.UseVisualStyleBackColor = true;
             // 
             // panLog
             // 
             this.panLog.Controls.Add(this.txtLog);
             this.panLog.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.panLog.Location = new System.Drawing.Point(301, 0);
+            this.panLog.Location = new System.Drawing.Point(239, 0);
             this.panLog.Name = "panLog";
-            this.panLog.Size = new System.Drawing.Size(483, 362);
+            this.panLog.Size = new System.Drawing.Size(545, 362);
             this.panLog.TabIndex = 1;
             // 
             // txtLog
@@ -188,21 +222,19 @@
             this.txtLog.Location = new System.Drawing.Point(0, 0);
             this.txtLog.Name = "txtLog";
             this.txtLog.ReadOnly = true;
-            this.txtLog.Size = new System.Drawing.Size(483, 362);
+            this.txtLog.Size = new System.Drawing.Size(545, 362);
             this.txtLog.TabIndex = 0;
             this.txtLog.Text = "";
             // 
-            // cbxRemoveMissedArchives
+            // btnAnalyze
             // 
-            this.cbxRemoveMissedArchives.AutoSize = true;
-            this.cbxRemoveMissedArchives.Checked = true;
-            this.cbxRemoveMissedArchives.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.cbxRemoveMissedArchives.Location = new System.Drawing.Point(151, 307);
-            this.cbxRemoveMissedArchives.Name = "cbxRemoveMissedArchives";
-            this.cbxRemoveMissedArchives.Size = new System.Drawing.Size(146, 17);
-            this.cbxRemoveMissedArchives.TabIndex = 10;
-            this.cbxRemoveMissedArchives.Text = "Remove Missed Archives";
-            this.cbxRemoveMissedArchives.UseVisualStyleBackColor = true;
+            this.btnAnalyze.Location = new System.Drawing.Point(155, 13);
+            this.btnAnalyze.Name = "btnAnalyze";
+            this.btnAnalyze.Size = new System.Drawing.Size(75, 23);
+            this.btnAnalyze.TabIndex = 11;
+            this.btnAnalyze.Text = "Analyze";
+            this.btnAnalyze.UseVisualStyleBackColor = true;
+            this.btnAnalyze.Click += new System.EventHandler(this.btnAnalyze_Click);
             // 
             // MainForm
             // 
@@ -211,14 +243,16 @@
             this.ClientSize = new System.Drawing.Size(784, 362);
             this.Controls.Add(this.panLog);
             this.Controls.Add(this.panSettings);
-            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
-            this.MaximizeBox = false;
+            this.MinimumSize = new System.Drawing.Size(800, 300);
             this.Name = "MainForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Library Cleaner";
             this.panSettings.ResumeLayout(false);
-            this.panSettings.PerformLayout();
+            this.panel2.ResumeLayout(false);
+            this.panel2.PerformLayout();
+            this.panel1.ResumeLayout(false);
+            this.panel1.PerformLayout();
             this.panLog.ResumeLayout(false);
             this.ResumeLayout(false);
 
@@ -240,6 +274,9 @@
         private System.Windows.Forms.CheckBox cbxRemoveForeign;
         private System.Windows.Forms.CheckBox cbxRemoveDeleted;
         private System.Windows.Forms.CheckBox cbxRemoveMissedArchives;
+        private System.Windows.Forms.Panel panel2;
+        private System.Windows.Forms.Panel panel1;
+        private System.Windows.Forms.Button btnAnalyze;
     }
 }
 

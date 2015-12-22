@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 using LibCleaner;
@@ -14,7 +15,7 @@ namespace LibraryCleaner
             InitializeComponent();
         
             _cleaner = new Cleaner(null);
-            _cleaner.OnStateChanged += s => AddToLog(s);
+            _cleaner.OnStateChanged += (s, state) => AddToLog(s, state);
 
             clsGenres.Items.Clear();
             var genres = GenresListContainer.GetDefaultItems();
@@ -30,17 +31,31 @@ namespace LibraryCleaner
 
         #region GUI helper methods
 
-        private void AddToLog(string message, bool newLine = true)
+        private void AddToLog(string message, Cleaner.StateKind state, bool newLine = true)
         {
             if (InvokeRequired)
             {
-                Invoke(new Action<string, bool>(AddToLog), new object[] { message, newLine });
+                Invoke(new Action<string, Cleaner.StateKind, bool>(AddToLog), new object[] { message, state, newLine });
                 return;
             }
 
             if (newLine)
                 message += "\n";
-            txtLog.AppendLine(message, txtLog.ForeColor);
+            switch (state)
+            {
+                case Cleaner.StateKind.Error:
+                    txtLog.AppendLine(message, Color.Red);
+                    break;
+                case Cleaner.StateKind.Warning:
+                    txtLog.AppendLine(message, Color.Orange);
+                    break;
+                case Cleaner.StateKind.Message:
+                    txtLog.AppendLine(message, Color.LimeGreen);
+                    break;
+                default:
+                    txtLog.AppendLine(message, txtLog.ForeColor);
+                    break;
+            }
             txtLog.ScrollToCaret();
             Application.DoEvents();
         }
@@ -66,9 +81,10 @@ namespace LibraryCleaner
 
         #endregion GUI helper methods
 
-        private void btnStart_Click(object sender, EventArgs e)
+        private void ProcessCleanupTasks(bool analyzeOnly)
         {
             var startedTime = DateTime.Now;
+            btnAnalyze.Enabled = false;
             btnStart.Enabled = false;
             Cursor = Cursors.WaitCursor;
             try
@@ -83,18 +99,18 @@ namespace LibraryCleaner
 
                 if (!_cleaner.CheckParameters())
                 {
-                    AddToLog("Please check input parameters and start again!");
+                    AddToLog("Please check input parameters and start again!", Cleaner.StateKind.Warning);
                     return;
                 }
 
                 _cleaner.PrepareStatistics(() =>
                 {
-                    if (MessageBox.Show("Start database cleaning?", "Confirmation", MessageBoxButtons.YesNo,
+                    if (!analyzeOnly && MessageBox.Show("Start database cleaning?", "Confirmation", MessageBoxButtons.YesNo,
                             MessageBoxIcon.Question) == DialogResult.Yes)
                     {
                         _cleaner.Start(() =>
                         {
-                            AddToLog("Finished!");
+                            AddToLog("Finished!", Cleaner.StateKind.Log);
                             SetFinishedState(startedTime);
                         });
                     }
@@ -104,9 +120,19 @@ namespace LibraryCleaner
             }
             catch (Exception ex)
             {
-                AddToLog(ex.Message);
+                AddToLog(ex.Message, Cleaner.StateKind.Error);
                 SetFinishedState(startedTime);
             }
+        }
+
+        private void btnAnalyze_Click(object sender, EventArgs e)
+        {
+            ProcessCleanupTasks(true);
+        }
+
+        private void btnStart_Click(object sender, EventArgs e)
+        {
+            ProcessCleanupTasks(false);
         }
 
         private void SetFinishedState(DateTime startedTime)
@@ -117,7 +143,8 @@ namespace LibraryCleaner
                 return;
             }
             var timeWasted = DateTime.Now - startedTime;
-            AddToLog(string.Format("Time wasted: {0:G}", timeWasted));
+            AddToLog(string.Format("Time wasted: {0:G}", timeWasted), Cleaner.StateKind.Log);
+            btnAnalyze.Enabled = true;
             btnStart.Enabled = true;
             Cursor = Cursors.Default;
         }
