@@ -38,7 +38,7 @@ namespace LibCleaner
             }
 
             var cleaner = new Cleaner(archivesPath) {DatabasePath = databasePath};
-            cleaner.OnStateChanged += Console.WriteLine;
+            cleaner.OnStateChanged += (s, kind) => Console.WriteLine(s);
             
             if (!cleaner.CheckParameters())
             {
