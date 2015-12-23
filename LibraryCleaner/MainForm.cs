@@ -95,7 +95,7 @@ namespace LibraryCleaner
                 _cleaner.DatabasePath = txtDatabase.Text;
                 _cleaner.RemoveForeign = cbxRemoveForeign.Checked;
                 _cleaner.RemoveDeleted = cbxRemoveDeleted.Checked;
-                _cleaner.RemoveMissingArchivesFromDb = cbxRemoveMissedArchives.Checked;
+                _cleaner.RemoveMissingArchivesFromDb = !analyzeOnly && cbxRemoveMissedArchives.Checked;
 
                 if (!_cleaner.CheckParameters())
                 {
