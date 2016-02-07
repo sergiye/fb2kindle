@@ -464,30 +464,42 @@ namespace Fb2Kindle
             if (!string.IsNullOrWhiteSpace(MailTo))
             {
                 //send book to email
-                Console.WriteLine("Sending converted book to email: {0}...", MailTo);
+                Console.Write("Sending converted book to email: {0}...", MailTo);
                 try
                 {
-                    var smtp = new SmtpClient
+                    using (var smtp = new SmtpClient
                     {
                         Host = "smtp.mailgun.org",
                         Port = 587,
                         EnableSsl = true,
                         DeliveryMethod = SmtpDeliveryMethod.Network,
                         UseDefaultCredentials = false,
-                        Credentials = new NetworkCredential("postmaster@sandbox9bf1b495570048b9b31dabddddbccadf.mailgun.org", "2851987cc3314263118267b62744f3fc")
-                    };
-                    var message = new MailMessage(new MailAddress("simpl@Fb2Kindle.org", "Simpl's converter"), new MailAddress(MailTo));
-                    message.Subject = "Simpl's converter book";
-                    message.Body = "Hello! Please, check book(s) attached";
-                    message.Attachments.Add(new Attachment(tmpBookPath));
-                    smtp.Send(message);
-                    Console.WriteLine("Email sending finished");
+                        Credentials =
+                            new NetworkCredential("postmaster@sandbox9bf1b495570048b9b31dabddddbccadf.mailgun.org",
+                                "2851987cc3314263118267b62744f3fc")
+                    })
+                    {
+                        using (
+                            var message = new MailMessage(new MailAddress("simpl@Fb2Kindle.org", "Simpl's converter"),
+                                new MailAddress(MailTo))
+                            {
+                                Subject = "Simpl's converter book",
+                                Body = "Hello! Please, check book(s) attached"
+                            })
+                        {
+                            using (var att = new Attachment(tmpBookPath))
+                            {
+                                message.Attachments.Add(att);
+                                smtp.Send(message);
+                            }
+                        }
+                    }
+                    Console.WriteLine("OK");
                     saveLocal = false;
-                    File.Delete(tmpBookPath);
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine("Email sending finished with error: {0}", ex.Message);
+                    Console.WriteLine("Error: {0}", ex.Message);
                 }
             }
             if (saveLocal)
@@ -502,6 +514,10 @@ namespace Fb2Kindle
                     versionNumber++;
                 }
                 File.Move(tmpBookPath, string.Format("{0}\\{1}.mobi", resultPath, resultName));
+            }
+            else
+            {
+                File.Move(tmpBookPath, "NUL");
             }
             if (!showOutput)
                 Console.WriteLine("(OK)");
