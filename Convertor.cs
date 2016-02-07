@@ -464,7 +464,7 @@ namespace Fb2Kindle
             if (!string.IsNullOrWhiteSpace(MailTo))
             {
                 //send book to email
-                Console.Write("Sending converted book to email: {0}...", MailTo);
+                Console.Write("Sending to {0}...", MailTo);
                 try
                 {
                     using (var smtp = new SmtpClient
@@ -483,7 +483,7 @@ namespace Fb2Kindle
                             var message = new MailMessage(new MailAddress("simpl@Fb2Kindle.org", "Simpl's converter"),
                                 new MailAddress(MailTo))
                             {
-                                Subject = "Simpl's converter book",
+                                Subject = bookName,
                                 Body = "Hello! Please, check book(s) attached"
                             })
                         {
