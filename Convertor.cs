@@ -5,6 +5,8 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Net.Mail;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Xml;
@@ -35,6 +37,8 @@ namespace Fb2Kindle
         private readonly DefaultOptions _currentSettings;
 
         #region public
+
+        public string MailTo { get; set; }
 
         internal Convertor(DefaultOptions currentSettings, string css, bool detailedOutput = true, bool addGuideLine = false)
         {
@@ -430,7 +434,7 @@ namespace Fb2Kindle
             }
         }
 
-        private static bool CreateMobi(string workFolder, string tempDir, string bookName, string bookPath, bool compress, bool showOutput)
+        private bool CreateMobi(string workFolder, string tempDir, string bookName, string bookPath, bool compress, bool showOutput)
         {
             Console.WriteLine("Creating mobi (KF8)...");
             var kindleGenPath = string.Format("{0}\\kindlegen.exe", workFolder);
@@ -454,16 +458,51 @@ namespace Fb2Kindle
                 Console.WriteLine("Error converting to mobi");
                 return false;
             }
-            
-            var versionNumber = 1;
-            var resultPath = Path.GetDirectoryName(bookPath);
-            var resultName = bookName;
-            while (File.Exists(string.Format("{0}\\{1}.mobi", resultPath, resultName)))
+
+            var saveLocal = true;
+            var tmpBookPath = string.Format("{0}\\{1}.mobi", tempDir, bookName);
+            if (!string.IsNullOrWhiteSpace(MailTo))
             {
-                resultName = bookName + "(v" + versionNumber + ")";
-                versionNumber++;
+                //send book to email
+                Console.WriteLine("Sending converted book to email: {0}...", MailTo);
+                try
+                {
+                    var smtp = new SmtpClient
+                    {
+                        Host = "smtp.mailgun.org",
+                        Port = 587,
+                        EnableSsl = true,
+                        DeliveryMethod = SmtpDeliveryMethod.Network,
+                        UseDefaultCredentials = false,
+                        Credentials = new NetworkCredential("postmaster@sandbox9bf1b495570048b9b31dabddddbccadf.mailgun.org", "2851987cc3314263118267b62744f3fc")
+                    };
+                    var message = new MailMessage(new MailAddress("simpl@Fb2Kindle.org", "Simpl's converter"), new MailAddress(MailTo));
+                    message.Subject = "Simpl's converter book";
+                    message.Body = "Hello! Please, check book(s) attached";
+                    message.Attachments.Add(new Attachment(tmpBookPath));
+                    smtp.Send(message);
+                    Console.WriteLine("Email sending finished");
+                    saveLocal = false;
+                    File.Delete(tmpBookPath);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Email sending finished with error: {0}", ex.Message);
+                }
             }
-            File.Move(string.Format("{0}\\{1}.mobi", tempDir, bookName), string.Format("{0}\\{1}.mobi", resultPath, resultName));
+            if (saveLocal)
+            {
+                //save to output folder
+                var versionNumber = 1;
+                var resultPath = Path.GetDirectoryName(bookPath);
+                var resultName = bookName;
+                while (File.Exists(string.Format("{0}\\{1}.mobi", resultPath, resultName)))
+                {
+                    resultName = bookName + "(v" + versionNumber + ")";
+                    versionNumber++;
+                }
+                File.Move(tmpBookPath, string.Format("{0}\\{1}.mobi", resultPath, resultName));
+            }
             if (!showOutput)
                 Console.WriteLine("(OK)");
             return true;

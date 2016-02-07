@@ -12,7 +12,7 @@ namespace Fb2Kindle
         private static void ShowHelpText(Assembly asm)
         {
             Console.WriteLine();
-            Console.WriteLine(asm.GetName().Name + " <path> [-css <styles.css>] [-d] [-ni]");
+            Console.WriteLine(asm.GetName().Name + " <path> [-css <styles.css>] [-d] [-ni] [-mailto:recipient@mail.org]");
             Console.WriteLine();
             Console.WriteLine("<path>: input fb2 file or files mask (ex: *.fb2) or path to *fb2 files");
             Console.WriteLine("-css <styles.css>: styles used in destination book");
@@ -23,10 +23,14 @@ namespace Fb2Kindle
             Console.WriteLine("-ni: no images");
             Console.WriteLine("-ntoc: no table of content");
             Console.WriteLine("-nch: no chapters");
-            Console.WriteLine("-save: save parameters to be used at the next start");
+
+            Console.WriteLine("-mailto: - send document to email (kindle delivery)");
+
             Console.WriteLine("-a: all fb2 books in app folder");
             Console.WriteLine("-r: process files in subfolders (work with -a key)");
             Console.WriteLine("-j: join files from each folder to the single book");
+
+            Console.WriteLine("-save: save parameters to be used at the next start");
             Console.WriteLine("-w: wait for key press on finish");
             Console.WriteLine();
         }
@@ -64,6 +68,7 @@ namespace Fb2Kindle
                 var currentSettings = Util.ReadObjectFromFile<DefaultOptions>(settingsFile) ?? new DefaultOptions();
                 var bookPath = string.Empty;
                 string cssStyles = null;
+                string mailTo = null;
 
                 if (args.Length == 0)
                 {
@@ -99,26 +104,6 @@ namespace Fb2Kindle
                             case "-d":
                                 currentSettings.d = true;
                                 break;
-                            case "-css":
-                                if (args.Length > (j + 1))
-                                {
-                                    var cssFile = args[j + 1];
-                                    if (!File.Exists(cssFile))
-                                        cssFile = appPath + "\\" + cssFile;
-                                    if (!File.Exists(cssFile))
-                                    {
-                                        Console.WriteLine("css styles file not found");
-                                        return;
-                                    }
-                                    cssStyles = File.ReadAllText(cssFile, Encoding.UTF8);
-                                    if (String.IsNullOrEmpty(cssStyles))
-                                    {
-                                        Console.WriteLine("css styles file is empty");
-                                        return;
-                                    }
-                                    j++;
-                                }
-                                break;
                             case "-save":
                                 save = true;
                                 break;
@@ -140,10 +125,34 @@ namespace Fb2Kindle
                             case "-nc":
                                 debug = true;
                                 break;
+                            case "-css":
+                                if (args.Length > (j + 1))
+                                {
+                                    var cssFile = args[j + 1];
+                                    if (!File.Exists(cssFile))
+                                        cssFile = appPath + "\\" + cssFile;
+                                    if (!File.Exists(cssFile))
+                                    {
+                                        Console.WriteLine("css styles file not found");
+                                        return;
+                                    }
+                                    cssStyles = File.ReadAllText(cssFile, Encoding.UTF8);
+                                    if (String.IsNullOrEmpty(cssStyles))
+                                    {
+                                        Console.WriteLine("css styles file is empty");
+                                        return;
+                                    }
+                                    j++;
+                                }
+                                break;
                             default:
                                 if (j == 0)
                                     bookPath = args[j];
                                 break;
+                        }
+                        if (args[j].StartsWith("-mailto:"))
+                        {
+                            mailTo = args[j].Split(':')[1];
                         }
                     }
                 }
@@ -162,7 +171,7 @@ namespace Fb2Kindle
                     bookPath = Path.GetFileName(bookPath);
                 if (string.IsNullOrEmpty(bookPath))
                     bookPath = allBooksPattern;
-                var conv = new Convertor(currentSettings, cssStyles, detailedOutput);
+                var conv = new Convertor(currentSettings, cssStyles, detailedOutput) { MailTo = mailTo };
                 ProcessFolder(conv, workPath, bookPath, recursive, join, debug);
             }
             catch (Exception ex)
