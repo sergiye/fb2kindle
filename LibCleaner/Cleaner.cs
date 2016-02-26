@@ -412,17 +412,16 @@ namespace LibCleaner
                     }
                 }
 
+                if (!string.IsNullOrWhiteSpace(ArchivesOutputPath))
+                {
+                    SqlHelper.ExecuteNonQuery(string.Format("update params set text='{0}' where id=9", ArchivesOutputPath));
+                }
+            
                 if (!removeFromDb) return;
                 idsToRemove = idsToRemove.TrimEnd(',');
                 SqlHelper.ExecuteNonQuery(string.Format("delete from archives where id in ({0})", idsToRemove));
                 SqlHelper.ExecuteNonQuery(string.Format("delete from files where id_archive in ({0})", idsToRemove));
                 //SqlHelper.ExecuteNonQuery("delete from files where id_archive not in (select id from archives)");
-
-                if (!string.IsNullOrWhiteSpace(ArchivesOutputPath))
-                {
-                    SqlHelper.ProcessUpdate("params", new[] {new SqlHelper.QueryParameter("text", ArchivesOutputPath)}, "id=9");
-                    //SqlHelper.ExecuteNonQuery(string.Format("update params set text={0} where id=9", ArchivesOutputPath));
-                }
             }
         }
     }

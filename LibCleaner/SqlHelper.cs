@@ -1,9 +1,7 @@
 using System;
-using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Data.SQLite;
-using System.Text;
 
 namespace LibCleaner
 {
@@ -45,11 +43,6 @@ namespace LibCleaner
             return command.Parameters.AddWithValue(parameterName, parameter);
         }
 
-        protected static void AddSqlCondition(StringBuilder strSQL, bool addWhere)
-        {
-            strSQL.Append(addWhere ? " WHERE " : " and ");
-        }
-
         #region Common methods
 
         public static void ExecuteNonQuery(string sqlString)
@@ -59,108 +52,6 @@ namespace LibCleaner
                 using (var cmd = GetCommand(sqlString, cn))
                     cmd.ExecuteNonQuery();
             }
-        }
-
-        public static long ProcessInsert(string tableName, List<QueryParameter> values)
-        {
-            return ProcessInsert(tableName, values.ToArray());
-        }
-
-        public static long ProcessInsert(string tableName, QueryParameter[] values)
-        {
-            if (values == null || string.IsNullOrEmpty(tableName))
-                return -1;
-            using (IDbConnection cn = GetConnection())
-            {
-                var stringBuilder = new StringBuilder();
-                stringBuilder.AppendFormat("INSERT INTO {0} (", tableName);
-                for (var i = 0; i < values.Length; i++)
-                {
-                    if (i != 0)
-                        stringBuilder.Append(", ");
-                    stringBuilder.Append(values[i].Name);
-                }
-                stringBuilder.Append(") VALUES (");
-                for (var i = 0; i < values.Length; i++)
-                {
-                    if (i != 0)
-                        stringBuilder.Append(", ");
-                    stringBuilder.AppendFormat("@{0}", values[i].Name);
-                }
-                stringBuilder.Append(")");
-                using (var cmd = GetCommand(stringBuilder.ToString(), cn))
-                {
-                    for (var i = 0; i < values.Length; i++)
-                        AddParameterToCommand(cmd, string.Format("@{0}", values[i].Name), values[i].Value);
-                    cmd.ExecuteNonQuery();
-                }
-                return -1;
-            }
-        }
-
-        public static bool ProcessUpdate(string tableName, List<QueryParameter> values, string whereCondition)
-        {
-            return ProcessUpdate(tableName, values.ToArray(), whereCondition);
-        }
-
-        public static bool ProcessUpdate(string tableName, QueryParameter[] values, string whereCondition)
-        {
-            if (values == null || string.IsNullOrEmpty(tableName))
-                return false;
-            using (IDbConnection cn = GetConnection())
-            {
-                var stringBuilder = new StringBuilder();
-                stringBuilder.Append(string.Format("UPDATE {0} SET ", tableName));
-                for (var i = 0; i < values.Length; i++)
-                {
-                    if (i != 0)
-                        stringBuilder.Append(", ");
-                    stringBuilder.AppendFormat("{1}.{0}=@{0}", values[i].Name, tableName);
-                }
-                stringBuilder.AppendFormat(" WHERE {0}", whereCondition);
-                using (var cmd = GetCommand(stringBuilder.ToString(), cn))
-                {
-                    for (var i = 0; i < values.Length; i++)
-                        AddParameterToCommand(cmd, string.Format("@{0}", values[i].Name), values[i].Value);
-                    cmd.ExecuteNonQuery();
-                }
-            }
-            return true;
-        }
-
-        public static bool ProcessUpdate(string tableName, QueryParameter[] values, string whereCondition, string connectionString)
-        {
-            if (values == null || string.IsNullOrEmpty(tableName))
-                return false;
-            using (IDbConnection cn = GetConnection())
-            {
-                var stringBuilder = new StringBuilder();
-                stringBuilder.Append(string.Format("UPDATE {0} SET ", tableName));
-                for (var i = 0; i < values.Length; i++)
-                {
-                    if (i != 0)
-                        stringBuilder.Append(", ");
-                    stringBuilder.AppendFormat("{1}.{0}=@{0}", values[i].Name, tableName);
-                }
-                stringBuilder.AppendFormat(" WHERE {0}", whereCondition);
-                using (var cmd = GetCommand(stringBuilder.ToString(), cn))
-                {
-                    for (var i = 0; i < values.Length; i++)
-                        AddParameterToCommand(cmd, string.Format("@{0}", values[i].Name), values[i].Value);
-                    cmd.ExecuteNonQuery();
-                }
-            }
-            return true;
-        }
-
-        public static void DeleteRecordByID(string tableName, long id, string idField)
-        {
-            ExecuteNonQuery(string.Format("DELETE FROM {0} WHERE ({1}={2})", tableName, idField, id));
-        }
-
-        public static void DeleteRecordByID(string tableName, long id)
-        {
-            DeleteRecordByID(tableName, id, "ID");
         }
 
         public static object GetScalarFromQuery(string sql, QueryParameter parameters)
@@ -182,30 +73,18 @@ namespace LibCleaner
 
         #endregion Common methods
 
-        public struct QueryParameter
+        public class QueryParameter
         {
-            private string _name;
-            private object _value;
-
+            public string Name { get; set; }
+            public object Value { get; set; }
+            
             public QueryParameter(string parameterName, object parameterValue)
             {
-                _name = parameterName;
+                Name = parameterName;
                 if (parameterValue is DateTime)
-                    _value = (DateTime) parameterValue == DateTime.MinValue ? DBNull.Value : parameterValue;
+                    Value = (DateTime) parameterValue == DateTime.MinValue ? DBNull.Value : parameterValue;
                 else
-                    _value = parameterValue;
-            }
-
-            public string Name
-            {
-                get { return _name; }
-                set { _name = value; }
-            }
-
-            public object Value
-            {
-                get { return _value; }
-                set { _value = value; }
+                    Value = parameterValue;
             }
         }
     }
