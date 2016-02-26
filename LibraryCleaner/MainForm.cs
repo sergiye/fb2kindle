@@ -67,6 +67,13 @@ namespace LibraryCleaner
             txtDatabase.Text = dlg.FileName;
         }
 
+        private void btnBrowseOutput_Click(object sender, EventArgs e)
+        {
+            var dlg = new FolderBrowserDialog();
+            if (dlg.ShowDialog() != DialogResult.OK) return;
+            txtOutput.Text = dlg.SelectedPath;
+        }
+     
         private void btnAllGenres_Click(object sender, EventArgs e)
         {
             for (var i = 0; i < clsGenres.Items.Count; i++)
@@ -93,6 +100,7 @@ namespace LibraryCleaner
                 var genresToRemove = clsGenres.CheckedItems.Cast<Genres>().Select(s => s.Code).ToArray();
                 _cleaner.GenresToRemove = genresToRemove;
                 _cleaner.DatabasePath = txtDatabase.Text;
+                _cleaner.ArchivesOutputPath = txtOutput.Text;
                 _cleaner.RemoveForeign = cbxRemoveForeign.Checked;
                 _cleaner.RemoveDeleted = cbxRemoveDeleted.Checked;
                 _cleaner.RemoveMissingArchivesFromDb = !analyzeOnly && cbxRemoveMissedArchives.Checked;

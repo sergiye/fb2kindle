@@ -34,6 +34,7 @@ namespace LibCleaner
         private readonly CommonQueue<QueueTask> _internalTasks;
 
         public string ArchivesPath { get; set; }
+        public string ArchivesOutputPath { get; set; }
         public bool RemoveDeleted { get; set; }
         public bool RemoveForeign { get; set; }
         public bool RemoveMissingArchivesFromDb { get; set; }
@@ -160,6 +161,9 @@ namespace LibCleaner
 
         private void CalculateStats()
         {
+            if (!string.IsNullOrWhiteSpace(ArchivesOutputPath))
+                Directory.CreateDirectory(ArchivesOutputPath);
+
             _filesData = new Dictionary<string, List<BookInfo>>();
             UpdateState(string.Format("Loading DB: '{0}' archives: '{1}' ...", SqlHelper.DataBasePath, ArchivesPath), StateKind.Log);
             UpdateArchivesOnDisk(RemoveMissingArchivesFromDb);
@@ -273,7 +277,7 @@ namespace LibCleaner
             var totalRemoved = 0;
             foreach (var item in _filesData)
             {
-                var archPath = string.Format("{1}\\{0}", item.Key, ArchivesPath);
+                var archPath = string.Format("{0}\\{1}", ArchivesPath, item.Key);
                 if (!File.Exists(archPath))
                 {
                     //UpdateState("File '{0}' not found", archPath);
@@ -297,9 +301,14 @@ namespace LibCleaner
                     }
                     UpdateState(string.Format("Removed {0} files", removedCount), StateKind.Message);
                     if (removedCount <= 0) continue;
-                    UpdateState("Saving archive...", StateKind.Log);
+
+                    var outputFile = string.IsNullOrWhiteSpace(ArchivesOutputPath)
+                        ? archPath
+                        : string.Format("{0}\\{1}", ArchivesOutputPath, item.Key);
+                    UpdateState(string.Format("Saving archive {0}", outputFile), StateKind.Log);
+
                     zip.CompressionLevel = CompressionLevel.BestCompression;
-                    zip.Save();
+                    zip.Save(outputFile);
                     UpdateState("Done", StateKind.Log);
                 }
                 totalRemoved += removedCount;
@@ -408,6 +417,12 @@ namespace LibCleaner
                 SqlHelper.ExecuteNonQuery(string.Format("delete from archives where id in ({0})", idsToRemove));
                 SqlHelper.ExecuteNonQuery(string.Format("delete from files where id_archive in ({0})", idsToRemove));
                 //SqlHelper.ExecuteNonQuery("delete from files where id_archive not in (select id from archives)");
+
+                if (!string.IsNullOrWhiteSpace(ArchivesOutputPath))
+                {
+                    SqlHelper.ProcessUpdate("params", new[] {new SqlHelper.QueryParameter("text", ArchivesOutputPath)}, "id=9");
+                    //SqlHelper.ExecuteNonQuery(string.Format("update params set text={0} where id=9", ArchivesOutputPath));
+                }
             }
         }
     }
