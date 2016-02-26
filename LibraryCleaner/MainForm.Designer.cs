@@ -39,13 +39,16 @@
             this.btnAllGenres = new System.Windows.Forms.Button();
             this.lblGenres = new System.Windows.Forms.Label();
             this.panel1 = new System.Windows.Forms.Panel();
+            this.btnAnalyze = new System.Windows.Forms.Button();
             this.cbxRemoveForeign = new System.Windows.Forms.CheckBox();
             this.cbxRemoveMissedArchives = new System.Windows.Forms.CheckBox();
             this.btnStart = new System.Windows.Forms.Button();
             this.cbxRemoveDeleted = new System.Windows.Forms.CheckBox();
             this.panLog = new System.Windows.Forms.Panel();
             this.txtLog = new LibraryCleaner.SimplTextBox();
-            this.btnAnalyze = new System.Windows.Forms.Button();
+            this.lblOutput = new System.Windows.Forms.Label();
+            this.txtOutput = new System.Windows.Forms.TextBox();
+            this.btnBrowseOutput = new System.Windows.Forms.Button();
             this.panSettings.SuspendLayout();
             this.panel2.SuspendLayout();
             this.panel1.SuspendLayout();
@@ -72,13 +75,16 @@
             "firest",
             "second",
             "last"});
-            this.clsGenres.Location = new System.Drawing.Point(0, 77);
+            this.clsGenres.Location = new System.Drawing.Point(0, 105);
             this.clsGenres.Name = "clsGenres";
-            this.clsGenres.Size = new System.Drawing.Size(239, 214);
+            this.clsGenres.Size = new System.Drawing.Size(239, 186);
             this.clsGenres.TabIndex = 4;
             // 
             // panel2
             // 
+            this.panel2.Controls.Add(this.lblOutput);
+            this.panel2.Controls.Add(this.txtOutput);
+            this.panel2.Controls.Add(this.btnBrowseOutput);
             this.panel2.Controls.Add(this.lblDBPath);
             this.panel2.Controls.Add(this.txtDatabase);
             this.panel2.Controls.Add(this.btnNoneGenres);
@@ -88,7 +94,7 @@
             this.panel2.Dock = System.Windows.Forms.DockStyle.Top;
             this.panel2.Location = new System.Drawing.Point(0, 0);
             this.panel2.Name = "panel2";
-            this.panel2.Size = new System.Drawing.Size(239, 77);
+            this.panel2.Size = new System.Drawing.Size(239, 105);
             this.panel2.TabIndex = 12;
             // 
             // lblDBPath
@@ -102,14 +108,14 @@
             // 
             // txtDatabase
             // 
-            this.txtDatabase.Location = new System.Drawing.Point(10, 21);
+            this.txtDatabase.Location = new System.Drawing.Point(10, 17);
             this.txtDatabase.Name = "txtDatabase";
             this.txtDatabase.Size = new System.Drawing.Size(200, 20);
             this.txtDatabase.TabIndex = 2;
             // 
             // btnNoneGenres
             // 
-            this.btnNoneGenres.Location = new System.Drawing.Point(111, 47);
+            this.btnNoneGenres.Location = new System.Drawing.Point(113, 80);
             this.btnNoneGenres.Name = "btnNoneGenres";
             this.btnNoneGenres.Size = new System.Drawing.Size(49, 23);
             this.btnNoneGenres.TabIndex = 7;
@@ -119,7 +125,7 @@
             // 
             // btnBrowse
             // 
-            this.btnBrowse.Location = new System.Drawing.Point(213, 18);
+            this.btnBrowse.Location = new System.Drawing.Point(213, 14);
             this.btnBrowse.Name = "btnBrowse";
             this.btnBrowse.Size = new System.Drawing.Size(23, 23);
             this.btnBrowse.TabIndex = 3;
@@ -129,7 +135,7 @@
             // 
             // btnAllGenres
             // 
-            this.btnAllGenres.Location = new System.Drawing.Point(56, 47);
+            this.btnAllGenres.Location = new System.Drawing.Point(58, 80);
             this.btnAllGenres.Name = "btnAllGenres";
             this.btnAllGenres.Size = new System.Drawing.Size(49, 23);
             this.btnAllGenres.TabIndex = 6;
@@ -140,7 +146,7 @@
             // lblGenres
             // 
             this.lblGenres.AutoSize = true;
-            this.lblGenres.Location = new System.Drawing.Point(9, 54);
+            this.lblGenres.Location = new System.Drawing.Point(11, 87);
             this.lblGenres.Name = "lblGenres";
             this.lblGenres.Size = new System.Drawing.Size(41, 13);
             this.lblGenres.TabIndex = 5;
@@ -158,6 +164,16 @@
             this.panel1.Name = "panel1";
             this.panel1.Size = new System.Drawing.Size(239, 71);
             this.panel1.TabIndex = 11;
+            // 
+            // btnAnalyze
+            // 
+            this.btnAnalyze.Location = new System.Drawing.Point(155, 13);
+            this.btnAnalyze.Name = "btnAnalyze";
+            this.btnAnalyze.Size = new System.Drawing.Size(75, 23);
+            this.btnAnalyze.TabIndex = 11;
+            this.btnAnalyze.Text = "Analyze";
+            this.btnAnalyze.UseVisualStyleBackColor = true;
+            this.btnAnalyze.Click += new System.EventHandler(this.btnAnalyze_Click);
             // 
             // cbxRemoveForeign
             // 
@@ -226,15 +242,31 @@
             this.txtLog.TabIndex = 0;
             this.txtLog.Text = "";
             // 
-            // btnAnalyze
+            // lblOutput
             // 
-            this.btnAnalyze.Location = new System.Drawing.Point(155, 13);
-            this.btnAnalyze.Name = "btnAnalyze";
-            this.btnAnalyze.Size = new System.Drawing.Size(75, 23);
-            this.btnAnalyze.TabIndex = 11;
-            this.btnAnalyze.Text = "Analyze";
-            this.btnAnalyze.UseVisualStyleBackColor = true;
-            this.btnAnalyze.Click += new System.EventHandler(this.btnAnalyze_Click);
+            this.lblOutput.AutoSize = true;
+            this.lblOutput.Location = new System.Drawing.Point(9, 41);
+            this.lblOutput.Name = "lblOutput";
+            this.lblOutput.Size = new System.Drawing.Size(152, 13);
+            this.lblOutput.TabIndex = 8;
+            this.lblOutput.Text = "Output (empty if same as input)";
+            // 
+            // txtOutput
+            // 
+            this.txtOutput.Location = new System.Drawing.Point(10, 58);
+            this.txtOutput.Name = "txtOutput";
+            this.txtOutput.Size = new System.Drawing.Size(200, 20);
+            this.txtOutput.TabIndex = 9;
+            // 
+            // btnBrowseOutput
+            // 
+            this.btnBrowseOutput.Location = new System.Drawing.Point(213, 55);
+            this.btnBrowseOutput.Name = "btnBrowseOutput";
+            this.btnBrowseOutput.Size = new System.Drawing.Size(23, 23);
+            this.btnBrowseOutput.TabIndex = 10;
+            this.btnBrowseOutput.Text = "...";
+            this.btnBrowseOutput.UseVisualStyleBackColor = true;
+            this.btnBrowseOutput.Click += new System.EventHandler(this.btnBrowseOutput_Click);
             // 
             // MainForm
             // 
@@ -277,6 +309,9 @@
         private System.Windows.Forms.Panel panel2;
         private System.Windows.Forms.Panel panel1;
         private System.Windows.Forms.Button btnAnalyze;
+        private System.Windows.Forms.Label lblOutput;
+        private System.Windows.Forms.TextBox txtOutput;
+        private System.Windows.Forms.Button btnBrowseOutput;
     }
 }
 
