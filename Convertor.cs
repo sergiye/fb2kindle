@@ -47,7 +47,7 @@ namespace Fb2Kindle
             _addGuideLine = addGuideLine;
             _detailedOutput = detailedOutput;
             _defaultCss = css;
-            if (String.IsNullOrEmpty(_defaultCss))
+            if (string.IsNullOrEmpty(_defaultCss))
                 _defaultCss = Util.GetScriptFromResource("defstyles.css");
         }
 
@@ -106,7 +106,7 @@ namespace Fb2Kindle
                             if (!coverDone)
                             {
                                 var imgSrc = Util.AttributeValue(book.Elements("description").Elements("title-info").Elements("coverpage").Elements("div").Elements("img"), "src");
-                                if (!String.IsNullOrEmpty(imgSrc))
+                                if (!string.IsNullOrEmpty(imgSrc))
                                 {
                                     _opfFile.Elements("metadata").First().Elements("dc-metadata").First().Elements("x-metadata").First().Add(new XElement("EmbeddedCover", imgSrc));
                                     AddGuideItem("Cover", imgSrc, "cover");
@@ -176,7 +176,7 @@ namespace Fb2Kindle
                 {
                     var src = element.Attribute("href").Value;
                     element.RemoveAll();
-                    if (String.IsNullOrEmpty(src)) continue;
+                    if (string.IsNullOrEmpty(src)) continue;
                     src = src.Replace("#", "");
                     var imgEl = new XElement("img");
                     imgEl.SetAttributeValue("src", string.Format("{0}\\{1}", imagesFolder, src));
@@ -233,14 +233,14 @@ namespace Fb2Kindle
             return li;
         }
 
-        private Dictionary<string, string> linksDictionary = new Dictionary<string, string>();
+        private readonly Dictionary<string, string> _linksDictionary = new Dictionary<string, string>();
         
         private void UpdateLinksInBook(XElement section, string sectionFilename)
         {
             //store new link targets in dictionary
             foreach (var idEl in section.DescendantsAndSelf().Where(el => el.Name != "div" && el.Attribute("id") != null))
             {
-                linksDictionary.Add(string.Format("#{0}", (string)idEl.Attribute("id")), sectionFilename);
+                _linksDictionary.Add(string.Format("#{0}", (string)idEl.Attribute("id")), sectionFilename);
             }
 
             //update found links hrefs
@@ -248,10 +248,10 @@ namespace Fb2Kindle
             {
                 var href = a.Attribute("href").Value;
                 //if (string.IsNullOrEmpty(href) || !noteId.Equals(href, StringComparison.OrdinalIgnoreCase)) continue;
-                if (string.IsNullOrEmpty(href) || !linksDictionary.ContainsKey(href)) continue;
+                if (string.IsNullOrEmpty(href) || !_linksDictionary.ContainsKey(href)) continue;
                 var value = a.Value;
                 a.RemoveAll();
-                a.SetAttributeValue("href", linksDictionary[href] + href);
+                a.SetAttributeValue("href", _linksDictionary[href] + href);
                 a.Add(new XElement("sup", value));
             }
         }
@@ -261,7 +261,7 @@ namespace Fb2Kindle
             var bookId = "i" + bookNum + postfix;
             var href = bookId + ".html";
             var t = section.Elements("title").FirstOrDefault();
-            if (t != null && !String.IsNullOrEmpty(t.Value))
+            if (t != null && !string.IsNullOrEmpty(t.Value))
             {
                 Util.RenameTag(t, "div", "title");
                 var inner = new XElement("div");
@@ -270,8 +270,8 @@ namespace Fb2Kindle
                 inner.Add(t.Nodes());
                 t.RemoveNodes();
                 t.Add(inner);
-                //t.SetAttributeValue("id", String.Format("title{0}", bookNum + 2));
-                toc = AddTitleToToc(t.Value.Trim(), String.Format("{0}#{1}", href, bookId), toc);
+                //t.SetAttributeValue("id", string.Format("title{0}", bookNum + 2));
+                toc = AddTitleToToc(t.Value.Trim(), string.Format("{0}#{1}", href, bookId), toc);
                 if (section.Parent != null)
                     section.Remove();
             }
@@ -298,7 +298,7 @@ namespace Fb2Kindle
 
         private void ProcessAllData(XElement book, string bookDir, string postfix, XElement bookLi)
         {
-            linksDictionary.Clear();
+            _linksDictionary.Clear();
             Console.Write("FB2 to HTML...");
             var bodies = book.Elements("body").ToArray();
 
@@ -319,7 +319,7 @@ namespace Fb2Kindle
                 var titleEl = bodies[i].Descendants("title").FirstOrDefault(el => el.Value != null);
                 if (titleEl != null)
                     bodyName = titleEl.Value.Trim();
-                if (String.IsNullOrEmpty(bodyName))
+                if (string.IsNullOrEmpty(bodyName))
                 {
                     bodyName = (string)bodies[i].Attribute("name");
                 }
@@ -341,16 +341,16 @@ namespace Fb2Kindle
                 var ts = bodies[0].Descendants("title");
                 foreach (var t in ts)
                 {
-                    if (!String.IsNullOrEmpty(t.Value))
-                        bookLi.Elements("ul").First().Add(GetListItem(t.Value.Trim(), "i.html#" + String.Format("title{0}", i + 2)));
+                    if (!string.IsNullOrEmpty(t.Value))
+                        bookLi.Elements("ul").First().Add(GetListItem(t.Value.Trim(), "i.html#" + string.Format("title{0}", i + 2)));
                     Util.RenameTag(t, "div", "title");
                     var inner = new XElement("div");
                     inner.SetAttributeValue("class", i == 0 ? "title0" : "title1");
-                    inner.SetAttributeValue("id", String.Format("title{0}", i + 2));
+                    inner.SetAttributeValue("id", string.Format("title{0}", i + 2));
                     inner.Add(t.Nodes());
                     t.RemoveNodes();
                     t.Add(inner);
-                    //t.SetAttributeValue("id", String.Format("title{0}", i + 2));
+                    //t.SetAttributeValue("id", string.Format("title{0}", i + 2));
                     i++;
                 }
             }
@@ -448,7 +448,7 @@ namespace Fb2Kindle
                 }
             }
 
-            var args = String.Format("\"{0}\\{1}.opf\"", tempDir, bookName);
+            var args = string.Format("\"{0}\\{1}.opf\"", tempDir, bookName);
             if (compress)
                 args += " -c2";
 
@@ -558,7 +558,7 @@ namespace Fb2Kindle
             linkEl.Add(new XAttribute("align", "center"));
             linkEl.Add(new XAttribute("id", "it"));
             linkEl.Add(AddAuthorsInfo(book.Elements("description").Elements("title-info").Elements("author")));
-            linkEl.Add(new XElement("p", String.Format("{0} {1}", Util.AttributeValue(book.Elements("description").Elements("title-info").Elements("sequence"), "name"), 
+            linkEl.Add(new XElement("p", string.Format("{0} {1}", Util.AttributeValue(book.Elements("description").Elements("title-info").Elements("sequence"), "name"), 
                 Util.AttributeValue(book.Elements("description").Elements("title-info").Elements("sequence"), "number"))));
             linkEl.Add(new XElement("br"));
             var pEl = new XElement("p");
@@ -596,7 +596,7 @@ namespace Fb2Kindle
             {
                 try
                 {
-                    var file = String.Format("{0}\\{1}", imagesFolder, binEl.Attribute("id").Value);
+                    var file = string.Format("{0}\\{1}", imagesFolder, binEl.Attribute("id").Value);
                     var contentType = binEl.Attribute("content-type").Value;
                     var fileBytes = Convert.FromBase64String(binEl.Value);
                     if (contentType == "image/jpeg")
@@ -751,10 +751,7 @@ namespace Fb2Kindle
             var seqName = Util.AttributeValue(book.Elements("description").Elements("title-info").Elements("sequence"), "name");
             if (useSequenceNameOnly)
             {
-                 if (string.IsNullOrEmpty(seqName))
-                    bookTitle = "Сборник";
-                else
-                    bookTitle = seqName;
+                 bookTitle = string.IsNullOrEmpty(seqName) ? string.Format("{0} (Сборник)", bookTitle) : seqName;
             }
             else
             {
@@ -768,7 +765,7 @@ namespace Fb2Kindle
             linkEl.Add(content);
             content = new XElement(nsHttp.GetName("Language"));
             var bookLang = Util.Value(book.Elements("description").First().Elements("title-info").First().Elements("lang"));
-            if (String.IsNullOrEmpty(bookLang))
+            if (string.IsNullOrEmpty(bookLang))
                 bookLang = "ru";
             content.Add(bookLang);
             linkEl.Add(content);
@@ -824,7 +821,7 @@ namespace Fb2Kindle
 
         private void AddGuideItem(string id, string href, string guideType = "text")
         {
-            if (String.IsNullOrEmpty(guideType)) return;
+            if (string.IsNullOrEmpty(guideType)) return;
             if (!_addGuideLine && guideType.Equals("text")) return;
             var itemEl = new XElement("reference");
             itemEl.Add(new XAttribute("type", guideType)); //"text"

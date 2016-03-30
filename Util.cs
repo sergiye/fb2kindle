@@ -60,7 +60,7 @@ namespace Fb2Kindle
 
         internal static string GetScriptFromResource(string resourceName)
         {
-            using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(String.Format("Fb2Kindle.{0}", resourceName)))
+            using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(string.Format("Fb2Kindle.{0}", resourceName)))
             {
                 if (stream != null)
                     using (var reader = new StreamReader(stream))
@@ -71,7 +71,7 @@ namespace Fb2Kindle
 
         internal static bool GetFileFromResource(string resourceName, string filename)
         {
-            using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(String.Format("Fb2Kindle.{0}", resourceName)))
+            using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(string.Format("Fb2Kindle.{0}", resourceName)))
             {
                 if (stream == null) return false;
                 using (Stream file = File.OpenWrite(filename))
@@ -119,7 +119,7 @@ namespace Fb2Kindle
         internal static string Value(IEnumerable<XElement> source, string defaultResult = null)
         {
             var value = source.Select(element => element.Value).FirstOrDefault();
-            if (value == null || String.IsNullOrEmpty(value.Trim()))
+            if (value == null || string.IsNullOrEmpty(value.Trim()))
                 return defaultResult;
             return value.Trim();
         }
@@ -127,7 +127,7 @@ namespace Fb2Kindle
         internal static string AttributeValue(IEnumerable<XElement> source, XName name, string defaultResult = null)
         {
             var value = source.Select(element => (string)element.Attribute(name)).FirstOrDefault();
-            if (value == null || String.IsNullOrEmpty(value.Trim()))
+            if (value == null || string.IsNullOrEmpty(value.Trim()))
                 return defaultResult;
             return value.Trim();
 
@@ -174,7 +174,7 @@ namespace Fb2Kindle
                 element.Attributes().Remove();
                 element.RemoveNodes();
             }
-            if (!String.IsNullOrEmpty(className))
+            if (!string.IsNullOrEmpty(className))
                 element.SetAttributeValue("class", className);
         }
 

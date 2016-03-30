@@ -137,7 +137,7 @@ namespace Fb2Kindle
                                         return;
                                     }
                                     cssStyles = File.ReadAllText(cssFile, Encoding.UTF8);
-                                    if (String.IsNullOrEmpty(cssStyles))
+                                    if (string.IsNullOrEmpty(cssStyles))
                                     {
                                         Console.WriteLine("css styles file is empty");
                                         return;
