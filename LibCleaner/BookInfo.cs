@@ -3,14 +3,15 @@ namespace LibCleaner
     public class BookInfo
     {
         public int Id;
-        public string FileName;
         public bool Deleted;
 
-        public BookInfo(int id, string fileName, bool deleted)
+        public BookInfo(int id, bool deleted)
         {
             Id = id;
-            FileName = fileName;
             Deleted = deleted;
+            FileName = Id + ".fb2";
         }
+
+        public string FileName { get; set; }
     }
 }

@@ -172,7 +172,7 @@ namespace LibCleaner
             using (var connection = SqlHelper.GetConnection())
             {
                 //by wrong type, lang or removed
-                var sql = new StringBuilder(@"select a.file_name an, f.file_name fn, b.id, b.deleted from files f
+                var sql = new StringBuilder(@"select a.file_name an, b.id, b.deleted from files f
                     join books b on b.id=f.id_book
                     join archives a on a.id=f.id_archive
                     where b.file_type<>'fb2' ");
@@ -189,17 +189,16 @@ namespace LibCleaner
                         while (reader.Read())
                         {
                             var archName = DBHelper.GetString(reader, "an");
-                            var fileName = DBHelper.GetString(reader, "fn");
                             var id = DBHelper.GetInt(reader, "id");
                             var deleted = DBHelper.GetBoolean(reader, "deleted");
-                            AddToRemovedFiles(_filesData, archName, new BookInfo(id, fileName, deleted));
+                            AddToRemovedFiles(_filesData, archName, new BookInfo(id, deleted));
                         }
                     }
                 }
                 //by genres
                 if (GenresToRemove.Length > 0)
                 {
-                    sql = new StringBuilder(@"select a.file_name an, f.file_name fn, b.genres genres, b.id, b.deleted from files f
+                    sql = new StringBuilder(@"select a.file_name an, b.genres genres, b.id, b.deleted from files f
                     join books b on b.id=f.id_book
                     join archives a on a.id=f.id_archive ");
                     for (var i = 0; i < GenresToRemove.Length; i++)
@@ -216,12 +215,11 @@ namespace LibCleaner
                             while (reader.Read())
                             {
                                 var archName = DBHelper.GetString(reader, "an");
-                                var fileName = DBHelper.GetString(reader, "fn");
                                 var id = DBHelper.GetInt(reader, "id");
                                 var deleted = DBHelper.GetBoolean(reader, "deleted");
                                 var genres = DBHelper.GetString(reader, "genres");
                                 if (!CheckGenres(genres, GenresToRemove)) continue;
-                                AddToRemovedFiles(_filesData, archName, new BookInfo(id, fileName, deleted));
+                                AddToRemovedFiles(_filesData, archName, new BookInfo(id, deleted));
                             }
                         }
                     }
@@ -229,7 +227,7 @@ namespace LibCleaner
                 //by sequence
                 if (_seqToRemove.Count > 0)
                 {
-                    sql = new StringBuilder(@"select a.file_name an, f.file_name fn, b.id, b.deleted from files f
+                    sql = new StringBuilder(@"select a.file_name an, b.id, b.deleted from files f
                     join books b on b.id=f.id_book
                     join archives a on a.id=f.id_archive
                     join bookseq bs on bs.id_book=b.id
@@ -244,10 +242,9 @@ namespace LibCleaner
                             while (reader.Read())
                             {
                                 var archName = DBHelper.GetString(reader, "an");
-                                var fileName = DBHelper.GetString(reader, "fn");
                                 var id = DBHelper.GetInt(reader, "id");
                                 var deleted = DBHelper.GetBoolean(reader, "deleted");
-                                AddToRemovedFiles(_filesData, archName, new BookInfo(id, fileName, deleted));
+                                AddToRemovedFiles(_filesData, archName, new BookInfo(id, deleted));
                             }
                         }
                     }
