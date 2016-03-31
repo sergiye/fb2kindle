@@ -35,7 +35,7 @@ namespace LibraryCleaner
         {
             if (InvokeRequired)
             {
-                Invoke(new Action<string, Cleaner.StateKind, bool>(AddToLog), new object[] { message, state, newLine });
+                Invoke(new Action<string, Cleaner.StateKind, bool>(AddToLog), message, state, newLine);
                 return;
             }
 
@@ -103,7 +103,7 @@ namespace LibraryCleaner
                 _cleaner.ArchivesOutputPath = txtOutput.Text;
                 _cleaner.RemoveForeign = cbxRemoveForeign.Checked;
                 _cleaner.RemoveDeleted = cbxRemoveDeleted.Checked;
-                _cleaner.RemoveMissingArchivesFromDb = !analyzeOnly && cbxRemoveMissedArchives.Checked;
+                _cleaner.RemoveMissingArchivesFromDb = cbxRemoveMissedArchives.Checked;// && !analyzeOnly;
 
                 if (!_cleaner.CheckParameters())
                 {
@@ -147,7 +147,7 @@ namespace LibraryCleaner
         {
             if (InvokeRequired)
             {
-                Invoke(new Action<DateTime>(SetFinishedState), new object[] {startedTime});
+                Invoke(new Action<DateTime>(SetFinishedState), startedTime);
                 return;
             }
             var timeWasted = DateTime.Now - startedTime;

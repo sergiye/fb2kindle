@@ -32,6 +32,9 @@
             this.panSettings = new System.Windows.Forms.Panel();
             this.clsGenres = new System.Windows.Forms.CheckedListBox();
             this.panel2 = new System.Windows.Forms.Panel();
+            this.lblOutput = new System.Windows.Forms.Label();
+            this.txtOutput = new System.Windows.Forms.TextBox();
+            this.btnBrowseOutput = new System.Windows.Forms.Button();
             this.lblDBPath = new System.Windows.Forms.Label();
             this.txtDatabase = new System.Windows.Forms.TextBox();
             this.btnNoneGenres = new System.Windows.Forms.Button();
@@ -46,9 +49,6 @@
             this.cbxRemoveDeleted = new System.Windows.Forms.CheckBox();
             this.panLog = new System.Windows.Forms.Panel();
             this.txtLog = new LibraryCleaner.SimplTextBox();
-            this.lblOutput = new System.Windows.Forms.Label();
-            this.txtOutput = new System.Windows.Forms.TextBox();
-            this.btnBrowseOutput = new System.Windows.Forms.Button();
             this.panSettings.SuspendLayout();
             this.panel2.SuspendLayout();
             this.panel1.SuspendLayout();
@@ -96,6 +96,32 @@
             this.panel2.Name = "panel2";
             this.panel2.Size = new System.Drawing.Size(239, 105);
             this.panel2.TabIndex = 12;
+            // 
+            // lblOutput
+            // 
+            this.lblOutput.AutoSize = true;
+            this.lblOutput.Location = new System.Drawing.Point(9, 41);
+            this.lblOutput.Name = "lblOutput";
+            this.lblOutput.Size = new System.Drawing.Size(152, 13);
+            this.lblOutput.TabIndex = 8;
+            this.lblOutput.Text = "Output (empty if same as input)";
+            // 
+            // txtOutput
+            // 
+            this.txtOutput.Location = new System.Drawing.Point(10, 58);
+            this.txtOutput.Name = "txtOutput";
+            this.txtOutput.Size = new System.Drawing.Size(200, 20);
+            this.txtOutput.TabIndex = 9;
+            // 
+            // btnBrowseOutput
+            // 
+            this.btnBrowseOutput.Location = new System.Drawing.Point(213, 55);
+            this.btnBrowseOutput.Name = "btnBrowseOutput";
+            this.btnBrowseOutput.Size = new System.Drawing.Size(23, 23);
+            this.btnBrowseOutput.TabIndex = 10;
+            this.btnBrowseOutput.Text = "...";
+            this.btnBrowseOutput.UseVisualStyleBackColor = true;
+            this.btnBrowseOutput.Click += new System.EventHandler(this.btnBrowseOutput_Click);
             // 
             // lblDBPath
             // 
@@ -212,8 +238,6 @@
             // cbxRemoveDeleted
             // 
             this.cbxRemoveDeleted.AutoSize = true;
-            this.cbxRemoveDeleted.Checked = true;
-            this.cbxRemoveDeleted.CheckState = System.Windows.Forms.CheckState.Checked;
             this.cbxRemoveDeleted.Location = new System.Drawing.Point(3, 26);
             this.cbxRemoveDeleted.Name = "cbxRemoveDeleted";
             this.cbxRemoveDeleted.Size = new System.Drawing.Size(104, 17);
@@ -227,7 +251,7 @@
             this.panLog.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panLog.Location = new System.Drawing.Point(239, 0);
             this.panLog.Name = "panLog";
-            this.panLog.Size = new System.Drawing.Size(545, 362);
+            this.panLog.Size = new System.Drawing.Size(553, 362);
             this.panLog.TabIndex = 1;
             // 
             // txtLog
@@ -238,41 +262,15 @@
             this.txtLog.Location = new System.Drawing.Point(0, 0);
             this.txtLog.Name = "txtLog";
             this.txtLog.ReadOnly = true;
-            this.txtLog.Size = new System.Drawing.Size(545, 362);
+            this.txtLog.Size = new System.Drawing.Size(553, 362);
             this.txtLog.TabIndex = 0;
             this.txtLog.Text = "";
-            // 
-            // lblOutput
-            // 
-            this.lblOutput.AutoSize = true;
-            this.lblOutput.Location = new System.Drawing.Point(9, 41);
-            this.lblOutput.Name = "lblOutput";
-            this.lblOutput.Size = new System.Drawing.Size(152, 13);
-            this.lblOutput.TabIndex = 8;
-            this.lblOutput.Text = "Output (empty if same as input)";
-            // 
-            // txtOutput
-            // 
-            this.txtOutput.Location = new System.Drawing.Point(10, 58);
-            this.txtOutput.Name = "txtOutput";
-            this.txtOutput.Size = new System.Drawing.Size(200, 20);
-            this.txtOutput.TabIndex = 9;
-            // 
-            // btnBrowseOutput
-            // 
-            this.btnBrowseOutput.Location = new System.Drawing.Point(213, 55);
-            this.btnBrowseOutput.Name = "btnBrowseOutput";
-            this.btnBrowseOutput.Size = new System.Drawing.Size(23, 23);
-            this.btnBrowseOutput.TabIndex = 10;
-            this.btnBrowseOutput.Text = "...";
-            this.btnBrowseOutput.UseVisualStyleBackColor = true;
-            this.btnBrowseOutput.Click += new System.EventHandler(this.btnBrowseOutput_Click);
             // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(784, 362);
+            this.ClientSize = new System.Drawing.Size(792, 362);
             this.Controls.Add(this.panLog);
             this.Controls.Add(this.panSettings);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));

@@ -132,7 +132,6 @@ namespace LibCleaner
                         CalculateStats();
                         break;
                     case CleanActions.CompressLibrary:
-                        OptimizeDatabase();
                         CompressLibrary();
                         break;
                 }
@@ -161,9 +160,6 @@ namespace LibCleaner
 
         private void CalculateStats()
         {
-            if (!string.IsNullOrWhiteSpace(ArchivesOutputPath))
-                Directory.CreateDirectory(ArchivesOutputPath);
-
             _filesData = new Dictionary<string, List<BookInfo>>();
             UpdateState(string.Format("Loading DB: '{0}' archives: '{1}' ...", SqlHelper.DataBasePath, ArchivesPath), StateKind.Log);
             UpdateArchivesOnDisk(RemoveMissingArchivesFromDb);
@@ -250,17 +246,10 @@ namespace LibCleaner
                     }
                 }
             }
-            foreach (var archiveName in _archivesFound)
-            {
-                if (!_filesData.Keys.Any(f => archiveName.EndsWith(f, StringComparison.OrdinalIgnoreCase)))
-                {
-                    UpdateState(string.Format("Archive {0} not registered in DB", archiveName), StateKind.Warning);
-                }
-            }
-            UpdateState(string.Format("Found {0} archives to proccess...", _filesData.Count), StateKind.Message);
+            UpdateState(string.Format("Found archives to process: {0}", _filesData.Count), StateKind.Message);
             
             var totalToRemove = _filesData.Sum(item => item.Value.Count);
-            UpdateState(string.Format("Found {0} files to remove...", totalToRemove), StateKind.Message);
+            UpdateState(string.Format("Found files to remove: {0}", totalToRemove), StateKind.Message);
         }
 
         private void CompressLibrary()
@@ -270,6 +259,9 @@ namespace LibCleaner
                 UpdateState("Nothing to do!", StateKind.Message);
                 return;
             }
+
+            if (!string.IsNullOrWhiteSpace(ArchivesOutputPath))
+                Directory.CreateDirectory(ArchivesOutputPath);
 
             var totalRemoved = 0;
             foreach (var item in _filesData)
@@ -344,7 +336,7 @@ namespace LibCleaner
             return false;
         }
 
-        private void CleanDatabaseRecords(Dictionary<string, List<BookInfo>> filesData, bool remove = false)
+        private void CleanDatabaseRecords(Dictionary<string, List<BookInfo>> filesData)
         {
             UpdateState("Updating db tables...", StateKind.Log);
             //var totalToUpdate = _filesData.Sum(item => item.Value.Count(f=>!f.Deleted));
@@ -360,21 +352,41 @@ namespace LibCleaner
             SqlHelper.ExecuteNonQuery("update books set deleted = 1 where file_type<>'fb2'");
             if (RemoveForeign)
                 SqlHelper.ExecuteNonQuery("update books set deleted = 1 where lang<>'ru'");
-            if (remove)
-            {
-                UpdateState("Cleaning db tables...", StateKind.Log);
-                SqlHelper.ExecuteNonQuery("delete from books where lang<>'ru' or file_type<>'fb2' or deleted=1");
-                SqlHelper.ExecuteNonQuery("delete from files where id_book not in (select id from books)");
-                SqlHelper.ExecuteNonQuery("delete from bookseq where id_book not in (select id from books)");
-                SqlHelper.ExecuteNonQuery("delete from sequences where id not in (select id_seq from bookseq)");
-            }
+//            if (remove)
+//            {
+//                UpdateState("Cleaning db tables...", StateKind.Log);
+//                SqlHelper.ExecuteNonQuery("delete from books where lang<>'ru' or file_type<>'fb2' or deleted=1");
+//                SqlHelper.ExecuteNonQuery("delete from files where id_book not in (select id from books)");
+//                SqlHelper.ExecuteNonQuery("delete from bookseq where id_book not in (select id from books)");
+//                SqlHelper.ExecuteNonQuery("delete from sequences where id not in (select id_seq from bookseq)");
+//            }
         }
 
         private void OptimizeDatabase()
         {
             UpdateState("Optimizing db tables...", StateKind.Log);
             SqlHelper.ExecuteNonQuery("delete from archives where [file_name] not like '%fb2-%'");
-            SqlHelper.ExecuteNonQuery("delete from files where id_archive not in (select id from archives)");
+
+            SqlHelper.ExecuteNonQuery("update files set file_name=(id_book || '.fb2') where file_name like '%.fb2'");
+            SqlHelper.ExecuteNonQuery("update files set id_archive=null where id_archive not in (select id from archives)");
+
+            SqlHelper.ExecuteNonQuery(@"update files set id_archive=(select id from archives 
+ where file_name like 'fb2-%' 
+ and substr(file_name,5,6)<=id_book 
+ and substr(file_name,12,6)>=id_book)
+ where id_archive is null or id_archive not in (select id from archives) ");
+            
+            SqlHelper.ExecuteNonQuery(@"update files set id_archive=(select id from archives 
+ where file_name like 'f.fb2-%' 
+ and substr(file_name,7,6)<=id_book 
+ and substr(file_name,14,6)>=id_book)
+ where id_archive is null or id_archive not in (select id from archives) ");
+
+            SqlHelper.ExecuteNonQuery(@"update files set id_archive=(select id from archives 
+ where file_name like 'd.fb2-%' 
+ and substr(file_name,7,6)<=id_book 
+ and substr(file_name,14,6)>=id_book)
+ where id_book>=172703 and id_book<=173908 and (id_archive is null or id_archive not in (select id from archives))");
             
 //            SqlHelper.ExecuteNonQuery("delete from books where lang<>'ru' or file_type<>'fb2' or deleted=1");
 //            SqlHelper.ExecuteNonQuery("delete from files where id_book not in (select id from books)");
@@ -385,9 +397,10 @@ namespace LibCleaner
         private void UpdateArchivesOnDisk(bool removeFromDb)
         {
             _archivesFound = Directory.GetFiles(ArchivesPath, "*.zip", SearchOption.TopDirectoryOnly);
-            //var archivesList = new DirectoryInfo(ArchivesPath).GetFiles("*.zip", SearchOption.TopDirectoryOnly).Select(fileInfo => fileInfo.Name).ToList();
+//            var archivesList = new DirectoryInfo(ArchivesPath).GetFiles("*.zip", SearchOption.TopDirectoryOnly).Select(fileInfo => fileInfo.Name).ToList();
 
             var idsToRemove = "";
+            var dbArchives = new List<string>();
             using (var connection = SqlHelper.GetConnection())
             {
                 using (var command = SqlHelper.GetCommand("select id, file_name from archives a", connection))
@@ -397,28 +410,35 @@ namespace LibCleaner
                         while (reader.Read())
                         {
                             var archName = DBHelper.GetString(reader, "file_name");
-                            //var ai = archivesList.Find(f => f == archName);
-                            //if (ai == null)
-                            //    idsToRemove += DBHelper.GetInt(reader, "id") + ",";
-                            if (_archivesFound.All(s => !s.EndsWith(archName, StringComparison.OrdinalIgnoreCase)))
+                            if (_archivesFound.Any(s => s.EndsWith(archName, StringComparison.OrdinalIgnoreCase)))
                             {
-                                idsToRemove += DBHelper.GetInt(reader, "id") + ",";
-                                UpdateState(string.Format("Archive '{0}' was not found in local folder", archName), StateKind.Warning);
+                                dbArchives.Add(archName);
+                                continue;
                             }
+                            idsToRemove += DBHelper.GetInt(reader, "id") + ",";
+                            UpdateState(string.Format("Archive not found in local folder: '{0}'", archName), StateKind.Warning);
                         }
                     }
                 }
-
-                if (!string.IsNullOrWhiteSpace(ArchivesOutputPath))
+                foreach (var archiveName in _archivesFound)
                 {
-                    SqlHelper.ExecuteNonQuery(string.Format("update params set text='{0}' where id=9", ArchivesOutputPath));
+                    var archiveFileName = Path.GetFileName(archiveName);
+                    if (!dbArchives.Any(f => archiveName.EndsWith(f, StringComparison.OrdinalIgnoreCase)))
+                    {
+                        UpdateState(string.Format("Archive not registered in DB: {0}", archiveName), StateKind.Warning);
+                        SqlHelper.ExecuteNonQuery(string.Format("insert into archives (file_name) values ('{0}')", archiveFileName));
+                        UpdateState(string.Format("Archive added to DB: {0}", archiveFileName), StateKind.Message);
+                    }
                 }
-            
+
                 if (!removeFromDb) return;
                 idsToRemove = idsToRemove.TrimEnd(',');
                 SqlHelper.ExecuteNonQuery(string.Format("delete from archives where id in ({0})", idsToRemove));
-                SqlHelper.ExecuteNonQuery(string.Format("delete from files where id_archive in ({0})", idsToRemove));
-                //SqlHelper.ExecuteNonQuery("delete from files where id_archive not in (select id from archives)");
+
+                OptimizeDatabase();
+
+                if (!string.IsNullOrWhiteSpace(ArchivesOutputPath))
+                    SqlHelper.ExecuteNonQuery(string.Format("update params set text='{0}' where id=9", ArchivesOutputPath));
             }
         }
     }
