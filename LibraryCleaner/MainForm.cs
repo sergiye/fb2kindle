@@ -91,9 +91,7 @@ namespace LibraryCleaner
         private void ProcessCleanupTasks(bool analyzeOnly)
         {
             var startedTime = DateTime.Now;
-            btnAnalyze.Enabled = false;
-            btnStart.Enabled = false;
-            Cursor = Cursors.WaitCursor;
+            SetStartedState();
             try
             {
                 //get selected genres list
@@ -143,6 +141,19 @@ namespace LibraryCleaner
             ProcessCleanupTasks(false);
         }
 
+        private void SetStartedState()
+        {
+            if (InvokeRequired)
+            {
+                Invoke(new Action(SetStartedState));
+                return;
+            }
+            btnOptimizeArchives.Enabled = false;
+            btnAnalyze.Enabled = false;
+            btnStart.Enabled = false;
+            Cursor = Cursors.WaitCursor;
+        }
+
         private void SetFinishedState(DateTime startedTime)
         {
             if (InvokeRequired)
@@ -152,9 +163,32 @@ namespace LibraryCleaner
             }
             var timeWasted = DateTime.Now - startedTime;
             AddToLog(string.Format("Time wasted: {0:G}", timeWasted), Cleaner.StateKind.Log);
+            btnOptimizeArchives.Enabled = true;
             btnAnalyze.Enabled = true;
             btnStart.Enabled = true;
             Cursor = Cursors.Default;
+        }
+
+        private void btnOptimizeArchives_Click(object sender, EventArgs e)
+        {
+            var startedTime = DateTime.Now;
+            SetStartedState();
+            try
+            {
+                _cleaner.DatabasePath = txtDatabase.Text;
+                if (!_cleaner.CheckParameters())
+                {
+                    AddToLog("Please check input parameters and start again!", Cleaner.StateKind.Warning);
+                    return;
+                }
+
+                _cleaner.OptimizeArchivesOnDisk();
+            }
+            catch (Exception ex)
+            {
+                AddToLog(ex.Message, Cleaner.StateKind.Error);
+                SetFinishedState(startedTime);
+            }
         }
     }
 }

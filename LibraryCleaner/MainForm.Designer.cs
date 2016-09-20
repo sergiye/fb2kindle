@@ -49,6 +49,7 @@
             this.cbxRemoveDeleted = new System.Windows.Forms.CheckBox();
             this.panLog = new System.Windows.Forms.Panel();
             this.txtLog = new LibraryCleaner.SimplTextBox();
+            this.btnOptimizeArchives = new System.Windows.Forms.Button();
             this.panSettings.SuspendLayout();
             this.panel2.SuspendLayout();
             this.panel1.SuspendLayout();
@@ -82,6 +83,7 @@
             // 
             // panel2
             // 
+            this.panel2.Controls.Add(this.btnOptimizeArchives);
             this.panel2.Controls.Add(this.lblOutput);
             this.panel2.Controls.Add(this.txtOutput);
             this.panel2.Controls.Add(this.btnBrowseOutput);
@@ -141,9 +143,9 @@
             // 
             // btnNoneGenres
             // 
-            this.btnNoneGenres.Location = new System.Drawing.Point(113, 80);
+            this.btnNoneGenres.Location = new System.Drawing.Point(100, 80);
             this.btnNoneGenres.Name = "btnNoneGenres";
-            this.btnNoneGenres.Size = new System.Drawing.Size(49, 23);
+            this.btnNoneGenres.Size = new System.Drawing.Size(42, 23);
             this.btnNoneGenres.TabIndex = 7;
             this.btnNoneGenres.Text = "None";
             this.btnNoneGenres.UseVisualStyleBackColor = true;
@@ -161,9 +163,9 @@
             // 
             // btnAllGenres
             // 
-            this.btnAllGenres.Location = new System.Drawing.Point(58, 80);
+            this.btnAllGenres.Location = new System.Drawing.Point(52, 80);
             this.btnAllGenres.Name = "btnAllGenres";
-            this.btnAllGenres.Size = new System.Drawing.Size(49, 23);
+            this.btnAllGenres.Size = new System.Drawing.Size(42, 23);
             this.btnAllGenres.TabIndex = 6;
             this.btnAllGenres.Text = "All";
             this.btnAllGenres.UseVisualStyleBackColor = true;
@@ -266,6 +268,16 @@
             this.txtLog.TabIndex = 0;
             this.txtLog.Text = "";
             // 
+            // btnOptimizeArchives
+            // 
+            this.btnOptimizeArchives.Location = new System.Drawing.Point(179, 80);
+            this.btnOptimizeArchives.Name = "btnOptimizeArchives";
+            this.btnOptimizeArchives.Size = new System.Drawing.Size(57, 23);
+            this.btnOptimizeArchives.TabIndex = 11;
+            this.btnOptimizeArchives.Text = "Optimize";
+            this.btnOptimizeArchives.UseVisualStyleBackColor = true;
+            this.btnOptimizeArchives.Click += new System.EventHandler(this.btnOptimizeArchives_Click);
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -310,6 +322,7 @@
         private System.Windows.Forms.Label lblOutput;
         private System.Windows.Forms.TextBox txtOutput;
         private System.Windows.Forms.Button btnBrowseOutput;
+        private System.Windows.Forms.Button btnOptimizeArchives;
     }
 }
 
