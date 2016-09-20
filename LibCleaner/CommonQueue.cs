@@ -28,7 +28,7 @@ namespace LibCleaner
             ExecuteStep = 1;
             UseExecuteStepAsMinValue = true;
             StepTimeout = 60;
-            Process.GetCurrentProcess().ProcessorAffinity = new IntPtr(Environment.ProcessorCount > 2 ? (int)Math.Pow(2, (double)Environment.ProcessorCount / 4) - 1 : 1);
+            //Process.GetCurrentProcess().ProcessorAffinity = new IntPtr(Environment.ProcessorCount > 2 ? (int)Math.Pow(2, (double)Environment.ProcessorCount / 4) - 1 : 1);
             _started = true;
             _worker = new Thread(Work) { IsBackground = true };
             _worker.Start();
