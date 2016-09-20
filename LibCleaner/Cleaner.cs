@@ -14,7 +14,8 @@ namespace LibCleaner
         private enum CleanActions
         {
             CalculateStats,
-            CompressLibrary
+            CompressLibrary,
+            OptimizeArchivesByHash
         }
 
         private class QueueTask
@@ -135,6 +136,9 @@ namespace LibCleaner
                     case CleanActions.CompressLibrary:
                         CompressLibrary();
                         break;
+                    case CleanActions.OptimizeArchivesByHash:
+                        OptimizeArchivesOnDisk();
+                        break;
                 }
             }
             catch (Exception ex)
@@ -151,6 +155,12 @@ namespace LibCleaner
         {
             _internalTasks.EnqueueTask(new QueueTask(CleanActions.CalculateStats, onTaskFinished));
             //CalculateStats();
+        }
+
+        public void OptimizeArchivesByHash(Action onTaskFinished)
+        {
+            _internalTasks.EnqueueTask(new QueueTask(CleanActions.OptimizeArchivesByHash, onTaskFinished));
+            //OptimizeArchivesOnDisk();
         }
 
         public void Start(Action onTaskFinished)
@@ -251,6 +261,57 @@ namespace LibCleaner
             
             var totalToRemove = _filesData.Sum(item => item.Value.Count);
             UpdateState(string.Format("Found files to remove: {0}", totalToRemove), StateKind.Message);
+        }
+
+        private void OptimizeArchivesOnDisk()
+        {
+            var totalRemoved = 0;
+            var tempPath = Path.GetTempPath();
+            _archivesFound = Directory.GetFiles(ArchivesPath, "*fb2*.zip", SearchOption.TopDirectoryOnly);
+            var allFiles = new HashSet<string>(); //hash/path
+            foreach (var archPath in _archivesFound)
+            {
+                UpdateState("Processing: " + archPath, StateKind.Log);
+                var removedCount = 0;
+                using (var zip = new ZipFile(archPath))
+                {
+                    var entriesToRemove = new List<ZipEntry>();
+                    foreach (ZipEntry file in zip.Entries)
+                    {
+                        string uniqueHash;
+                        var tempFileName = string.Format("{0}{1}", tempPath, file.FileName);
+                        try
+                        {
+                            file.Extract(tempPath, ExtractExistingFileAction.OverwriteSilently);
+                            uniqueHash = Md5SumByProcess(tempFileName);
+                        }
+                        //                        catch (Exception)
+                        //                        {
+                        //                            uniqueHash = file.Crc.ToString();
+                        //                        }
+                        finally
+                        {
+                            File.Delete(tempFileName);
+                        }
+                        if (!allFiles.Contains(uniqueHash))
+                        {
+                            allFiles.Add(uniqueHash);
+                            continue;
+                        }
+                        entriesToRemove.Add(file);
+                        removedCount++;
+                    }
+                    UpdateState(string.Format("Removed {0} files", removedCount), StateKind.Message);
+                    if (removedCount <= 0) continue;
+                    zip.RemoveEntries(entriesToRemove);
+                    UpdateState(string.Format("Saving archive {0}", archPath), StateKind.Log);
+                    zip.CompressionLevel = CompressionLevel.BestCompression;
+                    zip.Save(archPath + ".new");
+                    UpdateState("Done", StateKind.Log);
+                }
+                totalRemoved += removedCount;
+            }
+            UpdateState(string.Format("Total removed {0} files", totalRemoved), StateKind.Message);
         }
 
         private void CompressLibrary()
@@ -463,57 +524,6 @@ namespace LibCleaner
             p.WaitForExit();
             string output = p.StandardOutput.ReadToEnd();
             return output.Split(' ')[0].Substring(1).ToUpper();
-        }
-
-        public void OptimizeArchivesOnDisk()
-        {
-            var totalRemoved = 0;
-            var tempPath = Path.GetTempPath();
-            _archivesFound = Directory.GetFiles(ArchivesPath, "*fb2*.zip", SearchOption.TopDirectoryOnly);
-            var allFiles = new Dictionary<string, string>(); //hash/path
-            foreach (var archPath in _archivesFound)
-            {
-                UpdateState("Processing: " + archPath, StateKind.Log);
-                var removedCount = 0;
-                using (var zip = new ZipFile(archPath))
-                {
-                    var entriesToRemove = new List<ZipEntry>();
-                    foreach (ZipEntry file in zip.Entries)
-                    {
-                        string uniqueHash;
-                        var tempFileName = string.Format("{0}{1}", tempPath, file.FileName);
-                        try
-                        {
-                            file.Extract(tempPath, ExtractExistingFileAction.OverwriteSilently);
-                            uniqueHash = Md5SumByProcess(tempFileName);
-                        }
-                        catch (Exception)
-                        {
-                            uniqueHash = file.Crc.ToString();
-                        }
-                        finally
-                        {
-                            File.Delete(tempFileName);
-                        }
-                        if (!allFiles.ContainsKey(uniqueHash))
-                        {
-                            allFiles.Add(uniqueHash, file.FileName);
-                            continue;
-                        }
-                        entriesToRemove.Add(file);
-                        removedCount++;
-                    }
-                    UpdateState(string.Format("Removed {0} files", removedCount), StateKind.Message);
-                    if (removedCount <= 0) continue;
-                    zip.RemoveEntries(entriesToRemove);
-                    UpdateState(string.Format("Saving archive {0}", archPath), StateKind.Log);
-                    zip.CompressionLevel = CompressionLevel.BestCompression;
-                    zip.Save(archPath+".new");
-                    UpdateState("Done", StateKind.Log);
-                }
-                totalRemoved += removedCount;
-            }
-            UpdateState(string.Format("Total removed {0} files", totalRemoved), StateKind.Message);
         }
     }
 }

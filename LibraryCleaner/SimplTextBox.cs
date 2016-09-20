@@ -6,28 +6,28 @@ namespace LibraryCleaner
 {
     public class SimplTextBox : RichTextBox
     {
-        private const short WM_PAINT = 0x00f;
-        private const int maxsize = 409600;
-        private const int dropsize = maxsize / 4;
+        private const short WmPaint = 0x00f;
+        private const int Maxsize = 409600;
+        private const int Dropsize = Maxsize / 4;
 
         private bool _skipPainting;
 
         protected override void WndProc(ref Message m)
         {
-            if (m.Msg == WM_PAINT && _skipPainting)
+            if (m.Msg == WmPaint && _skipPainting)
                 m.Result = IntPtr.Zero;
             else
                 base.WndProc(ref m);
         }
 
-        public void AppendLine(string text, Color color)
+        public void AppendLine(string text, Color color, bool lineEnding = true)
         {
-            if (Text.Length > maxsize)
+            if (Text.Length > Maxsize)
             {
                 _skipPainting = true;
-                var endmarker = Text.IndexOf('\n', dropsize) + 1;
-                if (endmarker < dropsize)
-                    endmarker = dropsize;
+                var endmarker = Text.IndexOf('\n', Dropsize) + 1;
+                if (endmarker < Dropsize)
+                    endmarker = Dropsize;
                 Select(0, endmarker);//Select(0, GetFirstCharIndexFromLine(1000));
                 var prevReadOnly = ReadOnly;
                 ReadOnly = false;
@@ -38,7 +38,9 @@ namespace LibraryCleaner
             SelectionStart = Text.Length;
             SelectionLength = 0;
             SelectionColor = color;
-            AppendText(text.Trim() + Environment.NewLine);
+            AppendText(text.Trim());
+            if (lineEnding)
+                AppendText(Environment.NewLine);
             //ScrollToCaret();
         }
     }

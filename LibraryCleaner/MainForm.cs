@@ -15,7 +15,7 @@ namespace LibraryCleaner
             InitializeComponent();
         
             _cleaner = new Cleaner(null);
-            _cleaner.OnStateChanged += (s, state) => AddToLog(s, state);
+            _cleaner.OnStateChanged += AddToLog;
 
             clsGenres.Items.Clear();
             var genres = GenresListContainer.GetDefaultItems();
@@ -31,16 +31,14 @@ namespace LibraryCleaner
 
         #region GUI helper methods
 
-        private void AddToLog(string message, Cleaner.StateKind state, bool newLine = true)
+        private void AddToLog(string message, Cleaner.StateKind state)
         {
             if (InvokeRequired)
             {
-                Invoke(new Action<string, Cleaner.StateKind, bool>(AddToLog), message, state, newLine);
+                Invoke(new Action<string, Cleaner.StateKind>(AddToLog), message, state);
                 return;
             }
-
-            if (newLine)
-                message += "\n";
+            txtLog.AppendLine(string.Format("{0:T} - ", DateTime.Now), Color.LightGray, false);
             switch (state)
             {
                 case Cleaner.StateKind.Error:
@@ -176,13 +174,14 @@ namespace LibraryCleaner
             try
             {
                 _cleaner.DatabasePath = txtDatabase.Text;
+
                 if (!_cleaner.CheckParameters())
                 {
                     AddToLog("Please check input parameters and start again!", Cleaner.StateKind.Warning);
                     return;
                 }
 
-                _cleaner.OptimizeArchivesOnDisk();
+                _cleaner.OptimizeArchivesByHash(() => SetFinishedState(startedTime));
             }
             catch (Exception ex)
             {
