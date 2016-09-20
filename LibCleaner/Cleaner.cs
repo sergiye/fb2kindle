@@ -452,7 +452,7 @@ namespace LibCleaner
                 StartInfo =
                 {
                     FileName = "md5sum.exe",
-                    Arguments = file,
+                    Arguments = string.Format("\"{0}\"", file),
                     UseShellExecute = false,
                     RedirectStandardOutput = true,
                     CreateNoWindow = true,
@@ -481,16 +481,19 @@ namespace LibCleaner
                     foreach (ZipEntry file in zip.Entries)
                     {
                         string uniqueHash;
+                        var tempFileName = string.Format("{0}{1}", tempPath, file.FileName);
                         try
                         {
                             file.Extract(tempPath, ExtractExistingFileAction.OverwriteSilently);
-                            var tempFileName = string.Format("{0}{1}", tempPath, file.FileName);
                             uniqueHash = Md5SumByProcess(tempFileName);
-                            File.Delete(tempFileName);
                         }
                         catch (Exception)
                         {
                             uniqueHash = file.Crc.ToString();
+                        }
+                        finally
+                        {
+                            File.Delete(tempFileName);
                         }
                         if (!allFiles.ContainsKey(uniqueHash))
                         {
