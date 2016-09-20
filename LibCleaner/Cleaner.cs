@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -396,7 +397,7 @@ namespace LibCleaner
 
         private void UpdateArchivesOnDisk(bool removeFromDb)
         {
-            _archivesFound = Directory.GetFiles(ArchivesPath, "*.zip", SearchOption.TopDirectoryOnly);
+            _archivesFound = Directory.GetFiles(ArchivesPath, "*fb2*.zip", SearchOption.TopDirectoryOnly);
 //            var archivesList = new DirectoryInfo(ArchivesPath).GetFiles("*.zip", SearchOption.TopDirectoryOnly).Select(fileInfo => fileInfo.Name).ToList();
 
             var idsToRemove = "";
@@ -440,6 +441,76 @@ namespace LibCleaner
                 if (!string.IsNullOrWhiteSpace(ArchivesOutputPath))
                     SqlHelper.ExecuteNonQuery(string.Format("update params set text='{0}' where id=9", ArchivesOutputPath));
             }
+        }
+
+        public static string Md5SumByProcess(string file)
+        {
+            if (!File.Exists(file)) 
+                return null;
+            var p = new Process
+            {
+                StartInfo =
+                {
+                    FileName = "md5sum.exe",
+                    Arguments = file,
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    CreateNoWindow = true,
+                    WindowStyle = ProcessWindowStyle.Hidden
+                }
+            };
+            p.Start();
+            p.WaitForExit();
+            string output = p.StandardOutput.ReadToEnd();
+            return output.Split(' ')[0].Substring(1).ToUpper();
+        }
+
+        public void OptimizeArchivesOnDisk()
+        {
+            var totalRemoved = 0;
+            var tempPath = Path.GetTempPath();
+            _archivesFound = Directory.GetFiles(ArchivesPath, "*fb2*.zip", SearchOption.TopDirectoryOnly);
+            var allFiles = new Dictionary<string, string>(); //hash/path
+            foreach (var archPath in _archivesFound)
+            {
+                UpdateState("Processing: " + archPath, StateKind.Log);
+                var removedCount = 0;
+                using (var zip = new ZipFile(archPath))
+                {
+                    var entriesToRemove = new List<ZipEntry>();
+                    foreach (ZipEntry file in zip.Entries)
+                    {
+                        string uniqueHash;
+                        try
+                        {
+                            file.Extract(tempPath, ExtractExistingFileAction.OverwriteSilently);
+                            var tempFileName = string.Format("{0}{1}", tempPath, file.FileName);
+                            uniqueHash = Md5SumByProcess(tempFileName);
+                            File.Delete(tempFileName);
+                        }
+                        catch (Exception)
+                        {
+                            uniqueHash = file.Crc.ToString();
+                        }
+                        if (!allFiles.ContainsKey(uniqueHash))
+                        {
+                            allFiles.Add(uniqueHash, file.FileName);
+                            continue;
+                        }
+                        entriesToRemove.Add(file);
+                        removedCount++;
+                    }
+                    UpdateState(string.Format("Removed {0} files", removedCount), StateKind.Message);
+                    if (removedCount <= 0) continue;
+                    zip.RemoveEntries(entriesToRemove);
+                    UpdateState(string.Format("Saving archive {0}", archPath), StateKind.Log);
+                    zip.CompressionLevel = CompressionLevel.BestCompression;
+                    zip.Save(archPath+".new");
+                    UpdateState("Done", StateKind.Log);
+                }
+                totalRemoved += removedCount;
+            }
+            UpdateState(string.Format("Total removed {0} files", totalRemoved), StateKind.Message);
         }
     }
 }
