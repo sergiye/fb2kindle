@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using Ionic.Zip;
 using Ionic.Zlib;
@@ -266,50 +266,44 @@ namespace LibCleaner
         private void OptimizeArchivesOnDisk()
         {
             var totalRemoved = 0;
-            var tempPath = Path.GetTempPath();
-            _archivesFound = Directory.GetFiles(ArchivesPath, "*fb2*.zip", SearchOption.TopDirectoryOnly);
-            var allFiles = new HashSet<string>(); //hash/path
-            foreach (var archPath in _archivesFound)
+            using (var alg = MD5.Create())
             {
-                UpdateState("Processing: " + archPath, StateKind.Log);
-                var removedCount = 0;
-                using (var zip = new ZipFile(archPath))
+                _archivesFound = Directory.GetFiles(ArchivesPath, "*fb2*.zip", SearchOption.TopDirectoryOnly);
+                var allFiles = new HashSet<string>(); //hash/path
+                foreach (var archPath in _archivesFound)
                 {
-                    var entriesToRemove = new List<ZipEntry>();
-                    foreach (ZipEntry file in zip.Entries)
+                    UpdateState("Processing: " + archPath, StateKind.Log);
+                    var removedCount = 0;
+                    using (var zip = new ZipFile(archPath))
                     {
-                        string uniqueHash;
-                        var tempFileName = string.Format("{0}{1}", tempPath, file.FileName);
-                        try
+                        var entriesToRemove = new List<ZipEntry>();
+                        foreach (ZipEntry file in zip.Entries)
                         {
-                            file.Extract(tempPath, ExtractExistingFileAction.OverwriteSilently);
-                            uniqueHash = Md5SumByProcess(tempFileName);
+                            string uniqueHash;
+                            using (var ms = new MemoryStream())
+                            {
+                                file.Extract(ms);
+                                ms.Seek(0, SeekOrigin.Begin);
+                                uniqueHash = BitConverter.ToString(alg.ComputeHash(ms)).ToLower();
+                            }
+                            if (!allFiles.Contains(uniqueHash))
+                            {
+                                allFiles.Add(uniqueHash);
+                                continue;
+                            }
+                            entriesToRemove.Add(file);
+                            removedCount++;
                         }
-                        //                        catch (Exception)
-                        //                        {
-                        //                            uniqueHash = file.Crc.ToString();
-                        //                        }
-                        finally
-                        {
-                            File.Delete(tempFileName);
-                        }
-                        if (!allFiles.Contains(uniqueHash))
-                        {
-                            allFiles.Add(uniqueHash);
-                            continue;
-                        }
-                        entriesToRemove.Add(file);
-                        removedCount++;
+                        UpdateState(string.Format("Removed {0} files", removedCount), StateKind.Message);
+                        if (removedCount <= 0) continue;
+                        zip.RemoveEntries(entriesToRemove);
+                        UpdateState(string.Format("Saving archive {0}", archPath), StateKind.Log);
+                        zip.CompressionLevel = CompressionLevel.BestCompression;
+                        zip.Save(archPath + ".new");
+                        UpdateState("Done", StateKind.Log);
                     }
-                    UpdateState(string.Format("Removed {0} files", removedCount), StateKind.Message);
-                    if (removedCount <= 0) continue;
-                    zip.RemoveEntries(entriesToRemove);
-                    UpdateState(string.Format("Saving archive {0}", archPath), StateKind.Log);
-                    zip.CompressionLevel = CompressionLevel.BestCompression;
-                    zip.Save(archPath + ".new");
-                    UpdateState("Done", StateKind.Log);
+                    totalRemoved += removedCount;
                 }
-                totalRemoved += removedCount;
             }
             UpdateState(string.Format("Total removed {0} files", totalRemoved), StateKind.Message);
         }
@@ -502,28 +496,6 @@ namespace LibCleaner
                 if (!string.IsNullOrWhiteSpace(ArchivesOutputPath))
                     SqlHelper.ExecuteNonQuery(string.Format("update params set text='{0}' where id=9", ArchivesOutputPath));
             }
-        }
-
-        public static string Md5SumByProcess(string file)
-        {
-            if (!File.Exists(file)) 
-                return null;
-            var p = new Process
-            {
-                StartInfo =
-                {
-                    FileName = "md5sum.exe",
-                    Arguments = string.Format("\"{0}\"", file),
-                    UseShellExecute = false,
-                    RedirectStandardOutput = true,
-                    CreateNoWindow = true,
-                    WindowStyle = ProcessWindowStyle.Hidden
-                }
-            };
-            p.Start();
-            p.WaitForExit();
-            string output = p.StandardOutput.ReadToEnd();
-            return output.Split(' ')[0].Substring(1).ToUpper();
         }
     }
 }
