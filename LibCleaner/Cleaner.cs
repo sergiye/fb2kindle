@@ -265,11 +265,16 @@ namespace LibCleaner
 
         private void OptimizeArchivesOnDisk()
         {
+            var savedItemsPath = ArchivesPath + "\\items.xml";
             var totalRemoved = 0;
             using (var alg = MD5.Create())
             {
                 _archivesFound = Directory.GetFiles(ArchivesPath, "*fb2*.zip", SearchOption.TopDirectoryOnly);
-                var allFiles = new HashSet<string>(); //hash/path
+                HashSet<string> allFiles = null; //hash
+                if (File.Exists(savedItemsPath))
+                    allFiles = XmlSerializerHelper.DeserializeFile<HashSet<string>>(savedItemsPath);
+                if (allFiles == null)
+                    allFiles = new HashSet<string>();
                 foreach (var archPath in _archivesFound)
                 {
                     UpdateState("Processing: " + archPath, StateKind.Log);
@@ -304,6 +309,7 @@ namespace LibCleaner
                     }
                     totalRemoved += removedCount;
                 }
+                XmlSerializerHelper.SerializeToFile(savedItemsPath, allFiles);
             }
             UpdateState(string.Format("Total removed {0} files", totalRemoved), StateKind.Message);
         }
