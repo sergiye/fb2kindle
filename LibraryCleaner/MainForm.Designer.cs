@@ -28,10 +28,10 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.panSettings = new System.Windows.Forms.Panel();
             this.clsGenres = new System.Windows.Forms.CheckedListBox();
             this.panel2 = new System.Windows.Forms.Panel();
+            this.btnOptimizeArchives = new System.Windows.Forms.Button();
             this.lblOutput = new System.Windows.Forms.Label();
             this.txtOutput = new System.Windows.Forms.TextBox();
             this.btnBrowseOutput = new System.Windows.Forms.Button();
@@ -49,7 +49,6 @@
             this.cbxRemoveDeleted = new System.Windows.Forms.CheckBox();
             this.panLog = new System.Windows.Forms.Panel();
             this.txtLog = new LibraryCleaner.SimplTextBox();
-            this.btnOptimizeArchives = new System.Windows.Forms.Button();
             this.panSettings.SuspendLayout();
             this.panel2.SuspendLayout();
             this.panel1.SuspendLayout();
@@ -98,6 +97,16 @@
             this.panel2.Name = "panel2";
             this.panel2.Size = new System.Drawing.Size(239, 105);
             this.panel2.TabIndex = 12;
+            // 
+            // btnOptimizeArchives
+            // 
+            this.btnOptimizeArchives.Location = new System.Drawing.Point(179, 80);
+            this.btnOptimizeArchives.Name = "btnOptimizeArchives";
+            this.btnOptimizeArchives.Size = new System.Drawing.Size(57, 23);
+            this.btnOptimizeArchives.TabIndex = 11;
+            this.btnOptimizeArchives.Text = "Optimize";
+            this.btnOptimizeArchives.UseVisualStyleBackColor = true;
+            this.btnOptimizeArchives.Click += new System.EventHandler(this.btnOptimizeArchives_Click);
             // 
             // lblOutput
             // 
@@ -268,16 +277,6 @@
             this.txtLog.TabIndex = 0;
             this.txtLog.Text = "";
             // 
-            // btnOptimizeArchives
-            // 
-            this.btnOptimizeArchives.Location = new System.Drawing.Point(179, 80);
-            this.btnOptimizeArchives.Name = "btnOptimizeArchives";
-            this.btnOptimizeArchives.Size = new System.Drawing.Size(57, 23);
-            this.btnOptimizeArchives.TabIndex = 11;
-            this.btnOptimizeArchives.Text = "Optimize";
-            this.btnOptimizeArchives.UseVisualStyleBackColor = true;
-            this.btnOptimizeArchives.Click += new System.EventHandler(this.btnOptimizeArchives_Click);
-            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -285,7 +284,6 @@
             this.ClientSize = new System.Drawing.Size(792, 362);
             this.Controls.Add(this.panLog);
             this.Controls.Add(this.panSettings);
-            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MinimumSize = new System.Drawing.Size(800, 300);
             this.Name = "MainForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;

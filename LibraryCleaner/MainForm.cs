@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
@@ -13,7 +14,9 @@ namespace LibraryCleaner
         public MainForm()
         {
             InitializeComponent();
-        
+
+            Icon = Icon.ExtractAssociatedIcon(Process.GetCurrentProcess().MainModule.FileName);
+
             _cleaner = new Cleaner(null);
             _cleaner.OnStateChanged += AddToLog;
 
