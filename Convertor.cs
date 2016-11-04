@@ -462,46 +462,7 @@ namespace Fb2Kindle
             var saveLocal = true;
             var tmpBookPath = string.Format("{0}\\{1}.mobi", tempDir, bookName);
             if (!string.IsNullOrWhiteSpace(MailTo))
-            {
-                //send book to email
-                Console.Write("Sending to {0}...", MailTo);
-                try
-                {
-                    using (var smtp = new SmtpClient
-                    {
-                        Host = "smtp.mailgun.org",
-                        Port = 587,
-                        EnableSsl = true,
-                        DeliveryMethod = SmtpDeliveryMethod.Network,
-                        UseDefaultCredentials = false,
-                        Credentials =
-                            new NetworkCredential("postmaster@sandbox9bf1b495570048b9b31dabddddbccadf.mailgun.org",
-                                "2851987cc3314263118267b62744f3fc")
-                    })
-                    {
-                        using (
-                            var message = new MailMessage(new MailAddress("simpl@Fb2Kindle.org", "Simpl's converter"),
-                                new MailAddress(MailTo))
-                            {
-                                Subject = bookName,
-                                Body = "Hello! Please, check book(s) attached"
-                            })
-                        {
-                            using (var att = new Attachment(tmpBookPath))
-                            {
-                                message.Attachments.Add(att);
-                                smtp.Send(message);
-                            }
-                        }
-                    }
-                    Console.WriteLine("OK");
-                    saveLocal = false;
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine("Error: {0}", ex.Message);
-                }
-            }
+                saveLocal = !SendBookByMail(bookName, tmpBookPath);
             if (saveLocal)
             {
                 //save to output folder
@@ -522,6 +483,45 @@ namespace Fb2Kindle
             if (!showOutput)
                 Console.WriteLine("(OK)");
             return true;
+        }
+
+        private bool SendBookByMail(string bookName, string tmpBookPath)
+        {
+            Console.Write("Sending to {0}...", MailTo);
+            try
+            {
+                using (var smtp = new SmtpClient
+                                  {
+                                      Host = "smtp.gmail.com",
+                                      Port = 587,
+                                      EnableSsl = true,
+                                      DeliveryMethod = SmtpDeliveryMethod.Network,
+                                      UseDefaultCredentials = false,
+                                      Credentials = new NetworkCredential("trial.develop@gmail.com", "DeveloperTest")
+                                  })
+                {
+                    using (var message = new MailMessage(new MailAddress("simpl@Fb2Kindle.org", "Simpl's converter"),
+                            new MailAddress(MailTo))
+                                      {
+                                          Subject = bookName,
+                                          Body = "Hello! Please, check book(s) attached"
+                                      })
+                    {
+                        using (var att = new Attachment(tmpBookPath))
+                        {
+                            message.Attachments.Add(att);
+                            smtp.Send(message);
+                        }
+                    }
+                }
+                Console.WriteLine("OK");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error: {0}", ex.Message);
+            }
+            return false;
         }
 
         private static XElement AddAuthorsInfo(IEnumerable<XElement> avtorbook)
