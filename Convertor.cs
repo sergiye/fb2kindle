@@ -490,17 +490,27 @@ namespace Fb2Kindle
             Console.Write("Sending to {0}...", MailTo);
             try
             {
-                using (var smtp = new SmtpClient
-                                  {
-                                      Host = "smtp.gmail.com",
-                                      Port = 587,
-                                      EnableSsl = true,
-                                      DeliveryMethod = SmtpDeliveryMethod.Network,
-                                      UseDefaultCredentials = false,
-                                      Credentials = new NetworkCredential("trial.develop@gmail.com", "DeveloperTest")
-                                  })
+                const string smtpLogin = "trial.develop@gmail.com";
+                const string smtpPassword = "Ghbdtneirb1";
+                using (var smtp = new SmtpClient("smtp.gmail.com", 587)
+                                    {
+                                        Credentials = new NetworkCredential(smtpLogin, smtpPassword),
+                                        EnableSsl = true
+                                    })
                 {
-                    using (var message = new MailMessage(new MailAddress("simpl@Fb2Kindle.org", "Simpl's converter"),
+//                const string smtpLogin = "postmaster@sandbox9bf1b495570048b9b31dabddddbccadf.mailgun.org";
+//                const string smtpPassword = "2851987cc3314263118267b62744f3fc";
+//                using (var smtp = new SmtpClient
+//                                  {
+//                                      Host = "smtp.mailgun.org",
+//                                      Port = 587,
+//                                      EnableSsl = true,
+//                                      DeliveryMethod = SmtpDeliveryMethod.Network,
+//                                      UseDefaultCredentials = false,
+//                                      Credentials = new NetworkCredential(smtpLogin, smtpPassword)
+//                                  })
+//                {
+                    using (var message = new MailMessage(new MailAddress(smtpLogin, "Simpl's converter"),
                             new MailAddress(MailTo))
                                       {
                                           Subject = bookName,
