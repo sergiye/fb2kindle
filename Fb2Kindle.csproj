@@ -51,6 +51,9 @@
   <PropertyGroup>
     <RootNamespace>Fb2Kindle</RootNamespace>
   </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>Kindle.ico</ApplicationIcon>
+  </PropertyGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
     <Compile Include="AssemblyInfo.cs" />
@@ -93,5 +96,8 @@
       <ProductName>Windows Installer 4.5</ProductName>
       <Install>true</Install>
     </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Kindle.ico" />
   </ItemGroup>
 </Project>
