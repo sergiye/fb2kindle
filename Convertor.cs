@@ -490,26 +490,23 @@ namespace Fb2Kindle
             Console.Write("Sending to {0}...", MailTo);
             try
             {
+#if DEBUG
                 const string smtpLogin = "trial.develop@gmail.com";
                 const string smtpPassword = "Ghbdtneirb1";
-                using (var smtp = new SmtpClient("smtp.gmail.com", 587)
-                                    {
-                                        Credentials = new NetworkCredential(smtpLogin, smtpPassword),
-                                        EnableSsl = true
-                                    })
+                const string smtpServer = "smtp.gmail.com";
+#else
+                const string smtpLogin = "postmaster@sandbox9bf1b495570048b9b31dabddddbccadf.mailgun.org";
+                const string smtpPassword = "2851987cc3314263118267b62744f3fc";
+                const string smtpServer = "smtp.mailgun.org";
+#endif
+                using (var smtp = new SmtpClient(smtpServer, 587)
                 {
-//                const string smtpLogin = "postmaster@sandbox9bf1b495570048b9b31dabddddbccadf.mailgun.org";
-//                const string smtpPassword = "2851987cc3314263118267b62744f3fc";
-//                using (var smtp = new SmtpClient
-//                                  {
-//                                      Host = "smtp.mailgun.org",
-//                                      Port = 587,
-//                                      EnableSsl = true,
-//                                      DeliveryMethod = SmtpDeliveryMethod.Network,
-//                                      UseDefaultCredentials = false,
-//                                      Credentials = new NetworkCredential(smtpLogin, smtpPassword)
-//                                  })
-//                {
+                    Credentials = new NetworkCredential(smtpLogin, smtpPassword),
+                    EnableSsl = true,
+//                    UseDefaultCredentials = false,
+//                    DeliveryMethod = SmtpDeliveryMethod.Network,
+                })
+                {
                     using (var message = new MailMessage(new MailAddress(smtpLogin, "Simpl's converter"),
                             new MailAddress(MailTo))
                                       {
@@ -594,7 +591,7 @@ namespace Fb2Kindle
             SaveXmlToFile(content, fileName);
         }
 
-        #region helper methods
+#region helper methods
 
         private static bool ExtractImages(XElement book, string imagesFolder)
         {
@@ -846,6 +843,6 @@ namespace Fb2Kindle
             guide.Add(itemEl);
         }
 
-        #endregion helper methods
+#endregion helper methods
     }
 }
