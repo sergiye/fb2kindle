@@ -492,7 +492,7 @@ namespace Fb2Kindle
             {
 #if DEBUG
                 const string smtpLogin = "trial.develop@gmail.com";
-                const string smtpPassword = "Ghbdtneirb1";
+                const string smtpPassword = "TrI@lDeVeL0peR";
                 const string smtpServer = "smtp.gmail.com";
 #else
                 const string smtpLogin = "postmaster@sandbox9bf1b495570048b9b31dabddddbccadf.mailgun.org";
