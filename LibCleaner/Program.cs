@@ -2,7 +2,7 @@
 
 namespace LibCleaner
 {
-    class Program
+    static class Program
     {
         private static void ShowUsage()
         {
