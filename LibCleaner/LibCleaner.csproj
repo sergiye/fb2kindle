@@ -51,7 +51,6 @@
     <Compile Include="BookInfo.cs" />
     <Compile Include="Cleaner.cs" />
     <Compile Include="CommonQueue.cs" />
-    <Compile Include="DBHelper.cs" />
     <Compile Include="Genres.cs" />
     <Compile Include="SqlHelper.cs" />
     <Compile Include="Program.cs" />

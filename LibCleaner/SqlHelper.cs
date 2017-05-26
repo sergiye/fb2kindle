@@ -1,11 +1,9 @@
-using System;
 using System.Data;
-using System.Data.Common;
 using System.Data.SQLite;
 
 namespace LibCleaner
 {
-    public class SqlHelper
+    internal static class SqlHelper
     {
         public static string DataBasePath { get; set; }
 
@@ -19,28 +17,7 @@ namespace LibCleaner
         public static IDbCommand GetCommand(string sqlString, IDbConnection cn)
         {
             var connection = cn as SQLiteConnection;
-            if (connection == null)
-                return null;
-            return new SQLiteCommand(sqlString, connection);
-        }
-
-        public static DbParameter AddParameterToCommand(IDbCommand cmd, string parameterName, object parameter)
-        {
-            var command = cmd as SQLiteCommand;
-            if (command == null) return null;
-            if (parameter == null)
-                return command.Parameters.AddWithValue(parameterName, DBNull.Value);
-
-            if (parameter is DateTime)
-            {
-                var dt = (DateTime) parameter;
-                if (dt == DateTime.MinValue)
-                    return command.Parameters.AddWithValue(parameterName, DBNull.Value);
-                var param = new SQLiteParameter(parameterName, DbType.Date) {Value = dt};
-                command.Parameters.Add(param);
-                return param;
-            }
-            return command.Parameters.AddWithValue(parameterName, parameter);
+            return connection == null ? null : new SQLiteCommand(sqlString, connection);
         }
 
         #region Common methods
@@ -54,38 +31,62 @@ namespace LibCleaner
             }
         }
 
-        public static object GetScalarFromQuery(string sql, QueryParameter parameters)
-        {
-            return GetScalarFromQuery(sql, new[] {parameters});
-        }
-
-        public static object GetScalarFromQuery(string sql, QueryParameter[] parameters = null)
+        public static object GetScalarFromQuery(string sql)
         {
             using (IDbConnection cn = GetConnection())
             {
                 var cmd = GetCommand(sql, cn);
-                if (parameters != null && parameters.Length > 0)
-                    foreach (var _parameter in parameters)
-                        AddParameterToCommand(cmd, _parameter.Name, _parameter.Value);
                 return cmd.ExecuteScalar();
             }
         }
 
-        #endregion Common methods
-
-        public class QueryParameter
+        public static string GetString(IDataReader dr, string fieldName)
         {
-            public string Name { get; set; }
-            public object Value { get; set; }
-            
-            public QueryParameter(string parameterName, object parameterValue)
-            {
-                Name = parameterName;
-                if (parameterValue is DateTime)
-                    Value = (DateTime) parameterValue == DateTime.MinValue ? DBNull.Value : parameterValue;
-                else
-                    Value = parameterValue;
-            }
+            return GetString(dr, fieldName, string.Empty);
         }
+
+        private static string GetString(IDataReader dr, string fieldName, string defaultValue)
+        {
+            return GetString(dr, dr.GetOrdinal(fieldName), defaultValue);
+        }
+
+        private static string GetString(IDataReader dr, int columnIndex, string defaultValue)
+        {
+            return dr.IsDBNull(columnIndex) ? defaultValue : dr.GetString(columnIndex);
+        }
+
+        public static int GetInt(IDataReader dr, string fieldName)
+        {
+            return GetInt(dr, fieldName, 0);
+        }
+
+        private static int GetInt(IDataReader dr, string fieldName, int defaultValue)
+        {
+            return GetInt(dr, dr.GetOrdinal(fieldName), defaultValue);
+        }
+
+        private static int GetInt(IDataReader dr, int columnIndex, int defaultValue)
+        {
+            return dr.IsDBNull(columnIndex) ? defaultValue : dr.GetInt32(columnIndex);
+//            return dr.IsDBNull(columnIndex) ? defaultValue : (int) dr.GetDecimal(columnIndex);
+        }
+
+        public static bool GetBoolean(IDataReader dr, string fieldName)
+        {
+            return GetBoolean(dr, fieldName, false);
+        }
+
+        private static bool GetBoolean(IDataReader dr, string fieldName, bool defaultValue)
+        {
+            return GetBoolean(dr, dr.GetOrdinal(fieldName), defaultValue);
+        }
+
+        private static bool GetBoolean(IDataReader dr, int columnIndex, bool defaultValue)
+        {
+            return dr.IsDBNull(columnIndex) ? defaultValue : dr.GetBoolean(columnIndex);
+//            return dr.IsDBNull(columnIndex) ? defaultValue : dr.GetDecimal(columnIndex) == 1;
+        }
+
+        #endregion Common methods
     }
 }

@@ -194,9 +194,9 @@ namespace LibCleaner
                     {
                         while (reader.Read())
                         {
-                            var archName = DBHelper.GetString(reader, "an");
-                            var id = DBHelper.GetInt(reader, "id");
-                            var deleted = DBHelper.GetBoolean(reader, "deleted");
+                            var archName = SqlHelper.GetString(reader, "an");
+                            var id = SqlHelper.GetInt(reader, "id");
+                            var deleted = SqlHelper.GetBoolean(reader, "deleted");
                             AddToRemovedFiles(_filesData, archName, new BookInfo(id, deleted));
                         }
                     }
@@ -220,10 +220,10 @@ namespace LibCleaner
                         {
                             while (reader.Read())
                             {
-                                var archName = DBHelper.GetString(reader, "an");
-                                var id = DBHelper.GetInt(reader, "id");
-                                var deleted = DBHelper.GetBoolean(reader, "deleted");
-                                var genres = DBHelper.GetString(reader, "genres");
+                                var archName = SqlHelper.GetString(reader, "an");
+                                var id = SqlHelper.GetInt(reader, "id");
+                                var deleted = SqlHelper.GetBoolean(reader, "deleted");
+                                var genres = SqlHelper.GetString(reader, "genres");
                                 if (!CheckGenres(genres, GenresToRemove)) continue;
                                 AddToRemovedFiles(_filesData, archName, new BookInfo(id, deleted));
                             }
@@ -247,9 +247,9 @@ namespace LibCleaner
                         {
                             while (reader.Read())
                             {
-                                var archName = DBHelper.GetString(reader, "an");
-                                var id = DBHelper.GetInt(reader, "id");
-                                var deleted = DBHelper.GetBoolean(reader, "deleted");
+                                var archName = SqlHelper.GetString(reader, "an");
+                                var id = SqlHelper.GetInt(reader, "id");
+                                var deleted = SqlHelper.GetBoolean(reader, "deleted");
                                 AddToRemovedFiles(_filesData, archName, new BookInfo(id, deleted));
                             }
                         }
@@ -477,13 +477,13 @@ namespace LibCleaner
                     {
                         while (reader.Read())
                         {
-                            var archName = DBHelper.GetString(reader, "file_name");
+                            var archName = SqlHelper.GetString(reader, "file_name");
                             if (_archivesFound.Any(s => s.EndsWith(archName, StringComparison.OrdinalIgnoreCase)))
                             {
                                 dbArchives.Add(archName);
                                 continue;
                             }
-                            idsToRemove += DBHelper.GetInt(reader, "id") + ",";
+                            idsToRemove += SqlHelper.GetInt(reader, "id") + ",";
                             UpdateState(string.Format("Archive not found in local folder: '{0}'", archName), StateKind.Warning);
                         }
                     }
