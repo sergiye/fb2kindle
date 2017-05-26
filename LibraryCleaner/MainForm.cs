@@ -107,6 +107,7 @@ namespace LibraryCleaner
                 if (!_cleaner.CheckParameters())
                 {
                     AddToLog("Please check input parameters and start again!", Cleaner.StateKind.Warning);
+                    SetFinishedState(startedTime);
                     return;
                 }
 
@@ -181,6 +182,7 @@ namespace LibraryCleaner
                 if (!_cleaner.CheckParameters())
                 {
                     AddToLog("Please check input parameters and start again!", Cleaner.StateKind.Warning);
+                    SetFinishedState(startedTime);
                     return;
                 }
 

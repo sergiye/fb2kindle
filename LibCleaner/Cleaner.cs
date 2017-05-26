@@ -20,8 +20,8 @@ namespace LibCleaner
 
         private class QueueTask
         {
-            public CleanActions ActionType { get; private set; }
-            public Action OnActionFinish { get; private set; }
+            public CleanActions ActionType { get; }
+            public Action OnActionFinish { get; }
 
             public QueueTask(CleanActions actionType, Action onActionFinish)
             {
@@ -35,16 +35,15 @@ namespace LibCleaner
         private string[] _archivesFound;
         private readonly CommonQueue<QueueTask> _internalTasks;
 
-        public string ArchivesPath { get; set; }
-        public string ArchivesOutputPath { get; set; }
+        private string ArchivesPath { get; set; }
+        public string ArchivesOutputPath { private get; set; }
         public bool RemoveDeleted { get; set; }
         public bool RemoveForeign { get; set; }
         public bool RemoveMissingArchivesFromDb { get; set; }
-        public string[] GenresToRemove { get; set; }
+        public string[] GenresToRemove { private get; set; }
 
         public string DatabasePath
         {
-            get { return SqlHelper.DataBasePath; }
             set { SqlHelper.DataBasePath = value; }
         }
 
@@ -277,37 +276,44 @@ namespace LibCleaner
                     allFiles = new HashSet<string>();
                 foreach (var archPath in _archivesFound)
                 {
-                    UpdateState("Processing: " + archPath, StateKind.Log);
-                    var removedCount = 0;
-                    using (var zip = new ZipFile(archPath))
+                    try
                     {
-                        var entriesToRemove = new List<ZipEntry>();
-                        foreach (ZipEntry file in zip.Entries)
+                        UpdateState(string.Format("Processing: {0}", archPath), StateKind.Log);
+                        var removedCount = 0;
+                        using (var zip = new ZipFile(archPath))
                         {
-                            string uniqueHash;
-                            using (var ms = new MemoryStream())
+                            var entriesToRemove = new List<ZipEntry>();
+                            foreach (var file in zip.Entries)
                             {
-                                file.Extract(ms);
-                                ms.Seek(0, SeekOrigin.Begin);
-                                uniqueHash = BitConverter.ToString(alg.ComputeHash(ms)).ToLower();
+                                string uniqueHash;
+                                using (var ms = new MemoryStream())
+                                {
+                                    file.Extract(ms);
+                                    ms.Seek(0, SeekOrigin.Begin);
+                                    uniqueHash = BitConverter.ToString(alg.ComputeHash(ms)).ToLower();
+                                }
+                                if (!allFiles.Contains(uniqueHash))
+                                {
+                                    allFiles.Add(uniqueHash);
+                                    continue;
+                                }
+                                entriesToRemove.Add(file);
+                                removedCount++;
                             }
-                            if (!allFiles.Contains(uniqueHash))
-                            {
-                                allFiles.Add(uniqueHash);
-                                continue;
-                            }
-                            entriesToRemove.Add(file);
-                            removedCount++;
+                            UpdateState(string.Format("Removed {0} files", removedCount), StateKind.Message);
+                            if (removedCount <= 0) continue;
+                            zip.RemoveEntries(entriesToRemove);
+                            UpdateState(string.Format("Saving archive {0}", archPath), StateKind.Log);
+                            zip.CompressionLevel = CompressionLevel.BestCompression;
+                            zip.Save(archPath + ".new");
+                            UpdateState("Done", StateKind.Log);
                         }
-                        UpdateState(string.Format("Removed {0} files", removedCount), StateKind.Message);
-                        if (removedCount <= 0) continue;
-                        zip.RemoveEntries(entriesToRemove);
-                        UpdateState(string.Format("Saving archive {0}", archPath), StateKind.Log);
-                        zip.CompressionLevel = CompressionLevel.BestCompression;
-                        zip.Save(archPath + ".new");
-                        UpdateState("Done", StateKind.Log);
+                        totalRemoved += removedCount;
                     }
-                    totalRemoved += removedCount;
+                    catch (Exception ex)
+                    {
+                        UpdateState(string.Format("Error Processing: {0}: {1}", archPath, ex.Message), StateKind.Error);
+                    }
                 }
                 XmlSerializerHelper.SerializeToFile(savedItemsPath, allFiles);
             }
