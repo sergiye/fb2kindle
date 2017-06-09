@@ -78,7 +78,7 @@ namespace Fb2Kindle
                     if (fileNameWithoutExtension != null)
                     {
                         var fileName = fileNameWithoutExtension.Trim();
-                        Console.WriteLine("Processing: " + fileName);
+                        Util.WriteLine("Processing: " + fileName);
                         var book = LoadBookWithoutNs(books[idx]);
                         if (book == null) return false;
 
@@ -141,7 +141,7 @@ namespace Fb2Kindle
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Unknown error: " + ex.Message);
+                Util.WriteLine("Unknown error: " + ex.Message, ConsoleColor.Red);
                 return false;
             }
             finally
@@ -153,8 +153,8 @@ namespace Fb2Kindle
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine("Error clearing temp folder: " + ex.Message);
-                    Console.WriteLine();
+                    Util.WriteLine("Error clearing temp folder: " + ex.Message, ConsoleColor.Red);
+                    Util.WriteLine();
                 }
             }
         }
@@ -179,7 +179,7 @@ namespace Fb2Kindle
                     if (string.IsNullOrEmpty(src)) continue;
                     src = src.Replace("#", "");
                     var imgEl = new XElement("img");
-                    imgEl.SetAttributeValue("src", string.Format("{0}\\{1}", imagesFolder, src));
+                    imgEl.SetAttributeValue("src", string.Format("{0}\\{1}.jpg", imagesFolder, src));
                     element.Add(imgEl);
                 }
             }
@@ -299,7 +299,7 @@ namespace Fb2Kindle
         private void ProcessAllData(XElement book, string bookDir, string postfix, XElement bookLi)
         {
             _linksDictionary.Clear();
-            Console.Write("FB2 to HTML...");
+            Util.Write("FB2 to HTML...", ConsoleColor.White);
             var bodies = book.Elements("body").ToArray();
 
             //process other "bodies" (notes)
@@ -382,7 +382,7 @@ namespace Fb2Kindle
                 bookLi.Elements("ul").First().Add(GetListItem(part.Key, part.Value));
             }
 
-            Console.WriteLine("(OK)");
+            Util.WriteLine("(OK)", ConsoleColor.Green);
         }
 
         private void SetBigFirstLetters(XElement body)
@@ -436,14 +436,14 @@ namespace Fb2Kindle
 
         private bool CreateMobi(string workFolder, string tempDir, string bookName, string bookPath, bool compress, bool showOutput)
         {
-            Console.WriteLine("Creating mobi (KF8)...");
+            Util.WriteLine("Creating mobi (KF8)...", ConsoleColor.White);
             var kindleGenPath = string.Format("{0}\\kindlegen.exe", workFolder);
             if (!File.Exists(kindleGenPath))
             {
                 kindleGenPath = string.Format("{0}\\kindlegen.exe", tempDir);
                 if (!Util.GetFileFromResource("kindlegen.exe", kindleGenPath))
                 {
-                    Console.WriteLine("kindlegen.exe not found");
+                    Util.WriteLine("kindlegen.exe not found", ConsoleColor.Red);
                     return false;
                 }
             }
@@ -455,7 +455,7 @@ namespace Fb2Kindle
             var res = Util.StartProcess(kindleGenPath, args, showOutput);
             if (res == 2)
             {
-                Console.WriteLine("Error converting to mobi");
+                Util.WriteLine("Error converting to mobi", ConsoleColor.Red);
                 return false;
             }
 
@@ -481,13 +481,13 @@ namespace Fb2Kindle
                 File.Move(tmpBookPath, "NUL");
             }
             if (!showOutput)
-                Console.WriteLine("(OK)");
+                Util.WriteLine("(OK)", ConsoleColor.Green);
             return true;
         }
 
         private bool SendBookByMail(string bookName, string tmpBookPath)
         {
-            Console.Write("Sending to {0}...", MailTo);
+            Util.Write(string.Format("Sending to {0}...", MailTo), ConsoleColor.White);
             try
             {
 #if DEBUG
@@ -521,12 +521,12 @@ namespace Fb2Kindle
                         }
                     }
                 }
-                Console.WriteLine("OK");
+                Util.WriteLine("OK", ConsoleColor.Green);
                 return true;
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Error: {0}", ex.Message);
+                Util.WriteLine(string.Format("Error: {0}", ex.Message), ConsoleColor.Red);
             }
             return false;
         }
@@ -591,59 +591,58 @@ namespace Fb2Kindle
             SaveXmlToFile(content, fileName);
         }
 
-#region helper methods
+        #region helper methods
 
         private static bool ExtractImages(XElement book, string imagesFolder)
         {
             if (book == null) return true;
-            Console.Write("Extracting images...");
+            Util.Write("Extracting images...", ConsoleColor.White);
             if (!Directory.Exists(imagesFolder))
                 Directory.CreateDirectory(imagesFolder);
             foreach (var binEl in book.Elements("binary"))
             {
                 try
                 {
-                    var file = string.Format("{0}\\{1}", imagesFolder, binEl.Attribute("id").Value);
-                    var contentType = binEl.Attribute("content-type").Value;
+                    var file = string.Format("{0}\\{1}.jpg", imagesFolder, binEl.Attribute("id").Value);
                     var fileBytes = Convert.FromBase64String(binEl.Value);
-                    if (contentType == "image/jpeg")
+                    try
                     {
-                        try
+                        using (Stream str = new MemoryStream(fileBytes))
                         {
-                            using (Stream str = new MemoryStream(fileBytes))
+                            using (var img = Image.FromStream(str))
                             {
-                                using (var img = Image.FromStream(str))
-                                {
-                                    var parList = new List<EncoderParameter>
-                                        {
-                                        new EncoderParameter(Encoder.Quality, 50L), 
-                                        //new EncoderParameter(Encoder.ColorDepth, 8L)
-                                    };
-                                    var encoderParams = new EncoderParameters(parList.Count);
-                                    for (var i = 0; i < parList.Count; i++)
-                                        encoderParams.Param[i] = parList[i];
-                                    var codec = Util.GetEncoderInfo(Path.GetExtension(file));
-                                    img.Save(file, codec, encoderParams);
-                                }
+//                                    var parList = new List<EncoderParameter>
+//                                        {
+//                                        new EncoderParameter(Encoder.Quality, 50L), 
+//                                        new EncoderParameter(Encoder.ColorDepth, 8L)
+//                                    };
+//                                    var encoderParams = new EncoderParameters(parList.Count);
+//                                    for (var i = 0; i < parList.Count; i++)
+//                                        encoderParams.Param[i] = parList[i];
+//                                    var codec = Util.GetEncoderInfo("jpeg");//Path.GetExtension(file));
+//                                    img.Save(file, codec, encoderParams);
+                                img.Save(file, ImageFormat.Jpeg);
                             }
                         }
-                        catch (Exception ex)
+                        Image gsImage;
+                        using (var img = Image.FromFile(file))
                         {
-                            Console.WriteLine("Error compressing image: " + ex.Message);
-                            File.WriteAllBytes(file, fileBytes);
+                            gsImage = Util.GrayScale(img, true);
                         }
+                        gsImage.Save(file, ImageFormat.Jpeg);
                     }
-                    else
+                    catch (Exception ex)
                     {
+                        Util.WriteLine("Error compressing image: " + ex.Message, ConsoleColor.Red);
                         File.WriteAllBytes(file, fileBytes);
                     }
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine(ex.Message);
+                    Util.WriteLine(ex.Message, ConsoleColor.Red);
                 }
             }
-            Console.WriteLine("(OK)");
+            Util.WriteLine("(OK)", ConsoleColor.Green);
             return true;
         }
 
@@ -701,7 +700,7 @@ namespace Fb2Kindle
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Unknown file format: " + ex.Message);
+                Util.WriteLine("Unknown file format: " + ex.Message, ConsoleColor.Red);
                 return null;
             }
         }

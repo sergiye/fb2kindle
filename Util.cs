@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
@@ -60,7 +61,7 @@ namespace Fb2Kindle
 
         internal static string GetScriptFromResource(string resourceName)
         {
-            using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(string.Format("Fb2Kindle.{0}", resourceName)))
+            using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(String.Format("Fb2Kindle.{0}", resourceName)))
             {
                 if (stream != null)
                     using (var reader = new StreamReader(stream))
@@ -71,7 +72,7 @@ namespace Fb2Kindle
 
         internal static bool GetFileFromResource(string resourceName, string filename)
         {
-            using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(string.Format("Fb2Kindle.{0}", resourceName)))
+            using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(String.Format("Fb2Kindle.{0}", resourceName)))
             {
                 if (stream == null) return false;
                 using (Stream file = File.OpenWrite(filename))
@@ -106,20 +107,10 @@ namespace Fb2Kindle
                 CopyDirectory(subdir.FullName, Path.Combine(destDirName, subdir.Name), true);
         }
 
-        internal static ImageCodecInfo GetEncoderInfo(string extension)
-        {
-            extension = extension.ToLower();
-            var codecs = ImageCodecInfo.GetImageEncoders();
-            for (var i = 0; i < codecs.Length; i++)
-                if (codecs[i].FilenameExtension.ToLower().Contains(extension))
-                    return codecs[i];
-            return null;
-        }
-
         internal static string Value(IEnumerable<XElement> source, string defaultResult = null)
         {
             var value = source.Select(element => element.Value).FirstOrDefault();
-            if (value == null || string.IsNullOrEmpty(value.Trim()))
+            if (value == null || String.IsNullOrEmpty(value.Trim()))
                 return defaultResult;
             return value.Trim();
         }
@@ -127,7 +118,7 @@ namespace Fb2Kindle
         internal static string AttributeValue(IEnumerable<XElement> source, XName name, string defaultResult = null)
         {
             var value = source.Select(element => (string)element.Attribute(name)).FirstOrDefault();
-            if (value == null || string.IsNullOrEmpty(value.Trim()))
+            if (value == null || String.IsNullOrEmpty(value.Trim()))
                 return defaultResult;
             return value.Trim();
 
@@ -174,7 +165,7 @@ namespace Fb2Kindle
                 element.Attributes().Remove();
                 element.RemoveNodes();
             }
-            if (!string.IsNullOrEmpty(className))
+            if (!String.IsNullOrEmpty(className))
                 element.SetAttributeValue("class", className);
         }
 
@@ -192,9 +183,89 @@ namespace Fb2Kindle
             var process = Process.Start(startInfo);
             if (addToConsole)
                 while (!process.StandardOutput.EndOfStream)
-                    Console.WriteLine(process.StandardOutput.ReadLine());
+                    Util.WriteLine(process.StandardOutput.ReadLine());
             process.WaitForExit();
             return process.ExitCode;
         }
+
+        internal static void WriteLine(string message = null, ConsoleColor? color = null, ConsoleColor? backColor = null)
+        {
+            Write(message, color, backColor, true);
+        }
+
+        internal static void Write(string message = null, ConsoleColor? color = null, ConsoleColor? backColor = null, bool newLine = false)
+        {
+            if (backColor.HasValue)
+                Console.BackgroundColor = backColor.Value;
+            if (color.HasValue)
+                Console.ForegroundColor = color.Value;
+            if (newLine)
+                Console.WriteLine(message);
+            else
+                Console.Write(message);
+            Console.ResetColor();
+        }
+
+        #region Images
+
+        internal static ImageCodecInfo GetEncoderInfo(string extension)
+        {
+            extension = extension.ToLower();
+            var codecs = ImageCodecInfo.GetImageEncoders();
+            for (var i = 0; i < codecs.Length; i++)
+                if (codecs[i].FilenameExtension.ToLower().Contains(extension))
+                    return codecs[i];
+            return null;
+        }
+
+        internal static Image GrayScale(Image img, bool fast)
+        {
+            Stream imageStream = new MemoryStream();
+            if (fast)
+            {
+                using (var bmp = new Bitmap(img))
+                {
+                    var gsBmp = MakeGrayscale3(bmp);
+                    gsBmp.Save(imageStream, ImageFormat.Jpeg);
+                }
+            }
+            else
+            {
+                using (var bmp = new Bitmap(img))
+                {
+                    for (var y = 0; y < bmp.Height; y++)
+                    for (var x = 0; x < bmp.Width; x++)
+                    {
+                        var c = bmp.GetPixel(x, y);
+                        var rgb = (c.R + c.G + c.B) / 3;
+                        bmp.SetPixel(x, y, Color.FromArgb(rgb, rgb, rgb));
+                    }
+                    bmp.Save(imageStream, ImageFormat.Jpeg);
+                }
+            }
+            return Image.FromStream(imageStream);
+        }
+
+        internal static Bitmap MakeGrayscale3(Bitmap original)
+        {
+            var newBitmap = new Bitmap(original.Width, original.Height);
+            var g = Graphics.FromImage(newBitmap);
+            var colorMatrix = new ColorMatrix(new[]
+                                              {
+                                                  new[] {.3f, .3f, .3f, 0, 0},
+                                                  new[] {.59f, .59f, .59f, 0, 0},
+                                                  new[] {.11f, .11f, .11f, 0, 0},
+                                                  new float[] {0, 0, 0, 1, 0},
+                                                  new float[] {0, 0, 0, 0, 1}
+                                              });
+            var attributes = new ImageAttributes();
+            attributes.SetColorMatrix(colorMatrix);
+            g.DrawImage(original, new Rectangle(0, 0, original.Width, original.Height),
+                0, 0, original.Width, original.Height, GraphicsUnit.Pixel, attributes);
+            g.Dispose();
+            return newBitmap;
+        }
+
+        #endregion Images
     }
 }
