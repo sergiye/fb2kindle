@@ -7,44 +7,45 @@ using System.Text;
 
 namespace Fb2Kindle
 {
-    class Program
+    static class Program
     {
         private static void ShowHelpText(Assembly asm)
         {
-            Console.WriteLine();
-            Console.WriteLine(asm.GetName().Name + " <path> [-css <styles.css>] [-d] [-ni] [-mailto:recipient@mail.org]");
-            Console.WriteLine();
-            Console.WriteLine("<path>: input fb2 file or files mask (ex: *.fb2) or path to *fb2 files");
-            Console.WriteLine("-css <styles.css>: styles used in destination book");
-            Console.WriteLine("-d: delete source file after successful convertion");
-            Console.WriteLine("-c: use compression (slow)");
-            Console.WriteLine("-o: hide detailed output");
-            Console.WriteLine("-s: add sequence and number to title");
-            Console.WriteLine("-ni: no images");
-            Console.WriteLine("-ntoc: no table of content");
-            Console.WriteLine("-nch: no chapters");
+            Util.WriteLine();
+            Util.WriteLine(asm.GetName().Name + " <path> [-css <styles.css>] [-d] [-ni] [-mailto:recipient@mail.org]");
+            Util.WriteLine();
+            Util.WriteLine("<path>: input fb2 file or files mask (ex: *.fb2) or path to *fb2 files");
+            Util.WriteLine("-css <styles.css>: styles used in destination book");
+            Util.WriteLine("-d: delete source file after successful convertion");
+            Util.WriteLine("-c: use compression (slow)");
+            Util.WriteLine("-o: hide detailed output");
+            Util.WriteLine("-s: add sequence and number to title");
+            Util.WriteLine("-ni: no images");
+            Util.WriteLine("-ntoc: no table of content");
+            Util.WriteLine("-nch: no chapters");
 
-            Console.WriteLine("-mailto: - send document to email (kindle delivery)");
+            Util.WriteLine("-mailto: - send document to email (kindle delivery)");
 
-            Console.WriteLine("-a: all fb2 books in app folder");
-            Console.WriteLine("-r: process files in subfolders (work with -a key)");
-            Console.WriteLine("-j: join files from each folder to the single book");
+            Util.WriteLine("-a: all fb2 books in app folder");
+            Util.WriteLine("-r: process files in subfolders (work with -a key)");
+            Util.WriteLine("-j: join files from each folder to the single book");
 
-            Console.WriteLine("-save: save parameters to be used at the next start");
-            Console.WriteLine("-w: wait for key press on finish");
-            Console.WriteLine();
+            Util.WriteLine("-save: save parameters to be used at the next start");
+            Util.WriteLine("-w: wait for key press on finish");
+            Util.WriteLine();
         }
 
         private static void ShowMainInfo(Assembly asm)
         {
             //            Console.Clear();
-            Console.WriteLine();
+            Util.WriteLine();
             var ver = asm.GetName().Version;
-            Console.WriteLine(asm.GetName().Name + " Version: " + ver.ToString(3) + "; Build time: " + Util.GetBuildTime(ver).ToString("yyyy/MM/dd HH:mm:ss"));
+            Util.WriteLine(string.Format("{0} Version: {1}; Build time: {2:yyyy/MM/dd HH:mm:ss}", 
+                asm.GetName().Name, ver.ToString(3), Util.GetBuildTime(ver)), ConsoleColor.White);
             var title = Util.GetAttribute<AssemblyTitleAttribute>(asm);
             if (title != null)
-                Console.WriteLine(title.Title);
-            Console.WriteLine();
+                Util.WriteLine(title.Title, ConsoleColor.White);
+            Util.WriteLine();
         }
 
         [STAThread]
@@ -73,7 +74,7 @@ namespace Fb2Kindle
                 if (args.Length == 0)
                 {
                     ShowHelpText(asm);
-                    Console.Write("Process all files with default parameters (-a -r -w)? Press 'Enter' to continue: ");
+                    Util.Write("Process all files with default parameters (-a -r -w)? Press 'Enter' to continue: ", ConsoleColor.White);
                     if (Console.ReadKey().Key != ConsoleKey.Enter)
                         return;
                     wait = true;
@@ -133,13 +134,13 @@ namespace Fb2Kindle
                                         cssFile = appPath + "\\" + cssFile;
                                     if (!File.Exists(cssFile))
                                     {
-                                        Console.WriteLine("css styles file not found");
+                                        Util.WriteLine("css styles file not found", ConsoleColor.Red);
                                         return;
                                     }
                                     cssStyles = File.ReadAllText(cssFile, Encoding.UTF8);
                                     if (string.IsNullOrEmpty(cssStyles))
                                     {
-                                        Console.WriteLine("css styles file is empty");
+                                        Util.WriteLine("css styles file is empty", ConsoleColor.Red);
                                         return;
                                     }
                                     j++;
@@ -158,7 +159,7 @@ namespace Fb2Kindle
                 }
                 if (string.IsNullOrEmpty(bookPath))
                 {
-                    Console.WriteLine("No input file");
+                    Util.WriteLine("No input file", ConsoleColor.Red);
                     return;
                 }
                 if (save)
@@ -176,17 +177,17 @@ namespace Fb2Kindle
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                Util.WriteLine(ex.Message, ConsoleColor.Red);
             }
             finally
             {
                 var timeWasted = DateTime.Now - startedTime;
-                Console.WriteLine();
-                Console.WriteLine("Time wasted: {0:G}", timeWasted);
+                Util.WriteLine();
+                Util.WriteLine(string.Format("Time wasted: {0:G}", timeWasted), ConsoleColor.White);
                 if (wait)
                 {
-                    Console.WriteLine();
-                    Console.WriteLine("Press any key to continue...");
+                    Util.WriteLine();
+                    Util.WriteLine("Press any key to continue...", ConsoleColor.White);
                     Console.ReadKey();
                 }
             }
