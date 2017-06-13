@@ -47,8 +47,14 @@ namespace Fb2Kindle
             _addGuideLine = addGuideLine;
             _detailedOutput = detailedOutput;
             _defaultCss = css;
-            if (string.IsNullOrEmpty(_defaultCss))
-                _defaultCss = Util.GetScriptFromResource("defstyles.css");
+            if (!string.IsNullOrEmpty(_defaultCss)) return;
+            var defStylesFile = Path.ChangeExtension(Assembly.GetExecutingAssembly().Location, ".css");
+            if (File.Exists(defStylesFile))
+            {
+                _defaultCss = File.ReadAllText(defStylesFile);
+            }
+            if (!string.IsNullOrEmpty(_defaultCss)) return;
+            _defaultCss = Util.GetScriptFromResource("defstyles.css");
         }
 
         internal bool ConvertBookSequence(string[] books, bool debug)
