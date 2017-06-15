@@ -67,7 +67,7 @@
     <Compile Include="Program.cs" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="defstyles.css" />
+    <EmbeddedResource Include="Fb2Kindle.css" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="kindlegen.exe" />
