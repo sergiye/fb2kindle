@@ -496,15 +496,9 @@ namespace Fb2Kindle
             Util.Write(string.Format("Sending to {0}...", MailTo), ConsoleColor.White);
             try
             {
-#if DEBUG
                 const string smtpLogin = "trial.develop@gmail.com";
                 const string smtpPassword = "TrI@lDeVeL0peR";
                 const string smtpServer = "smtp.gmail.com";
-#else
-                const string smtpLogin = "postmaster@sandbox9bf1b495570048b9b31dabddddbccadf.mailgun.org";
-                const string smtpPassword = "2851987cc3314263118267b62744f3fc";
-                const string smtpServer = "smtp.mailgun.org";
-#endif
                 using (var smtp = new SmtpClient(smtpServer, 587)
                 {
                     Credentials = new NetworkCredential(smtpLogin, smtpPassword),
