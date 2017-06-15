@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fb2Kindle", "Fb2Kindle.csproj", "{633B7EE3-298C-4D1B-83BA-6E3B6E2062D8}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fb2Kindle", "Fb2Kindle\Fb2Kindle.csproj", "{633B7EE3-298C-4D1B-83BA-6E3B6E2062D8}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LibCleaner", "LibCleaner\LibCleaner.csproj", "{8D57FD38-FD64-4F51-AE87-43A59112B56B}"
 EndProject
