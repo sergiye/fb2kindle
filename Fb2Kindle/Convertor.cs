@@ -54,7 +54,7 @@ namespace Fb2Kindle
                 _defaultCss = File.ReadAllText(defStylesFile);
             }
             if (!string.IsNullOrEmpty(_defaultCss)) return;
-            _defaultCss = Util.GetScriptFromResource("defstyles.css");
+            _defaultCss = Util.GetScriptFromResource("Fb2Kindle.css");
         }
 
         internal bool ConvertBookSequence(string[] books, bool debug)
