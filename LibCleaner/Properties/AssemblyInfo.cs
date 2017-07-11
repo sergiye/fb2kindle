@@ -4,9 +4,9 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("LibCleaner")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Sergey Egoshin")]
+[assembly: AssemblyCompany("Sergiy Yegoshyn")]
 [assembly: AssemblyProduct("LibCleaner")]
-[assembly: AssemblyCopyright("Copyright © Sergey Egoshin 2013")]
+[assembly: AssemblyCopyright("Copyright © Sergiy Yegoshyn 2017")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
