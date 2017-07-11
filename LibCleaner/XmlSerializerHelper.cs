@@ -53,7 +53,7 @@ namespace LibCleaner
                 var serializer = new XmlSerializer(typeof(T));
                 return (T)serializer.Deserialize(reader);
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 return null;
             }
