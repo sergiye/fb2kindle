@@ -264,8 +264,6 @@ namespace LibCleaner
 
         private void OptimizeArchivesOnDisk()
         {
-            var archivesFound = Directory.GetFiles(ArchivesPath, "*fb2*.zip", SearchOption.TopDirectoryOnly);
-
             UpdateState("Calculating archives in database...", StateKind.Warning);
             var dbFiles = new Dictionary<string, List<BookFileInfo>>();
             var allHashes = new Dictionary<string, BookFileInfo>();
@@ -273,11 +271,13 @@ namespace LibCleaner
             using (var connection = SqlHelper.GetConnection())
             {
                 var sql = @"select b.id id_book, b.md5sum md5sum, a.file_name archive_file_name, b.file_name file_name, b.id_archive id_archive, 0 isFile from books b
-JOIN archives a on a.id=b.id_archive and b.file_name is not NULL and b.file_name<>''
-UNION
-select b.id id_book, b.md5sum md5sum, a.file_name archive_file_name, f.file_name file_name, f.id_archive id_archive, 1 isFile from books b
-JOIN files f ON f.id_book=b.id and f.file_name is not NULL and f.file_name<>''
-JOIN archives a on a.id=f.id_archive";
+JOIN archives a on a.id=b.id_archive and b.file_name is not NULL and b.file_name<>''";
+//                var sql = @"select b.id id_book, b.md5sum md5sum, a.file_name archive_file_name, b.file_name file_name, b.id_archive id_archive, 0 isFile from books b
+//JOIN archives a on a.id=b.id_archive and b.file_name is not NULL and b.file_name<>''
+//UNION
+//select b.id id_book, b.md5sum md5sum, a.file_name archive_file_name, f.file_name file_name, f.id_archive id_archive, 1 isFile from books b
+//JOIN files f ON f.id_book=b.id and f.file_name is not NULL and f.file_name<>''
+//JOIN archives a on a.id=f.id_archive";
                 using (var command = SqlHelper.GetCommand(sql, connection))
                 using (var reader = command.ExecuteReader())
                 {
@@ -305,6 +305,7 @@ JOIN archives a on a.id=f.id_archive";
             }
             UpdateState(string.Format("Found archives in database: {0}", dbFiles.Count), StateKind.Message);
             //process all archives on disk
+            var archivesFound = Directory.GetFiles(ArchivesPath, "*fb2*.zip", SearchOption.TopDirectoryOnly);
             UpdateState(string.Format("Found {0} archives to optimize", archivesFound.Length), StateKind.Message);
             //get all files not found on disk (to remove from db)
             var totalRemoved = 0;
@@ -326,7 +327,7 @@ JOIN archives a on a.id=f.id_archive";
                     }
                     using (var zip = new ZipFile(archPath))
                     {
-                        var removedCount = 0;
+                        var zipFilesToRemove = new List<string>();
                         var zipFiles = zip.EntryFileNames;
                         var dbArchiveFiles = dbFiles[archiveName.ToLower()];
                         var filesNotFound = dbArchiveFiles.Where(fi => !zipFiles.Contains(fi.file_name)).ToArray();
@@ -367,11 +368,11 @@ JOIN archives a on a.id=f.id_archive";
                         {
                             if (allHashes.ContainsKey(fileInfo.md5sum))
                             {
-                                if (allHashes[fileInfo.md5sum].file_name.Equals(fileInfo.file_name, StringComparison.OrdinalIgnoreCase))
+                                if (allHashes[fileInfo.md5sum].id_book.Equals(fileInfo.id_book) ||
+                                    allHashes[fileInfo.md5sum].file_name.Equals(fileInfo.file_name, StringComparison.OrdinalIgnoreCase))
                                     continue;
                                 //remove file from zip and all lists
-                                zip.RemoveSelectedEntries(fileInfo.file_name);
-                                removedCount++;
+                                zipFilesToRemove.Add(fileInfo.file_name);
                             }
                             else
                             {
@@ -405,24 +406,24 @@ JOIN archives a on a.id=f.id_archive";
                                 if (allHashes[md5Sum].file_name.Equals(zipFile, StringComparison.OrdinalIgnoreCase))
                                     continue;
                                 //remove file from zip and all lists
-                                zip.RemoveSelectedEntries(zipFile);
-                                removedCount++;
+                                zipFilesToRemove.Add(zipFile);
                             }
                             else
                             {
-                                //add
                                 var fi = new BookFileInfo(zipFile, 0, 0, archiveName, md5Sum, false);
                                 allHashes.Add(md5Sum, fi);
                                 filesFound.Add(fi);
                             }
                         }
-                        if (removedCount <= 0) continue;
+                        if (zipFilesToRemove.Count == 0) continue;
                         //update zip
+                        foreach (var zipfile in zipFilesToRemove)
+                            zip.RemoveSelectedEntries(zipfile);
                         UpdateState(string.Format("Saving archive {0}", archPath), StateKind.Log);
                         zip.CompressionLevel = CompressionLevel.BestSpeed;
-                        zip.Save(archPath + ".new");
+                        zip.Save(); //archPath + ".new");
                         UpdateState("Done", StateKind.Log);
-                        totalRemoved += removedCount;
+                        totalRemoved += zipFilesToRemove.Count;
                     }
                 }
                 catch (Exception ex)
@@ -430,87 +431,6 @@ JOIN archives a on a.id=f.id_archive";
                     UpdateState(string.Format("Error Processing: {0}: {1}", archPath, ex.Message), StateKind.Error);
                 }
             }
-
-//            //get all duplicated files in archives
-//            UpdateState("Searching for duplicated files in archives...", StateKind.Warning);
-//            using (var alg = MD5.Create())
-//            {
-//                foreach (var archPath in archivesFound)
-//                {
-//                    try
-//                    {
-//                        UpdateState(string.Format("Processing: {0}", archPath), StateKind.Log);
-//                        var archiveName = Path.GetFileName(archPath).ToLower();
-//                        if (string.IsNullOrWhiteSpace(archiveName))
-//                        {
-//                            UpdateState(string.Format("Skipped as invalid file name: {0}", archPath), StateKind.Warning);
-//                            continue;
-//                        }
-//                        List<BookFileInfo> dbArchiveFiles = null;
-//                        if (dbFiles.ContainsKey(archiveName))
-//                        {
-//                            dbArchiveFiles = dbFiles[archiveName];
-//                        }
-//                        var removedCount = 0;
-//                        using (var zip = new ZipFile(archPath))
-//                        {
-//                            var entriesToRemove = new List<ZipEntry>();
-//                            foreach (var file in zip.Entries)
-//                            {
-//                                string uniqueHash = null;
-//                                if (dbArchiveFiles != null)
-//                                {
-//                                    //try to get hash from db record
-//                                    var dbRec = dbArchiveFiles.Find(fi => fi.file_name.Equals(file.FileName, StringComparison.OrdinalIgnoreCase));
-//                                    if (dbRec != null)
-//                                        uniqueHash = dbRec.md5sum;
-//                                }
-//                                if (string.IsNullOrWhiteSpace(uniqueHash))
-//                                {
-//                                    //calculate hash from real zip file
-//                                    using (var ms = new MemoryStream())
-//                                    {
-//                                        file.Extract(ms);
-//                                        ms.Seek(0, SeekOrigin.Begin);
-//                                        uniqueHash = BitConverter.ToString(alg.ComputeHash(ms)).Replace("-", "").ToLower();
-//                                    }
-//                                }
-//                                if (!allHashes.ContainsKey(uniqueHash))
-//                                {
-//                                    allHashes.Add(uniqueHash, new BookFileInfo(file.FileName, 0, 0, archiveName, uniqueHash, false));
-//                                    continue;
-//                                }
-//                                if (allHashes[uniqueHash].file_name.Equals(file.FileName, StringComparison.OrdinalIgnoreCase) &&
-//                                    allHashes[uniqueHash].archive_file_name.Equals(archiveName, StringComparison.OrdinalIgnoreCase))
-//                                {
-//                                    //this is the file that is already in db
-//                                    continue;
-//                                }
-//                                entriesToRemove.Add(file);
-//                                removedCount++;
-//                            }
-//                            UpdateState(string.Format("Removed {0} files", removedCount), StateKind.Message);
-//                            if (removedCount > 0)
-//                            {
-//                                zip.RemoveEntries(entriesToRemove);
-//                                UpdateState(string.Format("Saving archive {0}", archPath), StateKind.Log);
-//                                zip.CompressionLevel = CompressionLevel.BestSpeed;
-//                                zip.Save(archPath + ".new");
-//                                UpdateState("Done", StateKind.Log);
-//                            }
-//                            else
-//                            {
-//                                continue;
-//                            }
-//                        }
-//                        totalRemoved += removedCount;
-//                    }
-//                    catch (Exception ex)
-//                    {
-//                        UpdateState(string.Format("Error Processing: {0}: {1}", archPath, ex.Message), StateKind.Error);
-//                    }
-//                }
-//            }
             UpdateState(string.Format("Total removed {0} files", totalRemoved), StateKind.Message);
             SqlHelper.ExecuteNonQuery("VACUUM");
         }
@@ -547,7 +467,7 @@ JOIN archives a on a.id=f.id_archive";
                             continue;
                         }
                         //zip.getsize()
-                        zip.RemoveSelectedEntries(file.FileName);
+                        zip.RemoveEntry(file.FileName);
                         //UpdateState("Removed: '{0}' from archive", file);
                         removedCount++;
                     }
