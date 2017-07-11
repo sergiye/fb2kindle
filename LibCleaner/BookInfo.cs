@@ -2,8 +2,9 @@ namespace LibCleaner
 {
     public class BookInfo
     {
-        public int Id;
-        public bool Deleted;
+        public readonly int Id;
+        public readonly bool Deleted;
+        public string FileName { get; }
 
         public BookInfo(int id, bool deleted)
         {
@@ -11,7 +12,5 @@ namespace LibCleaner
             Deleted = deleted;
             FileName = Id + ".fb2";
         }
-
-        public string FileName { get; set; }
     }
 }
