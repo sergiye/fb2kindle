@@ -48,6 +48,7 @@
     <Reference Include="System.XML" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BookFileInfo.cs" />
     <Compile Include="BookInfo.cs" />
     <Compile Include="Cleaner.cs" />
     <Compile Include="CommonQueue.cs" />

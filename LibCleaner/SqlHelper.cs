@@ -9,7 +9,7 @@ namespace LibCleaner
 
         public static SQLiteConnection GetConnection()
         {
-            var result = new SQLiteConnection(string.Format("Data Source={0}", DataBasePath));
+            var result = new SQLiteConnection(string.Format("Data Source={0};synchronous = OFF;journal_mode = MEMORY;Page Size=4096;Cache Size=2000;", DataBasePath));
             result.Open();
             return result;
         }
@@ -50,7 +50,7 @@ namespace LibCleaner
             return GetString(dr, dr.GetOrdinal(fieldName), defaultValue);
         }
 
-        private static string GetString(IDataReader dr, int columnIndex, string defaultValue)
+        public static string GetString(IDataReader dr, int columnIndex, string defaultValue)
         {
             return dr.IsDBNull(columnIndex) ? defaultValue : dr.GetString(columnIndex);
         }
@@ -65,7 +65,7 @@ namespace LibCleaner
             return GetInt(dr, dr.GetOrdinal(fieldName), defaultValue);
         }
 
-        private static int GetInt(IDataReader dr, int columnIndex, int defaultValue)
+        public static int GetInt(IDataReader dr, int columnIndex, int defaultValue)
         {
             return dr.IsDBNull(columnIndex) ? defaultValue : dr.GetInt32(columnIndex);
 //            return dr.IsDBNull(columnIndex) ? defaultValue : (int) dr.GetDecimal(columnIndex);
