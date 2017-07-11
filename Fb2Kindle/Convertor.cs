@@ -582,9 +582,9 @@ namespace Fb2Kindle
             linkEl.Add(new XElement("br"));
             linkEl.Add(new XElement("br"));
             linkEl.Add(new XElement("br"));
-            var ver = Assembly.GetExecutingAssembly().GetName().Version;
-            linkEl.Add(new XElement("p", "Kindle book was created by © Fb2Kindle (ver. " + ver.ToString(3) + ")"));
-            linkEl.Add(new XElement("p", "Copyright © Sergey Egoshin (egoshin.sergey@gmail.com)"));
+            linkEl.Add(new XElement("p", string.Format("Сreated on {0:yyyy-MM-dd} by © Fb2Kindle (ver. {1})", 
+                DateTime.Now, Assembly.GetExecutingAssembly().GetName().Version.ToString(3))));
+            linkEl.Add(new XElement("p", "developed by Sergiy Yegoshyn (egoshin.sergey@gmail.com)"));
             linkEl.Add(new XElement("br"));
             body.Add(linkEl);
             content.Add(body);

@@ -7,9 +7,9 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("LibraryCleaner")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Sergey Egoshin")]
+[assembly: AssemblyCompany("Sergiy Yegoshyn")]
 [assembly: AssemblyProduct("LibraryCleaner")]
-[assembly: AssemblyCopyright("Copyright © Sergey Egoshin 2015")]
+[assembly: AssemblyCopyright("Copyright © Sergiy Yegoshyn 2017")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
