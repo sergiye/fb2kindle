@@ -267,17 +267,17 @@ namespace LibCleaner
             UpdateState("Calculating archives in database...", StateKind.Warning);
             var dbFiles = new Dictionary<string, List<BookFileInfo>>();
             var allHashes = new Dictionary<string, BookFileInfo>();
+            //move remapped files info to books table
+            SqlHelper.ExecuteNonQuery(@"UPDATE books SET
+                   file_name = (SELECT files.file_name FROM files WHERE files.id_book = books.id)
+                 , id_archive = (SELECT files.id_archive FROM files WHERE files.id_book = books.id)
+                WHERE EXISTS(SELECT * FROM files WHERE files.id_book = books.id)");
+            SqlHelper.ExecuteNonQuery("delete from files");
             //get all database items data (some would be removed if not found on disk)
             using (var connection = SqlHelper.GetConnection())
             {
-                var sql = @"select b.id id_book, b.md5sum md5sum, a.file_name archive_file_name, b.file_name file_name, b.id_archive id_archive, 0 isFile from books b
+                var sql = @"select b.id id_book, b.md5sum md5sum, a.file_name archive_file_name, b.file_name file_name, b.id_archive id_archive from books b
 JOIN archives a on a.id=b.id_archive and b.file_name is not NULL and b.file_name<>''";
-//                var sql = @"select b.id id_book, b.md5sum md5sum, a.file_name archive_file_name, b.file_name file_name, b.id_archive id_archive, 0 isFile from books b
-//JOIN archives a on a.id=b.id_archive and b.file_name is not NULL and b.file_name<>''
-//UNION
-//select b.id id_book, b.md5sum md5sum, a.file_name archive_file_name, f.file_name file_name, f.id_archive id_archive, 1 isFile from books b
-//JOIN files f ON f.id_book=b.id and f.file_name is not NULL and f.file_name<>''
-//JOIN archives a on a.id=f.id_archive";
                 using (var command = SqlHelper.GetCommand(sql, connection))
                 using (var reader = command.ExecuteReader())
                 {
@@ -287,8 +287,7 @@ JOIN archives a on a.id=b.id_archive and b.file_name is not NULL and b.file_name
                             SqlHelper.GetInt(reader, "id_book"), 
                             SqlHelper.GetInt(reader, "id_archive"), 
                             SqlHelper.GetString(reader, "archive_file_name").ToLower(),
-                            SqlHelper.GetString(reader, "md5sum"),
-                            SqlHelper.GetBoolean(reader, "isFile"));
+                            SqlHelper.GetString(reader, "md5sum"));
                         List<BookFileInfo> archiveFiles;
                         if (dbFiles.ContainsKey(fi.archive_file_name))
                         {
@@ -340,17 +339,10 @@ JOIN archives a on a.id=b.id_archive and b.file_name is not NULL and b.file_name
                             {
                                 try
                                 {
-                                    if (info.isFile)
-                                    {
-                                        SqlHelper.ExecuteNonQuery(string.Format(
-                                            "delete from files where id_book={0} and id_archive={1} and file_name='{2}'",
-                                            info.id_book, info.id_archive, info.file_name));
-                                        dbRemoved++;
-                                    }
-                                    else
-                                    {
-                                        //todo: remove record from books table after check that it's OK to do it
-                                    }
+                                    SqlHelper.ExecuteNonQuery(string.Format(
+                                        "delete from books where id={0} and id_archive={1} and file_name='{2}'",
+                                        info.id_book, info.id_archive, info.file_name));
+                                    dbRemoved++;
                                 }
                                 catch (Exception ex)
                                 {
@@ -364,19 +356,24 @@ JOIN archives a on a.id=b.id_archive and b.file_name is not NULL and b.file_name
                         dbArchiveFiles.RemoveAll(fi => !zipFiles.Contains(fi.file_name));
                         //collect all hashes in one place
                         var filesFound = dbArchiveFiles.Where(fi => zipFiles.Contains(fi.file_name)).ToList();
-                        foreach (var fileInfo in filesFound)
+                        foreach (var info in filesFound)
                         {
-                            if (allHashes.ContainsKey(fileInfo.md5sum))
+                            if (allHashes.ContainsKey(info.md5sum))
                             {
-                                if (allHashes[fileInfo.md5sum].id_book.Equals(fileInfo.id_book) ||
-                                    allHashes[fileInfo.md5sum].file_name.Equals(fileInfo.file_name, StringComparison.OrdinalIgnoreCase))
+                                if (allHashes[info.md5sum].id_book.Equals(info.id_book) ||
+                                    allHashes[info.md5sum].file_name.Equals(info.file_name, StringComparison.OrdinalIgnoreCase))
                                     continue;
                                 //remove file from zip and all lists
-                                zipFilesToRemove.Add(fileInfo.file_name);
+                                zipFilesToRemove.Add(info.file_name);
+                                //remove duplicated records from DB
+                                SqlHelper.ExecuteNonQuery(string.Format(
+                                    "delete from books where id={0} and id_archive={1} and file_name='{2}'",
+                                    info.id_book, info.id_archive, info.file_name));
+
                             }
                             else
                             {
-                                allHashes.Add(fileInfo.md5sum, fileInfo);
+                                allHashes.Add(info.md5sum, info);
                             }
                         }
                         //get file hashes that are not listed in DB
@@ -410,7 +407,7 @@ JOIN archives a on a.id=b.id_archive and b.file_name is not NULL and b.file_name
                             }
                             else
                             {
-                                var fi = new BookFileInfo(zipFile, 0, 0, archiveName, md5Sum, false);
+                                var fi = new BookFileInfo(zipFile, 0, 0, archiveName, md5Sum);
                                 allHashes.Add(md5Sum, fi);
                                 filesFound.Add(fi);
                             }
