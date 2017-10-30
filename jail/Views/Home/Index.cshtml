@@ -1,0 +1,48 @@
+﻿@model IEnumerable<jail.Models.BookInfo>
+
+@{
+    ViewBag.Title = "Search";
+}
+<script type="text/javascript">
+    $(document).ready(function () {
+            $("#searchBlock").keyup(function () {
+                window.Helper.delay(function () { RefreshData(true); }, 1000);
+        });
+    });
+    function RefreshData(reloadOnError) {
+        var search = $("#searchBlock");
+        var key = $.trim(search.val());
+        $.ajax({
+            type: "GET",
+            url: '@Url.Action("SearchResults")',
+            data: { key: key },
+            success: function (response) {
+                $("#gridContainer").html(response);
+            },
+            error: function (response, status, error) {
+                if (reloadOnError)
+                    location.reload();
+                else
+                    window.Helper.ShowError(error);
+            }
+        });
+    }
+</script>
+<div class="search-wrapper ">
+    <div class="btn-toolbar pull-left col-md-1" role="toolbar">
+        <h4>@ViewBag.Title</h4>
+    </div>
+    <div class="input-group pull-left">
+        <input id="searchBlock" type="text" class="form-control" aria-label="..."
+               placeholder="Search by title or author...">
+        <div class="input-group-btn">
+            <button id="searchTypeBtn" type="button" class="btn btn-primary" onclick="RefreshData();">Search</button>
+        </div>
+    </div>
+</div>
+<br/>
+<div class="clearfix"></div>
+
+<div id="gridContainer">
+    @{Html.RenderPartial("SearchResults", Model);}
+</div>

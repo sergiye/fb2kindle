@@ -1,0 +1,26 @@
+﻿@model IEnumerable<jail.Models.BookInfo>
+
+<table class="table table-striped table-bordered table-hover">
+    <tr>
+        <th style="min-width: 150px; width: 150px;">Title</th>
+        <th style="min-width: 60px; width: 60px;">Author</th>
+        <th style="max-width: calc(100vw - 800px); word-wrap: break-word;">Description</th>
+        <th style="max-width: 100px;">File</th>
+        <th style="max-width: 100px;">Size</th>
+        <th style="max-width: 100px;">Lang</th>
+    </tr>
+    @foreach (var item in Model)
+    {
+        var rowClass = "";
+        <tr class="@rowClass">
+            <td>@Html.DisplayFor(modelItem => item.Title)</td>
+            <td>@Html.DisplayFor(modelItem => item.Author)</td>
+            <td style="max-width: calc(100vw - 800px); word-wrap: break-word;">
+                @Html.DisplayFor(modelItem => item.Description)
+            </td>
+            <td>@Html.DisplayFor(modelItem => item.FileName)</td>
+            <td>@Html.DisplayFor(modelItem => item.FileSize)</td>
+            <td>@Html.DisplayFor(modelItem => item.Lang)</td>
+        </tr>
+    }
+</table>
