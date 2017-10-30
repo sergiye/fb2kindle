@@ -1,0 +1,68 @@
+﻿@using jail.Controllers
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JAIL - @ViewBag.Title</title>
+    <link rel="icon" type="image/png" href="~/favicon.ico" />
+    @Styles.Render("~/Content/css")
+    @Scripts.Render("~/bundles/modernizr")
+    @Scripts.Render("~/bundles/jquery")
+    @Scripts.Render("~/bundles/bootstrap")
+</head>
+<body>
+    <div class="navbar navbar-inverse navbar-fixed-top">
+        <div class="container">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a id="mainLogoRef" class="navbar-brand pull-left" href="~/">
+                    <img src="@Url.Content("~/Images/logo.png")" alt="JAIL" title="JAIL"/>
+                </a>
+                @Html.ActionLink("JAIL", "Index", "Home", new { area = "" }, new { @class = "navbar-brand" })
+            </div>
+            <div class="navbar-collapse collapse">
+                <ul class="nav navbar-nav">
+                    <li>@Html.ActionLink("File", "File", "Home")</li>
+                    <li>@Html.ActionLink("Contact", "Contact", "Home")</li>
+                    <li>@Html.ActionLink("About", "About", "Home")</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <div id="wrapper" class="container body-content">
+        <div id="main" class="clearfix">
+            @RenderBody()
+        </div>
+    </div>
+    <div class="clearfix"></div>
+    <div id="footer">
+        <hr />
+        <footer>
+            &copy; @DateTime.Now.Year - JAIL - Just Another Internet Library
+            <p>@HomeController.GetVersionString()</p>
+            </footer>
+        </div>
+        <div id='ajax_loader' style="position: fixed; left: calc(50% - 60px); top: calc(50% - 60px); display: none;">
+            <img src="~/Images/loader.gif" />
+        </div>
+
+        @RenderSection("scripts", required: false)
+
+    <script type="text/javascript">
+        jQuery(function ($) {
+            $(document).ajaxStop(function () {
+                $("#ajax_loader").hide();
+            });
+            $(document).ajaxStart(function () {
+                $("#ajax_loader").show();
+            });
+        });
+    </script>
+    </body>
+    </html>
