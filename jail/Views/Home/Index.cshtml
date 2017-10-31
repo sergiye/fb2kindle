@@ -5,8 +5,11 @@
 }
 <script type="text/javascript">
     $(document).ready(function () {
-            $("#searchBlock").keyup(function () {
-                window.Helper.delay(function () { RefreshData(true); }, 1000);
+        $("#searchBlock").keyup(function (event) {
+            //window.Helper.delay(function () { RefreshData(true); }, 1000);
+            if (event.keyCode === 13) {
+                RefreshData(true);
+            }
         });
     });
     function RefreshData(reloadOnError) {

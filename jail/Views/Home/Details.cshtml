@@ -8,5 +8,10 @@
 
 <p>@Html.Raw(Model.Description)</p>
 
+<div>
+    Registered: @Html.DisplayFor(modelItem => Model.CreatedDate)
+</div>
 <hr />
-Download <a href='@Url.Action("download", new { id = Model.Id })' title="Get .fb2 file"><b>.fb2</b></a> book (@Html.DisplayFor(modelItem => Model.FileSizeStr))
+<div>
+    Download <a href='@Url.Action("download", new { id = Model.Id })' title="Get .fb2 file"><b>.fb2</b></a> book (@Html.DisplayFor(modelItem => Model.FileSizeStr))
+</div>
