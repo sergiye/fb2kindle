@@ -26,6 +26,8 @@
 <hr />
 <div>
     Download <a href='@Url.Action("download", new { id = Model.Id })' title="Get .fb2 file"><b>.fb2</b></a> book (@Html.DisplayFor(modelItem => modelItem.FileSizeStr))
+    or
+    <a href='@Url.Action("mobi", new { id = Model.Id })' title="Get .mobi file"><b>Prepare for kindle</b></a>
 </div>
 <div>
     Read book <a href='@Url.Action("read", new { id = Model.Id })' title="Read .fb2 file"><b>@Html.DisplayFor(modelItem => modelItem.Title)</b></a>
