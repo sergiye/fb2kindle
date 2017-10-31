@@ -10,11 +10,8 @@
         @Html.HiddenFor(modelItem => item.FileName)
         <tr>
             <td style="width: 100%;">
-                @Html.DisplayFor(modelItem => item.Title) - @string.Join(", ", item.Authors)
-@*                @foreach (var author in item.Authors)*@
-@*                {*@
-@*                    @Html.DisplayFor(modelItem => author.FullName)*@
-@*                } *@
+                <a href='@Url.Action("details", new { id = item.Id })' title="Book details"><b>@Html.DisplayFor(modelItem => item.Title)</b></a>
+                - @{Html.RenderPartial("AuthorsList", item.Authors);}
             </td>
             <td>
                 @Html.DisplayFor(modelItem => item.Lang)

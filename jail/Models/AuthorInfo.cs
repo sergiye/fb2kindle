@@ -12,9 +12,14 @@ namespace jail.Models
         public string SearchName { get; set; }
         public long Number { get; set; }
 
+        public string DisplayName
+        {
+            get { return string.Format("{0} {1} {2}", FirstName.Trim(), MiddleName.Trim(), LastName.Trim()); }
+        }
+
         public override string ToString()
         {
-            return FullName;
+            return FullName.Trim();
         }
     }
 }
