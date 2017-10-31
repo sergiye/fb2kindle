@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Globalization;
 using Simpl.Extensions;
 using Simpl.Extensions.Database;
 
@@ -12,9 +14,21 @@ namespace jail.Models
         public string ArchiveFileName { get; set; }
         public string FileName { get; set; }
         public long FileSize { get; set; }
+        public long Created { get; set; }
 
         [DapperIgnore]
         public string FileSizeStr { get { return StringHelper.FileSizeStr(FileSize); } }
+
+        [DapperIgnore]
+        public string CreatedDate {
+            get
+            {
+                DateTime dt;
+                return DateTime.TryParseExact(Created.ToString(), "yyMMdd",
+                    CultureInfo.InvariantCulture,
+                    DateTimeStyles.None, out dt) ? dt.ToString("d") : null;
+            } 
+        }
 
         public string Annotation { get; set; }
         public string Description { get; set; }

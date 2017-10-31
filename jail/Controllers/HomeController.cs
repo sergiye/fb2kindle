@@ -55,7 +55,7 @@ namespace jail.Controllers
 
         public ActionResult SearchResults(string key)
         {
-            return PartialView(DataRepository.GetSearchData(key));
+            return PartialView(DataRepository.GetSearchData(key.ToLower()));
         }
 
         [HttpGet, Route("download")]

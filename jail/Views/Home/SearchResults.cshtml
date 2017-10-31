@@ -14,6 +14,9 @@
                 - @{Html.RenderPartial("AuthorsList", item.Authors);}
             </td>
             <td>
+                @Html.DisplayFor(modelItem => item.CreatedDate)
+            </td>
+            <td>
                 @Html.DisplayFor(modelItem => item.Lang)
             </td>
             <td>
