@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using jail.Models;
 using Simpl.Extensions.Database;
 
@@ -35,18 +36,24 @@ namespace jail.Classes
             }
         }
 
-        public static IEnumerable<BookInfo> GetSearchData(string key)
+        public static IEnumerable<BookInfo> GetSearchData(string key, string searchLang)
         {
             if (string.IsNullOrWhiteSpace(key))
                 return new List<BookInfo>();
-            var info = Db.QueryMultiple<BookInfo, AuthorInfo, long>(@"select b.*, ar.file_name ArchiveFileName, a.* from books b
+
+            var sql = new StringBuilder(@"select b.*, ar.file_name ArchiveFileName, a.* from books b
 join fts_book_content c on b.id=c.docid
 join authors a on a.id=b.id_author
 join fts_auth_content ac on ac.docid=a.id
 join archives ar on ar.id=b.id_archive
-where c.c0content like @key or ac.c0content like @key
-order by b.title, b.created DESC LIMIT 100", 
-                b => b.Id, b => b.Authors, new { key = "%%" + key + "%%" });
+where (c.c0content like @key or ac.c0content like @key)");
+            if (searchLang != "all")
+            {
+                sql.Append(" and b.lang=@lang");
+            }
+            sql.Append(" order by b.title, b.created DESC LIMIT 100");
+            var info = Db.QueryMultiple<BookInfo, AuthorInfo, long>(sql.ToString(), 
+                b => b.Id, b => b.Authors, new { key = "%%" + key + "%%", lang = searchLang });
             return info;
         }
 

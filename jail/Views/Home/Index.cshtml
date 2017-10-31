@@ -11,14 +11,26 @@
                 RefreshData(true);
             }
         });
+        $(".dropdown-menu.change-lang").on('click', 'li a', function () {
+            var selectedItemText = $(this).text();
+            var selectedItemSearchType = $(this).attr("data-search-lang");
+
+            $(this).parents("li").addClass("selected");
+            $(this).parents("ul").find("li").removeClass("selected");
+            $("#searchBlock").attr("data-search-lang", selectedItemSearchType);
+            var btnIdToChange = $(this).parents(".dropdown-menu.change-lang").attr("data-change-item-id");
+            $("#" + btnIdToChange).html(selectedItemText + " <span class='caret'></span>");
+            RefreshData(true);
+        });
     });
     function RefreshData(reloadOnError) {
         var search = $("#searchBlock");
         var key = $.trim(search.val());
+        var searchLang = search.attr("data-search-lang");
         $.ajax({
             type: "GET",
             url: '@Url.Action("SearchResults")',
-            data: { key: key },
+            data: { key: key, searchLang: searchLang },
             success: function (response) {
                 $("#gridContainer").html(response);
             },
@@ -37,7 +49,15 @@
     </div>
     <div class="input-group pull-left">
         <input id="searchBlock" type="text" class="form-control" aria-label="..."
-               placeholder="Search by title or author...">
+               data-search-lang="ru" placeholder="Search by title or author...">
+        <div class="input-group-btn">
+            <button id="searchLangBtn" type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" 
+                    aria-haspopup="true" aria-expanded="false">Ru<span class="caret"></span></button>
+            <ul class="dropdown-menu dropdown-menu-right change-lang" data-change-item-id="searchLangBtn">
+                <li><a href="#" data-search-lang="all">All</a></li>
+                <li><a href="#" data-search-lang="ru">Ru</a></li>
+            </ul>
+        </div>
         <div class="input-group-btn">
             <button id="searchTypeBtn" type="button" class="btn btn-primary" onclick="RefreshData();">Search</button>
         </div>
