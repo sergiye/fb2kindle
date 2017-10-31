@@ -27,7 +27,7 @@ namespace jail.Models
                 DateTime dt;
                 return DateTime.TryParseExact(Created.ToString(), "yyMMdd",
                     CultureInfo.InvariantCulture,
-                    DateTimeStyles.None, out dt) ? dt.ToString("d") : null;
+                    DateTimeStyles.None, out dt) ? dt.ToString("yyyy-MM-dd") : null;
             } 
         }
 

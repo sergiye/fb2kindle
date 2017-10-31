@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 // General Information about an assembly is controlled through the following 
@@ -15,5 +16,7 @@ using System.Runtime.InteropServices;
 
 [assembly: ComVisible(false)]
 [assembly: Guid("75655dff-13a8-4f14-b340-82d93a46d4cb")]
+
+[assembly: InternalsVisibleTo("jail")]
 
 [assembly: AssemblyVersion("1.0.*")]

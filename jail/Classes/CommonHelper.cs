@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Linq;
 using System.Net.Http;
+using System.Text.RegularExpressions;
 using System.Web;
+using jail.Models;
 
 namespace jail.Classes
 {
@@ -81,6 +83,15 @@ namespace jail.Classes
                 str = str.Replace(rus_low[i], lat_low[i]);
             }
             return str;
+        }
+
+        public static string GetBookDownloadFileName(BookInfo book, string ext = ".fb2")
+        {
+            var fileName = Regex.Replace(string.Format("{0}_{1}{2}",
+                    book.Authors.First().FullName.ToLower().Translit(),
+                    book.Title.ToLower().Translit(), ext),
+                @"[!@#$%_ ']", "_");
+            return fileName;
         }
     }
 }

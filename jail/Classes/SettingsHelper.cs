@@ -1,4 +1,5 @@
 ﻿using System.Configuration;
+using Fb2Kindle;
 
 namespace jail.Classes
 {
@@ -12,13 +13,24 @@ namespace jail.Classes
         /// </summary>
         public static string DatabasePath { get; set; }
 
+        public static DefaultOptions ConverterSettings;
+        public static string ConverterCss;
+        public static bool ConverterDetailedOutput;
+
         /// <summary>
         /// constructor
         /// </summary>
         static SettingsHelper()
         {
             DatabasePath = ConfigurationManager.AppSettings["DatabasePath"];
-            //DatabasePath = ConfigurationManager.ConnectionStrings["DatabasePath"].ConnectionString;
+
+            //todo: customize from web.config later
+            ConverterSettings = new DefaultOptions
+                                {
+                                    d = true
+                                }; 
+            ConverterCss = string.Empty;
+            ConverterDetailedOutput = false;
         }
     }
 }

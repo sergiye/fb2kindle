@@ -11,16 +11,20 @@
         <tr>
             <td style="width: 100%;">
                 <a href='@Url.Action("details", new { id = item.Id })' title="Book details"><b>@Html.DisplayFor(modelItem => item.Title)</b></a>
-                - @{Html.RenderPartial("AuthorsList", item.Authors);}
+                (@Html.DisplayFor(modelItem => item.Lang)) - @{Html.RenderPartial("AuthorsList", item.Authors);}
+                <a href='@Url.Action("read", new {id = item.Id})' title="Read book">
+                    <b>@Html.DisplayFor(modelItem => item.FileSizeStr)</b>
+                </a>
+                @if (!string.IsNullOrWhiteSpace(item.CreatedDate))
+                {
+                    @:(@Html.DisplayFor(modelItem => item.CreatedDate))
+                }
             </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.CreatedDate)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Lang)
-            </td>
-            <td>
-                <a href='@Url.Action("download", new { id = item.Id })' title="Get .fb2 file"><b>@Html.DisplayFor(modelItem => item.FileSizeStr)</b></a>
+            <td style="min-width: 80px;">
+                <span>
+                    <a href='@Url.Action("download", new { id = item.Id })' title="Get .fb2 file">.fb2</a>
+                    / <a href='@Url.Action("mobi", new { id = item.Id })' title="Get .mobi file">mobi</a>
+                </span>
             </td>
         </tr>
     }
