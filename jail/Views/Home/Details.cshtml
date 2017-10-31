@@ -1,0 +1,12 @@
+﻿@model jail.Models.BookInfo
+
+<h2>@Model.Title</h2>
+<h4>
+    @{Html.RenderPartial("AuthorsList", Model.Authors);}
+</h4>
+<hr />
+
+<p>@Html.Raw(Model.Description)</p>
+
+<hr />
+Download <a href='@Url.Action("download", new { id = Model.Id })' title="Get .fb2 file"><b>.fb2</b></a> book (@Html.DisplayFor(modelItem => Model.FileSizeStr))

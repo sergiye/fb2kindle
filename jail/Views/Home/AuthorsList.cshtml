@@ -1,0 +1,14 @@
+﻿@model IEnumerable<jail.Models.AuthorInfo>
+
+@{
+    var addComma = false;
+    foreach (var author in Model)
+    {
+        if (addComma)
+        {
+            @Html.Raw(", ")
+        }
+        @Html.DisplayFor(modelItem => author.DisplayName)
+        addComma = true;
+    }
+}

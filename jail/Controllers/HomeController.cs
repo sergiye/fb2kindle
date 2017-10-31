@@ -93,6 +93,39 @@ namespace jail.Controllers
             }
         }
 
+        public ActionResult Details(long id)
+        {
+            var book = DataRepository.GetBook(id);
+            if (book == null)
+            {
+                throw new FileNotFoundException("Book not found in db");
+            }
+
+            var archPath = Path.Combine(DataRepository.ArchivesPath, book.ArchiveFileName);
+            if (!System.IO.File.Exists(archPath))
+            {
+                throw new FileNotFoundException("Book archive not found");
+            }
+//            using (var zip = new ZipFile(archPath))
+//            {
+//                var zipEntry = zip.Entries.FirstOrDefault(e => e.FileName.Equals(book.FileName));
+//                if (zipEntry == null)
+//                {
+//                    throw new FileNotFoundException("Book file not found in archive");
+//                }
+//
+//                var ms = new MemoryStream();
+//                {
+//                    zipEntry.Extract(ms);
+//                    ms.Seek(0, SeekOrigin.Begin);
+//
+//                }
+//            }
+            ViewBag.Title = book.Title;
+
+            return View(book);
+        }
+
         public ActionResult About()
         {
             return View();
