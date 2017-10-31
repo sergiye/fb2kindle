@@ -93,5 +93,11 @@ namespace jail.Classes
                 @"[!@#$%_ ']", "_");
             return fileName;
         }
+
+        public static string GetCorrectedFileName(string filename)
+        {
+            var fileName = Regex.Replace(filename.ToLower().Translit(), @"[!@#$%_ ']", "_");
+            return fileName;
+        }
     }
 }

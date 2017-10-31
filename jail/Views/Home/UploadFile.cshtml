@@ -52,7 +52,26 @@
             // Send the file
             var xhr = new XMLHttpRequest();
             xhr.upload.addEventListener('progress', uploadProgress, false);
-            xhr.onreadystatechange = stateChange;
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4) {
+                    if (xhr.status == 200) {
+                        var resp = JSON.parse(xhr.response);
+                        if (resp.success == true) {
+                            dropZone.text('Upload Complete!');
+                            $('#downloadZone').html('<a href="' + resp.link + '" title="Download">' + resp.fileName + '</a>');
+                            dropZone.removeClass('error');
+                        }
+                        else {
+                            dropZone.text('Upload error!');
+                            dropZone.addClass('error');
+                        }
+                    }
+                    else {
+                        dropZone.text('Upload Failed!');
+                        dropZone.addClass('error');
+                    }
+                }
+            }
             xhr.open('POST', 'handleFileUpload', true);
             xhr.setRequestHeader('X-FILE-NAME', file.name);
             xhr.send(file);
@@ -65,30 +84,22 @@
             var percent = parseInt(event.loaded / event.total * 100);
             dropZone.text('Uploading: ' + percent + '%');
         }
-
-        // Show upload complete or upload failed depending on result
-        function stateChange(event) {
-            if (event.target.readyState == 4) {
-                if (event.target.status == 200) {
-                    dropZone.text('Upload Complete!');
-                    dropZone.removeClass('error');
-                }
-                else {
-                    dropZone.text('Upload Failed!');
-                    dropZone.addClass('error');
-                }
-            }
-        }
 </script>
 
-<h2>Drop '.fb2' file to convert to kindle format</h2>
+<div style="text-align: center;">
+    <h3>Drop '.fb2' file to convert to kindle format (.mobi)</h3>
 
-<form id="form1" runat="server">
-    <div id="dropZone">
-        Drop File Here to Upload.
+    <form id="form1" runat="server">
+        <div id="dropZone">
+            Drop File Here to Upload.
+        </div>
+    </form>
+    <div>
+        and get the result...
     </div>
-</form>
-
-<p>
-    Sorry, converter is not ready... :(
-</p>
+    <div id="downloadZone">
+        <p>
+            No files uploaded yet... :(
+        </p>
+    </div>
+</div>

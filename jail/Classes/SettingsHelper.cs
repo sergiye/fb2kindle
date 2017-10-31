@@ -1,4 +1,5 @@
 ﻿using System.Configuration;
+using System.Web.Configuration;
 using Fb2Kindle;
 
 namespace jail.Classes
@@ -12,6 +13,7 @@ namespace jail.Classes
         /// MobileCMSDB
         /// </summary>
         public static string DatabasePath { get; set; }
+        public static long MaxRequestLength { get; set; }
 
         public static DefaultOptions ConverterSettings;
         public static string ConverterCss;
@@ -24,6 +26,9 @@ namespace jail.Classes
         {
             DatabasePath = ConfigurationManager.AppSettings["DatabasePath"];
 
+            var section = ConfigurationManager.GetSection("system.web/httpRuntime") as HttpRuntimeSection;
+            MaxRequestLength = section != null ? (long)section.MaxRequestLength * 1024 : 4096 * 1024;
+            
             //todo: customize from web.config later
             ConverterSettings = new DefaultOptions
                                 {
