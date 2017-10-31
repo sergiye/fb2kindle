@@ -45,7 +45,7 @@ join authors a on a.id=b.id_author
 join fts_auth_content ac on ac.docid=a.id
 join archives ar on ar.id=b.id_archive
 where c.c0content like @key or ac.c0content like @key
-order by b.title LIMIT 100", 
+order by b.title, b.created DESC LIMIT 100", 
                 b => b.Id, b => b.Authors, new { key = "%%" + key + "%%" });
             return info;
         }
@@ -56,7 +56,7 @@ order by b.title LIMIT 100",
 join authors a on a.id=b.id_author
 join archives ar on ar.id=b.id_archive
 where b.id=@id
-order by b.title LIMIT 100", 
+order by b.title, b.created DESC LIMIT 100", 
                 b => b.Id, b => b.Authors, new { id }).FirstOrDefault();
             FillBookSequences(info);
             return info;
