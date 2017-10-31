@@ -58,7 +58,17 @@ join archives ar on ar.id=b.id_archive
 where b.id=@id
 order by b.title LIMIT 100", 
                 b => b.Id, b => b.Authors, new { id }).FirstOrDefault();
+            FillBookSequences(info);
             return info;
+        }
+
+        public static void FillBookSequences(BookInfo book)
+        {
+            if (book == null) return;
+            var info = Db.Query<SequenceInfo>(@"select s.*, bs.number BookOrder from bookseq bs
+  join sequences s on s.id = bs.id_seq where bs.id_book=@id
+order by s.value LIMIT 100", new { id = book.Id });
+            book.Sequences = info;
         }
     }
 }
