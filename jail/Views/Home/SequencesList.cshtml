@@ -1,0 +1,13 @@
+﻿@model IEnumerable<jail.Models.SequenceInfo>
+
+@foreach (var seq in Model)
+{
+    @Html.HiddenFor(modelItem => seq.Id)
+    <div>
+        @Html.DisplayFor(modelItem => seq.Value)
+        @if (seq.BookOrder > 0 ){
+            <span>- @Html.DisplayFor(modelItem => seq.BookOrder)</span>
+        }
+    </div>
+    
+}

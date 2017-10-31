@@ -4,6 +4,9 @@
 <h4>
     @{Html.RenderPartial("AuthorsList", Model.Authors);}
 </h4>
+<p>
+    @{Html.RenderPartial("SequencesList", Model.Sequences);}
+</p>
 <hr />
 
 <p>@Html.Raw(Model.Description)</p>

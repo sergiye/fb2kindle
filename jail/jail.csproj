@@ -147,6 +147,7 @@
     </Compile>
     <Compile Include="Models\AuthorInfo.cs" />
     <Compile Include="Models\BookInfo.cs" />
+    <Compile Include="Models\SequenceInfo.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -209,6 +210,7 @@
     <Content Include="Views\Home\SearchResults.cshtml" />
     <Content Include="Views\Home\Details.cshtml" />
     <Content Include="Views\Home\AuthorsList.cshtml" />
+    <Content Include="Views\Home\SequencesList.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
