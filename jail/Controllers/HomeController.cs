@@ -48,12 +48,12 @@ namespace jail.Controllers
 
         public ActionResult Index()
         {
-            return View(DataRepository.GetSearchData(""));
+            return View(DataRepository.GetSearchData(null, null));
         }
 
-        public ActionResult SearchResults(string key)
+        public ActionResult SearchResults(string key, string searchLang)
         {
-            return PartialView(DataRepository.GetSearchData(key.ToLower()));
+            return PartialView(DataRepository.GetSearchData(key.ToLower(), searchLang));
         }
 
         [HttpGet, Route("download")]
