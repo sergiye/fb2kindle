@@ -1,17 +1,27 @@
-﻿using Simpl.Extensions.Database;
+﻿using System.Collections.Generic;
+using Simpl.Extensions;
+using Simpl.Extensions.Database;
 
 namespace jail.Models
 {
     public class BookInfo: LongIdContainer
     {
         public string Title { get; set; }
-        public string Author { get; set; }
-        public long IdAuthor { get; set; }
+        public List<AuthorInfo> Authors { get; set; }
         public long IdArchive { get; set; }
         public string FileName { get; set; }
         public long FileSize { get; set; }
+
+        [DapperIgnore]
+        public string FileSizeStr { get { return StringHelper.FileSizeStr(FileSize); } }
+
         public string Annotation { get; set; }
         public string Description { get; set; }
         public string Lang { get; set; }
+
+        public BookInfo()
+        {
+            Authors = new List<AuthorInfo>();
+        }
     }
 }
