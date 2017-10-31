@@ -4,12 +4,44 @@ using System.IO;
 using System.Reflection;
 using System.Web.Configuration;
 using System.Web.Mvc;
+using System.Web.Routing;
 using jail.Classes;
 
 namespace jail.Controllers
 {
     public class HomeController : Controller
     {
+        protected override void HandleUnknownAction(string actionName)
+        {
+            base.HandleUnknownAction(actionName);
+        }
+
+        protected override HttpNotFoundResult HttpNotFound(string statusDescription)
+        {
+            return base.HttpNotFound(statusDescription);
+        }
+
+        protected override void OnException(ExceptionContext filterContext)
+        {
+//            if (filterContext.Exception != null)
+//            {
+//                if (filterContext.Exception is TaskCanceledException ||
+//                    filterContext.Exception is OperationCanceledException)
+//                    return;
+//            }
+
+            var name = CommonHelper.GetActionLogName(filterContext.HttpContext.Request);
+            Log.WriteError(filterContext.Exception, string.Format("{0} - {1}", name, 
+                filterContext.Exception != null ? filterContext.Exception.Message : null), CommonHelper.GetClientAddress(), CommonHelper.CurrentIdentityName);
+            base.OnException(filterContext);
+        }
+
+        protected override IAsyncResult BeginExecute(RequestContext requestContext, AsyncCallback callback, object state)
+        {
+            Log.WriteDebug(CommonHelper.GetActionLogName(requestContext.HttpContext.Request), CommonHelper.GetClientAddress(), CommonHelper.CurrentIdentityName);
+            return base.BeginExecute(requestContext, callback, state);
+        }
+
         public static string GetVersionString()
         {
             var ver = Assembly.GetExecutingAssembly().GetName().Version;
