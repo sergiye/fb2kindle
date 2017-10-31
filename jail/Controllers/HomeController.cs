@@ -1,26 +1,22 @@
 ﻿using System;
 using System.Configuration;
 using System.IO;
+using System.Linq;
+using System.Net;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using System.Web.Configuration;
 using System.Web.Mvc;
 using System.Web.Routing;
+using Ionic.Zip;
 using jail.Classes;
 
 namespace jail.Controllers
 {
     public class HomeController : Controller
     {
-        protected override void HandleUnknownAction(string actionName)
-        {
-            base.HandleUnknownAction(actionName);
-        }
-
-        protected override HttpNotFoundResult HttpNotFound(string statusDescription)
-        {
-            return base.HttpNotFound(statusDescription);
-        }
-
         protected override void OnException(ExceptionContext filterContext)
         {
 //            if (filterContext.Exception != null)
@@ -60,6 +56,41 @@ namespace jail.Controllers
         public ActionResult SearchResults(string key)
         {
             return PartialView(DataRepository.GetSearchData(key));
+        }
+
+        [HttpGet, Route("download")]
+        public FileResult Download(long id)
+        {
+            var book = DataRepository.GetBook(id);
+            if (book == null)
+            {
+                throw new FileNotFoundException("Book not found in db");
+            }
+
+            var archPath = Path.Combine(DataRepository.ArchivesPath, book.ArchiveFileName);
+            if (!System.IO.File.Exists(archPath))
+            {
+                throw new FileNotFoundException("Book archive not found");
+            }
+            using (var zip = new ZipFile(archPath))
+            {
+                var zipEntry = zip.Entries.FirstOrDefault(e => e.FileName.Equals(book.FileName));
+                if (zipEntry == null)
+                {
+                    throw new FileNotFoundException("Book file not found in archive");
+                }
+
+                var ms = new MemoryStream();
+                {
+                    zipEntry.Extract(ms);
+                    ms.Seek(0, SeekOrigin.Begin);
+                    var fileName = Regex.Replace(string.Format("{0}_{1}.fb2", 
+                        book.Authors.First().FullName.ToLower().Translit(), 
+                        book.Title.ToLower().Translit()), 
+                        @"[!@#$%_ ']", "_");
+                    return File(ms.ToArray(), System.Net.Mime.MediaTypeNames.Application.Octet, fileName);
+                }
+            }
         }
 
         public ActionResult About()
