@@ -35,6 +35,9 @@ namespace jail.Models
         public string Description { get; set; }
         public string Lang { get; set; }
 
+        [DapperIgnore]
+        public string BookContent { get; set; }
+
         public BookInfo()
         {
             Authors = new List<AuthorInfo>();

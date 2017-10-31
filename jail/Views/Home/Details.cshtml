@@ -9,12 +9,24 @@
 </p>
 <hr />
 
-<p>@Html.Raw(Model.Description)</p>
+@Html.HiddenFor(modelItem => modelItem.ArchiveFileName)
+@Html.HiddenFor(modelItem => modelItem.FileName)
+@Html.HiddenFor(modelItem => modelItem.IdArchive)
+@Html.HiddenFor(modelItem => modelItem.Id)
+
+<p>
+    @Html.Raw(Model.Annotation)
+    <br/>
+    @Html.Raw(Model.Description)
+</p>
 
 <div>
-    Registered: @Html.DisplayFor(modelItem => Model.CreatedDate)
+    Registered: @Html.DisplayFor(modelItem => modelItem.CreatedDate)
 </div>
 <hr />
 <div>
-    Download <a href='@Url.Action("download", new { id = Model.Id })' title="Get .fb2 file"><b>.fb2</b></a> book (@Html.DisplayFor(modelItem => Model.FileSizeStr))
+    Download <a href='@Url.Action("download", new { id = Model.Id })' title="Get .fb2 file"><b>.fb2</b></a> book (@Html.DisplayFor(modelItem => modelItem.FileSizeStr))
+</div>
+<div>
+    Read book <a href='@Url.Action("read", new { id = Model.Id })' title="Read .fb2 file"><b>@Html.DisplayFor(modelItem => modelItem.Title)</b></a>
 </div>

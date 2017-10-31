@@ -60,7 +60,7 @@ footer {
 }
 #gridContainer {
     overflow: auto;
-    height: calc(99% - 20px);
+    height: 99%;
     margin-top: 20px;
     font-size: 12px;
 }
