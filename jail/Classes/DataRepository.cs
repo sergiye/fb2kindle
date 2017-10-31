@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using jail.Models;
 using Simpl.Extensions.Database;
@@ -19,13 +18,13 @@ namespace jail.Classes
         {
             if (string.IsNullOrWhiteSpace(key))
                 return new List<BookInfo>();
-            var info = Db.Query<BookInfo>(@"select a.full_name Author, b.* from books b
+            var info = Db.QueryMultiple<BookInfo, AuthorInfo, long>(@"select b.*, a.* from books b
 join fts_book_content c on b.id=c.docid
 join authors a on a.id=b.id_author
 join fts_auth_content ac on ac.docid=a.id
 where c.c0content like @key or ac.c0content like @key
 order by b.title LIMIT 100", 
-                new { key = "%%" + key + "%%" });
+                b => b.Id, b => b.Authors, new { key = "%%" + key + "%%" });
             return info;
         }
     }
