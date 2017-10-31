@@ -6,6 +6,7 @@
         @Html.HiddenFor(modelItem => item.Id)
         @Html.HiddenFor(modelItem => item.IdArchive)
         @Html.HiddenFor(modelItem => item.Description)
+        @Html.HiddenFor(modelItem => item.ArchiveFileName)
         @Html.HiddenFor(modelItem => item.FileName)
         <tr>
             <td style="width: 100%;">
@@ -19,7 +20,7 @@
                 @Html.DisplayFor(modelItem => item.Lang)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.FileSizeStr)
+                <a href='@Url.Action("download", new { id = item.Id })' title="Get .fb2 file"><b>@Html.DisplayFor(modelItem => item.FileSizeStr)</b></a>
             </td>
         </tr>
     }
