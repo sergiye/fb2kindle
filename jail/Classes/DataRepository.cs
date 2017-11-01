@@ -42,7 +42,7 @@ namespace jail.Classes
                 return new List<BookInfo>();
 
             var sql = new StringBuilder(@"select b.id, b.title, b.id_archive, b.file_name, b.file_size, b.md5sum, 
-b.created, b.lang, b.description, a.id, a.full_name, a.first_name, a.middle_name, a.last_name from books b
+b.created, b.lang, a.id, a.full_name, a.first_name, a.middle_name, a.last_name from books b
 join authors a on a.id=b.id_author
 join fts_book_content c on b.id=c.docid
 join fts_auth_content ac on ac.docid=a.id
@@ -77,6 +77,24 @@ where b.id=@id order by b.title, b.created DESC LIMIT 100",
   join sequences s on s.id = bs.id_seq where bs.id_book=@id
 order by s.value LIMIT 100", new { id = book.Id });
             book.Sequences = info;
+        }
+
+        public static SequenceData GetSequenceData(long id)
+        {
+            var seq = Db.QueryOne<SequenceData>("select s.*, 0 BookOrder from sequences s where s.id=@id", new {id});
+            if (seq == null) return null;
+
+            var sql = new StringBuilder(@"select b.id, b.title, b.id_archive, b.file_name, b.file_size, b.md5sum,
+  b.created, b.lang, bs.number BookOrder,
+  a.id, a.full_name, a.first_name, a.middle_name, a.last_name
+from books b
+join authors a on a.id=b.id_author
+left join bookseq bs on bs.id_book=b.id
+where bs.id_seq=@id
+order by bs.number, b.title, b.created DESC LIMIT 1000");
+            seq.Books = Db.QueryMultiple<BookInfo, AuthorInfo, long>(sql.ToString(),
+                b => b.Id, b => b.Authors, new { id }).ToList();
+            return seq;
         }
     }
 }

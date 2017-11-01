@@ -11,6 +11,8 @@ namespace jail.Controllers
     [OutputCache(NoStore = true, Duration = 0, VaryByParam = "None")]
     public class HomeController : Controller
     {
+        #region Logging
+
         protected override void OnException(ExceptionContext filterContext)
         {
 //            if (filterContext.Exception != null)
@@ -19,9 +21,8 @@ namespace jail.Controllers
 //                    filterContext.Exception is OperationCanceledException)
 //                    return;
 //            }
-
             var name = CommonHelper.GetActionLogName(filterContext.HttpContext.Request);
-            Log.WriteError(filterContext.Exception, string.Format("{0} - {1}", name, 
+            Log.WriteError(filterContext.Exception, string.Format("{0} - {1}", name,
                 filterContext.Exception != null ? filterContext.Exception.Message : null), CommonHelper.GetClientAddress(), CommonHelper.CurrentIdentityName);
             base.OnException(filterContext);
         }
@@ -31,6 +32,10 @@ namespace jail.Controllers
             Log.WriteDebug(CommonHelper.GetActionLogName(requestContext.HttpContext.Request), CommonHelper.GetClientAddress(), CommonHelper.CurrentIdentityName);
             return base.BeginExecute(requestContext, callback, state);
         }
+
+        #endregion
+
+        #region basic methods
 
         public static string GetVersionString()
         {
@@ -42,6 +47,21 @@ namespace jail.Controllers
                 Assembly.GetExecutingAssembly().GetName().Version, buildTime);
         }
 
+        public ActionResult About()
+        {
+            return View();
+        }
+
+        public ActionResult Contact()
+        {
+            ViewBag.Message = "Contacts page.";
+            return View();
+        }
+
+        #endregion
+
+        #region Search
+
         public ActionResult Index()
         {
             return View(DataRepository.GetSearchData(null, null));
@@ -51,6 +71,10 @@ namespace jail.Controllers
         {
             return PartialView(DataRepository.GetSearchData(key.ToLower(), searchLang));
         }
+
+        #endregion
+
+        #region book
 
         [HttpGet, Route("download")]
         public FileResult Download(long id)
@@ -158,16 +182,20 @@ namespace jail.Controllers
             return View(book);
         }
 
-        public ActionResult About()
+        #endregion
+
+        #region sequence
+
+        public ActionResult Sequence(long id)
         {
-            return View();
+            var data = DataRepository.GetSequenceData(id);
+            ViewBag.Title = data.Value;
+            return View(data);
         }
 
-        public ActionResult Contact()
-        {
-            ViewBag.Message = "Contacts page.";
-            return View();
-        }
+        #endregion
+
+        #region upload/convert
 
         public ActionResult UploadFile()
         {
@@ -203,5 +231,7 @@ namespace jail.Controllers
 
             return Json(new { success = true, link = mobiRelativePath, fileName = mobiDisplayName });
         }
+
+        #endregion
     }
 }

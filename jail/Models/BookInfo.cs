@@ -15,7 +15,6 @@ namespace jail.Models
         public string Md5sum { get; set; }
         public long FileSize { get; set; }
         public long Created { get; set; }
-        public string Description { get; set; }
         public string Lang { get; set; }
 
         [DapperIgnore]

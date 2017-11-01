@@ -34,6 +34,7 @@
             data: { key: key, searchLang: searchLang },
             success: function (response) {
                 $("#gridContainer").html(response);
+                $("#footer").hide();
             },
             error: function (response, status, error) {
                 if (reloadOnError)
@@ -70,6 +71,7 @@
 <div id="gridContainer">
     @{Html.RenderPartial("SearchResults", Model);}
 </div>
+
 <div class="clearfix"></div>
 <div id="footer">
     <footer>

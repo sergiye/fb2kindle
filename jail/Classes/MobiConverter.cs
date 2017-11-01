@@ -93,11 +93,17 @@ namespace jail.Classes
         {
             var xmlDoc = new XmlDocument();
             xmlDoc.Load(inputFile);
-            foreach (XmlNode node in xmlDoc.GetElementsByTagName("annotation"))
+            var nodes = xmlDoc.GetElementsByTagName("annotation");
+            if (nodes.Count > 0)
             {
-                File.WriteAllText(outputFile, node.InnerText);
-                break;
+                foreach (XmlNode node in nodes)
+                {
+                    File.WriteAllText(outputFile, node.InnerText);
+                    break;
+                }
             }
+            else
+                File.WriteAllText(outputFile, "");
         }
 
         public static void Transform(string inputFile, string outputFile, string xsl)

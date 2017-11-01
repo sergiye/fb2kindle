@@ -2,12 +2,13 @@
 
 @foreach (var seq in Model)
 {
-    @Html.HiddenFor(modelItem => seq.Id)
     <div>
-        @Html.DisplayFor(modelItem => seq.Value)
-        @if (seq.BookOrder > 0 ){
+        <a href='@Url.Action("sequence", new {id = seq.Id})' title="View sequence">
+            @Html.DisplayFor(modelItem => seq.Value)
+        </a>
+        @if (seq.BookOrder > 0 )
+        {
             <span>- @Html.DisplayFor(modelItem => seq.BookOrder)</span>
         }
     </div>
-    
 }
