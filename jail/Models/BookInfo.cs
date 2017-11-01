@@ -16,6 +16,7 @@ namespace jail.Models
         public long FileSize { get; set; }
         public long Created { get; set; }
         public string Lang { get; set; }
+        public int BookOrder { get; set; }
 
         [DapperIgnore]
         public string FileSizeStr { get { return StringHelper.FileSizeStr(FileSize); } }

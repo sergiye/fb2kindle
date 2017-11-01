@@ -18,6 +18,12 @@
                     @:(@Html.DisplayFor(modelItem => item.CreatedDate))
                 }
             </td>
+            @if (ViewBag.SequenceMode != null && ViewBag.SequenceMode)
+            {
+            <td>
+                @Html.DisplayFor(modelItem => item.BookOrder)
+            </td>
+            }
             <td style="min-width: 80px;">
                 <span>
                     <a href='@Url.Action("download", new { id = item.Id })' title="Get .fb2 file">.fb2</a>
