@@ -9,10 +9,8 @@ namespace jail.Classes
     /// </summary>
     public static class SettingsHelper
     {
-        /// <summary>
-        /// MobileCMSDB
-        /// </summary>
         public static string DatabasePath { get; set; }
+        public static string ConvertedBooksPath { get; set; }
         public static long MaxRequestLength { get; set; }
 
         public static DefaultOptions ConverterSettings;
@@ -25,6 +23,7 @@ namespace jail.Classes
         static SettingsHelper()
         {
             DatabasePath = ConfigurationManager.AppSettings["DatabasePath"];
+            ConvertedBooksPath = ConfigurationManager.AppSettings["ConvertedBooksPath"];
 
             var section = ConfigurationManager.GetSection("system.web/httpRuntime") as HttpRuntimeSection;
             MaxRequestLength = section != null ? (long)section.MaxRequestLength * 1024 : 4096 * 1024;
