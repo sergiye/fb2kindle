@@ -40,7 +40,7 @@ namespace jail.Controllers
             var buildTime = new DateTime(2000, 1, 1).AddDays(ver.Build).AddSeconds(ver.Revision * 2);
             if (TimeZone.IsDaylightSavingTime(DateTime.Now, TimeZone.CurrentTimeZone.GetDaylightChanges(DateTime.Now.Year)))
                 buildTime = buildTime.AddHours(1);
-            return string.Format("Application version: {0}; Build Time: {1:yyyy/MM/dd HH:mm:ss}",
+            return string.Format("Version: {0}; Updated: {1:yy/MM/dd HH:mm}",
                 Assembly.GetExecutingAssembly().GetName().Version, buildTime);
         }
 

@@ -1,5 +1,4 @@
-﻿@using jail.Controllers
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8" />
@@ -40,18 +39,11 @@
             @RenderBody()
         </div>
     </div>
-    <div class="clearfix"></div>
-    <div id="footer">
-        <footer>
-            &copy; @DateTime.Now.Year - JAIL - Just Another Internet Library
-            <p>@HomeController.GetVersionString()</p>
-            </footer>
-        </div>
-        <div id='ajax_loader' style="position: fixed; left: calc(50% - 60px); top: calc(50% - 60px); display: none;">
-            <img src="~/Images/loader.gif" />
-        </div>
+    <div id='ajax_loader' style="position: fixed; left: calc(50% - 60px); top: calc(50% - 60px); display: none;">
+        <img src="~/Images/loader.gif" />
+    </div>
 
-        @RenderSection("scripts", required: false)
+    @RenderSection("scripts", required: false)
 
     <script type="text/javascript">
         jQuery(function ($) {

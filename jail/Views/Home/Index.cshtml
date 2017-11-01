@@ -1,4 +1,5 @@
-﻿@model IEnumerable<jail.Models.BookInfo>
+﻿@using jail.Controllers
+@model IEnumerable<jail.Models.BookInfo>
 
 @{
     ViewBag.Title = "Search";
@@ -68,4 +69,11 @@
 
 <div id="gridContainer">
     @{Html.RenderPartial("SearchResults", Model);}
+</div>
+<div class="clearfix"></div>
+<div id="footer">
+    <footer>
+        &copy; @DateTime.Now.Year - JAIL (Just Another Internet Library)
+        <p>@HomeController.GetVersionString()</p>
+    </footer>
 </div>
