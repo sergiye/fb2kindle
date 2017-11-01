@@ -2,7 +2,12 @@
 
 
 <h2>@ViewBag.Title</h2>
-
+<script> 
+    $(function(){
+        $("#includedContent").load("@ViewBag.BookContent");
+    });
+</script> 
 <div id="gridContainer">
-    @Html.Raw(Model.BookContent)
+    <div id="includedContent"></div>
+@*    @Html.Raw(Model.BookContent)*@
 </div>

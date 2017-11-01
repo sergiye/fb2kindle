@@ -113,14 +113,15 @@ namespace jail.Controllers
             if (!System.IO.File.Exists(tempFile))
                 CommonHelper.ExtractZipFile(archPath, book.FileName, tempFile);
 
-            var sp = new MobiConverter(tempFile);
-            if (sp.InitializationError)
-                throw new ArgumentException("Error preparing file to read (initialization)");
-            //sp.saveImages();
-            var generatedFile = sp.transform(Server.MapPath("~/xhtml.xsl"), "index.html");
-            book.BookContent = System.IO.File.ReadAllText(generatedFile);
+            var detailsFolder = Path.Combine(Path.GetDirectoryName(tempFile), Path.GetFileNameWithoutExtension(tempFile));
+            if (string.IsNullOrWhiteSpace(detailsFolder))
+                throw new DirectoryNotFoundException("Details folder is empty");
+            Directory.CreateDirectory(detailsFolder);
+            var readingPath = Path.Combine(detailsFolder, "index.html");
+            if (!System.IO.File.Exists(readingPath))
+                MobiConverter.Transform(tempFile, readingPath, Server.MapPath("~/xhtml.xsl"));
             ViewBag.Title = book.Title;
-            
+            ViewBag.BookContent = Path.Combine(@"../../" + readingPath.Replace(Server.MapPath("~"), "").Replace('\\', '/'));
             return View(book);
         }
 
@@ -137,15 +138,22 @@ namespace jail.Controllers
             var tempFile = Server.MapPath(string.Format("~/Uploads/{0}", book.FileName));
             if (!System.IO.File.Exists(tempFile))
                 CommonHelper.ExtractZipFile(archPath, book.FileName, tempFile);
-
-            var sp = new MobiConverter(tempFile);
-            if (sp.InitializationError)
-                throw new ArgumentException("Error preparing file to read (initialization)");
-            var coverImage = sp.saveImages(true);
-            if (string.IsNullOrWhiteSpace(book.Annotation) && string.IsNullOrWhiteSpace(book.Description))
-                book.Annotation = System.IO.File.ReadAllText(sp.saveAnnotation());
+            var detailsFolder = Path.Combine(Path.GetDirectoryName(tempFile), Path.GetFileNameWithoutExtension(tempFile));
+            if (string.IsNullOrWhiteSpace(detailsFolder))
+                throw new DirectoryNotFoundException("Details folder is empty");
+            Directory.CreateDirectory(detailsFolder);
+            var coverImagePath = Path.Combine(detailsFolder, "cover.jpg");
+            var annotationsPath = Path.Combine(detailsFolder, "annotation.txt");
+            if (!System.IO.File.Exists(coverImagePath))
+                MobiConverter.SaveCover(tempFile, coverImagePath);
+            if (string.IsNullOrWhiteSpace(book.Description))
+            {
+                if (!System.IO.File.Exists(annotationsPath))
+                    MobiConverter.SaveAnnotation(tempFile, annotationsPath);
+                book.Description = System.IO.File.ReadAllText(annotationsPath);
+            }
             ViewBag.Title = book.Title;
-            ViewBag.Image = Path.Combine(@"..\..\" + coverImage.Replace(Server.MapPath("~"), ""));
+            ViewBag.Image = Path.Combine(@"..\..\" + coverImagePath.Replace(Server.MapPath("~"), ""));
 
             return View(book);
         }
