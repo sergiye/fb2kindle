@@ -1,11 +1,9 @@
 ﻿using System;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using System.Web.Mvc;
 using System.Web.Routing;
 using Fb2Kindle;
-using Ionic.Zip;
 using jail.Classes;
 
 namespace jail.Controllers
@@ -59,31 +57,14 @@ namespace jail.Controllers
         {
             var book = DataRepository.GetBook(id);
             if (book == null)
-            {
                 throw new FileNotFoundException("Book not found in db");
-            }
 
             var archPath = Path.Combine(DataRepository.ArchivesPath, book.ArchiveFileName);
             if (!System.IO.File.Exists(archPath))
-            {
                 throw new FileNotFoundException("Book archive not found");
-            }
-            using (var zip = new ZipFile(archPath))
-            {
-                var zipEntry = zip.Entries.FirstOrDefault(e => e.FileName.Equals(book.FileName));
-                if (zipEntry == null)
-                {
-                    throw new FileNotFoundException("Book file not found in archive");
-                }
-
-                var ms = new MemoryStream();
-                {
-                    zipEntry.Extract(ms);
-                    ms.Seek(0, SeekOrigin.Begin);
-                    return File(ms.ToArray(), System.Net.Mime.MediaTypeNames.Application.Octet, 
-                        CommonHelper.GetBookDownloadFileName(book));
-                }
-            }
+            var fileData = CommonHelper.ExtractZipFile(archPath, book.FileName);
+            return File(fileData, System.Net.Mime.MediaTypeNames.Application.Octet, 
+                CommonHelper.GetBookDownloadFileName(book));
         }
 
         [HttpGet, Route("mobi")]
@@ -96,20 +77,13 @@ namespace jail.Controllers
             var resultFile = Path.Combine(SettingsHelper.ConvertedBooksPath, Path.ChangeExtension(book.FileName, ".mobi"));
             if (!System.IO.File.Exists(resultFile))
             {
-                var tempFile = Path.Combine(Path.GetTempPath(), book.FileName);
                 var archPath = Path.Combine(DataRepository.ArchivesPath, book.ArchiveFileName);
                 if (!System.IO.File.Exists(archPath))
-                {
                     throw new FileNotFoundException("Book archive not found");
-                }
-                using (var zip = new ZipFile(archPath))
-                {
-                    var zipEntry = zip.Entries.FirstOrDefault(e => e.FileName.Equals(book.FileName));
-                    if (zipEntry == null)
-                        throw new FileNotFoundException("Book file not found in archive");
-                    using (var fs = System.IO.File.Create(tempFile))
-                        zipEntry.Extract(fs);
-                }
+
+                var tempFile = Path.Combine(Path.GetTempPath(), book.FileName);
+                if (!System.IO.File.Exists(tempFile))
+                    CommonHelper.ExtractZipFile(archPath, book.FileName, tempFile);
 
                 var conv = new Convertor(SettingsHelper.ConverterSettings, SettingsHelper.ConverterCss, SettingsHelper.ConverterDetailedOutput);
                 if (!conv.ConvertBook(tempFile, false))
@@ -134,29 +108,17 @@ namespace jail.Controllers
             var archPath = Path.Combine(DataRepository.ArchivesPath, book.ArchiveFileName);
             if (!System.IO.File.Exists(archPath))
                 throw new FileNotFoundException("Book archive not found");
-            using (var zip = new ZipFile(archPath))
-            {
-                var zipEntry = zip.Entries.FirstOrDefault(e => e.FileName.Equals(book.FileName));
-                if (zipEntry == null)
-                    throw new FileNotFoundException("Book file not found in archive");
 
-                var tempFile = Server.MapPath(string.Format("~/Uploads/{0}", book.FileName));
-                using (var fs = System.IO.File.Create(tempFile))
-                    zipEntry.Extract(fs);
+            var tempFile = Server.MapPath(string.Format("~/Uploads/{0}", book.FileName));
+            if (!System.IO.File.Exists(tempFile))
+                CommonHelper.ExtractZipFile(archPath, book.FileName, tempFile);
 
-                var sp = new MobiConverter(tempFile);
-                if (sp.InitializationError)
-                    throw new ArgumentException("Error preparing file to read (initialization)");
-                sp.saveImages();
-                var generatedFile = sp.transform(Server.MapPath("~/xhtml.xsl"), "index.html");
-                book.BookContent = System.IO.File.ReadAllText(generatedFile);
-//                using (var ms = new MemoryStream())
-//                {
-//                    zipEntry.Extract(ms);
-//                    ms.Seek(0, SeekOrigin.Begin);
-//                    book.BookContent = System.Text.Encoding.UTF8.GetString(ms.ToArray());
-//                }
-            }
+            var sp = new MobiConverter(tempFile);
+            if (sp.InitializationError)
+                throw new ArgumentException("Error preparing file to read (initialization)");
+            //sp.saveImages();
+            var generatedFile = sp.transform(Server.MapPath("~/xhtml.xsl"), "index.html");
+            book.BookContent = System.IO.File.ReadAllText(generatedFile);
             ViewBag.Title = book.Title;
             
             return View(book);
@@ -166,31 +128,24 @@ namespace jail.Controllers
         {
             var book = DataRepository.GetBook(id);
             if (book == null)
-            {
                 throw new FileNotFoundException("Book not found in db");
-            }
 
             var archPath = Path.Combine(DataRepository.ArchivesPath, book.ArchiveFileName);
             if (!System.IO.File.Exists(archPath))
-            {
                 throw new FileNotFoundException("Book archive not found");
-            }
-//            using (var zip = new ZipFile(archPath))
-//            {
-//                var zipEntry = zip.Entries.FirstOrDefault(e => e.FileName.Equals(book.FileName));
-//                if (zipEntry == null)
-//                {
-//                    throw new FileNotFoundException("Book file not found in archive");
-//                }
-//
-//                var ms = new MemoryStream();
-//                {
-//                    zipEntry.Extract(ms);
-//                    ms.Seek(0, SeekOrigin.Begin);
-//                }
-//            }
+
+            var tempFile = Server.MapPath(string.Format("~/Uploads/{0}", book.FileName));
+            if (!System.IO.File.Exists(tempFile))
+                CommonHelper.ExtractZipFile(archPath, book.FileName, tempFile);
+
+            var sp = new MobiConverter(tempFile);
+            if (sp.InitializationError)
+                throw new ArgumentException("Error preparing file to read (initialization)");
+            var coverImage = sp.saveImages(true);
+            if (string.IsNullOrWhiteSpace(book.Annotation))
+                book.Annotation = System.IO.File.ReadAllText(sp.saveAnnotation());
             ViewBag.Title = book.Title;
-            ViewBag.Image = string.Format("../../Uploads/{0}/cover.jpg", Path.GetFileNameWithoutExtension(book.FileName));
+            ViewBag.Image = Path.Combine(@"..\..\" + coverImage.Replace(Server.MapPath("~"), ""));
 
             return View(book);
         }
@@ -228,9 +183,7 @@ namespace jail.Controllers
             if (System.IO.File.Exists(originRealPath))
             {
                 if (System.IO.File.Exists(mobiRealPath))
-                {
-                    return Json(new { success = true, link = mobiRelativePath, fileName = mobiDisplayName });
-                }
+                    return Json(new {success = true, link = mobiRelativePath, fileName = mobiDisplayName});
                 System.IO.File.Delete(originRealPath); //delete old uploaded file to re-convert new one
             }
             using (var fileStream = new FileStream(originRealPath, FileMode.OpenOrCreate))
