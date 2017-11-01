@@ -76,7 +76,7 @@ namespace jail.Controllers
 
         #region book
 
-        [HttpGet, Route("download")]
+        [Route("d/{id}")]
         public FileResult Download(long id)
         {
             var book = DataRepository.GetBook(id);
@@ -91,7 +91,7 @@ namespace jail.Controllers
                 CommonHelper.GetBookDownloadFileName(book));
         }
 
-        [HttpGet, Route("mobi")]
+        [Route("m/{id}")]
         public FileResult Mobi(long id)
         {
             var book = DataRepository.GetBook(id);
@@ -122,7 +122,7 @@ namespace jail.Controllers
                 CommonHelper.GetBookDownloadFileName(book, ".mobi"));
         }
 
-        [HttpGet, Route("read")]
+        [Route("r/{id}")]
         public ActionResult Read(long id)
         {
             var book = DataRepository.GetBook(id);
@@ -149,6 +149,7 @@ namespace jail.Controllers
             return View(book);
         }
 
+        [Route("b/{id}")]
         public ActionResult Details(long id)
         {
             var book = DataRepository.GetBook(id);
@@ -186,6 +187,7 @@ namespace jail.Controllers
 
         #region sequence
 
+        [Route("s/{id}")]
         public ActionResult Sequence(long id)
         {
             var data = DataRepository.GetSequenceData(id);
@@ -198,6 +200,7 @@ namespace jail.Controllers
 
         #region upload/convert
 
+        [Route("c")]
         public ActionResult UploadFile()
         {
             ViewBag.maxRequestLength = SettingsHelper.MaxRequestLength;
