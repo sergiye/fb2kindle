@@ -148,6 +148,7 @@
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
     <Compile Include="Models\AuthorInfo.cs" />
+    <Compile Include="Models\BookDetailedInfo.cs" />
     <Compile Include="Models\BookInfo.cs" />
     <Compile Include="Models\SequenceInfo.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
