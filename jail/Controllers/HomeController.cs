@@ -187,11 +187,10 @@ namespace jail.Controllers
 //                {
 //                    zipEntry.Extract(ms);
 //                    ms.Seek(0, SeekOrigin.Begin);
-//
 //                }
 //            }
             ViewBag.Title = book.Title;
-            ViewBag.Image = string.Format("/Uploads/{0}/cover.jpg", Path.GetFileNameWithoutExtension(book.FileName));
+            ViewBag.Image = string.Format("../../Uploads/{0}/cover.jpg", Path.GetFileNameWithoutExtension(book.FileName));
 
             return View(book);
         }
