@@ -92,8 +92,8 @@ namespace jail.Controllers
             var book = DataRepository.GetBook(id);
             if (book == null)
                 throw new FileNotFoundException("Book not found in db");
-
-            var resultFile = Server.MapPath(string.Format("~/Uploads/{0}", Path.ChangeExtension(book.FileName, ".mobi")));
+            Directory.CreateDirectory(SettingsHelper.ConvertedBooksPath);
+            var resultFile = Path.Combine(SettingsHelper.ConvertedBooksPath, Path.ChangeExtension(book.FileName, ".mobi"));
             if (!System.IO.File.Exists(resultFile))
             {
                 var tempFile = Path.Combine(Path.GetTempPath(), book.FileName);
@@ -211,32 +211,32 @@ namespace jail.Controllers
         [HttpPost]
         public ActionResult HandleFileUpload()
         {
-            if (string.IsNullOrEmpty(Request.Headers["X-File-Name"]))
-                return Json(new {success = false});
             var originFileName = Request.Headers["X-File-Name"];
-            var originRelativePath = Server.MapPath(string.Format("~/Uploads/{0}", 
+            if (string.IsNullOrEmpty(originFileName))
+                return Json(new { success = false });
+            var originRealPath = Server.MapPath(string.Format("~/Uploads/{0}", 
                 CommonHelper.GetCorrectedFileName(originFileName)));
+            if (string.IsNullOrEmpty(originRealPath))
+                return Json(new { success = false });
             var mobiDisplayName = Path.ChangeExtension(originFileName, ".mobi");
-            var mobiRealPath = Path.ChangeExtension(originRelativePath, ".mobi");
+            var mobiRealPath = Path.ChangeExtension(originRealPath, ".mobi");
             var mobiRelativePath = Path.Combine(@"..\" + mobiRealPath.Replace(Server.MapPath("~"), ""));
-            if (System.IO.File.Exists(originRelativePath))
+            if (System.IO.File.Exists(originRealPath))
             {
                 if (System.IO.File.Exists(mobiRealPath))
                 {
                     return Json(new { success = true, link = mobiRelativePath, fileName = mobiDisplayName });
                 }
-                System.IO.File.Delete(originRelativePath);
+                System.IO.File.Delete(originRealPath); //delete old uploaded file to re-convert new one
             }
-            using (var fileStream = new FileStream(originRelativePath, FileMode.OpenOrCreate))
+            using (var fileStream = new FileStream(originRealPath, FileMode.OpenOrCreate))
                 Request.InputStream.CopyTo(fileStream);
 
             var conv = new Convertor(new DefaultOptions(), SettingsHelper.ConverterCss, SettingsHelper.ConverterDetailedOutput);
-            if (!conv.ConvertBook(originRelativePath, false))
+            if (!conv.ConvertBook(originRealPath, false))
                 throw new ArgumentException("Error converting book for kindle");
 
             return Json(new { success = true, link = mobiRelativePath, fileName = mobiDisplayName });
-//            var fileBytes = System.IO.File.ReadAllBytes(resultFile);
-//            return File(fileBytes, System.Net.Mime.MediaTypeNames.Application.Octet, originFileName + ".mobi");
         }
     }
 }
