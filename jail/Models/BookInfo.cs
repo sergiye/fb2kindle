@@ -10,13 +10,13 @@ namespace jail.Models
     {
         public string Title { get; set; }
         public List<AuthorInfo> Authors { get; set; }
-        public List<SequenceInfo> Sequences { get; set; }
         public long IdArchive { get; set; }
-        public string ArchiveFileName { get; set; }
         public string FileName { get; set; }
         public string Md5sum { get; set; }
         public long FileSize { get; set; }
         public long Created { get; set; }
+        public string Description { get; set; }
+        public string Lang { get; set; }
 
         [DapperIgnore]
         public string FileSizeStr { get { return StringHelper.FileSizeStr(FileSize); } }
@@ -32,16 +32,9 @@ namespace jail.Models
             } 
         }
 
-        public string Description { get; set; }
-        public string Lang { get; set; }
-
-        [DapperIgnore]
-        public string BookContent { get; set; }
-
         public BookInfo()
         {
             Authors = new List<AuthorInfo>();
-            Sequences = new List<SequenceInfo>();
         }
     }
 }

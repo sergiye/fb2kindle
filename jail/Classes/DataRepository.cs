@@ -41,11 +41,11 @@ namespace jail.Classes
             if (string.IsNullOrWhiteSpace(key))
                 return new List<BookInfo>();
 
-            var sql = new StringBuilder(@"select b.*, ar.file_name ArchiveFileName, a.* from books b
-join fts_book_content c on b.id=c.docid
+            var sql = new StringBuilder(@"select b.id, b.title, b.id_archive, b.file_name, b.file_size, b.md5sum, 
+b.created, b.lang, b.description, a.id, a.full_name, a.first_name, a.middle_name, a.last_name from books b
 join authors a on a.id=b.id_author
+join fts_book_content c on b.id=c.docid
 join fts_auth_content ac on ac.docid=a.id
-join archives ar on ar.id=b.id_archive
 where (c.c0content like @key or ac.c0content like @key)");
             if (searchLang != "all")
             {
@@ -57,19 +57,20 @@ where (c.c0content like @key or ac.c0content like @key)");
             return info;
         }
 
-        public static BookInfo GetBook(long id)
+        public static BookDetailedInfo GetBook(long id)
         {
-            var info = Db.QueryMultiple<BookInfo, AuthorInfo, long>(@"select b.*, ar.file_name ArchiveFileName, a.* from books b
+            var info = Db.QueryMultiple<BookDetailedInfo, AuthorInfo, long>(@"select b.id, b.title, b.id_archive, b.file_name, 
+b.file_size, b.md5sum, b.created, b.lang, b.description, ar.file_name ArchiveFileName, 
+a.id, a.full_name, a.first_name, a.middle_name, a.last_name from books b
 join authors a on a.id=b.id_author
 join archives ar on ar.id=b.id_archive
-where b.id=@id
-order by b.title, b.created DESC LIMIT 100", 
+where b.id=@id order by b.title, b.created DESC LIMIT 100", 
                 b => b.Id, b => b.Authors, new { id }).FirstOrDefault();
             FillBookSequences(info);
             return info;
         }
 
-        public static void FillBookSequences(BookInfo book)
+        public static void FillBookSequences(BookDetailedInfo book)
         {
             if (book == null) return;
             var info = Db.Query<SequenceInfo>(@"select s.*, bs.number BookOrder from bookseq bs
