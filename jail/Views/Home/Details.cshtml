@@ -13,13 +13,21 @@
 @Html.HiddenFor(modelItem => modelItem.FileName)
 @Html.HiddenFor(modelItem => modelItem.IdArchive)
 @Html.HiddenFor(modelItem => modelItem.Id)
-
-<p>
-    @Html.Raw(Model.Annotation)
-    <br/>
-    @Html.Raw(Model.Description)
-</p>
-
+<div class="panel-body">
+    <div class="col-md-2">
+        @if (ViewBag.Image != null)
+        {
+            @: <img src="@ViewBag.Image" style="width: 100%; height: auto;"/>
+        }
+    </div>
+    <div class="col-md-10">
+        <p>
+            @Html.Raw(Model.Annotation)
+            <br/>
+            @Html.Raw(Model.Description)
+        </p>
+    </div>
+</div>
 <div>
     Registered: @Html.DisplayFor(modelItem => modelItem.CreatedDate)
 </div>

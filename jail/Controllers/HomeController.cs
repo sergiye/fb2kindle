@@ -129,29 +129,33 @@ namespace jail.Controllers
         {
             var book = DataRepository.GetBook(id);
             if (book == null)
-            {
                 throw new FileNotFoundException("Book not found in db");
-            }
 
             var archPath = Path.Combine(DataRepository.ArchivesPath, book.ArchiveFileName);
             if (!System.IO.File.Exists(archPath))
-            {
                 throw new FileNotFoundException("Book archive not found");
-            }
             using (var zip = new ZipFile(archPath))
             {
                 var zipEntry = zip.Entries.FirstOrDefault(e => e.FileName.Equals(book.FileName));
                 if (zipEntry == null)
-                {
                     throw new FileNotFoundException("Book file not found in archive");
-                }
-            
-                using(var ms = new MemoryStream())
-                {
-                    zipEntry.Extract(ms);
-                    ms.Seek(0, SeekOrigin.Begin);
-                    book.BookContent = System.Text.Encoding.UTF8.GetString(ms.ToArray());
-                }
+
+                var tempFile = Server.MapPath(string.Format("~/Uploads/{0}", book.FileName));
+                using (var fs = System.IO.File.Create(tempFile))
+                    zipEntry.Extract(fs);
+
+                var sp = new MobiConverter(tempFile);
+                if (sp.InitializationError)
+                    throw new ArgumentException("Error preparing file to read (initialization)");
+                sp.saveImages();
+                var generatedFile = sp.transform(Server.MapPath("~/xhtml.xsl"), "index.html");
+                book.BookContent = System.IO.File.ReadAllText(generatedFile);
+//                using (var ms = new MemoryStream())
+//                {
+//                    zipEntry.Extract(ms);
+//                    ms.Seek(0, SeekOrigin.Begin);
+//                    book.BookContent = System.Text.Encoding.UTF8.GetString(ms.ToArray());
+//                }
             }
             ViewBag.Title = book.Title;
             
@@ -187,6 +191,7 @@ namespace jail.Controllers
 //                }
 //            }
             ViewBag.Title = book.Title;
+            ViewBag.Image = string.Format("/Uploads/{0}/cover.jpg", Path.GetFileNameWithoutExtension(book.FileName));
 
             return View(book);
         }

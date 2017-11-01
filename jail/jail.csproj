@@ -140,6 +140,7 @@
     <Compile Include="Classes\CommonHelper.cs" />
     <Compile Include="Classes\DataRepository.cs" />
     <Compile Include="Classes\Log.cs" />
+    <Compile Include="Classes\MobiConverter.cs" />
     <Compile Include="Classes\SettingsHelper.cs" />
     <Compile Include="Classes\SqLiteConnectionProvider.cs" />
     <Compile Include="Controllers\HomeController.cs" />
@@ -168,6 +169,9 @@
     <Content Include="Content\bootstrap.css.map" />
     <Content Include="Content\bootstrap-theme.min.css.map" />
     <Content Include="Content\bootstrap-theme.css.map" />
+    <Content Include="xhtml.xsl">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <None Include="Properties\PublishProfiles\CustomProfile.pubxml" />
     <None Include="Scripts\jquery-3.2.1.intellisense.js" />
     <Content Include="Images\loader.gif" />
