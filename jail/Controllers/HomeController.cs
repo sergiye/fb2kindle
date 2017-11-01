@@ -37,6 +37,30 @@ namespace jail.Controllers
 
         #region basic methods
 
+        private string AppBaseUrl
+        {
+            get
+            {
+                return Url.Content("~/");
+            }
+        }
+
+        private string AppBaseUrl2
+        {
+            get
+            {
+                if (Request == null || Request.Url == null || Request.ApplicationPath == null)
+                    return null;
+                return string.Format("{0}://{1}:{2}{3}/", Request.Url.Scheme, Request.Url.Host, Request.Url.Port,
+                    Request.ApplicationPath.TrimEnd('/'));
+            }
+        }
+
+        private string GetLinkToFile(string fileName)
+        {
+            return AppBaseUrl + fileName.Replace(Server.MapPath("~"), "").Replace('\\', '/');
+        }
+
         public static string GetVersionString()
         {
             var ver = Assembly.GetExecutingAssembly().GetName().Version;
@@ -145,7 +169,7 @@ namespace jail.Controllers
             if (!System.IO.File.Exists(readingPath))
                 MobiConverter.Transform(tempFile, readingPath, Server.MapPath("~/xhtml.xsl"));
             ViewBag.Title = book.Title;
-            ViewBag.BookContent = Path.Combine(@"../../" + readingPath.Replace(Server.MapPath("~"), "").Replace('\\', '/'));
+            ViewBag.BookContent = GetLinkToFile(readingPath);//Path.Combine(@"../" + readingPath.Replace(Server.MapPath("~"), "").Replace('\\', '/'));
             return View(book);
         }
 
@@ -178,7 +202,7 @@ namespace jail.Controllers
                 book.Description = System.IO.File.ReadAllText(annotationsPath);
             }
             ViewBag.Title = book.Title;
-            ViewBag.Image = Path.Combine(@"..\..\" + coverImagePath.Replace(Server.MapPath("~"), ""));
+            ViewBag.Image = GetLinkToFile(coverImagePath); //Path.Combine(@"..\" + coverImagePath.Replace(Server.MapPath("~"), ""));
 
             return View(book);
         }
@@ -219,7 +243,7 @@ namespace jail.Controllers
                 return Json(new { success = false });
             var mobiDisplayName = Path.ChangeExtension(originFileName, ".mobi");
             var mobiRealPath = Path.ChangeExtension(originRealPath, ".mobi");
-            var mobiRelativePath = Path.Combine(@"..\" + mobiRealPath.Replace(Server.MapPath("~"), ""));
+            var mobiRelativePath = GetLinkToFile(mobiRealPath);
             if (System.IO.File.Exists(originRealPath))
             {
                 if (System.IO.File.Exists(mobiRealPath))
