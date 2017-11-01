@@ -1,0 +1,7 @@
+﻿@model jail.Models.SequenceData
+
+<h2>@Model.Value</h2>
+
+<div id="gridContainer">
+    @{Html.RenderPartial("SearchResults", Model.Books);}
+</div>
