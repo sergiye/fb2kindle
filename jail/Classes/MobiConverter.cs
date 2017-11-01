@@ -7,70 +7,7 @@ namespace jail.Classes
 {
     public class MobiConverter
     {
-        private readonly bool _error;
-        private readonly string _inputFile;
-        private readonly string _workDir;
-        private string _outputdir;
-
-        public bool InitializationError { get { return _error; }}
-
-        public MobiConverter(string filePath)
-        {
-            _error = true;
-            _outputdir = "";
-            _inputFile = filePath;
-            _workDir = "";
-
-            if (!File.Exists(_inputFile))
-                return;
-
-            char[] trimchars = { '\\' };
-            var inputFileDir = Path.GetDirectoryName(_inputFile).TrimEnd(trimchars);
-            var outputFileDir = inputFileDir;
-            var bookname = transliteName(Path.GetFileNameWithoutExtension(_inputFile));
-            if (string.IsNullOrEmpty(bookname))
-                bookname = "fb2mobi";
-
-            var ok = prepareOutputFilePlace(outputFileDir, bookname);
-            if (!ok && outputFileDir != inputFileDir)
-                ok = prepareOutputFilePlace(inputFileDir, bookname);
-//            if (!ok)
-//                ok = prepareOutputFilePlace(Path.GetTempPath() + "\\fb2mobi", bookname);
-
-            if (ok)
-            {
-                _workDir = _outputdir + bookname;
-                Directory.CreateDirectory(_workDir);
-                _workDir += "\\";
-            }
-            _error = !ok;
-        }
-
-        private bool prepareOutputFilePlace(string dir, string file)
-        {
-            try
-            {
-                string name;
-                for (var cont = 0; ; ++cont)
-                {
-                    name = file;
-                    if (cont != 0)
-                        name += cont.ToString();
-                    var testName = dir + "\\" + name;
-                    if (!File.Exists(testName + ".mobi") && !Directory.Exists(testName))
-                        break;
-                }
-                _outputdir = dir + "\\";
-            }
-            catch (Exception)
-            {
-                return false;
-            }
-
-            return true;
-        }
-
-        private string transliteName(string file)
+        public static string TransliteName(string file)
         {
             var rus = new[]
                 {
@@ -103,15 +40,15 @@ namespace jail.Classes
             return name;
         }
 
-        public string saveImages(bool onlyCover = false)
+        public static string SaveImages(string inputFile, string outputFolder, bool onlyCover = false)
         {
             var firstFileName = string.Empty;
             var dd = new XmlDocument();
-            dd.Load(_inputFile);
+            dd.Load(inputFile);
             XmlNode bin = dd["FictionBook"]["binary"];
             while (bin != null)
             {
-                var fileName = _workDir + bin.Attributes["id"].InnerText;
+                var fileName = outputFolder + bin.Attributes["id"].InnerText;
                 using (var fs = new FileStream(fileName, FileMode.Create))
                 {
                     using (var w = new BinaryWriter(fs))
@@ -132,44 +69,40 @@ namespace jail.Classes
             return firstFileName;
         }
 
-        public string saveAnnotation()
+        public static void SaveCover(string inputFile, string outputFile)
         {
             var xmlDoc = new XmlDocument();
-            xmlDoc.Load(_inputFile);
-            var resultFile = _workDir + "annotation.txt";
-            foreach (XmlNode node in xmlDoc.GetElementsByTagName("annotation"))
+            xmlDoc.Load(inputFile);
+            XmlNode bin = xmlDoc["FictionBook"]["binary"];
+            while (bin != null)
             {
-                File.WriteAllText(resultFile, node.InnerText);
+                using (var fs = new FileStream(outputFile, FileMode.Create))
+                {
+                    using (var w = new BinaryWriter(fs))
+                    {
+                        w.Write(Convert.FromBase64String(bin.InnerText));
+                        w.Close();
+                    }
+                    fs.Close();
+                }
                 break;
             }
-//            XmlNode annotation = xmlDoc["FictionBook"]["description"]["title-info"]["annotation"];
-//            if (annotation != null)
-//            {
-//                var fileName = ;
-//                using (var fs = new FileStream(fileName, FileMode.Create))
-//                {
-//                    using (var w = new BinaryWriter(fs))
-//                    {
-//                        w.Write(Convert.FromBase64String(bin.InnerText));
-//                        w.Close();
-//                    }
-//                    fs.Close();
-//                }
-//                if (string.IsNullOrWhiteSpace(firstFileName))
-//                {
-//                    firstFileName = fileName;
-//                    if (onlyCover)
-//                        break;
-//                }
-//                bin = bin.NextSibling;
-//            }
-            return resultFile;
         }
 
-        public string transform(string xsl, string name)
+        public static void SaveAnnotation(string inputFile, string outputFile)
         {
-            var outputFile = _workDir + name;
-            using (var reader = new XmlTextReader(_inputFile))
+            var xmlDoc = new XmlDocument();
+            xmlDoc.Load(inputFile);
+            foreach (XmlNode node in xmlDoc.GetElementsByTagName("annotation"))
+            {
+                File.WriteAllText(outputFile, node.InnerText);
+                break;
+            }
+        }
+
+        public static void Transform(string inputFile, string outputFile, string xsl)
+        {
+            using (var reader = new XmlTextReader(inputFile))
             {
                 var xslt = new XslCompiledTransform();
                 xslt.Load(xsl);
@@ -179,7 +112,6 @@ namespace jail.Classes
                     writer.Close();
                 }
             }
-            return outputFile;
         }
     }
 }

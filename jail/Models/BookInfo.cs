@@ -14,6 +14,7 @@ namespace jail.Models
         public long IdArchive { get; set; }
         public string ArchiveFileName { get; set; }
         public string FileName { get; set; }
+        public string Md5sum { get; set; }
         public long FileSize { get; set; }
         public long Created { get; set; }
 
@@ -31,7 +32,6 @@ namespace jail.Models
             } 
         }
 
-        public string Annotation { get; set; }
         public string Description { get; set; }
         public string Lang { get; set; }
 
