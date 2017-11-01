@@ -103,14 +103,16 @@ namespace jail.Classes
             return name;
         }
 
-        public void saveImages()
+        public string saveImages(bool onlyCover = false)
         {
+            var firstFileName = string.Empty;
             var dd = new XmlDocument();
             dd.Load(_inputFile);
             XmlNode bin = dd["FictionBook"]["binary"];
             while (bin != null)
             {
-                using (var fs = new FileStream(_workDir + bin.Attributes["id"].InnerText, FileMode.Create))
+                var fileName = _workDir + bin.Attributes["id"].InnerText;
+                using (var fs = new FileStream(fileName, FileMode.Create))
                 {
                     using (var w = new BinaryWriter(fs))
                     {
@@ -119,8 +121,49 @@ namespace jail.Classes
                     }
                     fs.Close();
                 }
+                if (string.IsNullOrWhiteSpace(firstFileName))
+                {
+                    firstFileName = fileName;
+                    if (onlyCover)
+                        break;
+                }
                 bin = bin.NextSibling;
             }
+            return firstFileName;
+        }
+
+        public string saveAnnotation()
+        {
+            var xmlDoc = new XmlDocument();
+            xmlDoc.Load(_inputFile);
+            var resultFile = _workDir + "annotation.txt";
+            foreach (XmlNode node in xmlDoc.GetElementsByTagName("annotation"))
+            {
+                File.WriteAllText(resultFile, node.InnerText);
+                break;
+            }
+//            XmlNode annotation = xmlDoc["FictionBook"]["description"]["title-info"]["annotation"];
+//            if (annotation != null)
+//            {
+//                var fileName = ;
+//                using (var fs = new FileStream(fileName, FileMode.Create))
+//                {
+//                    using (var w = new BinaryWriter(fs))
+//                    {
+//                        w.Write(Convert.FromBase64String(bin.InnerText));
+//                        w.Close();
+//                    }
+//                    fs.Close();
+//                }
+//                if (string.IsNullOrWhiteSpace(firstFileName))
+//                {
+//                    firstFileName = fileName;
+//                    if (onlyCover)
+//                        break;
+//                }
+//                bin = bin.NextSibling;
+//            }
+            return resultFile;
         }
 
         public string transform(string xsl, string name)

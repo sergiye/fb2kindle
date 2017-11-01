@@ -1,8 +1,10 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Web;
+using Ionic.Zip;
 using jail.Models;
 
 namespace jail.Classes
@@ -12,6 +14,34 @@ namespace jail.Classes
     /// </summary>
     public static class CommonHelper
     {
+        public static void ExtractZipFile(string archivePath, string fileName, string outputFileName)
+        {
+            using (var zip = new ZipFile(archivePath))
+            {
+                var zipEntry = zip.Entries.FirstOrDefault(e => e.FileName.Equals(fileName));
+                if (zipEntry == null)
+                    throw new FileNotFoundException("Book file not found in archive");
+                using (var fs = System.IO.File.Create(outputFileName))
+                    zipEntry.Extract(fs);
+            }
+        }
+
+        public static byte[] ExtractZipFile(string archivePath, string fileName)
+        {
+            using (var zip = new ZipFile(archivePath))
+            {
+                var zipEntry = zip.Entries.FirstOrDefault(e => e.FileName.Equals(fileName));
+                if (zipEntry == null)
+                    throw new FileNotFoundException("Book file not found in archive");
+                var ms = new MemoryStream();
+                {
+                    zipEntry.Extract(ms);
+                    ms.Seek(0, SeekOrigin.Begin);
+                    return ms.ToArray();
+                }
+            }
+        }
+
         /// <summary>
         /// Get client IP from HTTP request
         /// </summary>
