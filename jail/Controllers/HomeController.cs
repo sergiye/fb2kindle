@@ -142,7 +142,7 @@ namespace jail.Controllers
             if (sp.InitializationError)
                 throw new ArgumentException("Error preparing file to read (initialization)");
             var coverImage = sp.saveImages(true);
-            if (string.IsNullOrWhiteSpace(book.Annotation))
+            if (string.IsNullOrWhiteSpace(book.Annotation) && string.IsNullOrWhiteSpace(book.Description))
                 book.Annotation = System.IO.File.ReadAllText(sp.saveAnnotation());
             ViewBag.Title = book.Title;
             ViewBag.Image = Path.Combine(@"..\..\" + coverImage.Replace(Server.MapPath("~"), ""));
