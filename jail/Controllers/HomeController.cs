@@ -190,6 +190,7 @@ namespace jail.Controllers
         {
             var data = DataRepository.GetSequenceData(id);
             ViewBag.Title = data.Value;
+            ViewBag.SequenceMode = true;
             return View(data);
         }
 
