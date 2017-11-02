@@ -170,7 +170,8 @@ namespace jail.Controllers
                 MobiConverter.Transform(tempFile, readingPath, Server.MapPath("~/xhtml.xsl"));
             ViewBag.Title = book.Title;
             ViewBag.BookContent = GetLinkToFile(readingPath);//Path.Combine(@"../" + readingPath.Replace(Server.MapPath("~"), "").Replace('\\', '/'));
-            return View(book);
+            return new FilePathResult(GetLinkToFile(readingPath), "text/html");
+            //return View(book);
         }
 
         [Route("b/{id}")]
