@@ -38,22 +38,19 @@ namespace jail.Classes
 
         public static IEnumerable<BookInfo> GetSearchData(string key, string searchLang)
         {
-            if (string.IsNullOrWhiteSpace(key))
-                return new List<BookInfo>();
-
             var sql = new StringBuilder(@"select b.id, b.title, b.id_archive, b.file_name, b.file_size, b.md5sum, 
 b.created, b.lang, a.id, a.full_name, a.first_name, a.middle_name, a.last_name from books b
 join authors a on a.id=b.id_author
 join fts_book_content c on b.id=c.docid
 join fts_auth_content ac on ac.docid=a.id
-where (c.c0content like @key or ac.c0content like @key)");
+where (b.title like @key or c.c0content like @key or ac.c0content like @key)");
             if (searchLang != "all")
             {
                 sql.Append(" and b.lang=@lang");
             }
             sql.Append(" order by b.title, b.created DESC LIMIT 100");
             var info = Db.QueryMultiple<BookInfo, AuthorInfo, long>(sql.ToString(), 
-                b => b.Id, b => b.Authors, new { key = "%%" + key + "%%", lang = searchLang });
+                b => b.Id, b => b.Authors, new { key = "%" + key + "%", lang = searchLang });
             return info;
         }
 
