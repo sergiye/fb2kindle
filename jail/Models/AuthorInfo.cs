@@ -11,7 +11,7 @@ namespace jail.Models
 
         public string DisplayName
         {
-            get { return string.Format("{0} {1} {2}", FirstName.Trim(), MiddleName.Trim(), LastName.Trim()); }
+            get { return string.Join(" ", FirstName, MiddleName, LastName).Trim(); }
         }
 
         public override string ToString()
