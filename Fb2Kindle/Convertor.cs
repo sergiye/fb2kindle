@@ -544,7 +544,7 @@ namespace Fb2Kindle
             return linkEl;
         }
 
-        private static void CreateTitlePage(XElement book, string fileName)
+        internal static void CreateTitlePage(XElement book, string fileName)
         {
             var content = new XElement("html");
             content.Add(new XElement("head", GetCssLink()));
@@ -635,7 +635,7 @@ namespace Fb2Kindle
             return true;
         }
 
-        private static void ConvertTagsToHtml(XElement book, bool full = false)
+        internal static void ConvertTagsToHtml(XElement book, bool full = false)
         {
             Util.RenameTags(book, "text-author", "P", "text-author");
             Util.RenameTags(book, "empty-line", "br");
