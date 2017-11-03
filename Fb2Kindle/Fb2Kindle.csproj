@@ -58,6 +58,7 @@
   <ItemGroup>
     <Compile Include="AssemblyInfo.cs" />
     <Compile Include="Convertor.cs" />
+    <Compile Include="DefaultOptions.cs" />
     <Compile Include="Util.cs" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Xml" />

@@ -113,9 +113,9 @@ namespace jail.Controllers
             var archPath = Path.Combine(DataRepository.ArchivesPath, book.ArchiveFileName);
             if (!System.IO.File.Exists(archPath))
                 throw new FileNotFoundException("Book archive not found");
-            var fileData = CommonHelper.ExtractZipFile(archPath, book.FileName);
+            var fileData = BookHelper.ExtractZipFile(archPath, book.FileName);
             return File(fileData, System.Net.Mime.MediaTypeNames.Application.Octet, 
-                CommonHelper.GetBookDownloadFileName(book));
+                BookHelper.GetBookDownloadFileName(book));
         }
 
         [Route("m/{id}")]
@@ -133,7 +133,7 @@ namespace jail.Controllers
                     throw new FileNotFoundException("Book archive not found");
 
                 if (!System.IO.File.Exists(sourceFileName))
-                    CommonHelper.ExtractZipFile(archPath, book.FileName, sourceFileName);
+                    BookHelper.ExtractZipFile(archPath, book.FileName, sourceFileName);
 
                 var conv = new Convertor(SettingsHelper.ConverterSettings, SettingsHelper.ConverterCss, false);
                 if (!conv.ConvertBook(sourceFileName, false))
@@ -141,7 +141,7 @@ namespace jail.Controllers
             }
             var fileBytes = System.IO.File.ReadAllBytes(resultFile);
             return File(fileBytes, System.Net.Mime.MediaTypeNames.Application.Octet, 
-                CommonHelper.GetBookDownloadFileName(book, ".mobi"));
+                BookHelper.GetBookDownloadFileName(book, ".mobi"));
         }
 
         [Route("r/{id}")]
@@ -157,7 +157,7 @@ namespace jail.Controllers
 
             var tempFile = Server.MapPath(string.Format("~/b/{0}", book.FileName));
             if (!System.IO.File.Exists(tempFile))
-                CommonHelper.ExtractZipFile(archPath, book.FileName, tempFile);
+                BookHelper.ExtractZipFile(archPath, book.FileName, tempFile);
 
             var detailsFolder = Path.Combine(Path.GetDirectoryName(tempFile), Path.GetFileNameWithoutExtension(tempFile));
             if (string.IsNullOrWhiteSpace(detailsFolder))
@@ -165,7 +165,7 @@ namespace jail.Controllers
             Directory.CreateDirectory(detailsFolder);
             var readingPath = Path.Combine(detailsFolder, "index.html");
             if (!System.IO.File.Exists(readingPath))
-                MobiConverter.Transform(tempFile, readingPath, Server.MapPath("~/xhtml.xsl"));
+                BookHelper.Transform(tempFile, readingPath, Server.MapPath("~/xhtml.xsl"));
             ViewBag.Title = book.Title;
             ViewBag.BookContent = GetLinkToFile(readingPath);//Path.Combine(@"../" + readingPath.Replace(Server.MapPath("~"), "").Replace('\\', '/'));
             return new FilePathResult(GetLinkToFile(readingPath), "text/html");
@@ -185,7 +185,7 @@ namespace jail.Controllers
 
             var tempFile = Server.MapPath(string.Format("~/b/{0}", book.FileName));
             if (!System.IO.File.Exists(tempFile))
-                CommonHelper.ExtractZipFile(archPath, book.FileName, tempFile);
+                BookHelper.ExtractZipFile(archPath, book.FileName, tempFile);
             var detailsFolder = Path.Combine(Path.GetDirectoryName(tempFile), Path.GetFileNameWithoutExtension(tempFile));
             if (string.IsNullOrWhiteSpace(detailsFolder))
                 throw new DirectoryNotFoundException("Details folder is empty");
@@ -193,13 +193,9 @@ namespace jail.Controllers
             var coverImagePath = Path.Combine(detailsFolder, "cover.jpg");
             var annotationsPath = Path.Combine(detailsFolder, "annotation.txt");
             if (!System.IO.File.Exists(coverImagePath))
-                MobiConverter.SaveCover(tempFile, coverImagePath);
+                BookHelper.SaveCover(tempFile, coverImagePath);
             if (string.IsNullOrWhiteSpace(book.Description))
-            {
-                if (!System.IO.File.Exists(annotationsPath))
-                    MobiConverter.SaveAnnotation(tempFile, annotationsPath);
-                book.Description = System.IO.File.ReadAllText(annotationsPath);
-            }
+                book.Description = BookHelper.GetAnnotation(tempFile, annotationsPath);
             ViewBag.Title = book.Title;
             if (System.IO.File.Exists(coverImagePath))
                 ViewBag.Image = GetLinkToFile(coverImagePath);
@@ -237,7 +233,7 @@ namespace jail.Controllers
             if (string.IsNullOrEmpty(originFileName))
                 return Json(new { success = false });
             var originRealPath = Server.MapPath(string.Format("~/b/{0}", 
-                CommonHelper.GetCorrectedFileName(originFileName)));
+                BookHelper.GetCorrectedFileName(originFileName)));
             if (string.IsNullOrEmpty(originRealPath))
                 return Json(new { success = false });
             var mobiDisplayName = Path.ChangeExtension(originFileName, ".mobi");

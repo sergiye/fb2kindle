@@ -140,7 +140,7 @@
     <Compile Include="Classes\CommonHelper.cs" />
     <Compile Include="Classes\DataRepository.cs" />
     <Compile Include="Classes\Log.cs" />
-    <Compile Include="Classes\MobiConverter.cs" />
+    <Compile Include="Classes\BookHelper.cs" />
     <Compile Include="Classes\SettingsHelper.cs" />
     <Compile Include="Classes\SqLiteConnectionProvider.cs" />
     <Compile Include="Controllers\HomeController.cs" />
