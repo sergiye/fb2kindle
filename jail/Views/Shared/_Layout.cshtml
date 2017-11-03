@@ -20,16 +20,26 @@
                     <span class="icon-bar"></span>
                 </button>
                 <a id="mainLogoRef" class="navbar-brand pull-left" href="~/">
-                    <img src="@Url.Content("~/Images/logo.png")" alt="JAIL" title="JAIL"/>
+                    <img src="@Url.Content("~/Images/logo.png")" alt="JAIL" title="JAIL"/>JAIL
                 </a>
-                @Html.ActionLink("JAIL", "Index", "Home", new { area = "" }, new { @class = "navbar-brand" })
             </div>
             <div class="navbar-collapse collapse">
                 <ul class="nav navbar-nav">
+                    <li>@Html.ActionLink("Search", "Index", "Home")</li>
                     <li>@Html.ActionLink("Convert", "UploadFile", "Home")</li>
-                    <li>@Html.ActionLink("Contact", "Contact", "Home")</li>
-                    <li>@Html.ActionLink("About", "About", "Home")</li>
                 </ul>
+                <ul class="nav navbar-nav navbar-right">
+                    <li class="dropdown">
+                        <a class="dropdown-toggle" data-toggle="dropdown" href="#">Help
+                            <span class="caret"></span></a>
+                        <ul class="dropdown-menu">
+                            <li>@Html.ActionLink("Contact", "Contact", "Home")</li>
+                            <li>@Html.ActionLink("About", "About", "Home")</li>
+                        </ul>
+                    </li>
+                    <li class="disabled"><a href="#"><span class="glyphicon glyphicon-user"></span> Sign Up</a></li>
+                    <li class="disabled"><a href="#"><span class="glyphicon glyphicon-log-in"></span> Login</a></li>
+                </ul>         
             </div>
         </div>
     </div>

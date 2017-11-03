@@ -32,6 +32,8 @@ namespace jail.Models
             } 
         }
 
+        public string BookOrderStr { get { return BookOrder == 0 ? "" : BookOrder.ToString(); } }
+
         public BookInfo()
         {
             Authors = new List<AuthorInfo>();

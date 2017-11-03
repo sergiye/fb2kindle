@@ -1,43 +1,35 @@
 ﻿@model IEnumerable<jail.Models.BookInfo>
-
-<table class="table table-striped table-bordered table-hover">
-    @foreach (var item in Model)
-    {
-        @Html.HiddenFor(modelItem => item.Id)
-        @Html.HiddenFor(modelItem => item.IdArchive)
-        @Html.HiddenFor(modelItem => item.FileName)
-        <tr>
-            <td style="width: 100%;">
-                Title: <a href='@Url.Action("details", new {id = item.Id})' title="Book details">
-                    <b>@Html.DisplayFor(modelItem => item.Title)</b>
-                </a>
-                @if (ViewBag.AuthorMode == null || !ViewBag.AuthorMode)
-                {
-                    @:<br />Author(s): @{ Html.RenderPartial("AuthorsList", item.Authors); }
-                    @:<br />Language: @Html.DisplayFor(modelItem => item.Lang)
-                }
-                <br/>
-                File: @Html.DisplayFor(modelItem => item.FileSizeStr)
-                <a href='@Url.Action("read", new {id = item.Id})' title="Read book">
-                    <b>(read)</b>
-                </a>
-                @if (!string.IsNullOrWhiteSpace(item.CreatedDate))
-                {
-                    @:<br/>Registered: @Html.DisplayFor(modelItem => item.CreatedDate)
-                }
-            </td>
-            @if (ViewBag.SequenceMode != null && ViewBag.SequenceMode)
-            {
-            <td>
-                @Html.DisplayFor(modelItem => item.BookOrder)
-            </td>
-            }
-            <td style="min-width: 80px;">
-                <span>
-                    <a href='@Url.Action("download", new { id = item.Id })' title="Get .fb2 file">.fb2</a>
-                    / <a href='@Url.Action("mobi", new { id = item.Id })' title="Get .mobi file">mobi</a>
-                </span>
-            </td>
-        </tr>
-    }
-</table>
+<div class="list-group">
+@foreach (var item in Model)
+{
+    @Html.HiddenFor(modelItem => item.Id)
+    @Html.HiddenFor(modelItem => item.IdArchive)
+    @Html.HiddenFor(modelItem => item.FileName)
+    <div class="list-group-item">
+        Title: <a href='@Url.Action("details", new {id = item.Id})' title="Book details">
+            <b>@Html.DisplayFor(modelItem => item.Title)</b>
+        </a>
+        @if (ViewBag.AuthorMode == null || !ViewBag.AuthorMode)
+        {
+            @:<br />Author(s): @{ Html.RenderPartial("AuthorsList", item.Authors); }
+            @:<br />Language: @Html.DisplayFor(modelItem => item.Lang)
+        }
+        @if (ViewBag.SequenceMode != null && ViewBag.SequenceMode && item.BookOrder > 0)
+        {
+            @:<br />Sequence number: @Html.DisplayFor(modelItem => item.BookOrderStr)
+        }
+@*                <br/>*@
+@*                <a href='@Url.Action("read", new {id = item.Id})' title="Read book">*@
+@*                    <b>(read)</b>*@
+@*                </a>*@
+        @if (!string.IsNullOrWhiteSpace(item.CreatedDate))
+        {
+            @:<br/>Registered: @Html.DisplayFor(modelItem => item.CreatedDate)
+        }
+        <br/>
+        File: @Html.DisplayFor(modelItem => item.FileSizeStr)
+        <a class="btn btn-default" href='@Url.Action("download", new { id = item.Id })' title="Get FB2 file">FB2 file</a>
+        <a class="btn btn-default" href='@Url.Action("mobi", new { id = item.Id })' title="Get MOBI file">Kindle file</a>
+    </div>
+}
+</div>
