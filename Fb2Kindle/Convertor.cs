@@ -14,17 +14,6 @@ using System.Xml.Linq;
 
 namespace Fb2Kindle
 {
-    [Serializable]
-    public class DefaultOptions
-    {
-        public bool d { get; set; }
-        public bool nch { get; set; }
-        public bool ni { get; set; }
-        public bool ntoc { get; set; }
-        public bool c { get; set; }
-        public bool s { get; set; }
-    }
-
     internal class Convertor
     {
         private const string NcxName = "toc.ncx";
@@ -662,7 +651,7 @@ namespace Fb2Kindle
             Util.RenameTags(book, "title", "div", "subtitle");
         }
 
-        static XDocument ReadXDocumentWithInvalidCharacters(string filename)
+        internal static XDocument ReadXDocumentWithInvalidCharacters(string filename)
         {
             XDocument xDocument;
             var xmlReaderSettings = new XmlReaderSettings { CheckCharacters = false };
@@ -675,7 +664,7 @@ namespace Fb2Kindle
             return xDocument;
         }
 
-        private static XElement LoadBookWithoutNs(string bookPath)
+        internal static XElement LoadBookWithoutNs(string bookPath)
         {
             try
             {
