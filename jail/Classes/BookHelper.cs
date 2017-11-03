@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Xml;
+using System.Xml.Linq;
 using System.Xml.Xsl;
 using Ionic.Zip;
 using jail.Models;
@@ -112,7 +113,9 @@ namespace jail.Classes
         {
             if (File.Exists(outputFile))
                 return File.ReadAllText(outputFile);
-            string result;
+
+            var result = string.Empty;
+
             var xmlDoc = new XmlDocument();
             xmlDoc.Load(inputFile);
             var nodes = xmlDoc.GetElementsByTagName("annotation");
@@ -122,15 +125,14 @@ namespace jail.Classes
                 File.WriteAllText(outputFile, result);
                 return result;
             }
-            nodes = xmlDoc.GetElementsByTagName("body");
-            foreach (XmlNode node in nodes)
+
+            var book = new XElement("bookData", Fb2Kindle.Convertor.LoadBookWithoutNs(inputFile).Elements("body"));
+            if (book != null)
             {
-                result = node.InnerText.Shorten(1024);
-                File.WriteAllText(outputFile, result);
-                return result;
+                result = Regex.Replace(book.Value.Trim().Shorten(1024).Replace("\n", "<br/>"), @"\s+", " ").Replace("<br/> <br/> ", "<br/>");
             }
-            File.WriteAllText(outputFile, "");
-            return null;
+            File.WriteAllText(outputFile, result);
+            return result;
         }
 
         public static void Transform(string inputFile, string outputFile, string xsl)
