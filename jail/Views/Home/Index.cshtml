@@ -45,10 +45,7 @@
         });
     }
 </script>
-<div class="search-wrapper ">
-    <div class="btn-toolbar pull-left col-md-1" role="toolbar">
-        <h4>@ViewBag.Title</h4>
-    </div>
+<div class="search-wrapper">
     <div class="input-group pull-left">
         <input id="searchBlock" type="text" class="form-control" aria-label="..."
                data-search-lang="ru" placeholder="Search by title or author...">
@@ -62,7 +59,9 @@
             </ul>
         </div>
         <div class="input-group-btn">
-            <button id="searchTypeBtn" type="button" class="btn btn-primary" onclick="RefreshData();">Search</button>
+            <button id="searchTypeBtn" type="button" class="btn btn-primary" onclick="RefreshData();">
+                <i class="glyphicon glyphicon-search"></i>
+            </button>
         </div>
     </div>
 </div>

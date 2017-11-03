@@ -28,6 +28,7 @@ body {
 }
 .search-wrapper {
     width: 100%;
+    padding-top: 20px;
     padding-left: 10%;
     padding-right: 10%;
 }
@@ -51,7 +52,7 @@ footer {
     overflow: auto;
     height: 100%;
     margin-top: 20px;
-    font-size: 12px;
+    font-size: 14px;
 }
 .vcenter {
     display: inline-block;

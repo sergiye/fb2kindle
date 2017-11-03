@@ -7,6 +7,18 @@
 <p>
     @{Html.RenderPartial("SequencesList", Model.Sequences);}
 </p>
+<div>
+    File: @Html.DisplayFor(modelItem => modelItem.FileSizeStr)
+</div>
+<div>
+    Registered: @Html.DisplayFor(modelItem => modelItem.CreatedDate)
+</div>
+
+<br />
+<div>
+    <a class="btn btn-success" href='@Url.Action("download", new { id = Model.Id })' title="Get FB2 file">FB2 file</a>
+    <a class="btn btn-info" href='@Url.Action("mobi", new { id = Model.Id })' title="Get MOBI file">File for kindle</a>
+</div>
 <hr />
 
 @Html.HiddenFor(modelItem => modelItem.ArchiveFileName)
@@ -26,15 +38,7 @@
         </p>
     </div>
 </div>
-<div>
-    Registered: @Html.DisplayFor(modelItem => modelItem.CreatedDate)
-</div>
 <hr />
 <div>
-    Download <a href='@Url.Action("download", new { id = Model.Id })' title="Get .fb2 file"><b>.fb2</b></a> book (@Html.DisplayFor(modelItem => modelItem.FileSizeStr))
-    or
-    <a href='@Url.Action("mobi", new { id = Model.Id })' title="Get .mobi file"><b>Prepare for kindle</b></a>
-</div>
-<div>
-    Read book <a href='@Url.Action("read", new { id = Model.Id })' title="Read .fb2 file"><b>@Html.DisplayFor(modelItem => modelItem.Title)</b></a>
+    <a class="btn btn-default" href='@Url.Action("read", new { id = Model.Id })' title="Read .fb2 file">Read book</a>
 </div>
