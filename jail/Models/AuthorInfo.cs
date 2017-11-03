@@ -1,4 +1,5 @@
-﻿using Simpl.Extensions.Database;
+﻿using System.Collections.Generic;
+using Simpl.Extensions.Database;
 
 namespace jail.Models
 {
@@ -17,6 +18,16 @@ namespace jail.Models
         public override string ToString()
         {
             return FullName.Trim();
+        }
+    }
+
+    public class AuthorData : AuthorInfo
+    {
+        public Dictionary<string, List<BookInfo>> Books { get; set; }
+
+        public AuthorData()
+        {
+            Books = new Dictionary<string, List<BookInfo>>();
         }
     }
 }
