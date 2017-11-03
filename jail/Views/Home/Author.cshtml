@@ -1,0 +1,30 @@
+﻿@model jail.Models.AuthorData
+
+<h2>@Model.FullName</h2>
+<div id="gridContainer">
+    @foreach (var langList in Model.Books)
+    {
+        var langItemId = string.Format("lang_{0}", langList.Key);
+        var openStateClass = langList.Key == "ru" ? "in" : "";
+        <button type="button" class="btn btn-info" data-toggle="collapse" data-target="#@langItemId">@langList.Key</button>
+        <div id="@langItemId" class="collapse @openStateClass">
+            @{Html.RenderPartial("SearchResults", langList.Value);}
+        </div>
+
+@*        <div class="panel-group" id="authorLangAccordion">*@
+@*            <div class="panel panel-default">*@
+@*                <div class="panel-heading">*@
+@*                    <h4 class="panel-title">*@
+@*                        <a data-toggle="collapse"  data-parent="#authorLangAccordion" href="#@langItemId">@langList.Key</a>*@
+@*                    </h4>*@
+@*                </div>*@
+@*                <div id="@langItemId" class="panel-collapse collapse">*@
+@*                    <div class="panel-body">*@
+@*                        @{Html.RenderPartial("SearchResults", langList.Value);}*@
+@*                    </div>*@
+@*$1$                    <div class="panel-footer">Panel Footer</div>#1#*@
+@*                </div>*@
+@*            </div>*@
+@*        </div>*@
+    }
+</div>

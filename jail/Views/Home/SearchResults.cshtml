@@ -8,14 +8,22 @@
         @Html.HiddenFor(modelItem => item.FileName)
         <tr>
             <td style="width: 100%;">
-                <a href='@Url.Action("details", new { id = item.Id })' title="Book details"><b>@Html.DisplayFor(modelItem => item.Title)</b></a>
-                (@Html.DisplayFor(modelItem => item.Lang)) - @{Html.RenderPartial("AuthorsList", item.Authors);}
+                Title: <a href='@Url.Action("details", new {id = item.Id})' title="Book details">
+                    <b>@Html.DisplayFor(modelItem => item.Title)</b>
+                </a>
+                @if (ViewBag.AuthorMode == null || !ViewBag.AuthorMode)
+                {
+                    @:<br />Author(s): @{ Html.RenderPartial("AuthorsList", item.Authors); }
+                    @:<br />Language: @Html.DisplayFor(modelItem => item.Lang)
+                }
+                <br/>
+                File: @Html.DisplayFor(modelItem => item.FileSizeStr)
                 <a href='@Url.Action("read", new {id = item.Id})' title="Read book">
-                    <b>@Html.DisplayFor(modelItem => item.FileSizeStr)</b>
+                    <b>(read)</b>
                 </a>
                 @if (!string.IsNullOrWhiteSpace(item.CreatedDate))
                 {
-                    @:(@Html.DisplayFor(modelItem => item.CreatedDate))
+                    @:<br/>Registered: @Html.DisplayFor(modelItem => item.CreatedDate)
                 }
             </td>
             @if (ViewBag.SequenceMode != null && ViewBag.SequenceMode)

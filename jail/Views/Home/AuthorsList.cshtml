@@ -8,7 +8,9 @@
         {
             @Html.Raw(", ")
         }
-        @Html.DisplayFor(modelItem => author.DisplayName)
+        <a href='@Url.Action("author", new {id = author.Id})' title="View author">
+            @Html.DisplayFor(modelItem => author.DisplayName)
+        </a>
         addComma = true;
     }
 }

@@ -39,13 +39,7 @@ namespace jail.Controllers
 
         #region basic methods
 
-        private string AppBaseUrl
-        {
-            get
-            {
-                return Url.Content("~/");
-            }
-        }
+        private string AppBaseUrl { get { return Url.Content("~/"); } }
 
         private string AppBaseUrl2
         {
@@ -80,7 +74,6 @@ namespace jail.Controllers
 
         public ActionResult Contact()
         {
-            ViewBag.Message = "Contacts page.";
             return View();
         }
 
@@ -212,6 +205,19 @@ namespace jail.Controllers
             var data = DataRepository.GetSequenceData(id);
             ViewBag.Title = data.Value;
             ViewBag.SequenceMode = true;
+            return View(data);
+        }
+
+        #endregion
+
+        #region author
+
+        [Route("a/{id}")]
+        public ActionResult Author(long id)
+        {
+            var data = DataRepository.GetAuthorData(id);
+            ViewBag.Title = data.FullName;
+            ViewBag.AuthorMode = true;
             return View(data);
         }
 
