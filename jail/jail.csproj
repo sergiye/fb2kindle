@@ -215,7 +215,6 @@
     <Content Include="Views\Home\Details.cshtml" />
     <Content Include="Views\Home\AuthorsList.cshtml" />
     <Content Include="Views\Home\SequencesList.cshtml" />
-    <Content Include="Views\Home\Read.cshtml" />
     <Content Include="Views\Home\Sequence.cshtml" />
     <Content Include="Views\Home\Author.cshtml" />
   </ItemGroup>

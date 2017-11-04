@@ -10,6 +10,7 @@ namespace jail.Models
     {
         public string Title { get; set; }
         public List<AuthorInfo> Authors { get; set; }
+        public List<SequenceInfo> Sequences { get; set; }
         public long IdArchive { get; set; }
         public string FileName { get; set; }
         public string Md5sum { get; set; }
@@ -32,11 +33,10 @@ namespace jail.Models
             } 
         }
 
-        public string BookOrderStr { get { return BookOrder == 0 ? "" : BookOrder.ToString(); } }
-
         public BookInfo()
         {
             Authors = new List<AuthorInfo>();
+            Sequences = new List<SequenceInfo>();
         }
     }
 }

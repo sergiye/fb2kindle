@@ -1,4 +1,5 @@
-﻿@model IEnumerable<jail.Models.BookInfo>
+﻿@using jail.Models
+@model IEnumerable<BookInfo>
 <div class="list-group">
 @foreach (var item in Model)
 {
@@ -16,18 +17,25 @@
         }
         @if (ViewBag.SequenceMode != null && ViewBag.SequenceMode && item.BookOrder > 0)
         {
-            @:<br />Sequence number: @Html.DisplayFor(modelItem => item.BookOrderStr)
+            @:<br />Sequence number: @Html.DisplayFor(modelItem => item.BookOrder)
+        }
+        @if (item.Sequences.Count > 0)
+        {
+            Html.RenderPartial("SequencesList", item.Sequences);
+        }
+        else
+        {
+            <br/>
         }
 @*                <br/>*@
 @*                <a href='@Url.Action("read", new {id = item.Id})' title="Read book">*@
 @*                    <b>(read)</b>*@
 @*                </a>*@
+        File: <b>@Html.DisplayFor(modelItem => item.FileSizeStr)</b>
         @if (!string.IsNullOrWhiteSpace(item.CreatedDate))
         {
-            @:<br/>Registered: @Html.DisplayFor(modelItem => item.CreatedDate)
+            @:Registered: <b>@Html.DisplayFor(modelItem => item.CreatedDate)</b>
         }
-        <br/>
-        File: @Html.DisplayFor(modelItem => item.FileSizeStr)
         <a class="btn btn-default" href='@Url.Action("download", new { id = item.Id })' title="Get FB2 file">FB2 file</a>
         <a class="btn btn-default" href='@Url.Action("mobi", new { id = item.Id })' title="Get MOBI file">Kindle file</a>
     </div>
