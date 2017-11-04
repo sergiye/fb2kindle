@@ -160,8 +160,8 @@ namespace jail.Controllers
             if (!System.IO.File.Exists(readingPath))
                 BookHelper.Transform(tempFile, readingPath, Server.MapPath("~/xhtml.xsl"));
             ViewBag.Title = book.Title;
-            ViewBag.BookContent = GetLinkToFile(readingPath);//Path.Combine(@"../" + readingPath.Replace(Server.MapPath("~"), "").Replace('\\', '/'));
             return new FilePathResult(GetLinkToFile(readingPath), "text/html");
+            //ViewBag.BookContent = GetLinkToFile(readingPath);//Path.Combine(@"../" + readingPath.Replace(Server.MapPath("~"), "").Replace('\\', '/'));
             //return View(book);
         }
 

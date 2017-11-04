@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -10,11 +9,11 @@ namespace jail.Classes
 {
     internal class DataRepository
     {
-        protected static BaseConnectionProvider<Guid> Db { get; set; }
+        protected static BaseConnectionProvider<long> Db { get; set; }
 
         static DataRepository()
         {
-            Db = new SqLiteConnectionProvider<Guid>(SettingsHelper.DatabasePath);
+            Db = new SqLiteConnectionProvider<long>(SettingsHelper.DatabasePath);
         }
 
         private static string _archivesPath;
@@ -39,41 +38,47 @@ namespace jail.Classes
         public static IEnumerable<BookInfo> GetSearchData(string key, string searchLang)
         {
             var sql = new StringBuilder(@"select b.id, b.title, b.id_archive, b.file_name, b.file_size, b.md5sum, 
-b.created, b.lang, a.id, a.full_name, a.first_name, a.middle_name, a.last_name from books b
+b.created, b.lang, s.*, bs.number BookOrder, 
+a.id, a.full_name, a.first_name, a.middle_name, a.last_name from books b
 join authors a on a.id=b.id_author
 join fts_book_content c on b.id=c.docid
 join fts_auth_content ac on ac.docid=a.id
+left join bookseq bs on bs.id_book=b.id
+left join sequences s on s.id=bs.id_seq
 where (b.title like @key or a.search_name like @key or c.c0content like @key or ac.c0content like @key)");
             if (searchLang != "all")
             {
                 sql.Append(" and b.lang=@lang");
             }
-            sql.Append(" order by b.title, b.created DESC LIMIT 100");
-            var info = Db.QueryMultiple<BookInfo, AuthorInfo, long>(sql.ToString(), 
-                b => b.Id, b => b.Authors, new { key = "%" + key + "%", lang = searchLang });
+            sql.Append(@" order by CASE WHEN b.lang = 'ru' THEN '1'
+              WHEN b.lang = 'en' THEN '2'
+              WHEN b.lang = 'ua' THEN '3'
+              WHEN b.lang = 'uk' THEN '4'
+              ELSE b.lang END ASC, b.title, b.created DESC LIMIT 100");
+            var info = Db.QueryMultiple<BookInfo, SequenceInfo, AuthorInfo, long>(sql.ToString(), 
+                b => b.Id, b => b.Sequences, b => b.Authors, new { key = "%" + key + "%", lang = searchLang });
             return info;
         }
 
         public static BookDetailedInfo GetBook(long id)
         {
-            var info = Db.QueryMultiple<BookDetailedInfo, AuthorInfo, long>(@"select b.id, b.title, b.id_archive, b.file_name, 
-b.file_size, b.md5sum, b.created, b.lang, b.description, ar.file_name ArchiveFileName, 
+            var info = Db.QueryMultiple<BookDetailedInfo, SequenceInfo, AuthorInfo, long>(@"select b.id, b.title, b.id_archive, b.file_name, 
+b.file_size, b.md5sum, b.created, b.lang, b.description, ar.file_name ArchiveFileName, s.*, bs.number BookOrder, 
 a.id, a.full_name, a.first_name, a.middle_name, a.last_name from books b
 join authors a on a.id=b.id_author
 join archives ar on ar.id=b.id_archive
-where b.id=@id order by b.title, b.created DESC LIMIT 100", 
-                b => b.Id, b => b.Authors, new { id }).FirstOrDefault();
-            FillBookSequences(info);
+left join bookseq bs on bs.id_book=b.id
+left join sequences s on s.id=bs.id_seq
+where b.id=@id order by s.value", 
+                b => b.Id, b => b.Sequences, b => b.Authors, new { id }).FirstOrDefault();
             return info;
         }
 
-        public static void FillBookSequences(BookDetailedInfo book)
+        public static List<SequenceInfo> GetBookSequences(long bookId)
         {
-            if (book == null) return;
-            var info = Db.Query<SequenceInfo>(@"select s.*, bs.number BookOrder from bookseq bs
+            return Db.Query<SequenceInfo>(@"select s.*, bs.number BookOrder from bookseq bs
   join sequences s on s.id = bs.id_seq where bs.id_book=@id
-order by s.value LIMIT 100", new { id = book.Id });
-            book.Sequences = info;
+order by s.value LIMIT 100", new { id = bookId });
         }
 
         public static SequenceData GetSequenceData(long id)
@@ -97,19 +102,20 @@ order by bs.number, b.title, b.created DESC",
         {
             var author = Db.QueryOne<AuthorData>("SELECT id, full_name, first_name, middle_name, last_name from authors where id=@id", new {id});
             if (author == null) return null;
-            var books = Db.QueryMultiple<BookInfo, AuthorInfo, long>(@"select b.id, b.title, b.id_archive, b.file_name, b.file_size, b.md5sum,
-  b.created, b.lang,
+            var books = Db.QueryMultiple<BookInfo, SequenceInfo, AuthorInfo, long>(@"select b.id, b.title, b.id_archive, b.file_name, b.file_size, b.md5sum,
+  b.created, b.lang, s.*, bs.number BookOrder, 
   a.id, a.full_name, a.first_name, a.middle_name, a.last_name
 from books b
 join authors a on a.id=b.id_author
+left join bookseq bs on bs.id_book=b.id
+left join sequences s on s.id=bs.id_seq
 where a.id=@id
 order by CASE WHEN b.lang = 'ru' THEN '1'
               WHEN b.lang = 'en' THEN '2'
               WHEN b.lang = 'ua' THEN '3'
               WHEN b.lang = 'uk' THEN '4'
               ELSE b.lang END ASC, b.title, b.created DESC",
-                b => b.Id, b => b.Authors, new { id }).ToList();
-            //group by language
+                b => b.Id, b => b.Sequences, b => b.Authors, new { id }).ToList();
             author.Books = new Dictionary<string, List<BookInfo>>();
             //var groupedList = books.GroupBy(u => u.Lang, (key, group) =>  new KeyValuePair<string, List<BookInfo>>(key, group.ToList())).ToList();
             var groupedList = books.GroupBy(u => u.Lang).Select(grp => grp.ToList()).ToList();
