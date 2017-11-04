@@ -4,7 +4,9 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Xml;
 using System.Xml.Linq;
+using System.Xml.XPath;
 using System.Xml.Xsl;
+using Fb2Kindle;
 using Ionic.Zip;
 using jail.Models;
 using Simpl.Extensions;
@@ -60,52 +62,28 @@ namespace jail.Classes
             return name;
         }
 
-        public static string SaveImages(string inputFile, string outputFolder, bool onlyCover = false)
-        {
-            var firstFileName = String.Empty;
-            var dd = new XmlDocument();
-            dd.Load(inputFile);
-            XmlNode bin = dd["FictionBook"]["binary"];
-            while (bin != null)
-            {
-                var fileName = outputFolder + bin.Attributes["id"].InnerText;
-                using (var fs = new FileStream(fileName, FileMode.Create))
-                {
-                    using (var w = new BinaryWriter(fs))
-                    {
-                        w.Write(Convert.FromBase64String(bin.InnerText));
-                        w.Close();
-                    }
-                    fs.Close();
-                }
-                if (String.IsNullOrWhiteSpace(firstFileName))
-                {
-                    firstFileName = fileName;
-                    if (onlyCover)
-                        break;
-                }
-                bin = bin.NextSibling;
-            }
-            return firstFileName;
-        }
-
         public static void SaveCover(string inputFile, string outputFile)
         {
-            var xmlDoc = new XmlDocument();
-            xmlDoc.Load(inputFile);
-            XmlNode bin = xmlDoc["FictionBook"]["binary"];
-            while (bin != null)
+            var book = Convertor.LoadBookWithoutNs(inputFile);
+            if (book == null) return;
+            var coverImage = book.Descendants("coverpage").Elements("image").FirstOrDefault();
+            if (coverImage != null)
             {
-                using (var fs = new FileStream(outputFile, FileMode.Create))
+                var coverPage = (string)coverImage.Attribute("href");
+                if (!string.IsNullOrWhiteSpace(coverPage))
                 {
-                    using (var w = new BinaryWriter(fs))
+                    var node = book.XPathSelectElement(string.Format("descendant::binary[@id='{0}']", coverPage.Replace("#", "")));
+                    if (node != null)
                     {
-                        w.Write(Convert.FromBase64String(bin.InnerText));
-                        w.Close();
+                        File.WriteAllBytes(outputFile, Convert.FromBase64String(node.Value));
+                        return;
                     }
-                    fs.Close();
                 }
-                break;
+            }
+            foreach (var binEl in book.Elements("binary"))
+            {
+                File.WriteAllBytes(outputFile, Convert.FromBase64String(binEl.Value));
+                return;
             }
         }
 
@@ -113,24 +91,17 @@ namespace jail.Classes
         {
             if (File.Exists(outputFile))
                 return File.ReadAllText(outputFile);
-
-            var result = string.Empty;
-
-            var xmlDoc = new XmlDocument();
-            xmlDoc.Load(inputFile);
-            var nodes = xmlDoc.GetElementsByTagName("annotation");
-            foreach (XmlNode node in nodes)
+            string result;
+            var book = Convertor.LoadBookWithoutNs(inputFile);
+            var desc = book.XPathSelectElement("descendant::annotation");
+            if (desc != null)
             {
-                result = node.InnerText;
+                result = desc.Value;
                 File.WriteAllText(outputFile, result);
                 return result;
             }
-
-            var book = new XElement("bookData", Fb2Kindle.Convertor.LoadBookWithoutNs(inputFile).Elements("body"));
-            if (book != null)
-            {
-                result = Regex.Replace(book.Value.Trim().Shorten(1024).Replace("\n", "<br/>"), @"\s+", " ").Replace("<br/> <br/> ", "<br/>");
-            }
+            result = Regex.Replace(book.Value.Trim().Shorten(1024).Replace("\n", "<br/>"), @"\s+", " ")
+                .Replace("<br/> <br/> ", "<br/>");
             File.WriteAllText(outputFile, result);
             return result;
         }
@@ -156,7 +127,7 @@ namespace jail.Classes
                 var zipEntry = zip.Entries.FirstOrDefault(e => e.FileName.Equals(fileName));
                 if (zipEntry == null)
                     throw new FileNotFoundException("Book file not found in archive");
-                using (var fs = System.IO.File.Create(outputFileName))
+                using (var fs = File.Create(outputFileName))
                     zipEntry.Extract(fs);
             }
         }
