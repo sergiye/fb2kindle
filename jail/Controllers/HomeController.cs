@@ -81,15 +81,18 @@ namespace jail.Controllers
 
         #region Search
 
-        public ActionResult Index()
+        public ActionResult Index(string k = null, string l = "ru")
         {
-            return View(new List<BookInfo>());
+            ViewBag.Key = k;
+            ViewBag.Lang = l;
+            return View(string.IsNullOrWhiteSpace(k) ? new List<BookInfo>() :
+                DataRepository.GetSearchData(k.ToLower(), l));
         }
 
         [ValidateInput(false)]
-        public ActionResult SearchResults(string key, string searchLang)
+        public ActionResult SearchResults(string k, string l)
         {
-            return PartialView(DataRepository.GetSearchData(key.ToLower(), searchLang));
+            return PartialView(DataRepository.GetSearchData(k.ToLower(), l));
         }
 
         #endregion
