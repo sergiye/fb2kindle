@@ -100,7 +100,7 @@ namespace jail.Classes
                 File.WriteAllText(outputFile, result);
                 return result;
             }
-            result = Regex.Replace(book.Value.Trim().Shorten(1024).Replace("\n", "<br/>"), @"\s+", " ")
+            result = Regex.Replace(book.XPathSelectElement("descendant::body").Value.Trim().Shorten(1024).Replace("\n", "<br/>"), @"\s+", " ")
                 .Replace("<br/> <br/> ", "<br/>");
             File.WriteAllText(outputFile, result);
             return result;
