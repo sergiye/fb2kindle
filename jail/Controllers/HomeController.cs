@@ -4,7 +4,6 @@ using System.IO;
 using System.Reflection;
 using System.Web.Mvc;
 using System.Web.Routing;
-using Fb2Kindle;
 using jail.Classes;
 using jail.Models;
 
@@ -106,7 +105,7 @@ namespace jail.Controllers
             if (book == null)
                 throw new FileNotFoundException("Book not found in db");
 
-            var archPath = Path.Combine(DataRepository.ArchivesPath, book.ArchiveFileName);
+            var archPath = Path.Combine(SettingsHelper.ArchivesPath, book.ArchiveFileName);
             if (!System.IO.File.Exists(archPath))
                 throw new FileNotFoundException("Book archive not found");
             var fileData = BookHelper.ExtractZipFile(archPath, book.FileName);
@@ -124,15 +123,14 @@ namespace jail.Controllers
             var resultFile = Path.ChangeExtension(sourceFileName, ".mobi");
             if (!System.IO.File.Exists(resultFile))
             {
-                var archPath = Path.Combine(DataRepository.ArchivesPath, book.ArchiveFileName);
+                var archPath = Path.Combine(SettingsHelper.ArchivesPath, book.ArchiveFileName);
                 if (!System.IO.File.Exists(archPath))
                     throw new FileNotFoundException("Book archive not found");
 
                 if (!System.IO.File.Exists(sourceFileName))
                     BookHelper.ExtractZipFile(archPath, book.FileName, sourceFileName);
 
-                var conv = new Convertor(SettingsHelper.ConverterSettings, SettingsHelper.ConverterCss, false);
-                if (!conv.ConvertBook(sourceFileName, false))
+                if (!BookHelper.ConvertBook(sourceFileName, false))
                     throw new ArgumentException("Error converting book for kindle");
             }
             var fileBytes = System.IO.File.ReadAllBytes(resultFile);
@@ -147,7 +145,7 @@ namespace jail.Controllers
             if (book == null)
                 throw new FileNotFoundException("Book not found in db");
 
-            var archPath = Path.Combine(DataRepository.ArchivesPath, book.ArchiveFileName);
+            var archPath = Path.Combine(SettingsHelper.ArchivesPath, book.ArchiveFileName);
             if (!System.IO.File.Exists(archPath))
                 throw new FileNotFoundException("Book archive not found");
 
@@ -175,7 +173,7 @@ namespace jail.Controllers
             if (book == null)
                 throw new FileNotFoundException("Book not found in db");
 
-            var archPath = Path.Combine(DataRepository.ArchivesPath, book.ArchiveFileName);
+            var archPath = Path.Combine(SettingsHelper.ArchivesPath, book.ArchiveFileName);
             if (!System.IO.File.Exists(archPath))
                 throw new FileNotFoundException("Book archive not found");
 
@@ -257,8 +255,7 @@ namespace jail.Controllers
             using (var fileStream = new FileStream(originRealPath, FileMode.OpenOrCreate))
                 Request.InputStream.CopyTo(fileStream);
 
-            var conv = new Convertor(new DefaultOptions(), SettingsHelper.ConverterCss, false);
-            if (!conv.ConvertBook(originRealPath, false))
+            if (!BookHelper.ConvertBook(originRealPath, false))
                 throw new ArgumentException("Error converting book for kindle");
 
             return Json(new { success = true, link = mobiRelativePath, fileName = mobiDisplayName });
