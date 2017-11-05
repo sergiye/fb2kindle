@@ -1,17 +1,23 @@
 ﻿@model jail.Models.BookDetailedInfo
 
 <h2>@Model.Title</h2>
+@Html.HiddenFor(modelItem => modelItem.FileName)
+@Html.HiddenFor(modelItem => modelItem.IdArchive)
+@Html.HiddenFor(modelItem => modelItem.Id)
 <h4>
     @{Html.RenderPartial("AuthorsList", Model.Authors);}
 </h4>
 <p>
     @{Html.RenderPartial("SequencesList", Model.Sequences);}
 </p>
+@if (!string.IsNullOrWhiteSpace(Model.CreatedDate))
+{
+    <div>
+        Registered: @Html.DisplayFor(modelItem => modelItem.CreatedDate)
+    </div>
+}
 <div>
     File: @Html.DisplayFor(modelItem => modelItem.FileSizeStr)
-</div>
-<div>
-    Registered: @Html.DisplayFor(modelItem => modelItem.CreatedDate)
 </div>
 <br />
 <div>
@@ -20,10 +26,6 @@
     <a class="btn btn-info" href='@Url.Action("mobi", new { id = Model.Id })' title="Get MOBI file">File for kindle</a>
 </div>
 <hr />
-
-@Html.HiddenFor(modelItem => modelItem.FileName)
-@Html.HiddenFor(modelItem => modelItem.IdArchive)
-@Html.HiddenFor(modelItem => modelItem.Id)
 <div class="panel-body">
     <div class="col-md-2">
         @if (ViewBag.Image != null)
