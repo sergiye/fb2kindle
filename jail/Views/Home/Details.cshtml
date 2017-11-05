@@ -13,9 +13,9 @@
 <div>
     Registered: @Html.DisplayFor(modelItem => modelItem.CreatedDate)
 </div>
-
 <br />
 <div>
+    <a class="btn btn-default" href='@Url.Action("read", new { id = Model.Id })' title="Read .fb2 file">Read book</a>
     <a class="btn btn-success" href='@Url.Action("download", new { id = Model.Id })' title="Get FB2 file">FB2 file</a>
     <a class="btn btn-info" href='@Url.Action("mobi", new { id = Model.Id })' title="Get MOBI file">File for kindle</a>
 </div>
@@ -38,6 +38,3 @@
     </div>
 </div>
 <hr />
-<div>
-    <a class="btn btn-default" href='@Url.Action("read", new { id = Model.Id })' title="Read .fb2 file">Read book</a>
-</div>
