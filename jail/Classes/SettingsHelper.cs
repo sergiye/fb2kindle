@@ -1,6 +1,5 @@
 ﻿using System.Configuration;
 using System.Web.Configuration;
-using Fb2Kindle;
 
 namespace jail.Classes
 {
@@ -10,10 +9,8 @@ namespace jail.Classes
     public static class SettingsHelper
     {
         public static string DatabasePath { get; set; }
+        public static string ArchivesPath { get; set; }
         public static long MaxRequestLength { get; set; }
-
-        public static DefaultOptions ConverterSettings;
-        public static string ConverterCss;
 
         /// <summary>
         /// constructor
@@ -21,13 +18,10 @@ namespace jail.Classes
         static SettingsHelper()
         {
             DatabasePath = ConfigurationManager.AppSettings["DatabasePath"];
+            ArchivesPath = ConfigurationManager.AppSettings["ArchivesPath"];
 
             var section = ConfigurationManager.GetSection("system.web/httpRuntime") as HttpRuntimeSection;
             MaxRequestLength = section != null ? (long)section.MaxRequestLength * 1024 : 4096 * 1024;
-            
-            //todo: customize from web.config later
-            ConverterSettings = new DefaultOptions(); 
-            ConverterCss = string.Empty;
         }
     }
 }

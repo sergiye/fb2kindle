@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -6,7 +7,6 @@ using System.Xml;
 using System.Xml.Linq;
 using System.Xml.XPath;
 using System.Xml.Xsl;
-using Fb2Kindle;
 using Ionic.Zip;
 using jail.Models;
 using Simpl.Extensions;
@@ -62,9 +62,76 @@ namespace jail.Classes
             return name;
         }
 
+        internal static XElement LoadBookWithoutNs(string bookPath)
+        {
+            try
+            {
+                XElement book;
+                //book = XDocument.Parse(File.ReadAllText(bookPath), LoadOptions.PreserveWhitespace).Root;
+                //book = ReadXDocumentWithInvalidCharacters(bookPath).Root;
+                using (Stream file = File.OpenRead(bookPath))
+                {
+                    book = XElement.Load(file, LoadOptions.PreserveWhitespace);
+                }
+                XNamespace ns = "";
+                foreach (var el in book.DescendantsAndSelf())
+                {
+                    el.Name = ns.GetName(el.Name.LocalName);
+                    var atList = el.Attributes().ToList();
+                    el.Attributes().Remove();
+                    foreach (var at in atList)
+                        el.Add(new XAttribute(ns.GetName(at.Name.LocalName), at.Value));
+                }
+                book = new XElement("book", book.Elements("description"), book.Elements("body"), book.Elements("binary"));
+                return book;
+            }
+            catch (Exception ex)
+            {
+                Log.WriteError(ex, "Unknown file format: " + ex.Message);
+                return null;
+            }
+        }
+
+        internal static int StartProcess(string fileName, string args, bool addToConsole)
+        {
+            var startInfo = new ProcessStartInfo
+                            {
+                                FileName = fileName,
+                                Arguments = args,
+                                UseShellExecute = false,
+                                RedirectStandardOutput = true,
+                                CreateNoWindow = true,
+                            };
+            var process = Process.Start(startInfo);
+            if (addToConsole)
+                while (!process.StandardOutput.EndOfStream)
+                    Log.WriteDebug(process.StandardOutput.ReadLine());
+            process.WaitForExit();
+            return process.ExitCode;
+        }
+
+        public static string GetApplicationPath()
+        {
+            return AppDomain.CurrentDomain.BaseDirectory;
+            //            var asm = Assembly.GetExecutingAssembly();
+            //            var directoryInfo = new FileInfo(asm.Location).Directory;
+            //            return directoryInfo != null ? directoryInfo.FullName : Path.GetDirectoryName(asm.Location);
+        }
+
+        internal static bool ConvertBook(string inputFile, bool writeLog)
+        {
+            var res = StartProcess(GetApplicationPath() + "bin\\Fb2Kindle.exe", inputFile, writeLog);
+            if (res == 2)
+            {
+                Log.WriteWarning("Error converting to mobi");
+                return false;
+            }
+            return true;
+        }
+
         public static void SaveCover(string inputFile, string outputFile)
         {
-            var book = Convertor.LoadBookWithoutNs(inputFile);
+            var book = LoadBookWithoutNs(inputFile);
             if (book == null) return;
             var coverImage = book.Descendants("coverpage").Elements("image").FirstOrDefault();
             if (coverImage != null)
@@ -92,7 +159,7 @@ namespace jail.Classes
             if (File.Exists(outputFile))
                 return File.ReadAllText(outputFile);
             string result;
-            var book = Convertor.LoadBookWithoutNs(inputFile);
+            var book = LoadBookWithoutNs(inputFile);
             var desc = book.XPathSelectElement("descendant::annotation");
             if (desc != null)
             {
