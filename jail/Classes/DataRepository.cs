@@ -45,7 +45,7 @@ join fts_book_content c on b.id=c.docid
 join fts_auth_content ac on ac.docid=a.id
 left join bookseq bs on bs.id_book=b.id
 left join sequences s on s.id=bs.id_seq
-where (b.title like @key or a.search_name like @key or c.c0content like @key or ac.c0content like @key)");
+where (REPLACE(b.title, ' ', '') like @key or REPLACE(a.search_name, ' ', '') like @key or REPLACE(c.c0content, ' ', '') like @key or REPLACE(ac.c0content, ' ', '') like @key)");
             if (searchLang != "all")
             {
                 sql.Append(" and b.lang=@lang");
@@ -56,7 +56,7 @@ where (b.title like @key or a.search_name like @key or c.c0content like @key or 
               WHEN b.lang = 'uk' THEN '4'
               ELSE b.lang END ASC, b.title, b.created DESC LIMIT 100");
             var info = Db.QueryMultiple<BookInfo, SequenceInfo, AuthorInfo, long>(sql.ToString(), 
-                b => b.Id, b => b.Sequences, b => b.Authors, new { key = "%" + key + "%", lang = searchLang });
+                b => b.Id, b => b.Sequences, b => b.Authors, new { key = "%" + key.Replace(" ", "") + "%", lang = searchLang });
             return info;
         }
 

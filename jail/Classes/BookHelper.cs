@@ -217,10 +217,10 @@ namespace jail.Classes
 
         public static string GetBookDownloadFileName(BookInfo book, string ext = ".fb2")
         {
-            var fileName = Regex.Replace(String.Format("{0}_{1}{2}",
+            var fileName = string.Format("{0}{1}", Regex.Replace(Regex.Replace(String.Format("{0}_{1}",
                     book.Authors.First().FullName.ToLower().Transliterate(),
-                    book.Title.ToLower().Transliterate(), ext),
-                @"[!@#$%_ ']", "_");
+                    book.Title.ToLower().Transliterate()),
+                @"[!@#$%_,. …\[\]\-']", "_"), @"(\p{P})(?<=\1\p{P}+)", "").Trim('_'), ext);
             return fileName;
         }
 
