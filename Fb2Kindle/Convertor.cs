@@ -544,7 +544,7 @@ namespace Fb2Kindle
             return linkEl;
         }
 
-        internal static void CreateTitlePage(XElement book, string fileName)
+        private static void CreateTitlePage(XElement book, string fileName)
         {
             var content = new XElement("html");
             content.Add(new XElement("head", GetCssLink()));
@@ -635,7 +635,7 @@ namespace Fb2Kindle
             return true;
         }
 
-        internal static void ConvertTagsToHtml(XElement book, bool full = false)
+        private static void ConvertTagsToHtml(XElement book, bool full = false)
         {
             Util.RenameTags(book, "text-author", "P", "text-author");
             Util.RenameTags(book, "empty-line", "br");
@@ -651,7 +651,7 @@ namespace Fb2Kindle
             Util.RenameTags(book, "title", "div", "subtitle");
         }
 
-        internal static XDocument ReadXDocumentWithInvalidCharacters(string filename)
+        private static XDocument ReadXDocumentWithInvalidCharacters(string filename)
         {
             XDocument xDocument;
             var xmlReaderSettings = new XmlReaderSettings { CheckCharacters = false };
@@ -664,7 +664,7 @@ namespace Fb2Kindle
             return xDocument;
         }
 
-        internal static XElement LoadBookWithoutNs(string bookPath)
+        private static XElement LoadBookWithoutNs(string bookPath)
         {
             try
             {

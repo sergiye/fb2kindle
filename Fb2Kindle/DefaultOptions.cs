@@ -3,7 +3,7 @@
 namespace Fb2Kindle
 {
     [Serializable]
-    public class DefaultOptions
+    internal class DefaultOptions
     {
         public bool d { get; set; }
         public bool nch { get; set; }
