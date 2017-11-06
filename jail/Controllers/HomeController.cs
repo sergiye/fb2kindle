@@ -105,10 +105,15 @@ namespace jail.Controllers
             if (book == null)
                 throw new FileNotFoundException("Book not found in db");
 
-            var archPath = Path.Combine(SettingsHelper.ArchivesPath, book.ArchiveFileName);
-            if (!System.IO.File.Exists(archPath))
-                throw new FileNotFoundException("Book archive not found");
-            var fileData = BookHelper.ExtractZipFile(archPath, book.FileName);
+            var sourceFileName = Server.MapPath(string.Format("~/b/{0}", book.FileName));
+            if (!System.IO.File.Exists(sourceFileName))
+            {
+                var archPath = Path.Combine(SettingsHelper.ArchivesPath, book.ArchiveFileName);
+                if (!System.IO.File.Exists(archPath))
+                    throw new FileNotFoundException("Book archive not found");
+                BookHelper.ExtractZipFile(archPath, book.FileName, sourceFileName);
+            }
+            var fileData = System.IO.File.ReadAllBytes(sourceFileName);
             return File(fileData, System.Net.Mime.MediaTypeNames.Application.Octet, 
                 BookHelper.GetBookDownloadFileName(book));
         }
@@ -145,13 +150,14 @@ namespace jail.Controllers
             if (book == null)
                 throw new FileNotFoundException("Book not found in db");
 
-            var archPath = Path.Combine(SettingsHelper.ArchivesPath, book.ArchiveFileName);
-            if (!System.IO.File.Exists(archPath))
-                throw new FileNotFoundException("Book archive not found");
-
             var tempFile = Server.MapPath(string.Format("~/b/{0}", book.FileName));
             if (!System.IO.File.Exists(tempFile))
+            {
+                var archPath = Path.Combine(SettingsHelper.ArchivesPath, book.ArchiveFileName);
+                if (!System.IO.File.Exists(archPath))
+                    throw new FileNotFoundException("Book archive not found");
                 BookHelper.ExtractZipFile(archPath, book.FileName, tempFile);
+            }
 
             var detailsFolder = Path.Combine(Path.GetDirectoryName(tempFile), Path.GetFileNameWithoutExtension(tempFile));
             if (string.IsNullOrWhiteSpace(detailsFolder))
