@@ -85,13 +85,15 @@ namespace jail.Controllers
             ViewBag.Key = k;
             ViewBag.Lang = l;
             return View(string.IsNullOrWhiteSpace(k) ? new List<BookInfo>() :
-                DataRepository.GetSearchData(k.ToLower(), l));
+                DataRepository.GetSearchData(k, l));
         }
 
         [ValidateInput(false)]
-        public ActionResult SearchResults(string k, string l)
+        [Route("search")]
+        public ActionResult SearchResults(string k = null, string l = "ru")
         {
-            return PartialView(DataRepository.GetSearchData(k.ToLower(), l));
+            return PartialView(string.IsNullOrWhiteSpace(k) ? new List<BookInfo>() : 
+                DataRepository.GetSearchData(k, l));
         }
 
         #endregion
