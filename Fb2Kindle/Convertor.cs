@@ -613,7 +613,7 @@ namespace Fb2Kindle
                                 img.Save(file, ImageFormat.Jpeg);
                             }
                         }
-                        if (!_currentSettings.g)
+                        if (_currentSettings.g)
                         {
                             Image gsImage;
                             using (var img = Image.FromFile(file))
