@@ -159,7 +159,7 @@ namespace Fb2Kindle
             return ConvertBookSequence(new[] { bookPath }, debug);
         }
 
-        private static bool ProcessImages(XElement book, string imagesFolder, bool removeImages)
+        private bool ProcessImages(XElement book, string imagesFolder, bool removeImages)
         {
             var imagesCreated = !removeImages && ExtractImages(book, imagesFolder);
             var list = Util.RenameTags(book, "image", "div", "image");
@@ -582,7 +582,7 @@ namespace Fb2Kindle
 
         #region helper methods
 
-        private static bool ExtractImages(XElement book, string imagesFolder)
+        private bool ExtractImages(XElement book, string imagesFolder)
         {
             if (book == null) return true;
             Util.Write("Extracting images...", ConsoleColor.White);
@@ -613,12 +613,15 @@ namespace Fb2Kindle
                                 img.Save(file, ImageFormat.Jpeg);
                             }
                         }
-                        Image gsImage;
-                        using (var img = Image.FromFile(file))
+                        if (!_currentSettings.g)
                         {
-                            gsImage = Util.GrayScale(img, true);
+                            Image gsImage;
+                            using (var img = Image.FromFile(file))
+                            {
+                                gsImage = Util.GrayScale(img, true);
+                            }
+                            gsImage.Save(file, ImageFormat.Jpeg);
                         }
-                        gsImage.Save(file, ImageFormat.Jpeg);
                     }
                     catch (Exception ex)
                     {

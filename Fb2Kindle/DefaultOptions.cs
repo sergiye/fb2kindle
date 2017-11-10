@@ -11,5 +11,6 @@ namespace Fb2Kindle
         public bool ntoc { get; set; }
         public bool c { get; set; }
         public bool s { get; set; }
+        public bool g { get; set; }
     }
 }

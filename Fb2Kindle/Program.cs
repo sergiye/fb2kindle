@@ -21,6 +21,7 @@ namespace Fb2Kindle
             Util.WriteLine("-o: hide detailed output");
             Util.WriteLine("-s: add sequence and number to title");
             Util.WriteLine("-ni: no images");
+            Util.WriteLine("-g: grayscaled images");
             Util.WriteLine("-ntoc: no table of content");
             Util.WriteLine("-nch: no chapters");
 
@@ -92,6 +93,9 @@ namespace Fb2Kindle
                                 break;
                             case "-ni":
                                 currentSettings.ni = true;
+                                break;
+                            case "-g":
+                                currentSettings.g = true;
                                 break;
                             case "-ntoc":
                                 currentSettings.ntoc = true;
