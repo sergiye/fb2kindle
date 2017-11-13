@@ -57,6 +57,12 @@ footer {
     margin-top: 20px;
     font-size: 14px;
 }
+#gridDataContainer {
+    overflow: auto;
+    height: 100%;
+    margin-top: 20px;
+    font-size: 12px;
+}
 .vcenter {
     display: inline-block;
     vertical-align: middle;

@@ -35,14 +35,10 @@ namespace jail.Controllers
 
         protected override IAsyncResult BeginExecute(RequestContext requestContext, AsyncCallback callback, object state)
         {
-            //if (!CommonHelper.IsAdmin())
+            if (!CommonHelper.CurrentIdentityName.GetHash().Equals(CommonHelper.AdminLoginHash))
                 Logger.WriteDebug(CommonHelper.GetActionLogName(requestContext.HttpContext.Request), CommonHelper.GetClientAddress(), CommonHelper.CurrentIdentityName);
             return base.BeginExecute(requestContext, callback, state);
         }
-
-        #endregion
-
-        #region basic methods
 
         public UserProfile CurrentUser
         {
@@ -56,7 +52,10 @@ namespace jail.Controllers
 
 //        public bool IsAdmin()
 //        {
-//            return Request.IsAuthenticated && ((UserProfile)ControllerContext.HttpContext.Session["User"]).UserType > UserType.User;
+//            var user = User as UserProfile;
+//            if (user == null)
+//                return false;
+//            return user.UserType == UserType.Administrator;
 //        }
 
         private string AppBaseUrl { get { return Url.Content("~/"); } }
@@ -76,6 +75,10 @@ namespace jail.Controllers
         {
             return AppBaseUrl + fileName.Replace(Server.MapPath("~"), "").Replace('\\', '/');
         }
+
+        #endregion
+
+        #region basic methods
 
         public static string GetVersionString()
         {
@@ -111,8 +114,8 @@ namespace jail.Controllers
         {
             if (ModelState.IsValid)
             {
-                var user = model.UserName.GetHash().Equals("dae7a3d670e30f7278ea90344c768af1") &&
-                           model.Password.GetHash().Equals("e3bbe98ee127683efc57b077e19cfa43")
+                var user = model.UserName.GetHash().Equals(CommonHelper.AdminLoginHash) &&
+                           model.Password.GetHash().Equals(CommonHelper.AdminPasswordHash)
                     ? UserRepository.GetUserById(0)
                     : UserRepository.GetUser(model.UserName, model.Password);
                 if (user == null)
