@@ -8,7 +8,7 @@ namespace jail.Models
         [Required, DisplayName("Email Address")]
         public string UserName { get; set; }
 
-        [Required, DataType(DataType.Password), DisplayName("Password")]
+        [DataType(DataType.Password), DisplayName("Password")]
         public string Password { get; set; }
 
 //        [DisplayName("Remember me")]
