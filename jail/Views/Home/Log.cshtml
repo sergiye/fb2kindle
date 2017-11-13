@@ -41,7 +41,7 @@
             url: '@Url.Action("LogPartial")',
             data: { key: key, searchType: searchType },
             success: function (response) {
-                $("#gridContainer").html(response);
+                $("#gridDataContainer").html(response);
 
                 if (autorefreshTimer) {
                     window.clearTimeout(autorefreshTimer);
@@ -127,6 +127,6 @@
     </div>
 </div>
 <div class="clearfix"></div>
-<div id="gridContainer">
+<div id="gridDataContainer">
     @{Html.RenderPartial("LogPartial", Model);}
 </div>

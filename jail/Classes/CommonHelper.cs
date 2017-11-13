@@ -68,5 +68,8 @@ namespace jail.Classes
                 return name;
             }
         }
+
+        public static string AdminLoginHash { get { return "dae7a3d670e30f7278ea90344c768af1"; } }
+        public static string AdminPasswordHash { get { return "e3bbe98ee127683efc57b077e19cfa43"; } }
     }
 }
