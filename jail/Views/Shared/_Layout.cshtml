@@ -52,7 +52,7 @@
                                         Admin<span class="caret"></span>
                                     </a>
                                     <ul class="dropdown-menu">
-                                        @*<li>@Html.ActionLink("Users", "Users", "Users")</li>*@
+                                        <li>@Html.ActionLink("Users", "Users", "Home")</li>
                                         <li>@Html.ActionLink("Log", "Log", "Home")</li>
                                     </ul>
                                 </li>
@@ -102,14 +102,50 @@
     <div id='ajax_loader' style="position: fixed; left: calc(50% - 60px); top: calc(50% - 60px); display: none;">
         <img src="~/Images/loader.gif" />
     </div>
-    @Html.Partial("Controls/_ModalPopupControl", new ModalPopupControlViewModel("NotificationPopup")
+
+@Html.Partial("Controls/_ModalPopupControl", new ModalPopupControlViewModel("NotificationPopup")
+                                            {
+                                                OkButtonText = "OK"
+                                            })
+@{
+    const string modalPopupId = "PasswordModalPopup";
+}
+    
+@Html.Partial("Controls/_ModalPopupControl", new ModalPopupControlViewModel(modalPopupId)
                                              {
-                                                 OkButtonText = "OK"
+                                                 OkButtonText = "Create",
+                                                 CloseButtonText = "Cancel",
+                                                 Title = "Set password",
+                                                 Template = "~/Views/Home/_PasswordChange.cshtml",
+                                                 TemplateViewData = new ViewDataDictionary { Model = new ChangePasswordModel() },
+                                                 IsManagePopup = true,
+                                                 AfterSaveCallback = "AfterSavePasswordCallbackEvent"
                                              })
 
     @RenderSection("scripts", required: false)
 
     <script type="text/javascript">
+        function ShowImage(imghref) {
+            window.Helper.ShowNotificationPopup('<img width="570px" height="auto" src="' + imghref + '" />', window.HelperItem.NotificationType.Image);
+        }
+        function EditPassword(id) {
+            var modalPopup = window.Pages.Controls["@modalPopupId"];
+            var popupHolder = modalPopup.ModalId;
+            $("#" + popupHolder).find(".modal-body").load("@Url.Action("PasswordChange", "Home")?id=" + id, function () {
+                modalPopup.Show("Change password", "Save");
+            });
+        }
+        AfterSavePasswordCallbackEvent = function (response) {
+            var modalPopup = window.Pages.Controls["@modalPopupId"];
+            if (response.id) {
+                modalPopup.Close();
+                window.Helper.ShowSuccess(response.message);
+                if (window.RefreshUsers)
+                    window.RefreshUsers();
+            } else {
+                $("#" + modalPopup.ModalId).find(".modal-body").html(response);
+            }
+        };
         jQuery(function ($) {
             $(document).ajaxStop(function () {
                 $("#ajax_loader").hide();

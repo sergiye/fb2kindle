@@ -94,11 +94,8 @@
         });
     }
 </script>
-<div class="filter-wrapper">
-    <div class="btn-toolbar pull-left col-md-1" role="toolbar">
-        <h4>@ViewBag.Title</h4>
-    </div>
-    <div class="input-group col-md-4 pull-left">
+<div class="search-wrapper">
+    <div class="input-group pull-left">
         <input id="filterBlock" type="text" class="form-control" aria-label="..." 
                data-search-type="@SystemLog.LogItemType.All" 
                placeholder="Search by message, user or IP...">
@@ -112,18 +109,21 @@
                 }
             </ul>
         </div>
-    </div>
-
-    <div class="btn-toolbar pull-right" role="toolbar">
-        <a href="#" onclick="RefreshData(true);" class="btn btn-primary">
-            <span class="glyphicon glyphicon-refresh"></span> Refresh
-        </a>
-        <a href="#" onclick="CalcSelectedLogs();" class="btn btn-success">
-            <span class="glyphicon glyphicon-check"></span> Count selected
-        </a>
-        <a href="#" onclick="ClearSelectedLogs();" class="btn btn-danger">
-            <span class="glyphicon glyphicon-minus"></span> Remove selected
-        </a>
+        <div class="input-group-btn">
+            <button type="button" class="btn btn-primary" onclick="RefreshData();" title="Search">
+                <i class="glyphicon glyphicon-search"></i>
+            </button>
+        </div>
+        <div class="input-group-btn">
+            <button type="button" class="btn btn-success" onclick="CalcSelectedLogs();" title="Count selected">
+                <i class="glyphicon glyphicon-check"></i>
+            </button>
+        </div>
+        <div class="input-group-btn">
+            <button type="button" class="btn btn-danger" onclick="ClearSelectedLogs();" title="Remove selected">
+                <i class="glyphicon glyphicon-minus"></i>
+            </button>
+        </div>
     </div>
 </div>
 <div class="clearfix"></div>
