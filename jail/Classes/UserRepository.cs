@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Configuration;
 using jail.Models;
 using Simpl.Extensions.Database;
@@ -16,10 +17,12 @@ namespace jail.Classes
 
         #region Users
 
-        public static UserProfile GetUserById(long id)
+        public static UserProfile GetUserById(long id, bool createForZero = false)
         {
             if (id == 0)
-                return new UserProfile {Email = "Administrator", UserType = UserType.Administrator};
+                return createForZero
+                    ? new UserProfile {Email = "Administrator", UserType = UserType.Administrator}
+                    : null;
 
             var data = Db.QueryOne<UserProfile>("select * from Users where Id=@id", new { id });
             return data;
@@ -33,6 +36,13 @@ namespace jail.Classes
                 : Db.QueryOne<UserProfile>("select * from Users where Email=@login and Password=@password",
                     new { login, password = password.GetHash()});
             return result;
+        }
+
+        public static List<UserProfile> GetUsers(string filter)
+        {
+            var users = Db.Query<UserProfile>("select TOP(100) * from Users where Email like @key order by Email", 
+                new { key = "%" + filter + "%" });
+            return users;
         }
 
         public static bool SetUserPassword(long userId, string oldPassword, string newPassword)

@@ -1,0 +1,107 @@
+﻿@using jail.Models
+@using jail.Models.Controls
+@model IEnumerable<UserProfile>
+
+@{
+    ViewBag.Title = "Users";
+    const string modalPopupId = "UserModalPopup";
+}
+
+<script type="text/javascript">
+    $(document).ready(function () {
+        $("#searchBlock").keyup(function () {
+            window.Helper.delay(function () { SearchUsers(); }, 1000);
+        });
+    });
+    function SearchUsers() {
+        var search = $("#searchBlock");
+        var key = $.trim(search.val());
+        $.ajax({
+            type: "GET",
+            url: '@Url.Action("UsersSearch")',
+            data: { key: key },
+            success: function (response) {
+                $("#gridDataContainer").html(response);
+                //$.bootstrapSortable();
+            },
+            error: function (response, status, error) {
+                window.Helper.ShowError(error);
+            }
+        });
+    }
+    function DeleteUser(id) {
+        if (!confirm("Are you sure you want to remove user?"))
+            return;
+        $.ajax({
+            url: '@Url.Action("UserDelete")',
+            data: { id: id },
+            success: SearchUsers,
+            error: function (response, status, error) {
+                window.Helper.ShowError(error);
+            }
+        });
+    }
+    function EditUser(id) {
+        var modalPopup = window.Pages.Controls["@modalPopupId"];
+        var popupHolder = modalPopup.ModalId;
+        $("#" + popupHolder).find(".modal-body").load("@Url.Action("UserEdit")?id=" + id, function () {
+            if (id == 0) {
+                modalPopup.Show("Create user");
+            } else {
+                modalPopup.Show("Edit user", "Save");
+            }
+        });
+    }
+    AfterSaveUserCallbackEvent = function (response) {
+        var modalPopup = window.Pages.Controls["@modalPopupId"];
+        if (response.itemId) {
+            modalPopup.Close();
+            window.Helper.ShowSuccess(response.message);
+            SearchUsers();
+        } else {
+            $("#" + modalPopup.ModalId).find(".modal-body").html(response);
+        }
+    };
+    function ResetUserPassword(id) {
+        $.ajax({
+            url: '@Url.Action("ResetUserPassword")',
+            data: { id: id },
+            success: function (data) {
+                window.Helper.ShowSuccess('' + data);
+                SearchUsers();
+            },
+            error: function (response, status, error) {
+                window.Helper.ShowError(error);
+            }
+        });
+    }
+</script>
+@Html.Partial("Controls/_ModalPopupControl", new ModalPopupControlViewModel(modalPopupId)
+{
+    OkButtonText = "Create",
+    CloseButtonText = "Cancel",
+    Title = "Create user",
+    Template = "UserEdit",
+    TemplateViewData = new ViewDataDictionary { Model = new UserProfile() },
+    IsManagePopup = true,
+    AfterSaveCallback = "AfterSaveUserCallbackEvent"
+})
+<div class="search-wrapper">
+    <div class="input-group pull-left">
+        <input id="searchBlock" type="text" class="form-control" aria-label="..." placeholder="Start type to search...">
+        <div class="input-group-btn">
+            <button type="button" class="btn btn-primary" onclick="SearchUsers();" title="Search">
+                <i class="glyphicon glyphicon-search"></i>
+            </button>
+        </div>
+        <div class="input-group-btn">
+            <button type="button" class="btn btn-success" onclick="EditUser(0);" title="Create">
+                <i class="glyphicon glyphicon-edit"></i>
+            </button>
+        </div>
+    </div>
+</div>
+<div class="clearfix"></div>
+<div id="gridDataContainer">
+    @{Html.RenderPartial("UsersPartial", Model);}
+</div>

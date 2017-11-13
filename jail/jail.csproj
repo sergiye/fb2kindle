@@ -229,6 +229,10 @@
     <Content Include="Views\Home\Log.cshtml" />
     <Content Include="Views\Home\LogPartial.cshtml" />
     <Content Include="Views\Shared\Controls\_ModalPopupControl.cshtml" />
+    <Content Include="Views\Home\_PasswordChange.cshtml" />
+    <Content Include="Views\Home\Users.cshtml" />
+    <Content Include="Views\Home\UsersPartial.cshtml" />
+    <Content Include="Views\Home\UserEdit.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

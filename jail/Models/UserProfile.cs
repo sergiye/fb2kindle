@@ -18,8 +18,14 @@ namespace jail.Models
     [DapperTable("Users")]
     public class UserProfile : LongIdContainer
     {
-        [DataMember, DisplayName("Email"), DataType(DataType.EmailAddress), StringLength(255)]
+        [DataMember, DisplayName("Email"), DataType(DataType.EmailAddress), StringLength(255), Required]
         public virtual string Email { get; set; }
+
+        [DapperReadOnly, DataType(DataType.Password)]
+        public virtual string Password { get; set; }
+
+        [DapperIgnore]
+        public virtual bool HasPassword { get { return !string.IsNullOrEmpty(Password); } }
 
         [DataMember, DisplayName("User Type")]
         public virtual UserType UserType { get; set; }
@@ -30,5 +36,8 @@ namespace jail.Models
 
         [DataMember, DisplayName("Active")]
         public virtual bool Active { get; set; }
+
+        [DapperIgnore, DisplayName("Active")]
+        public string ActiveText { get { return Active ? "Yes" : "No"; } }
     }
 }

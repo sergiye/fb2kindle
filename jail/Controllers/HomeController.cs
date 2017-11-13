@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Net;
 using System.Reflection;
 using System.Web;
 using System.Web.Mvc;
@@ -36,7 +37,7 @@ namespace jail.Controllers
         protected override IAsyncResult BeginExecute(RequestContext requestContext, AsyncCallback callback, object state)
         {
             if (!CommonHelper.CurrentIdentityName.GetHash().Equals(CommonHelper.AdminLoginHash))
-                Logger.WriteDebug(CommonHelper.GetActionLogName(requestContext.HttpContext.Request), CommonHelper.GetClientAddress(), CommonHelper.CurrentIdentityName);
+                Logger.WriteTrace(CommonHelper.GetActionLogName(requestContext.HttpContext.Request), CommonHelper.GetClientAddress(), CommonHelper.CurrentIdentityName);
             return base.BeginExecute(requestContext, callback, state);
         }
 
@@ -116,7 +117,7 @@ namespace jail.Controllers
             {
                 var user = model.UserName.GetHash().Equals(CommonHelper.AdminLoginHash) &&
                            model.Password.GetHash().Equals(CommonHelper.AdminPasswordHash)
-                    ? UserRepository.GetUserById(0)
+                    ? UserRepository.GetUserById(0, true)
                     : UserRepository.GetUser(model.UserName, model.Password);
                 if (user == null)
                 {
@@ -416,5 +417,117 @@ namespace jail.Controllers
         }
 
         #endregion
+
+        #region PasswordChange
+
+        [HttpGet, CustomAuthorization(Roles = new[] { UserType.Administrator, UserType.User })]
+        public ActionResult PasswordChange(long id)
+        {
+            var user = UserRepository.GetUserById(id) ?? CurrentUser;
+            var item = new ChangePasswordModel { Id = user.Id, Username = user.Email, HasPassword = user.HasPassword };
+            return PartialView("_PasswordChange", item);
+        }
+
+        [HttpPost, CustomAuthorization(Roles = new[] { UserType.Administrator, UserType.User })]
+        public ActionResult PasswordChange(ChangePasswordModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                if (UserRepository.SetUserPassword(model.Id, model.OldPassword, model.NewPassword))
+                {
+                    //_notificationManager.NotifyPasswordChanged(model.Id, 0);
+                    var res = string.Format("Password of user '{0}' was modified by '{1}'", model.Username, CurrentUser.Email);
+                    Logger.WriteInfo(res, CommonHelper.GetClientAddress(), CurrentUser.Email);
+                    ModelState.Clear();
+                    return Json(new { message = res, id = model.Id });
+                }
+                ModelState.AddModelError("", "The current password is incorrect or the new password is invalid.");
+            }
+            return PartialView("_PasswordChange", model);
+        }
+
+        #endregion PasswordChange
+
+        #region Users
+
+        [HttpGet, CustomAuthorization(Roles = new[] { UserType.Administrator })]
+        public ActionResult Users()
+        {
+            return View(UserRepository.GetUsers(string.Empty));
+        }
+
+        [HttpGet, CustomAuthorization(Roles = new[] { UserType.Administrator })]
+        public ActionResult UsersSearch(string key)
+        {
+            return PartialView("UsersPartial", UserRepository.GetUsers(key));
+        }
+
+        [HttpGet, CustomAuthorization(Roles = new[] { UserType.Administrator })]
+        public ActionResult UserDelete(long id)
+        {
+            try
+            {
+                var user = UserRepository.GetUserById(id);
+                if (user == null)
+                    return new HttpStatusCodeResult(HttpStatusCode.NotFound, "User was not found");
+                UserRepository.DeleteUser(user.Id);
+                Logger.WriteWarning(string.Format("User '{0}' was deleted by user '{1}'", user.Email, CurrentUser.Email), CommonHelper.GetClientAddress(),
+                    CurrentUser.Email);
+                return new HttpStatusCodeResult(HttpStatusCode.OK, "Done");
+            }
+            catch (Exception ex)
+            {
+                Logger.WriteError(ex, string.Format("Error deleting user {0}: {1}", id, ex.Message), CommonHelper.GetClientAddress(), CurrentUser.Email);
+                throw;
+            }
+        }
+
+        [HttpGet, CustomAuthorization(Roles = new[] { UserType.Administrator })]
+        public ActionResult UserEdit(long id = 0)
+        {
+            var user = UserRepository.GetUserById(id);
+            return user != null
+                ? PartialView(user)
+                : PartialView(new UserProfile
+                {
+                    UserType = UserType.User,
+                });
+        }
+
+        [HttpPost, CustomAuthorization(Roles = new[] { UserType.Administrator })]
+        public ActionResult UserEdit(UserProfile model)
+        {
+            if (ModelState.IsValid)
+            {
+                var old = UserRepository.GetUserById(model.Id);
+                //if (UserRepository.IsUserContactsUnique(model.Contacts, model.Id))
+                {
+                    Logger.WriteInfo(string.Format("User '{0}' was {2} by '{1}'", model.Email,
+                        CurrentUser.Email, model.Id > 0 ? "modified" : "created"), CommonHelper.GetClientAddress(), CurrentUser.Email);
+                    UserRepository.SaveUser(model);
+                    ModelState.Clear();
+                    return Json(new { message = "User successfully saved.", itemId = model.Id });
+                }
+                //ModelState.AddModelError("", "User email or phone already registered. Please enter another one.");
+            }
+            return PartialView(model);
+        }
+
+        [HttpGet, CustomAuthorization(Roles = new[] { UserType.Administrator })]
+        public string ResetUserPassword(long id)
+        {
+            try
+            {
+                if (UserRepository.SetUserPassword(id, null))
+                    return "Password was cleaned for user";
+                return "User not found by Id";
+            }
+            catch (Exception ex)
+            {
+                return ex.Message;
+            }
+        }
+
+        #endregion Users
     }
 }
