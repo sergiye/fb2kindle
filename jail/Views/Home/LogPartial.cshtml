@@ -1,0 +1,62 @@
+﻿@using jail.Models
+@model IEnumerable<SystemLog>
+
+<table class="table table-striped table-bordered table-hover">
+    <tr>
+        <th style="min-width: 150px; width: 150px;">Time</th>
+        <th style="min-width: 60px; width: 60px;">Level</th>
+        <th style="max-width: calc(100vw - 800px); word-wrap: break-word;">Message</th>
+        <th style="min-width: 120px; width: 120px;">User</th>
+        <th style="min-width: 60px; width: 60px;">Address</th>
+        @if (ViewBag.DebugMode)
+        {
+        <th style="min-width: 60px; width: 60px;">Machine</th>
+        }
+    </tr>
+
+    @foreach (var item in Model)
+    {
+        var rowClass = "";
+        switch (item.Level)
+        {
+            case SystemLog.LogItemType.Error:
+                rowClass = "danger";
+                break;
+            case SystemLog.LogItemType.Warn:
+                rowClass = "warning";
+                break;
+            case SystemLog.LogItemType.Info:
+                rowClass = "success";
+                break;
+            case SystemLog.LogItemType.Debug:
+                rowClass = "info";
+                break;
+            case SystemLog.LogItemType.Trace:
+                rowClass = "active";
+                break;
+        }
+        <tr class="@rowClass">
+            <td>@Html.DisplayFor(modelItem => item.EnteredDate)</td>
+            <td>@Html.DisplayFor(modelItem => item.Level)</td>
+            @if (!string.IsNullOrWhiteSpace(item.Exception))
+            {
+                <td style="max-width: calc(100vw - 800px); word-wrap: break-word;">
+                    <details>
+                        <summary style="max-width: calc(100vw - 800px); word-wrap: break-word;">@Html.DisplayFor(modelItem => item.Message)</summary>
+                        <p>@Html.DisplayFor(modelItem => item.Exception)</p>
+                    </details>
+                </td>
+            }
+            else
+            {
+                <td style="max-width: calc(100vw - 800px); word-wrap: break-word;">@Html.DisplayFor(modelItem => item.Message)</td>
+            }
+            <td>@Html.DisplayFor(modelItem => item.UserName)</td>
+            <td>@Html.DisplayFor(modelItem => item.CallerAddress)</td>
+            @if (ViewBag.DebugMode)
+            {
+            <td>@Html.DisplayFor(modelItem => item.MachineName)</td>
+            }
+        </tr>
+    }
+</table>

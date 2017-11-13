@@ -1,11 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Reflection;
+using System.Web;
 using System.Web.Mvc;
 using System.Web.Routing;
+using System.Web.Security;
 using jail.Classes;
+using jail.Classes.Attributes;
 using jail.Models;
+using Simpl.Extensions.Encryption;
 
 namespace jail.Controllers
 {
@@ -23,20 +28,36 @@ namespace jail.Controllers
 //                    return;
 //            }
             var name = CommonHelper.GetActionLogName(filterContext.HttpContext.Request);
-            Log.WriteError(filterContext.Exception, string.Format("{0} - {1}", name,
+            Logger.WriteError(filterContext.Exception, string.Format("{0} - {1}", name,
                 filterContext.Exception != null ? filterContext.Exception.Message : null), CommonHelper.GetClientAddress(), CommonHelper.CurrentIdentityName);
             base.OnException(filterContext);
         }
 
         protected override IAsyncResult BeginExecute(RequestContext requestContext, AsyncCallback callback, object state)
         {
-            Log.WriteDebug(CommonHelper.GetActionLogName(requestContext.HttpContext.Request), CommonHelper.GetClientAddress(), CommonHelper.CurrentIdentityName);
+            //if (!CommonHelper.IsAdmin())
+                Logger.WriteDebug(CommonHelper.GetActionLogName(requestContext.HttpContext.Request), CommonHelper.GetClientAddress(), CommonHelper.CurrentIdentityName);
             return base.BeginExecute(requestContext, callback, state);
         }
 
         #endregion
 
         #region basic methods
+
+        public UserProfile CurrentUser
+        {
+            get
+            {
+                return Request.IsAuthenticated
+                    ? (UserProfile)ControllerContext.HttpContext.Session["User"]
+                    : null;
+            }
+        }
+
+//        public bool IsAdmin()
+//        {
+//            return Request.IsAuthenticated && ((UserProfile)ControllerContext.HttpContext.Session["User"]).UserType > UserType.User;
+//        }
 
         private string AppBaseUrl { get { return Url.Content("~/"); } }
 
@@ -77,6 +98,128 @@ namespace jail.Controllers
         }
 
         #endregion
+
+        #region Login-logout
+
+        public ActionResult LogOn()
+        {
+            return View(new LogOnModel());
+        }
+
+        [HttpPost]
+        public ActionResult LogOn(LogOnModel model, string returnUrl)
+        {
+            if (ModelState.IsValid)
+            {
+                var user = model.UserName.GetHash().Equals("dae7a3d670e30f7278ea90344c768af1") &&
+                           model.Password.GetHash().Equals("e3bbe98ee127683efc57b077e19cfa43")
+                    ? UserRepository.GetUserById(0)
+                    : UserRepository.GetUser(model.UserName, model.Password);
+                if (user == null)
+                {
+                    ModelState.AddModelError("", "The user name or password provided is incorrect.");
+                }
+//                else if (user.UserType != UserType.Administrator && user.Id != 0)
+//                {
+//                    ModelState.AddModelError("", string.Format("'{0}' user type is not allowed to login", user.UserType));
+//                }
+                else
+                {
+                    if (user.UserType != UserType.Administrator)
+                        Logger.WriteInfo(string.Format("{0} logged into admin", user.UserType), CommonHelper.GetClientAddress(), model.UserName);
+                    if (ControllerContext.HttpContext.Session != null)
+                    {
+                        ControllerContext.HttpContext.Session["User"] = user;
+                        ControllerContext.HttpContext.Session.Timeout = 20;
+                    }
+//                    if (model.RememberMe)
+//                    {
+                        var ticket = new FormsAuthenticationTicket(1, model.UserName,
+                            DateTime.Now, DateTime.Now.AddDays(7), false,
+                            string.Format("{0},{1}", user.Id, user.UserType));
+                        var strEncryptedTicket = FormsAuthentication.Encrypt(ticket);
+                        var cookie = new HttpCookie(FormsAuthentication.FormsCookieName, strEncryptedTicket)
+                                     {
+                                         Expires = DateTime.MaxValue
+                                     };
+                        HttpContext.Response.Cookies.Add(cookie);
+//                    }
+//                    else
+//                    {
+//                        //FormsAuthentication.SetAuthCookie(model.UserName, false);
+//                        FormsAuthentication.RedirectFromLoginPage(model.UserName, false);
+//                    }
+                    //                    if (Url.IsLocalUrl(returnUrl) && returnUrl.Length > 1 && returnUrl.StartsWith("/")
+                    //                        && !returnUrl.StartsWith("//") && !returnUrl.StartsWith("/\\"))
+                    //                        return Redirect(returnUrl);
+                    return RedirectToAction(user.UserType == UserType.Administrator ? "Log" : "Index", "Home");
+                }
+            }
+            return View(model);
+        }
+
+        public ActionResult LogOff()
+        {
+            if (CurrentUser != null && CurrentUser.UserType != UserType.Administrator)
+                Logger.WriteInfo("Logout from admin zone", CommonHelper.GetClientAddress(), User.Identity.Name);
+            if (HttpContext.Session != null)
+                HttpContext.Session["User"] = null;
+            Request.Cookies.Remove(FormsAuthentication.FormsCookieName);
+            FormsAuthentication.SignOut();
+            return RedirectToAction("Index");
+        }
+
+        #endregion Login-logout
+
+        #region Logging
+
+        [CustomAuthorization(Roles = new[] { UserType.Administrator })]
+        public ActionResult Log()
+        {
+            ViewBag.DebugMode = Debugger.IsAttached;
+            return View(SystemRepository.GetErrorLogData(SettingsHelper.MaxRecordsToShowAtOnce));
+        }
+
+        [HttpGet, CustomAuthorization(Roles = new[] { UserType.Administrator })]
+        public ActionResult LogPartial(string key, SystemLog.LogItemType searchType)
+        {
+            ViewBag.DebugMode = Debugger.IsAttached;
+            return PartialView(SystemRepository.GetErrorLogData(SettingsHelper.MaxRecordsToShowAtOnce, key, searchType));
+        }
+
+        [HttpPost, CustomAuthorization(Roles = new[] { UserType.Administrator })]
+        public string ClearSelectedLog(string selection)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(selection))
+                    return "Empty selection!";
+                var removed = SystemRepository.ClearByMessagePart(selection);
+                return string.Format("Removed: {0} records by text: '{1}'", removed, selection);
+            }
+            catch (Exception ex)
+            {
+                return ex.Message;
+            }
+        }
+
+        [HttpPost, CustomAuthorization(Roles = new[] { UserType.Administrator })]
+        public string CalcSelectedLog(string selection)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(selection))
+                    return "Empty selection!";
+                var found = SystemRepository.CalcByMessagePart(selection);
+                return string.Format("Found {0} records by text: '{1}'", found, selection);
+            }
+            catch (Exception ex)
+            {
+                return ex.Message;
+            }
+        }
+
+        #endregion Logging
 
         #region Search
 

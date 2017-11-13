@@ -87,7 +87,7 @@ namespace jail.Classes
             }
             catch (Exception ex)
             {
-                Log.WriteError(ex, "Unknown file format: " + ex.Message);
+                Logger.WriteError(ex, "Unknown file format: " + ex.Message);
                 return null;
             }
         }
@@ -105,7 +105,7 @@ namespace jail.Classes
             var process = Process.Start(startInfo);
             if (addToConsole)
                 while (!process.StandardOutput.EndOfStream)
-                    Log.WriteDebug(process.StandardOutput.ReadLine());
+                    Logger.WriteDebug(process.StandardOutput.ReadLine());
             process.WaitForExit();
             return process.ExitCode;
         }
@@ -123,7 +123,7 @@ namespace jail.Classes
             var res = StartProcess(GetApplicationPath() + "bin\\Fb2Kindle.exe", inputFile, writeLog);
             if (res == 2)
             {
-                Log.WriteWarning("Error converting to mobi");
+                Logger.WriteWarning("Error converting to mobi");
                 return false;
             }
             return true;
