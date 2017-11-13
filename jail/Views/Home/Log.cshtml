@@ -1,0 +1,132 @@
+﻿@using jail.Models
+@model IEnumerable<SystemLog>
+
+@{
+    ViewBag.Title = "Log";
+//    var user = HttpContext.Current.Session["User"] as UserProfile;
+}
+<script type="text/javascript">
+    var autorefreshTimer = null;
+    $(document).ready(function () {
+        $("#filterBlock").keyup(function () {
+            window.Helper.delay(function () { RefreshData(true); }, 1000);
+        });
+        $(".dropdown-menu.change-name").on('click', 'li a', function () {
+            var selectedItemText = $(this).text();
+            var selectedItemSearchType = $(this).attr("data-search-type");
+
+            $(this).parents("li").addClass("selected");
+            $(this).parents("ul").find("li").removeClass("selected");
+            $("#filterBlock").attr("data-search-type", selectedItemSearchType);
+            var btnIdToChange = $(this).parents(".dropdown-menu.change-name").attr("data-change-item-id");
+            $("#" + btnIdToChange).html(selectedItemText + " <span class='caret'></span>");
+            RefreshData(true);
+        });
+        $(".dropdown-menu.change-devType").on('click', 'li a', function () {
+            var selectedItemText = $(this).text();
+
+            $(this).parents("li").addClass("selected");
+            $(this).parents("ul").find("li").removeClass("selected");
+            var btnIdToChange = $(this).parents(".dropdown-menu.change-devType").attr("data-change-item-id");
+            $("#" + btnIdToChange).html(selectedItemText + " <span class='caret'></span>");
+            RefreshData(true);
+        });
+    });
+    function RefreshData(reloadOnError) {
+        var search = $("#filterBlock");
+        var key = $.trim(search.val());
+        var searchType = search.attr("data-search-type");
+        $.ajax({
+            type: "GET",
+            url: '@Url.Action("LogPartial")',
+            data: { key: key, searchType: searchType },
+            success: function (response) {
+                $("#gridContainer").html(response);
+
+                if (autorefreshTimer) {
+                    window.clearTimeout(autorefreshTimer);
+                }
+                autorefreshTimer = window.setTimeout(function () {
+                    autorefreshTimer = null;
+                    RefreshData(true);
+                }, 60000);
+            },
+            error: function (response, status, error) {
+                if (reloadOnError)
+                    location.reload();
+                else
+                    window.Helper.ShowError(error);
+            }
+        });
+    }
+    function ClearSelectedLogs() {
+        var text = "";
+        if (window.getSelection) {
+            text = window.getSelection().toString();
+        } else if (document.selection && document.selection.type != "Control") {
+            text = document.selection.createRange().text;
+        }
+        $.ajax({
+            type: 'POST',
+            url: '@Url.Action("ClearSelectedLog")',
+            data: { selection: text },
+            success: function (data) {
+                window.Helper.ShowWarning('' + data, function () { RefreshData(true); });
+            },
+            error: function (data) { window.Helper.ShowError('' + data); }
+        });
+    }
+    function CalcSelectedLogs() {
+        var text = "";
+        if (window.getSelection) {
+            text = window.getSelection().toString();
+        } else if (document.selection && document.selection.type != "Control") {
+            text = document.selection.createRange().text;
+        }
+        $.ajax({
+            type: 'POST',
+            url: '@Url.Action("CalcSelectedLog")',
+            data: { selection: text },
+            success: function (data) {
+                window.Helper.ShowSuccess('' + data);
+            },
+            error: function (data) { window.Helper.ShowError('' + data); }
+        });
+    }
+</script>
+<div class="filter-wrapper">
+    <div class="btn-toolbar pull-left col-md-1" role="toolbar">
+        <h4>@ViewBag.Title</h4>
+    </div>
+    <div class="input-group col-md-4 pull-left">
+        <input id="filterBlock" type="text" class="form-control" aria-label="..." 
+               data-search-type="@SystemLog.LogItemType.All" 
+               placeholder="Search by message, user or IP...">
+        <div class="input-group-btn">
+            <button id="searchTypeBtn" type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" 
+                    aria-haspopup="true" aria-expanded="false">All<span class="caret"></span></button>
+            <ul class="dropdown-menu dropdown-menu-right change-name" data-change-item-id="searchTypeBtn">
+                @foreach (var item in Enum.GetValues(typeof(SystemLog.LogItemType)))
+                {
+                    <li><a href="#" data-search-type="@item">@item.ToString()</a></li>
+                }
+            </ul>
+        </div>
+    </div>
+
+    <div class="btn-toolbar pull-right" role="toolbar">
+        <a href="#" onclick="RefreshData(true);" class="btn btn-primary">
+            <span class="glyphicon glyphicon-refresh"></span> Refresh
+        </a>
+        <a href="#" onclick="CalcSelectedLogs();" class="btn btn-success">
+            <span class="glyphicon glyphicon-check"></span> Count selected
+        </a>
+        <a href="#" onclick="ClearSelectedLogs();" class="btn btn-danger">
+            <span class="glyphicon glyphicon-minus"></span> Remove selected
+        </a>
+    </div>
+</div>
+<div class="clearfix"></div>
+<div id="gridContainer">
+    @{Html.RenderPartial("LogPartial", Model);}
+</div>

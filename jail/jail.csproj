@@ -57,9 +57,6 @@
     <Reference Include="Ionic.Zip">
       <HintPath>..\LibCleaner\Ionic.Zip.dll</HintPath>
     </Reference>
-    <Reference Include="Ionic.Zlib, Version=1.9.1.5, Culture=neutral, PublicKeyToken=edbe51ad942a3f5c, processorArchitecture=MSIL">
-      <HintPath>..\..\..\nuget\Ionic.Zlib.1.9.1.5\lib\Ionic.Zlib.dll</HintPath>
-    </Reference>
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="Newtonsoft.Json, Version=10.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>c:\temp\nuget\Newtonsoft.Json.10.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
@@ -70,15 +67,16 @@
     <Reference Include="Simpl.Extensions, Version=1.0.6424.22344, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>c:\temp\nuget\Simpl.Extensions.1.0.6424.22344\lib\net45\Simpl.Extensions.dll</HintPath>
     </Reference>
-    <Reference Include="Simpl.Extensions.Database, Version=1.0.6400.24220, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>c:\temp\nuget\Simpl.Extensions.Database.1.0.6400.24220\lib\net45\Simpl.Extensions.Database.dll</HintPath>
+    <Reference Include="Simpl.Extensions.Database, Version=1.0.6525.34701, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>c:\temp\nuget\Simpl.Extensions.Database.1.0.6525.34701\lib\net45\Simpl.Extensions.Database.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
-    <Reference Include="System.Data.SQLite, Version=1.0.105.2, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=MSIL">
-      <HintPath>c:\temp\nuget\System.Data.SQLite.Core.1.0.105.2\lib\net46\System.Data.SQLite.dll</HintPath>
+    <Reference Include="System.Data.SQLite, Version=1.0.106.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=MSIL">
+      <HintPath>c:\temp\nuget\System.Data.SQLite.Core.1.0.106.0\lib\net46\System.Data.SQLite.dll</HintPath>
     </Reference>
     <Reference Include="System.Drawing" />
+    <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Web.DynamicData" />
     <Reference Include="System.Web.Entity" />
     <Reference Include="System.Web.ApplicationServices" />
@@ -137,12 +135,15 @@
     <Compile Include="App_Start\BundleConfig.cs" />
     <Compile Include="App_Start\FilterConfig.cs" />
     <Compile Include="App_Start\RouteConfig.cs" />
+    <Compile Include="Classes\Attributes\CustomAuthorization.cs" />
     <Compile Include="Classes\CommonHelper.cs" />
     <Compile Include="Classes\DataRepository.cs" />
     <Compile Include="Classes\Log.cs" />
     <Compile Include="Classes\BookHelper.cs" />
     <Compile Include="Classes\SettingsHelper.cs" />
     <Compile Include="Classes\SqLiteConnectionProvider.cs" />
+    <Compile Include="Classes\SystemRepository.cs" />
+    <Compile Include="Classes\UserRepository.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
@@ -150,7 +151,14 @@
     <Compile Include="Models\AuthorInfo.cs" />
     <Compile Include="Models\BookDetailedInfo.cs" />
     <Compile Include="Models\BookInfo.cs" />
+    <Compile Include="Models\ChangePasswordModel.cs" />
+    <Compile Include="Models\Controls\CustomInformationModel.cs" />
+    <Compile Include="Models\Controls\ModalPopupControlViewModel.cs" />
+    <Compile Include="Models\LogOnModel.cs" />
+    <Compile Include="Models\PasswordRestoreModel.cs" />
     <Compile Include="Models\SequenceInfo.cs" />
+    <Compile Include="Models\SystemLog.cs" />
+    <Compile Include="Models\UserProfile.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -217,11 +225,14 @@
     <Content Include="Views\Home\SequencesList.cshtml" />
     <Content Include="Views\Home\Sequence.cshtml" />
     <Content Include="Views\Home\Author.cshtml" />
+    <Content Include="Views\Home\LogOn.cshtml" />
+    <Content Include="Views\Home\Log.cshtml" />
+    <Content Include="Views\Home\LogPartial.cshtml" />
+    <Content Include="Views\Shared\Controls\_ModalPopupControl.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
     <Folder Include="b\" />
-    <Folder Include="Classes\Attributes\" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -256,12 +267,12 @@
       </FlavorProperties>
     </VisualStudio>
   </ProjectExtensions>
-  <Import Project="c:\temp\nuget\System.Data.SQLite.Core.1.0.105.2\build\net46\System.Data.SQLite.Core.targets" Condition="Exists('c:\temp\nuget\System.Data.SQLite.Core.1.0.105.2\build\net46\System.Data.SQLite.Core.targets')" />
+  <Import Project="c:\temp\nuget\System.Data.SQLite.Core.1.0.106.0\build\net46\System.Data.SQLite.Core.targets" Condition="Exists('c:\temp\nuget\System.Data.SQLite.Core.1.0.106.0\build\net46\System.Data.SQLite.Core.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
-    <Error Condition="!Exists('c:\temp\nuget\System.Data.SQLite.Core.1.0.105.2\build\net46\System.Data.SQLite.Core.targets')" Text="$([System.String]::Format('$(ErrorText)', 'c:\temp\nuget\System.Data.SQLite.Core.1.0.105.2\build\net46\System.Data.SQLite.Core.targets'))" />
+    <Error Condition="!Exists('c:\temp\nuget\System.Data.SQLite.Core.1.0.106.0\build\net46\System.Data.SQLite.Core.targets')" Text="$([System.String]::Format('$(ErrorText)', 'c:\temp\nuget\System.Data.SQLite.Core.1.0.106.0\build\net46\System.Data.SQLite.Core.targets'))" />
   </Target>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
        Other similar extension points exist, see Microsoft.Common.targets.

@@ -1,4 +1,5 @@
-﻿using System.Configuration;
+﻿using System;
+using System.Configuration;
 using System.Web.Configuration;
 
 namespace jail.Classes
@@ -11,6 +12,7 @@ namespace jail.Classes
         public static string DatabasePath { get; set; }
         public static string ArchivesPath { get; set; }
         public static long MaxRequestLength { get; set; }
+        public static int MaxRecordsToShowAtOnce { get; set; }
 
         /// <summary>
         /// constructor
@@ -19,6 +21,8 @@ namespace jail.Classes
         {
             DatabasePath = ConfigurationManager.AppSettings["DatabasePath"];
             ArchivesPath = ConfigurationManager.AppSettings["ArchivesPath"];
+
+            MaxRecordsToShowAtOnce = Convert.ToInt32(ConfigurationManager.AppSettings["MaxRecordsToShowAtOnce"]);
 
             var section = ConfigurationManager.GetSection("system.web/httpRuntime") as HttpRuntimeSection;
             MaxRequestLength = section != null ? (long)section.MaxRequestLength * 1024 : 4096 * 1024;

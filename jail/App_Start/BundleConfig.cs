@@ -9,7 +9,8 @@ namespace jail
         {
             bundles.Add(new ScriptBundle("~/bundles/jquery").Include(
                         "~/Scripts/jquery-{version}.js",
-                        "~/Scripts/helper.js"));
+                        "~/Scripts/helper.js",
+                        "~/Scripts/modal.popup.control.js"));
 
             bundles.Add(new ScriptBundle("~/bundles/jqueryval").Include(
                         "~/Scripts/jquery.validate*"));
