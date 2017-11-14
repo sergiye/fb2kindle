@@ -6,6 +6,7 @@ using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using System.Xml;
 using System.Xml.Linq;
 using System.Xml.Serialization;
@@ -172,20 +173,53 @@ namespace Fb2Kindle
         internal static int StartProcess(string fileName, string args, bool addToConsole)
         {
             var startInfo = new ProcessStartInfo
+                            {
+                                FileName = fileName,
+                                Arguments = args,
+                                UseShellExecute = false,
+                                RedirectStandardOutput = true,
+                                RedirectStandardError = true,
+                                CreateNoWindow = true,
+                                StandardOutputEncoding = Encoding.UTF8
+                                //WindowStyle = ProcessWindowStyle.Hidden
+                            };
+//            using (var process = Process.Start(startInfo))
+//            {
+//                if (addToConsole)
+//                {
+//                    while (!process.StandardOutput.EndOfStream)
+//                        WriteLine(process.StandardOutput.ReadLine());
+//                }
+//                process.WaitForExit();
+//                return process.ExitCode;
+//            }
+
+//            using (var process = Process.Start(startInfo))
+//            {
+//                using (var reader = process.StandardOutput)
+//                {
+//                    string result = reader.ReadToEnd();
+//                    if (addToConsole) WriteLine(result);
+//                }
+//                return process.ExitCode;
+//            }
+
+            using (var process = new Process {StartInfo = startInfo})
             {
-                FileName = fileName,
-                Arguments = args,
-                UseShellExecute = false,
-                RedirectStandardOutput = true,
-                CreateNoWindow = true,
-                //WindowStyle = ProcessWindowStyle.Hidden
-            };
-            var process = Process.Start(startInfo);
-            if (addToConsole)
-                while (!process.StandardOutput.EndOfStream)
-                    Util.WriteLine(process.StandardOutput.ReadLine());
-            process.WaitForExit();
-            return process.ExitCode;
+                process.OutputDataReceived += (sender, e) =>
+                                              {
+                                                  if (addToConsole) WriteLine(e.Data);
+                                              };
+                process.ErrorDataReceived += (sender, e) =>
+                                             {
+                                                 if (addToConsole) WriteLine(e.Data, ConsoleColor.Red);
+                                             };
+                process.Start();
+                process.BeginOutputReadLine();
+                process.BeginErrorReadLine();
+                process.WaitForExit();
+                return process.ExitCode;
+            }
         }
 
         internal static void WriteLine(string message = null, ConsoleColor? color = null, ConsoleColor? backColor = null)
