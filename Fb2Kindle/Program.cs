@@ -89,25 +89,25 @@ namespace Fb2Kindle
                         switch (args[j].ToLower().Trim())
                         {
                             case "-nch":
-                                currentSettings.nch = true;
+                                currentSettings.NoChapters = true;
                                 break;
                             case "-ni":
-                                currentSettings.ni = true;
+                                currentSettings.NoImages = true;
                                 break;
                             case "-g":
-                                currentSettings.g = true;
+                                currentSettings.Grayscaled = true;
                                 break;
                             case "-ntoc":
-                                currentSettings.ntoc = true;
+                                currentSettings.NoToc = true;
                                 break;
                             case "-c":
-                                currentSettings.c = true;
+                                currentSettings.Compression = true;
                                 break;
                             case "-s":
-                                currentSettings.s = true;
+                                currentSettings.Sequence = true;
                                 break;
                             case "-d":
-                                currentSettings.d = true;
+                                currentSettings.DeleteOriginal = true;
                                 break;
                             case "-save":
                                 save = true;
