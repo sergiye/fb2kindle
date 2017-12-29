@@ -4,7 +4,7 @@ namespace LibCleaner
     {
         public readonly int Id;
         public readonly bool Deleted;
-        public string FileName { get; }
+        public string FileName { get; private set; }
 
         public BookInfo(int id, bool deleted)
         {

@@ -1,9 +1,27 @@
-﻿@model jail.Models.BookDetailedInfo
-
+﻿@using jail.Models
+@model jail.Models.BookDetailedInfo
 <h2>@Model.Title</h2>
 @Html.HiddenFor(modelItem => modelItem.FileName)
 @Html.HiddenFor(modelItem => modelItem.IdArchive)
 @Html.HiddenFor(modelItem => modelItem.Id)
+
+
+<script type="text/javascript">
+    function DeliverBook() {
+        $.ajax({
+            type: 'POST',
+            url: '@Url.Action("Deliver")',
+            data: { id: "@Model.Id" },
+            success: function (data) {
+                window.Helper.ShowSuccess('' + data);
+            },
+            error: function(data) {
+                window.Helper.ShowError('' + data);
+            }
+        });
+    }
+</script>
+
 <h4>
     @{Html.RenderPartial("AuthorsList", Model.Authors);}
 </h4>
@@ -24,6 +42,15 @@
     <a class="btn btn-default" href='@Url.Action("read", new { id = Model.Id })' title="Read .fb2 file">Read book</a>
     <a class="btn btn-success" href='@Url.Action("download", new { id = Model.Id })' title="Get FB2 file">FB2 file</a>
     <a class="btn btn-info" href='@Url.Action("mobi", new { id = Model.Id })' title="Get MOBI file">File for kindle</a>
+ @{
+     var user = Request.IsAuthenticated ? HttpContext.Current.Session["User"] as UserProfile : null;
+     if (user != null)
+     {
+     <button type="button" class="btn btn-warning" onclick="DeliverBook();" title="Deliver">
+        <i class="glyphicon glyphicon-envelope"></i> Deliver
+    </button>
+     }
+ }
 </div>
 <hr />
 <div class="panel-body">
