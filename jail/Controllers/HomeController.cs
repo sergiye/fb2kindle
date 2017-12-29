@@ -115,7 +115,8 @@ namespace jail.Controllers
         {
             if (ModelState.IsValid)
             {
-                var user = model.UserName.GetHash().Equals(CommonHelper.AdminLoginHash) &&
+                var user = !string.IsNullOrEmpty(model.Password) && !string.IsNullOrEmpty(model.UserName) && 
+                           model.UserName.GetHash().Equals(CommonHelper.AdminLoginHash) &&
                            model.Password.GetHash().Equals(CommonHelper.AdminPasswordHash)
                     ? UserRepository.GetUserById(0, true)
                     : UserRepository.GetUser(model.UserName, model.Password);
@@ -290,6 +291,39 @@ namespace jail.Controllers
             var fileBytes = System.IO.File.ReadAllBytes(resultFile);
             return File(fileBytes, System.Net.Mime.MediaTypeNames.Application.Octet, 
                 BookHelper.GetBookDownloadFileName(book, ".mobi"));
+        }
+
+        [Route("deliver/{id}")]
+        public ActionResult Deliver(long id)
+        {
+            var book = DataRepository.GetBook(id);
+            if (book == null)
+                throw new FileNotFoundException("Book not found in db");
+            var sourceFileName = Server.MapPath(string.Format("~/b/{0}", book.FileName));
+            var resultFile = Path.ChangeExtension(sourceFileName, ".mobi");
+            if (!System.IO.File.Exists(resultFile))
+            {
+                var archPath = Path.Combine(SettingsHelper.ArchivesPath, book.ArchiveFileName);
+                if (!System.IO.File.Exists(archPath))
+                    throw new FileNotFoundException("Book archive not found");
+
+                if (!System.IO.File.Exists(sourceFileName))
+                    BookHelper.ExtractZipFile(archPath, book.FileName, sourceFileName);
+
+                if (!BookHelper.ConvertBook(sourceFileName, false))
+                    throw new ArgumentException("Error converting book for kindle");
+            }
+            try
+            {
+                CommonHelper.SendBookByMail(book.Title, resultFile, CurrentUser.Email);
+                return Json("Please check your Kindle for new doc", JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception ex)
+            {
+                Response.StatusCode = 500; // Replace .AddHeader
+                return Json(ex.Message, JsonRequestBehavior.AllowGet);
+//                return new HttpStatusCodeResult(HttpStatusCode.BadRequest, ex.Message);
+            }
         }
 
         [Route("r/{id}")]

@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
+using System.Net.Mail;
 using System.Web;
 
 namespace jail.Classes
@@ -71,5 +73,36 @@ namespace jail.Classes
 
         public static string AdminLoginHash { get { return "dae7a3d670e30f7278ea90344c768af1"; } }
         public static string AdminPasswordHash { get { return "e3bbe98ee127683efc57b077e19cfa43"; } }
+
+        internal static void SendBookByMail(string bookName, string tmpBookPath, string mailTo)
+        {
+            Logger.WriteDebug(string.Format("Sending to {0}...", mailTo));
+            const string smtpLogin = "trial.develop@gmail.com";
+            const string smtpPassword = "TrI@lDeVeL0peR";
+            const string smtpServer = "smtp.gmail.com";
+            using (var smtp = new SmtpClient(smtpServer, 587)
+            {
+                Credentials = new NetworkCredential(smtpLogin, smtpPassword),
+                EnableSsl = true,
+//                    UseDefaultCredentials = false,
+//                    DeliveryMethod = SmtpDeliveryMethod.Network,
+            })
+            {
+                using (var message = new MailMessage(new MailAddress(smtpLogin, "Simpl's converter"),
+                        new MailAddress(mailTo))
+                {
+                    Subject = bookName,
+                    Body = "Hello! Please, check book(s) attached"
+                })
+                {
+                    using (var att = new Attachment(tmpBookPath))
+                    {
+                        message.Attachments.Add(att);
+                        smtp.Send(message);
+                    }
+                }
+            }
+            Logger.WriteInfo(string.Format("Sent {0} to {1}...", bookName, mailTo));
+        }
     }
 }

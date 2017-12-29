@@ -20,8 +20,8 @@ namespace LibCleaner
 
         private class QueueTask
         {
-            public CleanActions ActionType { get; }
-            public Action OnActionFinish { get; }
+            public CleanActions ActionType { get; private set; }
+            public Action OnActionFinish { get; private set; }
 
             public QueueTask(CleanActions actionType, Action onActionFinish)
             {
