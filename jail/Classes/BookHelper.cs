@@ -118,9 +118,25 @@ namespace jail.Classes
             //            return directoryInfo != null ? directoryInfo.FullName : Path.GetDirectoryName(asm.Location);
         }
 
+        internal static string ConverterName
+        {
+            get
+            {
+                return "Fb2Kindle.exe";
+            }
+        }
+
+        internal static string ConverterPath
+        {
+            get
+            {
+                return string.Format("{0}bin\\{1}", GetApplicationPath(), ConverterName);
+            }
+        }
+
         internal static bool ConvertBook(string inputFile, bool writeLog)
         {
-            var res = StartProcess(GetApplicationPath() + "bin\\Fb2Kindle.exe", inputFile, writeLog);
+            var res = StartProcess(ConverterPath, inputFile, writeLog);
             if (res == 2)
             {
                 Logger.WriteWarning("Error converting to mobi");

@@ -450,6 +450,12 @@ namespace jail.Controllers
             return Json(new { success = true, link = mobiRelativePath, fileName = mobiDisplayName });
         }
 
+        public FileResult GetConverter()
+        {
+            return File(BookHelper.ConverterPath, 
+                System.Net.Mime.MediaTypeNames.Application.Octet, BookHelper.ConverterName);
+        }
+
         #endregion
 
         #region PasswordChange
