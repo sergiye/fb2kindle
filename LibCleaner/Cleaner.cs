@@ -136,7 +136,7 @@ namespace LibCleaner
                         CompressLibrary();
                         break;
                     case CleanActions.OptimizeArchivesByHash:
-                        OptimizeArchivesOnDisk();
+                        OptimizeArchivesOnDisk(true);
                         break;
                 }
             }
@@ -262,7 +262,7 @@ namespace LibCleaner
             UpdateState(string.Format("Found files to remove: {0}", totalToRemove), StateKind.Message);
         }
 
-        private void OptimizeArchivesOnDisk()
+        private void OptimizeArchivesOnDisk(bool removeNotRegistered)
         {
             UpdateState("Calculating archives in database...", StateKind.Warning);
             var dbFiles = new Dictionary<string, List<BookFileInfo>>();
@@ -376,40 +376,55 @@ JOIN archives a on a.id=b.id_archive and b.file_name is not NULL and b.file_name
                                 allHashes.Add(info.md5sum, info);
                             }
                         }
-                        //get file hashes that are not listed in DB
-                        foreach (var zipFile in zipFiles)
+
+                        if (removeNotRegistered)
                         {
-                            if (filesFound.Any(f => f.file_name.Equals(zipFile)))
-                                continue;
-                            //calculate zip file hash
-                            var zipEntry = zip.Entries.FirstOrDefault(e => e.FileName.Equals(zipFile));
-                            if (zipEntry == null)
+                            //get files that are not registered in DB
+                            foreach (var zipFile in zipFiles)
                             {
-                                UpdateState(string.Format("Zip entry not found: {0}", zipFile), StateKind.Warning);
-                                continue;
-                            }
-                            string md5Sum;
-                            //calculate hash from real zip file
-                            using (var ms = new MemoryStream())
-                            {
-                                zipEntry.Extract(ms);
-                                ms.Seek(0, SeekOrigin.Begin);
-                                using (var alg = MD5.Create())
-                                    md5Sum = BitConverter.ToString(alg.ComputeHash(ms)).Replace("-", "").ToLower();
-                            }
-                            //check hash already exists
-                            if (allHashes.ContainsKey(md5Sum))
-                            {
-                                if (allHashes[md5Sum].file_name.Equals(zipFile, StringComparison.OrdinalIgnoreCase))
+                                if (filesFound.Any(f => f.file_name.Equals(zipFile)))
                                     continue;
-                                //remove file from zip and all lists
+                                UpdateState(string.Format("Book not registered: {0}", zipFile), StateKind.Warning);
                                 zipFilesToRemove.Add(zipFile);
                             }
-                            else
+                        }
+                        else
+                        {
+                            //get file hashes that are not listed in DB
+                            foreach (var zipFile in zipFiles)
                             {
-                                var fi = new BookFileInfo(zipFile, 0, 0, archiveName, md5Sum);
-                                allHashes.Add(md5Sum, fi);
-                                filesFound.Add(fi);
+                                if (filesFound.Any(f => f.file_name.Equals(zipFile)))
+                                    continue;
+                                //calculate zip file hash
+                                var zipEntry = zip.Entries.FirstOrDefault(e => e.FileName.Equals(zipFile));
+                                if (zipEntry == null)
+                                {
+                                    UpdateState(string.Format("Zip entry not found: {0}", zipFile), StateKind.Warning);
+                                    continue;
+                                }
+                                string md5Sum;
+                                //calculate hash from real zip file
+                                using (var ms = new MemoryStream())
+                                {
+                                    zipEntry.Extract(ms);
+                                    ms.Seek(0, SeekOrigin.Begin);
+                                    using (var alg = MD5.Create())
+                                        md5Sum = BitConverter.ToString(alg.ComputeHash(ms)).Replace("-", "").ToLower();
+                                }
+                                //check hash already exists
+                                if (allHashes.ContainsKey(md5Sum))
+                                {
+                                    if (allHashes[md5Sum].file_name.Equals(zipFile, StringComparison.OrdinalIgnoreCase))
+                                        continue;
+                                    //remove file from zip and all lists
+                                    zipFilesToRemove.Add(zipFile);
+                                }
+                                else
+                                {
+                                    var fi = new BookFileInfo(zipFile, 0, 0, archiveName, md5Sum);
+                                    allHashes.Add(md5Sum, fi);
+                                    filesFound.Add(fi);
+                                }
                             }
                         }
                         if (zipFilesToRemove.Count == 0) continue;
