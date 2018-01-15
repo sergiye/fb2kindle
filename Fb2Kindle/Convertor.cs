@@ -257,6 +257,11 @@ namespace Fb2Kindle
             var bookId = "i" + bookNum + postfix;
             var href = bookId + ".html";
             var t = section.Elements("title").FirstOrDefault();
+            if (t == null || string.IsNullOrEmpty(t.Value))
+            {
+                t = section.Elements("p").FirstOrDefault();
+            }
+
             if (t != null && !string.IsNullOrEmpty(t.Value))
             {
                 Util.RenameTag(t, "div", "title");
