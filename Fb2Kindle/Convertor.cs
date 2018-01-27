@@ -619,7 +619,7 @@ namespace Fb2Kindle
 //                                        encoderParams.Param[i] = parList[i];
 //                                    var codec = Util.GetEncoderInfo("jpeg");//Path.GetExtension(file));
 //                                    img.Save(file, codec, encoderParams);
-                                img.Save(file, ImageFormat.Jpeg);
+                                img.Save(file, ImageFormat.Png);
                             }
                         }
                         if (_currentSettings.Grayscaled)
@@ -629,7 +629,7 @@ namespace Fb2Kindle
                             {
                                 gsImage = Util.GrayScale(img, true);
                             }
-                            gsImage.Save(file, ImageFormat.Jpeg);
+                            gsImage.Save(file, ImageFormat.Png);
                         }
                     }
                     catch (Exception ex)

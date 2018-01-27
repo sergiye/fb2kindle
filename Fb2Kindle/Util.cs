@@ -260,7 +260,7 @@ namespace Fb2Kindle
                 using (var bmp = new Bitmap(img))
                 {
                     var gsBmp = MakeGrayscale3(bmp);
-                    gsBmp.Save(imageStream, ImageFormat.Jpeg);
+                    gsBmp.Save(imageStream, ImageFormat.Png);
                 }
             }
             else
@@ -274,7 +274,7 @@ namespace Fb2Kindle
                         var rgb = (c.R + c.G + c.B) / 3;
                         bmp.SetPixel(x, y, Color.FromArgb(rgb, rgb, rgb));
                     }
-                    bmp.Save(imageStream, ImageFormat.Jpeg);
+                    bmp.Save(imageStream, ImageFormat.Png);
                 }
             }
             return Image.FromStream(imageStream);
