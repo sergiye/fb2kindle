@@ -12,5 +12,6 @@ namespace Fb2Kindle
         public bool Compression { get; set; }
         public bool Sequence { get; set; }
         public bool Grayscaled { get; set; }
+        public bool Jpeg { get; set; }
     }
 }

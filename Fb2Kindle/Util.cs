@@ -252,7 +252,12 @@ namespace Fb2Kindle
             return null;
         }
 
-        internal static Image GrayScale(Image img, bool fast)
+        internal static ImageCodecInfo GetEncoderInfo(ImageFormat format)
+        {
+            return ImageCodecInfo.GetImageEncoders().FirstOrDefault(codec => codec.FormatID.Equals(format.Guid));
+        }
+
+        internal static Image GrayScale(Image img, bool fast, ImageFormat format)
         {
             Stream imageStream = new MemoryStream();
             if (fast)
@@ -260,7 +265,7 @@ namespace Fb2Kindle
                 using (var bmp = new Bitmap(img))
                 {
                     var gsBmp = MakeGrayscale3(bmp);
-                    gsBmp.Save(imageStream, ImageFormat.Png);
+                    gsBmp.Save(imageStream, format);
                 }
             }
             else
@@ -274,7 +279,7 @@ namespace Fb2Kindle
                         var rgb = (c.R + c.G + c.B) / 3;
                         bmp.SetPixel(x, y, Color.FromArgb(rgb, rgb, rgb));
                     }
-                    bmp.Save(imageStream, ImageFormat.Png);
+                    bmp.Save(imageStream, format);
                 }
             }
             return Image.FromStream(imageStream);
