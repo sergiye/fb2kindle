@@ -22,6 +22,7 @@ namespace Fb2Kindle
             Util.WriteLine("-s: add sequence and number to title");
             Util.WriteLine("-ni: no images");
             Util.WriteLine("-g: grayscaled images");
+            Util.WriteLine("-jpeg: save images in jpeg");
             Util.WriteLine("-ntoc: no table of content");
             Util.WriteLine("-nch: no chapters");
 
@@ -96,6 +97,9 @@ namespace Fb2Kindle
                                 break;
                             case "-g":
                                 currentSettings.Grayscaled = true;
+                                break;
+                            case "-jpeg":
+                                currentSettings.Jpeg = true;
                                 break;
                             case "-ntoc":
                                 currentSettings.NoToc = true;
