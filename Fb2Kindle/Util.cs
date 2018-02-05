@@ -257,6 +257,41 @@ namespace Fb2Kindle
             return ImageCodecInfo.GetImageEncoders().FirstOrDefault(codec => codec.FormatID.Equals(format.Guid));
         }
 
+        internal static string GetMimeType(this Image image)
+        {
+            return image.RawFormat.GetMimeType();
+        }
+
+        internal static string GetMimeType(this ImageFormat imageFormat)
+        {
+            ImageCodecInfo[] codecs = ImageCodecInfo.GetImageEncoders();
+            return codecs.First(codec => codec.FormatID == imageFormat.Guid).MimeType;
+        }
+
+        internal static ImageFormat GetImageFormatFromMimeType(string contentType, ImageFormat defaultResult)
+        {
+            if (contentType.Equals(ImageFormat.Jpeg.GetMimeType(), StringComparison.OrdinalIgnoreCase))
+            {
+                return ImageFormat.Jpeg;
+            }
+            if (contentType.Equals(ImageFormat.Bmp.GetMimeType(), StringComparison.OrdinalIgnoreCase))
+            {
+                return ImageFormat.Bmp;
+            }
+            if (contentType.Equals(ImageFormat.Png.GetMimeType(), StringComparison.OrdinalIgnoreCase))
+            {
+                return ImageFormat.Png;
+            }
+//            foreach (var codecInfo in ImageCodecInfo.GetImageEncoders())
+//            {
+//                if (codecInfo.MimeType.Equals(contentType, StringComparison.OrdinalIgnoreCase))
+//                {
+//
+//                }
+//            }
+            return defaultResult;
+        }
+
         internal static Image GrayScale(Image img, bool fast, ImageFormat format)
         {
             Stream imageStream = new MemoryStream();
