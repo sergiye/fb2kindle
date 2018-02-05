@@ -602,10 +602,10 @@ namespace Fb2Kindle
                 try
                 {
                     var file = GetImageNameWithExt(string.Format("{0}\\{1}{2}", workFolder, imagesPrefix, binEl.Attribute("id").Value));
+                    var format = Util.GetImageFormatFromMimeType(binEl.Attribute("content-type").Value, _currentSettings.Jpeg ? ImageFormat.Jpeg : ImageFormat.Png);
                     var fileBytes = Convert.FromBase64String(binEl.Value);
                     try
                     {
-                        var format = _currentSettings.Jpeg ? ImageFormat.Jpeg : ImageFormat.Png;
                         using (Stream str = new MemoryStream(fileBytes))
                         {
                             using (var img = Image.FromStream(str))
