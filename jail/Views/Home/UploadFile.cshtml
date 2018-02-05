@@ -72,7 +72,7 @@
                     }
                 }
             }
-            xhr.open('POST', 'handleFileUpload', true);
+            xhr.open('POST', 'Home/HandleFileUpload', true);
             xhr.setRequestHeader('X-FILE-NAME', file.name);
             xhr.send(file);
             return true;
