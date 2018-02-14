@@ -86,6 +86,29 @@ namespace Fb2Kindle
                         }
 
                         var bookPostfix = idx == 0 ? "" : string.Format("_{0}", idx);
+
+                        //update images (extract and rewrite refs)
+                        if (ProcessImages(book, tempDir, bookPostfix, _currentSettings.NoImages))
+                        {
+                            var imgSrc = Util.AttributeValue(book.Elements("description").Elements("title-info").Elements("coverpage").Elements("div").Elements("img"), "src");
+                            if (!string.IsNullOrEmpty(imgSrc))
+                            {
+                                if (!coverDone)
+                                {
+                                    _opfFile.Elements("metadata").First().Elements("x-metadata").First().Add(new XElement("EmbeddedCover", imgSrc));
+                                    AddGuideItem("Cover", imgSrc, "other.ms-coverimage-standard");
+                                    AddPackItem("cover", imgSrc, "image/jpeg", false);
+                                    coverDone = true;
+                                }
+                                else
+                                {
+                                    AddGuideItem(string.Format("Cover{0}", bookPostfix), imgSrc);
+                                    AddPackItem(string.Format("Cover{0}", bookPostfix), imgSrc, "image/jpeg");
+                                }
+                            }
+                        }
+
+                        //title page
                         var titlePageName = "it" + bookPostfix;
                         AddPackItem(titlePageName, titlePageName + ".html");
                         if (idx == 0)
@@ -95,21 +118,6 @@ namespace Fb2Kindle
                         bookLi.Add(new XElement("ul", ""));
                         tocEl.Elements("body").Elements("ul").First().Add(bookLi);
 
-                        //update images (extract and rewrite refs)
-                        if (ProcessImages(book, tempDir, bookPostfix, _currentSettings.NoImages))
-                        {
-                            if (!coverDone)
-                            {
-                                var imgSrc = Util.AttributeValue(book.Elements("description").Elements("title-info").Elements("coverpage").Elements("div").Elements("img"), "src");
-                                if (!string.IsNullOrEmpty(imgSrc))
-                                {
-                                    _opfFile.Elements("metadata").First().Elements("x-metadata").First().Add(new XElement("EmbeddedCover", imgSrc));
-                                    AddGuideItem("Cover", imgSrc, "other.ms-coverimage-standard");
-                                    AddPackItem("cover", imgSrc, "image/jpeg", false);
-                                    coverDone = true;
-                                }
-                            }
-                        }
                         ProcessAllData(book, tempDir, bookPostfix, bookLi);
                     }
                 }
