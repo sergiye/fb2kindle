@@ -1,0 +1,10 @@
+<?xml version='1.0'?>
+<Obfuscator>
+  <Var name="InPath" value="." />
+  <Var name="OutPath" value=".\Obfuscator_Output" />
+  <Var name="HidePrivateApi" value="true" />
+  <Var name="KeyFile" value=".\test.snk" />
+
+  <Module file="$(InPath)\Fb2Kindle.exe" />
+<!--  <Module file="$(InPath)\Fb2Kindle.dll" />-->
+</Obfuscator>
