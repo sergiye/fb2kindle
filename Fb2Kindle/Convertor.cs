@@ -290,7 +290,8 @@ namespace Fb2Kindle
         {
             var bookId = "i" + bookNum + postfix;
             var href = bookId + ".html";
-            var t = section.Elements("title").FirstOrDefault();
+            var t = section.Elements("title").FirstOrDefault(el => !string.IsNullOrWhiteSpace(el.Value));
+            //var t = section.Descendants("title").FirstOrDefault(el => !string.IsNullOrWhiteSpace(el.Value));
             if (t == null || string.IsNullOrEmpty(t.Value))
             {
                 t = section.Elements("p").FirstOrDefault();
@@ -342,16 +343,16 @@ namespace Fb2Kindle
             for (var i = 1; i < bodies.Length; i++)
             {
                 Util.RenameTag(bodies[i], "section");
-                if (i < bodies.Length - 1)
-                {
-                    //all but last -> merge into first body
-                    if (bodies[i].Parent != null)
-                        bodies[i].Remove();
-                    bodies[0].Add(bodies[i]);
-                    continue;
-                }
+//                if (i < bodies.Length - 1)
+//                {
+//                    //all but last -> merge into first body
+//                    if (bodies[i].Parent != null)
+//                        bodies[i].Remove();
+//                    bodies[0].Add(bodies[i]);
+//                    continue;
+//                }
                 string bodyName = null;
-                var titleEl = bodies[i].Descendants("title").FirstOrDefault(el => el.Value != null);
+                var titleEl = bodies[i].Descendants("title").FirstOrDefault(el => !string.IsNullOrWhiteSpace(el.Value));
                 if (titleEl != null)
                     bodyName = titleEl.Value.Trim();
                 if (string.IsNullOrEmpty(bodyName))
