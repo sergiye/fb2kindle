@@ -9,6 +9,7 @@ using System.Net;
 using System.Net.Mail;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
 
@@ -490,10 +491,12 @@ namespace Fb2Kindle
                 return false;
             }
 
-            var saveLocal = true;
             var tmpBookPath = string.Format("{0}\\{1}.mobi", tempDir, bookName);
-            if (!string.IsNullOrWhiteSpace(MailTo))
-                saveLocal = !SendBookByMail(bookName, tmpBookPath);
+            if (string.IsNullOrWhiteSpace(MailTo)) return true;
+
+            //Task.Run(async() => await SendBookByMail(bookName, tmpBookPath));
+            var saveLocal = !SendBookByMail(bookName, tmpBookPath).GetAwaiter().GetResult();
+            // Wait for it to finish
             if (saveLocal)
             {
                 //save to output folder
@@ -516,7 +519,7 @@ namespace Fb2Kindle
             return true;
         }
 
-        private bool SendBookByMail(string bookName, string tmpBookPath)
+        private async Task<bool> SendBookByMail(string bookName, string tmpBookPath)
         {
             Util.Write(string.Format("Sending to {0}...", MailTo), ConsoleColor.White);
             try
@@ -542,7 +545,7 @@ namespace Fb2Kindle
                         using (var att = new Attachment(tmpBookPath))
                         {
                             message.Attachments.Add(att);
-                            smtp.Send(message);
+                            await smtp.SendMailAsync(message);
                         }
                     }
                 }
