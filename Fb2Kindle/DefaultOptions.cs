@@ -6,7 +6,7 @@ namespace Fb2Kindle
     internal class DefaultOptions
     {
         public bool DeleteOriginal { get; set; }
-        public bool NoChapters { get; set; }
+        public bool Chapters { get; set; }
         public bool NoImages { get; set; }
         public bool NoToc { get; set; }
         public bool Compression { get; set; }

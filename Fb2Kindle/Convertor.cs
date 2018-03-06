@@ -371,7 +371,7 @@ namespace Fb2Kindle
             if (_defaultCss.Contains("span.dc{"))
                 SetBigFirstLetters(bodies[0]);
 
-            if (_currentSettings.NoChapters)
+            if (!_currentSettings.Chapters)
             {
                 var i = 0;
                 var ts = bodies[0].Descendants("title");
@@ -401,7 +401,11 @@ namespace Fb2Kindle
                 parent.Add(new XElement("br"));
             }
             ConvertTagsToHtml(bodies[0]);
-            if (_currentSettings.NoChapters)
+            if (_currentSettings.Chapters)
+            {
+                SaveSubSections(bodies[0], 0, bookLi.Elements(TocElement).First(), bookDir, postfix);
+            }
+            else
             {
                 var htmlFile = string.Format("i{0}.html", postfix);
                 AddPackItem(string.Format("text{0}.html", postfix), htmlFile);
@@ -409,8 +413,6 @@ namespace Fb2Kindle
                 UpdateLinksInBook(bodies[0], htmlFile);
                 SaveAsHtmlBook(bodies[0], bookDir + @"\" + htmlFile);
             }
-            else
-                SaveSubSections(bodies[0], 0, bookLi.Elements(TocElement).First(), bookDir, postfix);
 
             foreach (var part in additionalParts)
             {

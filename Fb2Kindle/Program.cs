@@ -24,7 +24,7 @@ namespace Fb2Kindle
             Util.WriteLine("-g: grayscaled images");
             Util.WriteLine("-jpeg: save images in jpeg");
             Util.WriteLine("-ntoc: no table of content");
-            Util.WriteLine("-nch: no chapters");
+            Util.WriteLine("-ch: separate sections for chapters");
 
             Util.WriteLine("-mailto: - send document to email (kindle delivery)");
 
@@ -89,8 +89,8 @@ namespace Fb2Kindle
                     {
                         switch (args[j].ToLower().Trim())
                         {
-                            case "-nch":
-                                currentSettings.NoChapters = true;
+                            case "-ch":
+                                currentSettings.Chapters = true;
                                 break;
                             case "-ni":
                                 currentSettings.NoImages = true;
