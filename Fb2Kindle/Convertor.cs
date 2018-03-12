@@ -115,7 +115,8 @@ namespace Fb2Kindle
                         AddPackItem(titlePageName, titlePageName + ".html");
                         if (idx == 0)
                             AddGuideItem("Title", titlePageName + ".html", "start");
-                        CreateTitlePage(book, tempDir + "\\" + titlePageName + ".html");
+                        var titleDiv = CreateTitlePage(book);
+                        SaveAsHtmlBook(titleDiv, tempDir + "\\" + titlePageName + ".html");
                         var bookLi = GetListItem(GetTitle(book), titlePageName + ".html");
                         bookLi.Add(new XElement(TocElement, ""));
                         tocEl.Elements("body").Elements(TocElement).First().Add(bookLi);
@@ -292,10 +293,10 @@ namespace Fb2Kindle
             var href = bookId + ".html";
             var t = section.Elements("title").FirstOrDefault(el => !string.IsNullOrWhiteSpace(el.Value));
             //var t = section.Descendants("title").FirstOrDefault(el => !string.IsNullOrWhiteSpace(el.Value));
-            if (t == null || string.IsNullOrEmpty(t.Value))
-            {
-                t = section.Elements("p").FirstOrDefault();
-            }
+//            if (t == null || string.IsNullOrEmpty(t.Value))
+//            {
+//                t = section.Elements("p").FirstOrDefault();
+//            }
 
             if (t != null && !string.IsNullOrEmpty(t.Value))
             {
@@ -584,11 +585,8 @@ namespace Fb2Kindle
             return linkEl;
         }
 
-        private static void CreateTitlePage(XElement book, string fileName)
+        private static XElement CreateTitlePage(XElement book)
         {
-            var content = new XElement("html");
-            content.Add(new XElement("head", GetCssLink()));
-            var body = new XElement("body");
             var linkEl = new XElement("div");
             linkEl.Add(new XAttribute("class", "supertitle"));
             linkEl.Add(new XAttribute("align", "center"));
@@ -615,9 +613,7 @@ namespace Fb2Kindle
                 Assembly.GetExecutingAssembly().GetName().Version.ToString(3))));
             linkEl.Add(new XElement("p", "developed by Sergiy Yegoshyn (egoshin.sergey@gmail.com)"));
             linkEl.Add(new XElement("br"));
-            body.Add(linkEl);
-            content.Add(body);
-            SaveXmlToFile(content, fileName);
+            return linkEl;
         }
 
         #region helper methods
@@ -853,9 +849,8 @@ namespace Fb2Kindle
             toc.Add(new XElement("head", new XElement("title", "Содержание")));
             var body = new XElement("body", "");
             toc.Add(body);
-            var linkEl = new XElement("div", new XAttribute("style", "font-size: 130%;text-align:center;font-weight:bold;"));
-            linkEl.Add(new XAttribute("id", "toc"));
-            linkEl.Add(new XElement("p", "Содержание"));
+            var linkEl = new XElement("div", new XAttribute("class", "title"), 
+                new XAttribute("id", "toc"), new XElement("p", "Содержание"));
             body.Add(linkEl);
             body.Add(new XElement(TocElement, ""));
             return toc;

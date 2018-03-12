@@ -6,7 +6,7 @@ div.book{text-indent:35px;padding-bottom: 50px;page-break-before : always;}
 div.title{font-size: 130%;text-align:center;font-weight:bold;page-break-before:always;}
 div.epigraph{font-style:italic;margin-left : 20%;width:80%}
 div.supertitle{text-align:center;}
-div.subtitle{font-style:italic;font-weight: bold;text-align:center;page-break-after:always;}
+div.subtitle{font-style:italic;font-weight: bold;text-align:center;}
 div.cite{font-style:italic;font-size: 90%;}
 div.poem{text-indent:0;font-style:italic;text-align:center;}
 ul{text-align:left;font-style:italic;}
