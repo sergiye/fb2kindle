@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Drawing;
-using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -221,116 +219,6 @@ namespace Fb2Kindle
             else
                 Console.Write(message);
             Console.ResetColor();
-        }
-
-        #region Images
-
-        internal static ImageCodecInfo GetEncoderInfo(string extension)
-        {
-            extension = extension.ToLower();
-            var codecs = ImageCodecInfo.GetImageEncoders();
-            for (var i = 0; i < codecs.Length; i++)
-                if (codecs[i].FilenameExtension.ToLower().Contains(extension))
-                    return codecs[i];
-            return null;
-        }
-
-        internal static ImageCodecInfo GetEncoderInfo(ImageFormat format)
-        {
-            return ImageCodecInfo.GetImageEncoders().FirstOrDefault(codec => codec.FormatID.Equals(format.Guid));
-        }
-
-        internal static string GetMimeType(this Image image)
-        {
-            return image.RawFormat.GetMimeType();
-        }
-
-        internal static string GetMimeType(this ImageFormat imageFormat)
-        {
-            ImageCodecInfo[] codecs = ImageCodecInfo.GetImageEncoders();
-            return codecs.First(codec => codec.FormatID == imageFormat.Guid).MimeType;
-        }
-
-        internal static ImageFormat GetImageFormatFromMimeType(string contentType, ImageFormat defaultResult)
-        {
-            if (contentType.Equals(ImageFormat.Jpeg.GetMimeType(), StringComparison.OrdinalIgnoreCase))
-            {
-                return ImageFormat.Jpeg;
-            }
-            if (contentType.Equals(ImageFormat.Bmp.GetMimeType(), StringComparison.OrdinalIgnoreCase))
-            {
-                return ImageFormat.Bmp;
-            }
-            if (contentType.Equals(ImageFormat.Png.GetMimeType(), StringComparison.OrdinalIgnoreCase))
-            {
-                return ImageFormat.Png;
-            }
-//            foreach (var codecInfo in ImageCodecInfo.GetImageEncoders())
-//            {
-//                if (codecInfo.MimeType.Equals(contentType, StringComparison.OrdinalIgnoreCase))
-//                {
-//
-//                }
-//            }
-            return defaultResult;
-        }
-
-        internal static Image GrayScale(Image img, bool fast, ImageFormat format)
-        {
-            Stream imageStream = new MemoryStream();
-            if (fast)
-            {
-                using (var bmp = new Bitmap(img))
-                {
-                    var gsBmp = MakeGrayscale3(bmp);
-                    gsBmp.Save(imageStream, format);
-                }
-            }
-            else
-            {
-                using (var bmp = new Bitmap(img))
-                {
-                    for (var y = 0; y < bmp.Height; y++)
-                    for (var x = 0; x < bmp.Width; x++)
-                    {
-                        var c = bmp.GetPixel(x, y);
-                        var rgb = (c.R + c.G + c.B) / 3;
-                        bmp.SetPixel(x, y, Color.FromArgb(rgb, rgb, rgb));
-                    }
-                    bmp.Save(imageStream, format);
-                }
-            }
-            return Image.FromStream(imageStream);
-        }
-
-        internal static Bitmap MakeGrayscale3(Bitmap original)
-        {
-            var newBitmap = new Bitmap(original.Width, original.Height);
-            var g = Graphics.FromImage(newBitmap);
-            var colorMatrix = new ColorMatrix(new[]
-                                              {
-                                                  new[] {.3f, .3f, .3f, 0, 0},
-                                                  new[] {.59f, .59f, .59f, 0, 0},
-                                                  new[] {.11f, .11f, .11f, 0, 0},
-                                                  new float[] {0, 0, 0, 1, 0},
-                                                  new float[] {0, 0, 0, 0, 1}
-                                              });
-            var attributes = new ImageAttributes();
-            attributes.SetColorMatrix(colorMatrix);
-            g.DrawImage(original, new Rectangle(0, 0, original.Width, original.Height),
-                0, 0, original.Width, original.Height, GraphicsUnit.Pixel, attributes);
-            g.Dispose();
-            return newBitmap;
-        }
-
-        #endregion Images
-
-        internal static void SaveXmlToFile(XElement xml, string file)
-        {
-            if (Debugger.IsAttached)
-                xml.Save(file);
-            else
-                xml.Save(file, SaveOptions.DisableFormatting);
         }
     }
 }
