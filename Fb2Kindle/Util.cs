@@ -141,23 +141,6 @@ namespace Fb2Kindle
             return list;
         }
 
-//        internal static void UpdateLinksInBook(XElement hrefsContainer, XElement targetsContainer, string sectionFilename)
-//        {
-//            foreach (var idEl in targetsContainer.Descendants().Where(el => el.Attribute("id") != null))
-//            {
-//                var noteId = "#" + (string)idEl.Attribute("id");
-//                foreach (var a in hrefsContainer.Descendants("a"))
-//                {
-//                    var href = a.Attribute("href").Value;
-//                    if (string.IsNullOrEmpty(href) || !noteId.Equals(href, StringComparison.OrdinalIgnoreCase)) continue;
-//                    var value = a.Value;
-//                    a.RemoveAll();
-//                    a.SetAttributeValue("href", sectionFilename + noteId);
-//                    a.Add(new XElement("sup", value));
-//                }
-//            }
-//        }
-
         internal static void RenameTag(XElement element, string newName, string className = null, bool clearData = false)
         {
             element.Name = newName;
@@ -341,5 +324,13 @@ namespace Fb2Kindle
         }
 
         #endregion Images
+
+        internal static void SaveXmlToFile(XElement xml, string file)
+        {
+            if (Debugger.IsAttached)
+                xml.Save(file);
+            else
+                xml.Save(file, SaveOptions.DisableFormatting);
+        }
     }
 }
