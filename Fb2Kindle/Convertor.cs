@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
@@ -89,9 +90,8 @@ namespace Fb2Kindle
                         var bookPostfix = idx == 0 ? "" : string.Format("_{0}", idx);
 
                         //update images (extract and rewrite refs)
-                        var imagesPrefix = string.Format("Images\\{0}", bookPostfix);
                         Directory.CreateDirectory(string.Format(tempDir + "\\Images"));
-                        if (ProcessImages(book, tempDir, imagesPrefix, _currentSettings.NoImages))
+                        if (ProcessImages(book, tempDir, string.Format("Images\\{0}", bookPostfix), _currentSettings.NoImages))
                         {
                             var imgSrc = Util.AttributeValue(book.Elements("description").Elements("title-info").Elements("coverpage").Elements("div").Elements("img"), "src");
                             if (!string.IsNullOrEmpty(imgSrc))
@@ -112,19 +112,18 @@ namespace Fb2Kindle
                         }
 
                         //book root element to contain all the sections
-                        var bookRoot = new XElement("div", "");
                         var bookFileName = string.Format("book{0}.html", bookPostfix);
-                        AddPackItem("it" + bookPostfix, bookFileName);
+                        var bookRoot = new XElement("div");
+                        //add title
+                        bookRoot.Add(CreateTitlePage(book));
                         if (idx == 0)
                             AddGuideItem("Title", bookFileName, "start");
-                        var titleDiv = CreateTitlePage(book);
-                        bookRoot.Add(titleDiv);
+                        AddPackItem("it" + bookPostfix, bookFileName);
+                        //add to TOC
                         var bookLi = GetListItem(GetTitle(book), bookFileName);
-                        bookLi.Add(new XElement(TocElement, ""));
                         tocEl.Elements("body").Elements(TocElement).First().Add(bookLi);
-
                         ProcessAllData(book, bookRoot, bookPostfix, bookLi, bookFileName);
-
+                        ConvertTagsToHtml(bookRoot, true);
                         SaveAsHtmlBook(bookRoot, tempDir + "\\" + bookFileName);
                     }
                 }
@@ -135,11 +134,11 @@ namespace Fb2Kindle
                 {
                     AddPackItem("content", "toc.html");
                     AddGuideItem("toc", "toc.html", "toc");
-                    Util.SaveXmlToFile(tocEl, tempDir + @"\toc.html");
+                    SaveXmlToFile(tocEl, tempDir + @"\toc.html");
                     tocEl.RemoveAll();
                 }
 
-                Util.SaveXmlToFile(_opfFile, tempDir + @"\" + commonTitle + ".opf");
+                SaveXmlToFile(_opfFile, tempDir + @"\" + commonTitle + ".opf");
                 _opfFile.RemoveAll();
 
                 var result = CreateMobi(_workingFolder, tempDir, commonTitle, books[0], _currentSettings.Compression, _detailedOutput);
@@ -175,27 +174,7 @@ namespace Fb2Kindle
             return ConvertBookSequence(new[] { bookPath }, debug);
         }
 
-        private bool ProcessImages(XElement book, string workFolder, string imagesPrefix, bool removeImages)
-        {
-            var imagesCreated = !removeImages && ExtractImages(book, workFolder, imagesPrefix);
-            var list = Util.RenameTags(book, "image", "div", "image");
-            foreach (var element in list)
-            {
-                if (!imagesCreated)
-                    element.Remove();
-                else
-                {
-                    var src = element.Attribute("href").Value;
-                    element.RemoveAll();
-                    if (string.IsNullOrEmpty(src)) continue;
-                    src = src.Replace("#", "");
-                    var imgEl = new XElement("img");
-                    imgEl.SetAttributeValue("src", GetImageNameWithExt(string.Format("{0}{1}", imagesPrefix, src)));
-                    element.Add(imgEl);
-                }
-            }
-            return imagesCreated;
-        }
+        #endregion public
 
         #region ncx
 
@@ -229,7 +208,7 @@ namespace Fb2Kindle
             if (!addToc)
                 AddNcxItem(navMap, 1, "Содержание", "toc.html#toc");
             ncx.Add(navMap);
-            Util.SaveXmlToFile(ncx, folder + "\\" + NcxName);
+            SaveXmlToFile(ncx, folder + "\\" + NcxName);
             ncx.RemoveAll();
         }
 
@@ -259,27 +238,22 @@ namespace Fb2Kindle
 
         #endregion ncx
 
-        #endregion public
-
-        private readonly Dictionary<string, string> _linksDictionary = new Dictionary<string, string>();
-        
-        private void UpdateLinksInBook(XElement section, string sectionFilename)
+        private void UpdateLinksInBook(XElement book, string filename)
         {
+            var links = new Dictionary<string, string>();
             //store new link targets in dictionary
-            foreach (var idEl in section.DescendantsAndSelf().Where(el => el.Name != "div" && el.Attribute("id") != null))
+            foreach (var idEl in book.DescendantsAndSelf().Where(el => el.Name != "div" && el.Attribute("id") != null))
             {
-                _linksDictionary.Add(string.Format("#{0}", (string)idEl.Attribute("id")), sectionFilename);
+                links.Add(string.Format("#{0}", (string)idEl.Attribute("id")), filename);
             }
-
             //update found links hrefs
-            foreach (var a in section.Descendants("a"))
+            foreach (var a in book.Descendants("a"))
             {
                 var href = a.Attribute("href").Value;
-                //if (string.IsNullOrEmpty(href) || !noteId.Equals(href, StringComparison.OrdinalIgnoreCase)) continue;
-                if (string.IsNullOrEmpty(href) || !_linksDictionary.ContainsKey(href)) continue;
+                if (string.IsNullOrEmpty(href) || !links.ContainsKey(href)) continue;
                 var value = a.Value;
                 a.RemoveAll();
-                a.SetAttributeValue("href", _linksDictionary[href] + href);
+                a.SetAttributeValue("href", links[href] + href);
                 a.Add(new XElement("sup", value));
             }
         }
@@ -328,16 +302,17 @@ namespace Fb2Kindle
                 }
                 bookNum = SaveSubSections(firstSubSection, bookNum, si, bookRoot, postfix, bookFileName);
             }
-            UpdateLinksInBook(section, bookFileName);
             return bookNum;
         }
 
         private void ProcessAllData(XElement book, XElement bookRoot, string postfix, XElement bookLi, string bookFileName)
         {
-            _linksDictionary.Clear();
-            Util.Write("FB2 to HTML...", ConsoleColor.White);
-            var bodies = book.Elements("body").ToArray();
+            var listItem = new XElement(TocElement, "");
+            bookLi.Add(listItem);
 
+            Util.Write("FB2 to HTML...", ConsoleColor.White);
+            UpdateLinksInBook(book, bookFileName);
+            var bodies = book.Elements("body").ToArray();
             //process other "bodies" (notes)
             var additionalParts = new List<KeyValuePair<string, XElement>>();
             for (var i = 1; i < bodies.Length; i++)
@@ -351,8 +326,6 @@ namespace Fb2Kindle
 //                    bodies[0].Add(bodies[i]);
 //                    continue;
 //                }
-                UpdateLinksInBook(bodies[i], bookFileName);
-                ConvertTagsToHtml(bodies[i], true);
                 additionalParts.Add(new KeyValuePair<string, XElement>(string.Format("body{0}", i), bodies[i]));
             }
 
@@ -367,7 +340,7 @@ namespace Fb2Kindle
                 foreach (var t in ts)
                 {
                     if (!string.IsNullOrEmpty(t.Value))
-                        bookLi.Elements(TocElement).First().Add(GetListItem(t.Value.Trim(), string.Format("{0}#title{1}", bookFileName, i + 2)));
+                        listItem.Add(GetListItem(t.Value.Trim(), string.Format("{0}#title{1}", bookFileName, i + 2)));
                     Util.RenameTag(t, "div", "title");
                     var inner = new XElement("div");
                     inner.SetAttributeValue("class", i == 0 ? "title0" : "title1");
@@ -378,28 +351,10 @@ namespace Fb2Kindle
                     //t.SetAttributeValue("id", string.Format("title{0}", i + 2));
                     i++;
                 }
-            }
-            var els = bodies[0].Descendants("stanza");
-            foreach (var el in els)
-            {
-                el.Name = "br";
-                var parent = el.Parent;
-                if (parent == null) continue;
-                parent.Add(el.Nodes());
-                el.RemoveAll();
-                parent.Add(new XElement("br"));
-            }
-            ConvertTagsToHtml(bodies[0]);
-            if (_currentSettings.NoChapters)
-            {
-//                var htmlFile = string.Format("i{0}.html", postfix);
-//                AddPackItem(string.Format("text{0}.html", postfix), htmlFile);
-//                AddGuideItem("Book", htmlFile);
-                UpdateLinksInBook(bodies[0], bookFileName);
                 bookRoot.Add(bodies[0]);
             }
             else
-                SaveSubSections(bodies[0], 0, bookLi.Elements(TocElement).First(), bookRoot, postfix, bookFileName);
+                SaveSubSections(bodies[0], 0, listItem, bookRoot, postfix, bookFileName);
 
             foreach (var part in additionalParts)
             {
@@ -415,7 +370,7 @@ namespace Fb2Kindle
                     bodyName = (string)item.Attribute("name");
                 }
                 bookRoot.Add(item);
-                bookLi.Elements(TocElement).First().Add(GetListItem(bodyName, string.Format("{0}#{1}", bookFileName, part.Key)));
+                listItem.Add(GetListItem(bodyName, string.Format("{0}#{1}", bookFileName, part.Key)));
             }
 
             Util.WriteLine("(OK)", ConsoleColor.Green);
@@ -605,71 +560,6 @@ namespace Fb2Kindle
 
         #region helper methods
 
-        private string GetImageNameWithExt(string original)
-        {
-            var ext = Path.GetExtension(original);
-            if (string.IsNullOrWhiteSpace(ext))
-                return original + ".jpg";
-            return original;
-        }
-
-        private bool ExtractImages(XElement book, string workFolder, string imagesPrefix)
-        {
-            if (book == null) return true;
-            Util.Write("Extracting images...", ConsoleColor.White);
-            foreach (var binEl in book.Elements("binary"))
-            {
-                try
-                {
-                    var file = GetImageNameWithExt(string.Format("{0}\\{1}{2}", workFolder, imagesPrefix, binEl.Attribute("id").Value));
-                    var format = Util.GetImageFormatFromMimeType(binEl.Attribute("content-type").Value, _currentSettings.Jpeg ? ImageFormat.Jpeg : ImageFormat.Png);
-                    //todo: we can get format from img.RawFormat
-                    var fileBytes = Convert.FromBase64String(binEl.Value);
-                    try
-                    {
-                        using (Stream str = new MemoryStream(fileBytes))
-                        {
-                            using (var img = Image.FromStream(str))
-                            {
-//                                var pngCodec = Util.GetEncoderInfo(ImageFormat.Png);
-//                                if (pngCodec != null)
-//                                {
-//                                    var parameters = new EncoderParameters(1) {
-//                                            Param = {
-//                                                [0] = new EncoderParameter(Encoder.ColorDepth, 24)
-//                                            }
-//                                        };
-//                                    img.Save(file, pngCodec, parameters);
-//                                }
-//                                else
-                                img.Save(file, format);
-                            }
-                        }
-                        if (_currentSettings.Grayscaled)
-                        {
-                            Image gsImage;
-                            using (var img = Image.FromFile(file))
-                            {
-                                gsImage = Util.GrayScale(img, true, format);
-                            }
-                            gsImage.Save(file, format);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Util.WriteLine("Error compressing image: " + ex.Message, ConsoleColor.Red);
-                        File.WriteAllBytes(file, fileBytes);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Util.WriteLine(ex.Message, ConsoleColor.Red);
-                }
-            }
-            Util.WriteLine("(OK)", ConsoleColor.Green);
-            return true;
-        }
-
         private static void ConvertTagsToHtml(XElement book, bool full = false)
         {
             Util.RenameTags(book, "text-author", "P", "text-author");
@@ -681,8 +571,8 @@ namespace Fb2Kindle
             Util.RenameTags(book, "strong", "b");
             Util.RenameTags(book, "poem", "div", "poem");
             Util.RenameTags(book, "v", "p");
-            if (!full) return;
             Util.RenameTags(book, "stanza", "em");
+            if (!full) return;
             Util.RenameTags(book, "title", "div", "subtitle");
         }
 
@@ -729,6 +619,14 @@ namespace Fb2Kindle
             }
         }
 
+        private static void SaveXmlToFile(XElement xml, string file)
+        {
+            if (Debugger.IsAttached)
+                xml.Save(file);
+            else
+                xml.Save(file, SaveOptions.DisableFormatting);
+        }
+
         private static void SaveAsHtmlBook(XElement bodyEl, string fileName)
         {
             var doc = new XElement("html");
@@ -736,7 +634,7 @@ namespace Fb2Kindle
             doc.Add(new XElement("body", bodyEl));
             Util.RenameTags(doc, "section", "div", "book");
             Util.RenameTags(doc, "annotation", "em");
-            Util.SaveXmlToFile(doc, fileName);
+            SaveXmlToFile(doc, fileName);
             doc.RemoveAll();
         }
 
@@ -808,12 +706,8 @@ namespace Fb2Kindle
         {
             var toc = new XElement("html", new XAttribute("type", "toc"));
             toc.Add(new XElement("head", new XElement("title", "Содержание")));
-            var body = new XElement("body", "");
-            toc.Add(body);
-            var linkEl = new XElement("div", new XAttribute("class", "title"), 
-                new XAttribute("id", "toc"), new XElement("p", "Содержание"));
-            body.Add(linkEl);
-            body.Add(new XElement(TocElement, ""));
+            toc.Add(new XElement("body", new XElement("div", new XAttribute("class", "title"), 
+                new XAttribute("id", "toc"), "Содержание"), new XElement(TocElement, "")));
             return toc;
         }
 
@@ -851,5 +745,194 @@ namespace Fb2Kindle
         }
 
         #endregion helper methods
+
+        #region Images
+     
+        private bool ProcessImages(XElement book, string workFolder, string imagesPrefix, bool removeImages)
+        {
+            var imagesCreated = !removeImages && ExtractImages(book, workFolder, imagesPrefix);
+            var list = Util.RenameTags(book, "image", "div", "image");
+            foreach (var element in list)
+            {
+                if (!imagesCreated)
+                    element.Remove();
+                else
+                {
+                    var src = element.Attribute("href").Value;
+                    element.RemoveAll();
+                    if (string.IsNullOrEmpty(src)) continue;
+                    src = src.Replace("#", "");
+                    var imgEl = new XElement("img");
+                    imgEl.SetAttributeValue("src", GetImageNameWithExt(string.Format("{0}{1}", imagesPrefix, src)));
+                    element.Add(imgEl);
+                }
+            }
+            return imagesCreated;
+        }
+
+        private string GetImageNameWithExt(string original)
+        {
+            var ext = Path.GetExtension(original);
+            if (string.IsNullOrWhiteSpace(ext))
+                return original + ".jpg";
+            return original;
+        }
+
+        private bool ExtractImages(XElement book, string workFolder, string imagesPrefix)
+        {
+            if (book == null) return true;
+            Util.Write("Extracting images...", ConsoleColor.White);
+            foreach (var binEl in book.Elements("binary"))
+            {
+                try
+                {
+                    var file = GetImageNameWithExt(string.Format("{0}\\{1}{2}", workFolder, imagesPrefix, binEl.Attribute("id").Value));
+                    var format = GetImageFormatFromMimeType(binEl.Attribute("content-type").Value, _currentSettings.Jpeg ? ImageFormat.Jpeg : ImageFormat.Png);
+                    //todo: we can get format from img.RawFormat
+                    var fileBytes = Convert.FromBase64String(binEl.Value);
+                    try
+                    {
+                        using (Stream str = new MemoryStream(fileBytes))
+                        {
+                            using (var img = Image.FromStream(str))
+                            {
+//                                var pngCodec = Util.GetEncoderInfo(ImageFormat.Png);
+//                                if (pngCodec != null)
+//                                {
+//                                    var parameters = new EncoderParameters(1) {
+//                                            Param = {
+//                                                [0] = new EncoderParameter(Encoder.ColorDepth, 24)
+//                                            }
+//                                        };
+//                                    img.Save(file, pngCodec, parameters);
+//                                }
+//                                else
+                                img.Save(file, format);
+                            }
+                        }
+                        if (_currentSettings.Grayscaled)
+                        {
+                            Image gsImage;
+                            using (var img = Image.FromFile(file))
+                            {
+                                gsImage = GrayScale(img, true, format);
+                            }
+                            gsImage.Save(file, format);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Util.WriteLine("Error compressing image: " + ex.Message, ConsoleColor.Red);
+                        File.WriteAllBytes(file, fileBytes);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Util.WriteLine(ex.Message, ConsoleColor.Red);
+                }
+            }
+            Util.WriteLine("(OK)", ConsoleColor.Green);
+            return true;
+        }
+
+        private static ImageCodecInfo GetEncoderInfo(string extension)
+        {
+            extension = extension.ToLower();
+            var codecs = ImageCodecInfo.GetImageEncoders();
+            for (var i = 0; i < codecs.Length; i++)
+                if (codecs[i].FilenameExtension.ToLower().Contains(extension))
+                    return codecs[i];
+            return null;
+        }
+
+        private static ImageCodecInfo GetEncoderInfo(ImageFormat format)
+        {
+            return ImageCodecInfo.GetImageEncoders().FirstOrDefault(codec => codec.FormatID.Equals(format.Guid));
+        }
+
+        private static string GetMimeType(Image image)
+        {
+            return GetMimeType(image.RawFormat);
+        }
+
+        private static string GetMimeType(ImageFormat imageFormat)
+        {
+            ImageCodecInfo[] codecs = ImageCodecInfo.GetImageEncoders();
+            return codecs.First(codec => codec.FormatID == imageFormat.Guid).MimeType;
+        }
+
+        private static ImageFormat GetImageFormatFromMimeType(string contentType, ImageFormat defaultResult)
+        {
+            if (contentType.Equals(GetMimeType(ImageFormat.Jpeg), StringComparison.OrdinalIgnoreCase))
+            {
+                return ImageFormat.Jpeg;
+            }
+            if (contentType.Equals(GetMimeType(ImageFormat.Bmp), StringComparison.OrdinalIgnoreCase))
+            {
+                return ImageFormat.Bmp;
+            }
+            if (contentType.Equals(GetMimeType(ImageFormat.Png), StringComparison.OrdinalIgnoreCase))
+            {
+                return ImageFormat.Png;
+            }
+//            foreach (var codecInfo in ImageCodecInfo.GetImageEncoders())
+//            {
+//                if (codecInfo.MimeType.Equals(contentType, StringComparison.OrdinalIgnoreCase))
+//                {
+//                    return codecInfo.FormatID;
+//                }
+//            }
+            return defaultResult;
+        }
+
+        private static Image GrayScale(Image img, bool fast, ImageFormat format)
+        {
+            Stream imageStream = new MemoryStream();
+            if (fast)
+            {
+                using (var bmp = new Bitmap(img))
+                {
+                    var gsBmp = MakeGrayscale3(bmp);
+                    gsBmp.Save(imageStream, format);
+                }
+            }
+            else
+            {
+                using (var bmp = new Bitmap(img))
+                {
+                    for (var y = 0; y < bmp.Height; y++)
+                    for (var x = 0; x < bmp.Width; x++)
+                    {
+                        var c = bmp.GetPixel(x, y);
+                        var rgb = (c.R + c.G + c.B) / 3;
+                        bmp.SetPixel(x, y, Color.FromArgb(rgb, rgb, rgb));
+                    }
+                    bmp.Save(imageStream, format);
+                }
+            }
+            return Image.FromStream(imageStream);
+        }
+
+        private static Bitmap MakeGrayscale3(Bitmap original)
+        {
+            var newBitmap = new Bitmap(original.Width, original.Height);
+            var g = Graphics.FromImage(newBitmap);
+            var colorMatrix = new ColorMatrix(new[]
+                                              {
+                                                  new[] {.3f, .3f, .3f, 0, 0},
+                                                  new[] {.59f, .59f, .59f, 0, 0},
+                                                  new[] {.11f, .11f, .11f, 0, 0},
+                                                  new float[] {0, 0, 0, 1, 0},
+                                                  new float[] {0, 0, 0, 0, 1}
+                                              });
+            var attributes = new ImageAttributes();
+            attributes.SetColorMatrix(colorMatrix);
+            g.DrawImage(original, new Rectangle(0, 0, original.Width, original.Height),
+                0, 0, original.Width, original.Height, GraphicsUnit.Pixel, attributes);
+            g.Dispose();
+            return newBitmap;
+        }
+
+        #endregion Images
     }
 }
