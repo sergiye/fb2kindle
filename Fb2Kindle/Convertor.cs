@@ -216,6 +216,7 @@ namespace Fb2Kindle
         {
             foreach (var list in listEls)
             {
+                AddTocListItems(list.Elements(TocElement), navMap, ref playOrder);
                 foreach (var li in list.Elements("li"))
                 {
                     var navPoint = navMap;
@@ -343,13 +344,12 @@ namespace Fb2Kindle
                     //t.SetAttributeValue("id", string.Format("title{0}", i + 2));
                     i++;
                 }
-                bookRoot.Add(bodies[0]);
             }
             else
             {
-                bookRoot.Add(bodies[0]);
                 SaveSubSections(bodies[0], 0, listItem, postfix, bookFileName);
             }
+            bookRoot.Add(bodies[0]);
 
             foreach (var part in additionalParts)
             {
