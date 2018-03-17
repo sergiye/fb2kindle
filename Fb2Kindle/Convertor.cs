@@ -258,7 +258,7 @@ namespace Fb2Kindle
             }
         }
 
-        private int SaveSubSections(XElement section, int bookNum, XElement toc, XElement bookRoot, string postfix, string bookFileName)
+        private int SaveSubSections(XElement section, int bookNum, XElement toc, string postfix, string bookFileName)
         {
             var bookId = "i" + bookNum + postfix;
             var t = section.Elements("title").FirstOrDefault(el => !string.IsNullOrWhiteSpace(el.Value));
@@ -281,26 +281,18 @@ namespace Fb2Kindle
                 var li = GetListItem(t.Value.Trim(), string.Format("{0}#{1}", bookFileName, bookId)); 
                 toc.Add(li);
                 toc = li;
-
-                if (section.Parent != null)
-                    section.Remove();
             }
-//            AddPackItem(bookId, href);
-//            AddGuideItem(bookId, href);
-            bookRoot.Add(section);
             bookNum++;
-            while (true)
+            foreach (var subSection in section.Descendants("section"))
             {
-                var firstSubSection = section.Descendants("section").FirstOrDefault();
-                if (firstSubSection == null) break;
-                firstSubSection.Remove();
+                if (subSection == null) continue;
                 var si = toc.Descendants(TocElement).FirstOrDefault();
                 if (si == null)
                 {
                     si = new XElement(TocElement);
                     toc.Add(si);
                 }
-                bookNum = SaveSubSections(firstSubSection, bookNum, si, bookRoot, postfix, bookFileName);
+                bookNum = SaveSubSections(subSection, bookNum, si, postfix, bookFileName);
             }
             return bookNum;
         }
@@ -354,7 +346,10 @@ namespace Fb2Kindle
                 bookRoot.Add(bodies[0]);
             }
             else
-                SaveSubSections(bodies[0], 0, listItem, bookRoot, postfix, bookFileName);
+            {
+                bookRoot.Add(bodies[0]);
+                SaveSubSections(bodies[0], 0, listItem, postfix, bookFileName);
+            }
 
             foreach (var part in additionalParts)
             {
