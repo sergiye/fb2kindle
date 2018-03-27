@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
@@ -276,7 +277,7 @@ namespace LibCleaner
             //get all database items data (some would be removed if not found on disk)
             using (var connection = SqlHelper.GetConnection())
             {
-                var sql = @"select b.id id_book, b.md5sum md5sum, a.file_name archive_file_name, b.file_name file_name, b.id_archive id_archive from books b
+                var sql = @"select DISTINCT b.id id_book, b.md5sum md5sum, a.file_name archive_file_name, b.file_name file_name, b.id_archive id_archive from books b
 JOIN archives a on a.id=b.id_archive and b.file_name is not NULL and b.file_name<>''";
                 using (var command = SqlHelper.GetCommand(sql, connection))
                 using (var reader = command.ExecuteReader())
@@ -298,7 +299,8 @@ JOIN archives a on a.id=b.id_archive and b.file_name is not NULL and b.file_name
                             archiveFiles = new List<BookFileInfo>();
                             dbFiles.Add(fi.archive_file_name, archiveFiles);
                         }
-                        archiveFiles.Add(fi);
+                        //if (!archiveFiles.Any(f=>f.Equals(fi)))
+                            archiveFiles.Add(fi);
                     }
                 }
             }
@@ -329,6 +331,8 @@ JOIN archives a on a.id=b.id_archive and b.file_name is not NULL and b.file_name
                         var zipFilesToRemove = new List<string>();
                         var zipFiles = zip.EntryFileNames;
                         var dbArchiveFiles = dbFiles[archiveName.ToLower()];
+                        if (Debugger.IsAttached)
+                            dbArchiveFiles.Sort((b1, b2) => string.Compare(b1.file_name, b2.file_name, StringComparison.OrdinalIgnoreCase));
                         var filesNotFound = dbArchiveFiles.Where(fi => !zipFiles.Contains(fi.file_name)).ToArray();
                         if (filesNotFound.Length > 0)
                         {

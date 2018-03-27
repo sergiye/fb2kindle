@@ -30,6 +30,8 @@ namespace LibraryCleaner
             cbxRemoveForeign.Checked = _cleaner.RemoveForeign;
             cbxRemoveDeleted.Checked = _cleaner.RemoveDeleted;
             cbxRemoveMissedArchives.Checked = _cleaner.RemoveMissingArchivesFromDb;
+
+            txtDatabase.Text = @"d:\media\library\myrulib_flibusta\myrulib.db";
         }
 
         #region GUI helper methods
