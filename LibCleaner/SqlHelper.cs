@@ -22,11 +22,19 @@ namespace LibCleaner
 
         #region Common methods
 
-        public static void ExecuteNonQuery(string sqlString)
+        public static void ExecuteNonQuery(string sqlString, IDbConnection connection = null)
         {
-            using (IDbConnection cn = GetConnection())
+            if (connection == null)
             {
-                using (var cmd = GetCommand(sqlString, cn))
+                using (IDbConnection cn = GetConnection())
+                {
+                    using (var cmd = GetCommand(sqlString, cn))
+                        cmd.ExecuteNonQuery();
+                }
+            }
+            else
+            {
+                using (var cmd = GetCommand(sqlString, connection))
                     cmd.ExecuteNonQuery();
             }
         }

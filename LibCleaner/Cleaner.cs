@@ -274,6 +274,9 @@ namespace LibCleaner
                  , id_archive = (SELECT files.id_archive FROM files WHERE files.id_book = books.id)
                 WHERE EXISTS(SELECT * FROM files WHERE files.id_book = books.id)");
             SqlHelper.ExecuteNonQuery("delete from files");
+
+            FixFlibustaIdsLinks();
+
             //get all database items data (some would be removed if not found on disk)
             using (var connection = SqlHelper.GetConnection())
             {
@@ -449,6 +452,74 @@ JOIN archives a on a.id=b.id_archive and b.file_name is not NULL and b.file_name
             }
             UpdateState(string.Format("Total removed {0} files", totalRemoved), StateKind.Message);
             SqlHelper.ExecuteNonQuery("VACUUM");
+        }
+
+        private void FixFlibustaIdsLinks()
+        {
+            UpdateState("Updating flibusta links for imported files...", StateKind.Warning);
+            var updatedBooks = 0;
+            var booksToUpdate = new Dictionary<int, int>();
+            using (var connection = SqlHelper.GetConnection())
+            {
+                using (var command = SqlHelper.GetCommand(@"select DISTINCT b.id, b.file_name from books b join archives a on b.id_archive=a.id and a.file_name like '%f.fb2-%' where b.id<0 ORDER BY b.id DESC", connection))
+                using (var reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        try
+                        {
+                            var oldId = SqlHelper.GetInt(reader, "id");
+                            var fileName = SqlHelper.GetString(reader, "file_name").Replace(".fb2", "");
+                            int newId;
+                            if (int.TryParse(fileName, out newId))
+                            {
+                                booksToUpdate.Add(oldId, newId);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            UpdateState(ex.Message, StateKind.Error);
+                        }
+                    }
+                }
+            }
+            UpdateState(string.Format("Found {0} links to update...", booksToUpdate.Count), StateKind.Message);
+            using (var connection = SqlHelper.GetConnection())
+            {
+                using (var tr = connection.BeginTransaction())
+                {
+                    try
+                    {
+                        foreach (var item in booksToUpdate)
+                        {
+                            try
+                            {
+                                SqlHelper.ExecuteNonQuery(string.Format("update books set id={0} where id={1}", item.Value, item.Key), connection);
+                                SqlHelper.ExecuteNonQuery(string.Format("update bookseq set id_book={0} where id_book={1}", item.Value, item.Key), connection);
+                                SqlHelper.ExecuteNonQuery(string.Format("update fts_book_content set docid={0} where docid={1}", item.Value, item.Key), connection);
+                                SqlHelper.ExecuteNonQuery(string.Format("update genres set id_book={0} where id_book={1}", item.Value, item.Key), connection);
+                                updatedBooks++;
+                                if (updatedBooks % 100 == 0)
+                                {
+                                    UpdateState(string.Format("{0} records ({1}%) done...", updatedBooks, updatedBooks * 100 / booksToUpdate.Count), StateKind.Message);
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                UpdateState(string.Format("Error in item {0}: {1}", item.Key, ex.Message), StateKind.Error);
+                            }
+                        }
+
+                        tr.Commit();
+                        UpdateState(string.Format("Updated {0} links", updatedBooks), StateKind.Message);
+                    }
+                    catch (Exception ex)
+                    {
+                        UpdateState(ex.Message, StateKind.Error);
+                        tr.Rollback();
+                    }
+                }
+            }
         }
 
         private void CompressLibrary()
