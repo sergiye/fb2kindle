@@ -451,6 +451,9 @@ JOIN archives a on a.id=b.id_archive and b.file_name is not NULL and b.file_name
                 }
             }
             UpdateState(string.Format("Total removed {0} files", totalRemoved), StateKind.Message);
+            SqlHelper.ExecuteNonQuery("delete from bookseq where id_book not in (select DISTINCT id FROM books)");
+            SqlHelper.ExecuteNonQuery("delete from fts_book_content where docid not in (select DISTINCT id FROM books)");
+            SqlHelper.ExecuteNonQuery("delete from genres where id_book not in (select DISTINCT id FROM books)");
             SqlHelper.ExecuteNonQuery("VACUUM");
         }
 
