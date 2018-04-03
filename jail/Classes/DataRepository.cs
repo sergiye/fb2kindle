@@ -56,7 +56,7 @@ where (REPLACE(b.title, ' ', '') like @key or REPLACE(a.search_name, ' ', '') li
               WHEN b.lang = 'uk' THEN '4'
               ELSE b.lang END ASC, b.title, b.created DESC LIMIT 100");
             var info = Db.QueryMultiple<BookInfo, SequenceInfo, AuthorInfo, long>(sql.ToString(), 
-                b => b.Id, b => b.Sequences, b => b.Authors, new { key = "%" + key.ToLower().Replace(" ", "") + "%", lang = searchLang });
+                b => b.Id, b => b.Sequences, b => b.Authors, new { key = string.Format("%{0}%", key.ToLower().Replace(" ", "")), lang = searchLang });
             return info;
         }
 
