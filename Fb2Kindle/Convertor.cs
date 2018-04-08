@@ -134,8 +134,8 @@ namespace Fb2Kindle
                 {
                     AddPackItem("content", "toc.html");
                     AddGuideItem("toc", "toc.html", "toc");
-                    SaveAsHtmlBook(tocEl, tempDir + @"\toc.html");
-                    //SaveXmlToFile(tocEl, tempDir + @"\toc.html");
+                    //SaveAsHtmlBook(tocEl, tempDir + @"\toc.html");
+                    SaveXmlToFile(tocEl, tempDir + @"\toc.html");
                     tocEl.RemoveAll();
                 }
 
@@ -701,7 +701,9 @@ namespace Fb2Kindle
         private static XElement GetEmptyToc()
         {
             var toc = new XElement("html", new XAttribute("type", "toc"));
-            toc.Add(new XElement("head", new XElement("title", "Содержание")));
+            toc.Add(new XElement("head", new XElement("title", "Содержание"), 
+                    new XElement("link", new XAttribute("type", "text/css"), 
+                        new XAttribute("href", "book.css"), new XAttribute("rel", "Stylesheet"))));
             toc.Add(new XElement("body", new XElement("div", new XAttribute("class", "title"), 
                 new XAttribute("id", "toc"), "Содержание"), new XElement(TocElement, "")));
             return toc;
