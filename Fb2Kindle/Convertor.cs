@@ -134,7 +134,8 @@ namespace Fb2Kindle
                 {
                     AddPackItem("content", "toc.html");
                     AddGuideItem("toc", "toc.html", "toc");
-                    SaveXmlToFile(tocEl, tempDir + @"\toc.html");
+                    SaveAsHtmlBook(tocEl, tempDir + @"\toc.html");
+                    //SaveXmlToFile(tocEl, tempDir + @"\toc.html");
                     tocEl.RemoveAll();
                 }
 
