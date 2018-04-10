@@ -132,10 +132,9 @@ namespace Fb2Kindle
 
                 if (!_currentSettings.NoToc)
                 {
+                    SaveXmlToFile(tocEl, tempDir + @"\toc.html");
                     AddPackItem("content", "toc.html");
                     AddGuideItem("toc", "toc.html", "toc");
-                    //SaveAsHtmlBook(tocEl, tempDir + @"\toc.html");
-                    SaveXmlToFile(tocEl, tempDir + @"\toc.html");
                     tocEl.RemoveAll();
                 }
 
