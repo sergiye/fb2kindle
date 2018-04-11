@@ -346,10 +346,14 @@ namespace jail.Controllers
             if (string.IsNullOrWhiteSpace(detailsFolder))
                 throw new DirectoryNotFoundException("Details folder is empty");
             Directory.CreateDirectory(detailsFolder);
-            var readingPath = Path.Combine(detailsFolder, "index.html");
+            var readingPath = Path.Combine(detailsFolder, "toc.html");
             if (!System.IO.File.Exists(readingPath))
-                BookHelper.Transform(tempFile, readingPath, Server.MapPath("~/xhtml.xsl"));
+            {
+                //BookHelper.Transform(tempFile, readingPath, Server.MapPath("~/xhtml.xsl"));
+                BookHelper.Transform2(tempFile, detailsFolder);
+            }
             ViewBag.Title = book.Title;
+            return new RedirectResult(Path.Combine(@"../" + readingPath.Replace(Server.MapPath("~"), "").Replace('\\', '/')));
             return new FilePathResult(GetLinkToFile(readingPath), "text/html");
             //ViewBag.BookContent = GetLinkToFile(readingPath);//Path.Combine(@"../" + readingPath.Replace(Server.MapPath("~"), "").Replace('\\', '/'));
             //return View(book);
