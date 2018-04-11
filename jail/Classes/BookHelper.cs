@@ -123,7 +123,7 @@ namespace jail.Classes
         {
             get
             {
-                return "Fb2Kindle.exe";
+                return "Fb2KindleP.exe";
             }
         }
 
