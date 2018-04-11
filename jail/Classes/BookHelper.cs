@@ -7,6 +7,7 @@ using System.Xml;
 using System.Xml.Linq;
 using System.Xml.XPath;
 using System.Xml.Xsl;
+using Fb2Kindle;
 using Ionic.Zip;
 using jail.Models;
 using Simpl.Extensions;
@@ -201,6 +202,12 @@ namespace jail.Classes
                     writer.Close();
                 }
             }
+        }
+
+        public static void Transform2(string inputFile, string detailsFolder)
+        {
+            var conv = new Convertor(new DefaultOptions(), null, false);
+            conv.ConvertBook(inputFile, true, detailsFolder);
         }
 
         public static void ExtractZipFile(string archivePath, string fileName, string outputFileName)

@@ -48,14 +48,13 @@ namespace Fb2Kindle
             _defaultCss = Util.GetScriptFromResource("Fb2Kindle.css");
         }
 
-        internal bool ConvertBookSequence(string[] books, bool debug)
+        internal bool ConvertBookSequence(string[] books, bool debug, string tempDir = null)
         {
-            string tempDir = null;
             try
             {
                 //create temp working folder
-                //_tempDir = Path.GetTempPath() + "\\"  + Environment.TickCount.ToString();
-                tempDir = Path.GetTempPath() + "\\" + Guid.NewGuid().ToString();
+                if (string.IsNullOrWhiteSpace(tempDir))
+                    tempDir = string.Format("{0}\\{1}", Path.GetTempPath(), Guid.NewGuid());
                 if (!Directory.Exists(tempDir))
                     Directory.CreateDirectory(tempDir);
 
@@ -169,9 +168,9 @@ namespace Fb2Kindle
             }
         }
 
-        internal bool ConvertBook(string bookPath, bool debug)
+        internal bool ConvertBook(string bookPath, bool debug, string tempDir = null)
         {
-            return ConvertBookSequence(new[] { bookPath }, debug);
+            return ConvertBookSequence(new[] { bookPath }, debug, tempDir);
         }
 
         #endregion public
