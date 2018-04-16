@@ -267,12 +267,11 @@ namespace LibCleaner
         {
             UpdateState("Calculating archives in database...", StateKind.Warning);
             var dbFiles = new Dictionary<string, List<BookFileInfo>>();
-            var allHashes = new Dictionary<string, BookFileInfo>();
             //move remapped files info to books table
-            SqlHelper.ExecuteNonQuery(@"UPDATE books SET
-                   file_name = (SELECT files.file_name FROM files WHERE files.id_book = books.id)
-                 , id_archive = (SELECT files.id_archive FROM files WHERE files.id_book = books.id)
-                WHERE EXISTS(SELECT * FROM files WHERE files.id_book = books.id)");
+            //SqlHelper.ExecuteNonQuery(@"UPDATE books SET
+            //       file_name = (SELECT files.file_name FROM files WHERE files.id_book = books.id)
+            //     , id_archive = (SELECT files.id_archive FROM files WHERE files.id_book = books.id)
+            //    WHERE EXISTS(SELECT * FROM files WHERE files.id_book = books.id)");
             SqlHelper.ExecuteNonQuery("delete from files");
 
             FixFlibustaIdsLinks();
@@ -361,28 +360,7 @@ JOIN archives a on a.id=b.id_archive and b.file_name is not NULL and b.file_name
                                 UpdateState(string.Format("{0} db records removed", dbRemoved), StateKind.Warning);
                         }
                         dbArchiveFiles.RemoveAll(fi => !zipFiles.Contains(fi.file_name));
-                        //collect all hashes in one place
                         var filesFound = dbArchiveFiles.Where(fi => zipFiles.Contains(fi.file_name)).ToList();
-                        foreach (var info in filesFound)
-                        {
-                            if (allHashes.ContainsKey(info.md5sum))
-                            {
-                                if (allHashes[info.md5sum].id_book.Equals(info.id_book) ||
-                                    allHashes[info.md5sum].file_name.Equals(info.file_name, StringComparison.OrdinalIgnoreCase))
-                                    continue;
-                                //remove file from zip and all lists
-                                zipFilesToRemove.Add(info.file_name);
-                                //remove duplicated records from DB
-                                SqlHelper.ExecuteNonQuery(string.Format(
-                                    "delete from books where id={0} and id_archive={1} and file_name='{2}'",
-                                    info.id_book, info.id_archive, info.file_name));
-
-                            }
-                            else
-                            {
-                                allHashes.Add(info.md5sum, info);
-                            }
-                        }
 
                         if (removeNotRegistered)
                         {
@@ -397,6 +375,28 @@ JOIN archives a on a.id=b.id_archive and b.file_name is not NULL and b.file_name
                         }
                         else
                         {
+                            //collect all hashes in one place
+                            var allHashes = new Dictionary<string, BookFileInfo>();
+                            foreach (var info in filesFound)
+                            {
+                                if (allHashes.ContainsKey(info.md5sum))
+                                {
+                                    if (allHashes[info.md5sum].id_book.Equals(info.id_book) ||
+                                        allHashes[info.md5sum].file_name.Equals(info.file_name, StringComparison.OrdinalIgnoreCase))
+                                        continue;
+                                    //remove file from zip and all lists
+                                    zipFilesToRemove.Add(info.file_name);
+                                    //remove duplicated records from DB
+                                    SqlHelper.ExecuteNonQuery(string.Format(
+                                        "delete from books where id={0} and id_archive={1} and file_name='{2}'",
+                                        info.id_book, info.id_archive, info.file_name));
+
+                                }
+                                else
+                                {
+                                    allHashes.Add(info.md5sum, info);
+                                }
+                            }
                             //get file hashes that are not listed in DB
                             foreach (var zipFile in zipFiles)
                             {
@@ -435,6 +435,12 @@ JOIN archives a on a.id=b.id_archive and b.file_name is not NULL and b.file_name
                             }
                         }
                         if (zipFilesToRemove.Count == 0) continue;
+                        if (zipFilesToRemove.Count < 50) 
+                        {
+                            //don't waste time for re-saving zip if there are not many files to remove
+                            UpdateState(string.Format("Not registered books to remove: {0}", zipFilesToRemove.Count), StateKind.Message);
+                            continue;
+                        }
                         //update zip
                         foreach (var zipfile in zipFilesToRemove)
                             zip.RemoveSelectedEntries(zipfile);
