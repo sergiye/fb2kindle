@@ -22,21 +22,18 @@ namespace LibCleaner
 
         #region Common methods
 
-        public static void ExecuteNonQuery(string sqlString, IDbConnection connection = null)
+        public static int ExecuteNonQuery(string sqlString, IDbConnection connection = null)
         {
             if (connection == null)
             {
                 using (IDbConnection cn = GetConnection())
                 {
                     using (var cmd = GetCommand(sqlString, cn))
-                        cmd.ExecuteNonQuery();
+                        return cmd.ExecuteNonQuery();
                 }
             }
-            else
-            {
-                using (var cmd = GetCommand(sqlString, connection))
-                    cmd.ExecuteNonQuery();
-            }
+            using (var cmd = GetCommand(sqlString, connection))
+                return cmd.ExecuteNonQuery();
         }
 
         public static object GetScalarFromQuery(string sql)
@@ -45,6 +42,16 @@ namespace LibCleaner
             {
                 var cmd = GetCommand(sql, cn);
                 return cmd.ExecuteScalar();
+            }
+        }
+
+        public static int GetIntFromQuery(string sql)
+        {
+            using (IDbConnection cn = GetConnection())
+            {
+                var cmd = GetCommand(sql, cn);
+                var result = cmd.ExecuteScalar();
+                return result == null ? 0 : int.Parse(result.ToString());
             }
         }
 

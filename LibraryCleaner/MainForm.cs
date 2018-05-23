@@ -105,6 +105,7 @@ namespace LibraryCleaner
                 _cleaner.RemoveForeign = cbxRemoveForeign.Checked;
                 _cleaner.RemoveDeleted = cbxRemoveDeleted.Checked;
                 _cleaner.RemoveMissingArchivesFromDb = cbxRemoveMissedArchives.Checked;// && !analyzeOnly;
+                _cleaner.MinFilesToUpdateZip = (int) edtMinFilesToSave.Value;
 
                 if (!_cleaner.CheckParameters())
                 {
@@ -152,7 +153,6 @@ namespace LibraryCleaner
                 Invoke(new Action(SetStartedState));
                 return;
             }
-            btnOptimizeArchives.Enabled = false;
             btnAnalyze.Enabled = false;
             btnStart.Enabled = false;
             Cursor = Cursors.WaitCursor;
@@ -167,34 +167,9 @@ namespace LibraryCleaner
             }
             var timeWasted = DateTime.Now - startedTime;
             AddToLog(string.Format("Time wasted: {0:G}", timeWasted), Cleaner.StateKind.Log);
-            btnOptimizeArchives.Enabled = true;
             btnAnalyze.Enabled = true;
             btnStart.Enabled = true;
             Cursor = Cursors.Default;
-        }
-
-        private void btnOptimizeArchives_Click(object sender, EventArgs e)
-        {
-            var startedTime = DateTime.Now;
-            SetStartedState();
-            try
-            {
-                _cleaner.DatabasePath = txtDatabase.Text;
-
-                if (!_cleaner.CheckParameters())
-                {
-                    AddToLog("Please check input parameters and start again!", Cleaner.StateKind.Warning);
-                    SetFinishedState(startedTime);
-                    return;
-                }
-
-                _cleaner.OptimizeArchivesByHash(() => SetFinishedState(startedTime));
-            }
-            catch (Exception ex)
-            {
-                AddToLog(ex.Message, Cleaner.StateKind.Error);
-                SetFinishedState(startedTime);
-            }
         }
     }
 }
