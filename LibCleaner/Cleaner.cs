@@ -16,7 +16,6 @@ namespace LibCleaner
         {
             CalculateStats,
             CompressLibrary,
-            OptimizeArchivesByHash
         }
 
         private class QueueTask
@@ -31,13 +30,13 @@ namespace LibCleaner
             }
         }
 
-        private Dictionary<string, List<BookInfo>> _filesData;
         private readonly List<int> _seqToRemove;
         private string[] _archivesFound;
         private readonly CommonQueue<QueueTask> _internalTasks;
 
         private string ArchivesPath { get; set; }
         public string ArchivesOutputPath { private get; set; }
+        public int MinFilesToUpdateZip { get; set; }
         public bool RemoveDeleted { get; set; }
         public bool RemoveForeign { get; set; }
         public bool RemoveMissingArchivesFromDb { get; set; }
@@ -61,6 +60,7 @@ namespace LibCleaner
         public Cleaner(string archivesPath)
         {
             ArchivesPath = archivesPath;
+            MinFilesToUpdateZip = 10;
             RemoveForeign = true;
             RemoveDeleted = true;
             RemoveMissingArchivesFromDb = true;
@@ -136,9 +136,6 @@ namespace LibCleaner
                     case CleanActions.CompressLibrary:
                         CompressLibrary();
                         break;
-                    case CleanActions.OptimizeArchivesByHash:
-                        OptimizeArchivesOnDisk(true);
-                        break;
                 }
             }
             catch (Exception ex)
@@ -157,114 +154,17 @@ namespace LibCleaner
             //CalculateStats();
         }
 
-        public void OptimizeArchivesByHash(Action onTaskFinished)
-        {
-            _internalTasks.EnqueueTask(new QueueTask(CleanActions.OptimizeArchivesByHash, onTaskFinished));
-            //OptimizeArchivesOnDisk();
-        }
-
         public void Start(Action onTaskFinished)
         {
             _internalTasks.EnqueueTask(new QueueTask(CleanActions.CompressLibrary, onTaskFinished));
             //CompressLibrary();
         }
 
-        private void CalculateStats()
-        {
-            _filesData = new Dictionary<string, List<BookInfo>>();
-            UpdateState(string.Format("Loading DB: '{0}' archives: '{1}' ...", SqlHelper.DataBasePath, ArchivesPath), StateKind.Log);
-            UpdateArchivesOnDisk(RemoveMissingArchivesFromDb);
-
-            UpdateState("Calculating DB stats...", StateKind.Log);
-            using (var connection = SqlHelper.GetConnection())
-            {
-                //by wrong type, lang or removed
-                var sql = new StringBuilder(@"select a.file_name an, b.id, b.deleted from files f
-                    join books b on b.id=f.id_book
-                    join archives a on a.id=f.id_archive
-                    where b.file_type<>'fb2' ");
-                if (RemoveDeleted)
-                    sql.Append(" or b.deleted=1 ");
-                if (RemoveForeign)
-                    sql.Append(" or b.lang<>'ru' ");
-
-                sql.Append(" order by a.file_name");
-                using (var command = SqlHelper.GetCommand(sql.ToString(), connection))
-                {
-                    using (var reader = command.ExecuteReader())
-                    {
-                        while (reader.Read())
-                        {
-                            var archName = SqlHelper.GetString(reader, "an");
-                            var id = SqlHelper.GetInt(reader, "id");
-                            var deleted = SqlHelper.GetBoolean(reader, "deleted");
-                            AddToRemovedFiles(_filesData, archName, new BookInfo(id, deleted));
-                        }
-                    }
-                }
-                //by genres
-                if (GenresToRemove.Length > 0)
-                {
-                    sql = new StringBuilder(@"select a.file_name an, b.genres genres, b.id, b.deleted from files f
-                    join books b on b.id=f.id_book
-                    join archives a on a.id=f.id_archive ");
-                    for (var i = 0; i < GenresToRemove.Length; i++)
-                    {
-                        sql.Append(i == 0
-                            ? string.Format(" where b.genres like '%{0}%' ", GenresToRemove[i])
-                            : string.Format(" or b.genres like '%{0}%' ", GenresToRemove[i]));
-                    }
-                    sql.Append(" order by a.file_name");
-                    using (var command = SqlHelper.GetCommand(sql.ToString(), connection))
-                    {
-                        using (var reader = command.ExecuteReader())
-                        {
-                            while (reader.Read())
-                            {
-                                var archName = SqlHelper.GetString(reader, "an");
-                                var id = SqlHelper.GetInt(reader, "id");
-                                var deleted = SqlHelper.GetBoolean(reader, "deleted");
-                                var genres = SqlHelper.GetString(reader, "genres");
-                                if (!CheckGenres(genres, GenresToRemove)) continue;
-                                AddToRemovedFiles(_filesData, archName, new BookInfo(id, deleted));
-                            }
-                        }
-                    }
-                }
-                //by sequence
-                if (_seqToRemove.Count > 0)
-                {
-                    sql = new StringBuilder(@"select a.file_name an, b.id, b.deleted from files f
-                    join books b on b.id=f.id_book
-                    join archives a on a.id=f.id_archive
-                    join bookseq bs on bs.id_book=b.id
-                    where bs.id_seq in (");
-                    sql.Append(string.Join(",", _seqToRemove));
-                    sql.Append(")");
-                    sql.Append(" order by a.file_name");
-                    using (var command = SqlHelper.GetCommand(sql.ToString(), connection))
-                    {
-                        using (var reader = command.ExecuteReader())
-                        {
-                            while (reader.Read())
-                            {
-                                var archName = SqlHelper.GetString(reader, "an");
-                                var id = SqlHelper.GetInt(reader, "id");
-                                var deleted = SqlHelper.GetBoolean(reader, "deleted");
-                                AddToRemovedFiles(_filesData, archName, new BookInfo(id, deleted));
-                            }
-                        }
-                    }
-                }
-            }
-            UpdateState(string.Format("Found archives to process: {0}", _filesData.Count), StateKind.Message);
-            
-            var totalToRemove = _filesData.Sum(item => item.Value.Count);
-            UpdateState(string.Format("Found files to remove: {0}", totalToRemove), StateKind.Message);
-        }
-
         private void OptimizeArchivesOnDisk(bool removeNotRegistered)
         {
+            if (!string.IsNullOrWhiteSpace(ArchivesOutputPath))
+                Directory.CreateDirectory(ArchivesOutputPath);
+
             UpdateState("Calculating archives in database...", StateKind.Warning);
             var dbFiles = new Dictionary<string, List<BookFileInfo>>();
             //move remapped files info to books table
@@ -435,7 +335,7 @@ JOIN archives a on a.id=b.id_archive and b.file_name is not NULL and b.file_name
                             }
                         }
                         if (zipFilesToRemove.Count == 0) continue;
-                        if (zipFilesToRemove.Count < 50) 
+                        if (zipFilesToRemove.Count < MinFilesToUpdateZip) 
                         {
                             //don't waste time for re-saving zip if there are not many files to remove
                             UpdateState(string.Format("Not registered books to remove: {0}", zipFilesToRemove.Count), StateKind.Message);
@@ -446,7 +346,10 @@ JOIN archives a on a.id=b.id_archive and b.file_name is not NULL and b.file_name
                             zip.RemoveSelectedEntries(zipfile);
                         UpdateState(string.Format("Saving archive {0}", archPath), StateKind.Log);
                         zip.CompressionLevel = CompressionLevel.BestSpeed;
-                        zip.Save(); //archPath + ".new");
+                        if (!string.IsNullOrWhiteSpace(ArchivesOutputPath))
+                            zip.Save(Path.Combine(ArchivesOutputPath, archiveName));
+                        else
+                            zip.Save(); //archPath + ".new");
                         UpdateState("Done", StateKind.Log);
                         totalRemoved += zipFilesToRemove.Count;
                     }
@@ -458,6 +361,7 @@ JOIN archives a on a.id=b.id_archive and b.file_name is not NULL and b.file_name
             }
             UpdateState(string.Format("Total removed {0} files", totalRemoved), StateKind.Message);
 
+            SqlHelper.ExecuteNonQuery("delete from books where id_archive not in (select id from archives)");
             SqlHelper.ExecuteNonQuery("delete from bookseq where id_book not in (select DISTINCT id FROM books)");
             SqlHelper.ExecuteNonQuery("delete from sequences where id not in (select DISTINCT id_seq FROM bookseq)");
             SqlHelper.ExecuteNonQuery("delete from genres where id_book not in (select DISTINCT id FROM books)");
@@ -533,156 +437,14 @@ JOIN archives a on a.id=b.id_archive and b.file_name is not NULL and b.file_name
                 }
             }
         }
-
-        private void CompressLibrary()
-        {
-            if (_filesData == null || _filesData.Count == 0)
-            {
-                UpdateState("Nothing to do!", StateKind.Message);
-                return;
-            }
-
-            if (!string.IsNullOrWhiteSpace(ArchivesOutputPath))
-                Directory.CreateDirectory(ArchivesOutputPath);
-
-            var totalRemoved = 0;
-            foreach (var item in _filesData)
-            {
-                var archPath = string.Format("{0}\\{1}", ArchivesPath, item.Key);
-                if (!File.Exists(archPath))
-                {
-                    //UpdateState("File '{0}' not found", archPath);
-                    continue;
-                }
-                UpdateState("Processing: " + item.Key, StateKind.Log);
-                var removedCount = 0;
-                using (var zip = new ZipFile(archPath))
-                {
-                    foreach (var file in item.Value)
-                    {
-                        if (!zip.ContainsEntry(file.FileName))
-                        {
-                            //UpdateState("File '{0}' not found in archive", file);
-                            continue;
-                        }
-                        //zip.getsize()
-                        zip.RemoveEntry(file.FileName);
-                        //UpdateState("Removed: '{0}' from archive", file);
-                        removedCount++;
-                    }
-                    UpdateState(string.Format("Removed {0} files", removedCount), StateKind.Message);
-                    if (removedCount <= 0) continue;
-
-                    var outputFile = string.IsNullOrWhiteSpace(ArchivesOutputPath)
-                        ? archPath
-                        : string.Format("{0}\\{1}", ArchivesOutputPath, item.Key);
-                    UpdateState(string.Format("Saving archive {0}", outputFile), StateKind.Log);
-
-                    zip.CompressionLevel = CompressionLevel.BestSpeed;
-                    zip.Save(outputFile);
-                    UpdateState("Done", StateKind.Log);
-                }
-                totalRemoved += removedCount;
-            }
-
-            CleanDatabaseRecords(_filesData);
-            UpdateState(string.Format("Total removed {0} files", totalRemoved), StateKind.Message);
-        }
-
-        private void AddToRemovedFiles(Dictionary<string, List<BookInfo>> filesData, string archName, BookInfo bookinfo)
-        {
-            if (!_archivesFound.Any(s => s.EndsWith(archName, StringComparison.OrdinalIgnoreCase)))
-                return;
-            if (!filesData.ContainsKey(archName))
-                filesData.Add(archName, new List<BookInfo> { bookinfo });
-            else
-            {
-                if (filesData[archName].Any(s => s.Id.Equals(bookinfo.Id)))
-                    return;
-                filesData[archName].Add(bookinfo);
-            }
-        }
-
-        private bool CheckGenres(string genres, string[] genresToRemove)
-        {
-            var len = genres.Length;
-            if ((len % 2) != 0) return false;
-            //if (len == 2)
-            //    return genresToRemove.Any(genre => genre.Equals(genres, StringComparison.OrdinalIgnoreCase));
-            for (var i = 0; i < len / 2; i++)
-            {
-                var item = genres.Substring(i * 2, 2);
-                if (genresToRemove.Any(s => s.Equals(item, StringComparison.OrdinalIgnoreCase)))
-                    return true;
-            }
-            return false;
-        }
-
-        private void CleanDatabaseRecords(Dictionary<string, List<BookInfo>> filesData)
-        {
-            UpdateState("Updating db tables...", StateKind.Log);
-            //var totalToUpdate = _filesData.Sum(item => item.Value.Count(f=>!f.Deleted));
-            //var updated = 0;
-            foreach (var item in filesData)
-            {
-                var ids = item.Value.Where(f => !f.Deleted).Select(f => f.Id).ToArray();
-                if (ids.Length <= 0) continue;
-                SqlHelper.ExecuteNonQuery(string.Format("update books set deleted = 1 where id in ({0})", string.Join(",", ids)));
-                //updated += ids.Length;
-                //UpdateState("Updated: {0} of {1} items", updated, totalToUpdate);
-            }
-            SqlHelper.ExecuteNonQuery("update books set deleted = 1 where file_type<>'fb2'");
-            if (RemoveForeign)
-                SqlHelper.ExecuteNonQuery("update books set deleted = 1 where lang<>'ru'");
-//            if (remove)
-//            {
-//                UpdateState("Cleaning db tables...", StateKind.Log);
-//                SqlHelper.ExecuteNonQuery("delete from books where lang<>'ru' or file_type<>'fb2' or deleted=1");
-//                SqlHelper.ExecuteNonQuery("delete from files where id_book not in (select id from books)");
-//                SqlHelper.ExecuteNonQuery("delete from bookseq where id_book not in (select id from books)");
-//                SqlHelper.ExecuteNonQuery("delete from sequences where id not in (select id_seq from bookseq)");
-//            }
-        }
-
-        private void OptimizeDatabase()
-        {
-            UpdateState("Optimizing db tables...", StateKind.Log);
-            SqlHelper.ExecuteNonQuery("delete from archives where [file_name] not like '%fb2-%'");
-
-            SqlHelper.ExecuteNonQuery("update files set file_name=(id_book || '.fb2') where file_name like '%.fb2'");
-            SqlHelper.ExecuteNonQuery("update files set id_archive=null where id_archive not in (select id from archives)");
-
-            SqlHelper.ExecuteNonQuery(@"update files set id_archive=(select id from archives 
- where file_name like 'fb2-%' 
- and substr(file_name,5,6)<=id_book 
- and substr(file_name,12,6)>=id_book)
- where id_archive is null or id_archive not in (select id from archives) ");
-            
-            SqlHelper.ExecuteNonQuery(@"update files set id_archive=(select id from archives 
- where file_name like 'f.fb2-%' 
- and substr(file_name,7,6)<=id_book 
- and substr(file_name,14,6)>=id_book)
- where id_archive is null or id_archive not in (select id from archives) ");
-
-            SqlHelper.ExecuteNonQuery(@"update files set id_archive=(select id from archives 
- where file_name like 'd.fb2-%' 
- and substr(file_name,7,6)<=id_book 
- and substr(file_name,14,6)>=id_book)
- where id_book>=172703 and id_book<=173908 and (id_archive is null or id_archive not in (select id from archives))");
-            
-//            SqlHelper.ExecuteNonQuery("delete from books where lang<>'ru' or file_type<>'fb2' or deleted=1");
-//            SqlHelper.ExecuteNonQuery("delete from files where id_book not in (select id from books)");
-//            SqlHelper.ExecuteNonQuery("delete from bookseq where id_book not in (select id from books)");
-//            SqlHelper.ExecuteNonQuery("delete from sequences where id not in (select id_seq from bookseq)");
-        }
-
-        private void UpdateArchivesOnDisk(bool removeFromDb)
+     
+        private void OptimizeRegisteredArchives(bool unregisterNotFound)
         {
             _archivesFound = Directory.GetFiles(ArchivesPath, "*fb2*.zip", SearchOption.TopDirectoryOnly);
 //            var archivesList = new DirectoryInfo(ArchivesPath).GetFiles("*.zip", SearchOption.TopDirectoryOnly).Select(fileInfo => fileInfo.Name).ToList();
-
             var idsToRemove = "";
             var dbArchives = new List<string>();
+            //SqlHelper.ExecuteNonQuery("delete from archives where [file_name] not like '%fb2-%'");
             using (var connection = SqlHelper.GetConnection())
             {
                 using (var command = SqlHelper.GetCommand("select id, file_name from archives a", connection))
@@ -704,24 +466,142 @@ JOIN archives a on a.id=b.id_archive and b.file_name is not NULL and b.file_name
                 }
                 foreach (var archiveName in _archivesFound)
                 {
-                    var archiveFileName = Path.GetFileName(archiveName);
+//                    var archiveFileName = Path.GetFileName(archiveName);
                     if (!dbArchives.Any(f => archiveName.EndsWith(f, StringComparison.OrdinalIgnoreCase)))
                     {
                         UpdateState(string.Format("Archive not registered in DB: {0}", archiveName), StateKind.Warning);
-                        SqlHelper.ExecuteNonQuery(string.Format("insert into archives (file_name) values ('{0}')", archiveFileName));
-                        UpdateState(string.Format("Archive added to DB: {0}", archiveFileName), StateKind.Message);
+//                        SqlHelper.ExecuteNonQuery(string.Format("insert into archives (file_name) values ('{0}')", archiveFileName));
+//                        UpdateState(string.Format("Archive added to DB: {0}", archiveFileName), StateKind.Message);
                     }
                 }
-
-                if (!removeFromDb) return;
-                idsToRemove = idsToRemove.TrimEnd(',');
-                SqlHelper.ExecuteNonQuery(string.Format("delete from archives where id in ({0})", idsToRemove));
-
-                OptimizeDatabase();
-
+                if (unregisterNotFound)
+                {
+                    idsToRemove = idsToRemove.TrimEnd(',');
+                    SqlHelper.ExecuteNonQuery(string.Format("delete from archives where id in ({0})", idsToRemove));
+                }
                 if (!string.IsNullOrWhiteSpace(ArchivesOutputPath))
                     SqlHelper.ExecuteNonQuery(string.Format("update params set text='{0}' where id=9", ArchivesOutputPath));
             }
+        }
+   
+        private void CalculateStats()
+        {
+            UpdateState(string.Format("Loading DB: '{0}' archives: '{1}' ...", SqlHelper.DataBasePath, ArchivesPath), StateKind.Log);
+            UpdateState("Calculating DB stats...", StateKind.Log);
+
+            var archivesRegistered = SqlHelper.GetIntFromQuery("select count(1) from archives");
+            UpdateState(string.Format("Found archives to process: {0}", archivesRegistered), StateKind.Message);
+
+            var totalToRemove = SqlHelper.GetIntFromQuery("select count(1) from books b where b.id_archive not in (select id from archives)");
+            
+            //by wrong type, lang or removed
+            var sql = new StringBuilder(@"select count(1) from books b where b.file_type<>'fb2' ");
+            if (RemoveDeleted)
+                sql.Append(" or b.deleted=1 ");
+            if (RemoveForeign)
+                sql.Append(" or (b.lang not like 'ru%' and b.lang not like 'ua%' and b.lang not like 'uk%' and b.lang not like 'en%' and b.lang<>'') ");
+            totalToRemove += SqlHelper.GetIntFromQuery(sql.ToString());
+            
+            //by genres
+            if (GenresToRemove.Length > 0)
+            {
+                sql.Clear();
+                sql.Append(@"select count(1) from books b join genres g on g.id_book=b.id where 1=0");
+                foreach (var g in GenresToRemove)
+                {
+                    sql.Append(string.Format(" or g.id_genre='{0}' ", g));
+                }
+                sql.Append(")");
+                totalToRemove += SqlHelper.GetIntFromQuery(sql.ToString());
+            }
+
+//            using (var connection = SqlHelper.GetConnection())
+//            {
+//                //by sequence
+//                if (_seqToRemove.Count > 0)
+//                {
+//                    sql = new StringBuilder(@"select a.file_name an, b.id, b.deleted from files f
+//                    join books b on b.id=f.id_book
+//                    join archives a on a.id=f.id_archive
+//                    join bookseq bs on bs.id_book=b.id
+//                    where bs.id_seq in (");
+//                    sql.Append(string.Join(",", _seqToRemove));
+//                    sql.Append(")");
+//                    sql.Append(" order by a.file_name");
+//                    using (var command = SqlHelper.GetCommand(sql.ToString(), connection))
+//                    {
+//                        using (var reader = command.ExecuteReader())
+//                        {
+//                            while (reader.Read())
+//                            {
+//                                var archName = SqlHelper.GetString(reader, "an");
+//                                var id = SqlHelper.GetInt(reader, "id");
+//                                var deleted = SqlHelper.GetBoolean(reader, "deleted");
+//                                AddToRemovedFiles(_filesData, archName, new BookInfo(id, deleted));
+//                            }
+//                        }
+//                    }
+//                }
+//            }
+
+            UpdateState(string.Format("Found files to remove: {0}", totalToRemove), StateKind.Message);
+        }
+
+        private void CompressLibrary()
+        {
+            if (!string.IsNullOrWhiteSpace(ArchivesOutputPath))
+                Directory.CreateDirectory(ArchivesOutputPath);
+
+            OptimizeRegisteredArchives(RemoveMissingArchivesFromDb);
+
+            var totalRemoved = 0;
+            var removedCount = 0;
+
+            //general optimization
+            UpdateState("Optimizing db tables...", StateKind.Log);
+
+            //by wrong type, lang or removed
+            var sql = new StringBuilder(@"delete from books where file_type<>'fb2' ");
+            if (RemoveDeleted)
+                sql.Append(" or deleted=1 ");
+            if (RemoveForeign)
+                sql.Append(" or (lang not like 'ru%' and lang not like 'ua%' and lang not like 'uk%' and lang not like 'en%' and lang<>'') ");
+            removedCount = SqlHelper.ExecuteNonQuery(sql.ToString());
+            UpdateState(string.Format("Unregistered books: {0}", removedCount), StateKind.Message);
+            totalRemoved += removedCount;
+
+            //by genres
+            if (GenresToRemove.Length > 0)
+            {
+                sql.Clear();
+                sql.Append(@"delete from books where id in (select b.id from books b join genres g on g.id_book=b.id where 1=0");
+                foreach (var g in GenresToRemove)
+                    sql.Append(string.Format(" or g.id_genre='{0}' ", g));
+                sql.Append("))");
+
+                removedCount = SqlHelper.ExecuteNonQuery(sql.ToString());
+                UpdateState(string.Format("Unregistered books: {0}", removedCount), StateKind.Message);
+                totalRemoved += removedCount;
+            }
+
+            UpdateState(string.Format("Total unregistered books: {0}", totalRemoved), StateKind.Message);
+
+            OptimizeArchivesOnDisk(true);
+        }
+
+        private bool CheckGenres(string genres, string[] genresToRemove)
+        {
+            var len = genres.Length;
+            if ((len % 2) != 0) return false;
+            //if (len == 2)
+            //    return genresToRemove.Any(genre => genre.Equals(genres, StringComparison.OrdinalIgnoreCase));
+            for (var i = 0; i < len / 2; i++)
+            {
+                var item = genres.Substring(i * 2, 2);
+                if (genresToRemove.Any(s => s.Equals(item, StringComparison.OrdinalIgnoreCase)))
+                    return true;
+            }
+            return false;
         }
     }
 }
