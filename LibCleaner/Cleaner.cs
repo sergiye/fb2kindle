@@ -511,7 +511,6 @@ JOIN archives a on a.id=b.id_archive and b.file_name is not NULL and b.file_name
                 {
                     sql.Append(string.Format(" or g.id_genre='{0}' ", g));
                 }
-                sql.Append(")");
                 totalToRemove += SqlHelper.GetIntFromQuery(sql.ToString());
             }
 
@@ -577,7 +576,7 @@ JOIN archives a on a.id=b.id_archive and b.file_name is not NULL and b.file_name
                 sql.Append(@"delete from books where id in (select b.id from books b join genres g on g.id_book=b.id where 1=0");
                 foreach (var g in GenresToRemove)
                     sql.Append(string.Format(" or g.id_genre='{0}' ", g));
-                sql.Append("))");
+                sql.Append(")");
 
                 removedCount = SqlHelper.ExecuteNonQuery(sql.ToString());
                 UpdateState(string.Format("Unregistered books: {0}", removedCount), StateKind.Message);
