@@ -37,6 +37,7 @@ namespace LibCleaner
         private string ArchivesPath { get; set; }
         public string ArchivesOutputPath { private get; set; }
         public int MinFilesToUpdateZip { get; set; }
+        public string FileWithDeletedBooksIds { get; set; }
         public bool RemoveDeleted { get; set; }
         public bool RemoveForeign { get; set; }
         public bool RemoveMissingArchivesFromDb { get; set; }
@@ -61,6 +62,7 @@ namespace LibCleaner
         {
             ArchivesPath = archivesPath;
             MinFilesToUpdateZip = 10;
+            FileWithDeletedBooksIds = null;
             RemoveForeign = true;
             RemoveDeleted = true;
             RemoveMissingArchivesFromDb = true;
@@ -210,6 +212,12 @@ JOIN archives a on a.id=b.id_archive and b.file_name is not NULL and b.file_name
             //process all archives on disk
             var archivesFound = Directory.GetFiles(ArchivesPath, "*fb2*.zip", SearchOption.TopDirectoryOnly);
             UpdateState(string.Format("Found {0} archives to optimize", archivesFound.Length), StateKind.Message);
+
+            //get ids of deleted books from external file (if exists)
+            var externallyRemoved = GetExternalIdsFromFile(FileWithDeletedBooksIds);
+            if (externallyRemoved != null && externallyRemoved.Count > 0)
+                UpdateState(string.Format("Books removed in external list: {0}", externallyRemoved.Count), StateKind.Warning);
+            
             //get all files not found on disk (to remove from db)
             var totalRemoved = 0;
             foreach (var archPath in archivesFound)
@@ -235,6 +243,22 @@ JOIN archives a on a.id=b.id_archive and b.file_name is not NULL and b.file_name
                         var dbArchiveFiles = dbFiles[archiveName.ToLower()];
                         if (Debugger.IsAttached)
                             dbArchiveFiles.Sort((b1, b2) => string.Compare(b1.file_name, b2.file_name, StringComparison.OrdinalIgnoreCase));
+                        
+                        //remove files from external file with deleted books list 
+                        foreach (var ext in externallyRemoved)
+                        {
+                            var info = dbArchiveFiles.Find(f=>f.id_book == ext);
+                            if (info == null)
+                                continue; 
+                            SqlHelper.ExecuteNonQuery(string.Format("delete from books where id={0}", info.id_book));
+                            var zipFile = zipFiles.FirstOrDefault(f=>f == info.file_name);
+                            if (!string.IsNullOrWhiteSpace(zipFile))
+                            {
+                                zipFilesToRemove.Add(zipFile); 
+                                UpdateState(string.Format("Book removed by external list: {0}", info.file_name), StateKind.Warning);
+                            }
+                        }
+
                         var filesNotFound = dbArchiveFiles.Where(fi => !zipFiles.Contains(fi.file_name)).ToArray();
                         if (filesNotFound.Length > 0)
                         {
@@ -245,9 +269,7 @@ JOIN archives a on a.id=b.id_archive and b.file_name is not NULL and b.file_name
                             {
                                 try
                                 {
-                                    SqlHelper.ExecuteNonQuery(string.Format(
-                                        "delete from books where id={0} and id_archive={1} and file_name='{2}'",
-                                        info.id_book, info.id_archive, info.file_name));
+                                    SqlHelper.ExecuteNonQuery(string.Format("delete from books where id={0}", info.id_book));
                                     dbRemoved++;
                                 }
                                 catch (Exception ex)
@@ -438,6 +460,26 @@ JOIN archives a on a.id=b.id_archive and b.file_name is not NULL and b.file_name
             }
         }
      
+        private static List<long> GetExternalIdsFromFile(string fileName)
+        {
+            List<long> result = new List<long>();
+            if (File.Exists(fileName))
+            {
+                var fData = File.ReadAllLines(fileName);
+                foreach(var line in fData)
+                {
+                    if (!string.IsNullOrWhiteSpace(line))
+                    {
+                        var txtId = line.Trim();
+                        long id;
+                        if (long.TryParse(txtId, out id))
+                            result.Add(id);
+                    }
+                }
+            }
+            return result;
+        }
+
         private void OptimizeRegisteredArchives(bool unregisterNotFound)
         {
             _archivesFound = Directory.GetFiles(ArchivesPath, "*fb2*.zip", SearchOption.TopDirectoryOnly);

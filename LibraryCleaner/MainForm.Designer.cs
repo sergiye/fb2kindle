@@ -31,6 +31,7 @@
             this.panSettings = new System.Windows.Forms.Panel();
             this.clsGenres = new System.Windows.Forms.CheckedListBox();
             this.panel2 = new System.Windows.Forms.Panel();
+            this.lblMinFilesToUpdate = new System.Windows.Forms.Label();
             this.edtMinFilesToSave = new System.Windows.Forms.NumericUpDown();
             this.btnAnalyze = new System.Windows.Forms.Button();
             this.cbxRemoveForeign = new System.Windows.Forms.CheckBox();
@@ -47,7 +48,9 @@
             this.btnAllGenres = new System.Windows.Forms.Button();
             this.panLog = new System.Windows.Forms.Panel();
             this.txtLog = new LibraryCleaner.SimplTextBox();
-            this.lblMinFilesToUpdate = new System.Windows.Forms.Label();
+            this.lblFileWithDeleted = new System.Windows.Forms.Label();
+            this.txtDeletedFile = new System.Windows.Forms.TextBox();
+            this.btnDeletedFile = new System.Windows.Forms.Button();
             this.panSettings.SuspendLayout();
             this.panel2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.edtMinFilesToSave)).BeginInit();
@@ -73,13 +76,16 @@
             "firest",
             "second",
             "last"});
-            this.clsGenres.Location = new System.Drawing.Point(0, 177);
+            this.clsGenres.Location = new System.Drawing.Point(0, 214);
             this.clsGenres.Name = "clsGenres";
-            this.clsGenres.Size = new System.Drawing.Size(239, 288);
+            this.clsGenres.Size = new System.Drawing.Size(239, 251);
             this.clsGenres.TabIndex = 0;
             // 
             // panel2
             // 
+            this.panel2.Controls.Add(this.lblFileWithDeleted);
+            this.panel2.Controls.Add(this.txtDeletedFile);
+            this.panel2.Controls.Add(this.btnDeletedFile);
             this.panel2.Controls.Add(this.lblMinFilesToUpdate);
             this.panel2.Controls.Add(this.edtMinFilesToSave);
             this.panel2.Controls.Add(this.btnAnalyze);
@@ -98,12 +104,21 @@
             this.panel2.Dock = System.Windows.Forms.DockStyle.Top;
             this.panel2.Location = new System.Drawing.Point(0, 0);
             this.panel2.Name = "panel2";
-            this.panel2.Size = new System.Drawing.Size(239, 177);
+            this.panel2.Size = new System.Drawing.Size(239, 214);
             this.panel2.TabIndex = 12;
+            // 
+            // lblMinFilesToUpdate
+            // 
+            this.lblMinFilesToUpdate.AutoSize = true;
+            this.lblMinFilesToUpdate.Location = new System.Drawing.Point(99, 194);
+            this.lblMinFilesToUpdate.Name = "lblMinFilesToUpdate";
+            this.lblMinFilesToUpdate.Size = new System.Drawing.Size(75, 13);
+            this.lblMinFilesToUpdate.TabIndex = 16;
+            this.lblMinFilesToUpdate.Text = "Min files count";
             // 
             // edtMinFilesToSave
             // 
-            this.edtMinFilesToSave.Location = new System.Drawing.Point(180, 152);
+            this.edtMinFilesToSave.Location = new System.Drawing.Point(180, 192);
             this.edtMinFilesToSave.Minimum = new decimal(new int[] {
             1,
             0,
@@ -111,19 +126,19 @@
             0});
             this.edtMinFilesToSave.Name = "edtMinFilesToSave";
             this.edtMinFilesToSave.Size = new System.Drawing.Size(56, 20);
-            this.edtMinFilesToSave.TabIndex = 13;
+            this.edtMinFilesToSave.TabIndex = 17;
             this.edtMinFilesToSave.Value = new decimal(new int[] {
-            10,
+            1,
             0,
             0,
             0});
             // 
             // btnAnalyze
             // 
-            this.btnAnalyze.Location = new System.Drawing.Point(162, 94);
+            this.btnAnalyze.Location = new System.Drawing.Point(162, 134);
             this.btnAnalyze.Name = "btnAnalyze";
             this.btnAnalyze.Size = new System.Drawing.Size(75, 23);
-            this.btnAnalyze.TabIndex = 9;
+            this.btnAnalyze.TabIndex = 11;
             this.btnAnalyze.Text = "Analyze";
             this.btnAnalyze.UseVisualStyleBackColor = true;
             this.btnAnalyze.Click += new System.EventHandler(this.btnAnalyze_Click);
@@ -133,10 +148,10 @@
             this.cbxRemoveForeign.AutoSize = true;
             this.cbxRemoveForeign.Checked = true;
             this.cbxRemoveForeign.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.cbxRemoveForeign.Location = new System.Drawing.Point(10, 84);
+            this.cbxRemoveForeign.Location = new System.Drawing.Point(10, 124);
             this.cbxRemoveForeign.Name = "cbxRemoveForeign";
             this.cbxRemoveForeign.Size = new System.Drawing.Size(133, 17);
-            this.cbxRemoveForeign.TabIndex = 6;
+            this.cbxRemoveForeign.TabIndex = 9;
             this.cbxRemoveForeign.Text = "Remove foreign books";
             this.cbxRemoveForeign.UseVisualStyleBackColor = true;
             // 
@@ -145,10 +160,10 @@
             this.cbxRemoveMissedArchives.AutoSize = true;
             this.cbxRemoveMissedArchives.Checked = true;
             this.cbxRemoveMissedArchives.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.cbxRemoveMissedArchives.Location = new System.Drawing.Point(10, 130);
+            this.cbxRemoveMissedArchives.Location = new System.Drawing.Point(10, 170);
             this.cbxRemoveMissedArchives.Name = "cbxRemoveMissedArchives";
             this.cbxRemoveMissedArchives.Size = new System.Drawing.Size(146, 17);
-            this.cbxRemoveMissedArchives.TabIndex = 8;
+            this.cbxRemoveMissedArchives.TabIndex = 12;
             this.cbxRemoveMissedArchives.Text = "Remove Missed Archives";
             this.cbxRemoveMissedArchives.UseVisualStyleBackColor = true;
             // 
@@ -163,10 +178,10 @@
             // 
             // btnStart
             // 
-            this.btnStart.Location = new System.Drawing.Point(162, 123);
+            this.btnStart.Location = new System.Drawing.Point(162, 163);
             this.btnStart.Name = "btnStart";
             this.btnStart.Size = new System.Drawing.Size(75, 23);
-            this.btnStart.TabIndex = 10;
+            this.btnStart.TabIndex = 13;
             this.btnStart.Text = "Start";
             this.btnStart.UseVisualStyleBackColor = true;
             this.btnStart.Click += new System.EventHandler(this.btnStart_Click);
@@ -175,16 +190,17 @@
             // 
             this.txtOutput.Location = new System.Drawing.Point(10, 58);
             this.txtOutput.Name = "txtOutput";
+            this.txtOutput.ReadOnly = true;
             this.txtOutput.Size = new System.Drawing.Size(200, 20);
             this.txtOutput.TabIndex = 4;
             // 
             // cbxRemoveDeleted
             // 
             this.cbxRemoveDeleted.AutoSize = true;
-            this.cbxRemoveDeleted.Location = new System.Drawing.Point(10, 107);
+            this.cbxRemoveDeleted.Location = new System.Drawing.Point(10, 147);
             this.cbxRemoveDeleted.Name = "cbxRemoveDeleted";
             this.cbxRemoveDeleted.Size = new System.Drawing.Size(104, 17);
-            this.cbxRemoveDeleted.TabIndex = 7;
+            this.cbxRemoveDeleted.TabIndex = 10;
             this.cbxRemoveDeleted.Text = "Remove deleted";
             this.cbxRemoveDeleted.UseVisualStyleBackColor = true;
             // 
@@ -211,15 +227,16 @@
             // 
             this.txtDatabase.Location = new System.Drawing.Point(10, 17);
             this.txtDatabase.Name = "txtDatabase";
+            this.txtDatabase.ReadOnly = true;
             this.txtDatabase.Size = new System.Drawing.Size(200, 20);
             this.txtDatabase.TabIndex = 1;
             // 
             // btnNoneGenres
             // 
-            this.btnNoneGenres.Location = new System.Drawing.Point(36, 149);
+            this.btnNoneGenres.Location = new System.Drawing.Point(36, 189);
             this.btnNoneGenres.Name = "btnNoneGenres";
             this.btnNoneGenres.Size = new System.Drawing.Size(23, 23);
-            this.btnNoneGenres.TabIndex = 12;
+            this.btnNoneGenres.TabIndex = 15;
             this.btnNoneGenres.Text = "-";
             this.btnNoneGenres.UseVisualStyleBackColor = true;
             this.btnNoneGenres.Click += new System.EventHandler(this.btnNoneGenres_Click);
@@ -236,10 +253,10 @@
             // 
             // btnAllGenres
             // 
-            this.btnAllGenres.Location = new System.Drawing.Point(10, 149);
+            this.btnAllGenres.Location = new System.Drawing.Point(10, 189);
             this.btnAllGenres.Name = "btnAllGenres";
             this.btnAllGenres.Size = new System.Drawing.Size(23, 23);
-            this.btnAllGenres.TabIndex = 11;
+            this.btnAllGenres.TabIndex = 14;
             this.btnAllGenres.Text = "+";
             this.btnAllGenres.UseVisualStyleBackColor = true;
             this.btnAllGenres.Click += new System.EventHandler(this.btnAllGenres_Click);
@@ -265,14 +282,32 @@
             this.txtLog.TabIndex = 0;
             this.txtLog.Text = "";
             // 
-            // lblMinFilesToUpdate
+            // lblFileWithDeleted
             // 
-            this.lblMinFilesToUpdate.AutoSize = true;
-            this.lblMinFilesToUpdate.Location = new System.Drawing.Point(99, 154);
-            this.lblMinFilesToUpdate.Name = "lblMinFilesToUpdate";
-            this.lblMinFilesToUpdate.Size = new System.Drawing.Size(75, 13);
-            this.lblMinFilesToUpdate.TabIndex = 14;
-            this.lblMinFilesToUpdate.Text = "Min files count";
+            this.lblFileWithDeleted.AutoSize = true;
+            this.lblFileWithDeleted.Location = new System.Drawing.Point(9, 81);
+            this.lblFileWithDeleted.Name = "lblFileWithDeleted";
+            this.lblFileWithDeleted.Size = new System.Drawing.Size(121, 13);
+            this.lblFileWithDeleted.TabIndex = 6;
+            this.lblFileWithDeleted.Text = "Use file with deleted IDs";
+            // 
+            // txtDeletedFile
+            // 
+            this.txtDeletedFile.Location = new System.Drawing.Point(10, 98);
+            this.txtDeletedFile.Name = "txtDeletedFile";
+            this.txtDeletedFile.ReadOnly = true;
+            this.txtDeletedFile.Size = new System.Drawing.Size(200, 20);
+            this.txtDeletedFile.TabIndex = 7;
+            // 
+            // btnDeletedFile
+            // 
+            this.btnDeletedFile.Location = new System.Drawing.Point(213, 95);
+            this.btnDeletedFile.Name = "btnDeletedFile";
+            this.btnDeletedFile.Size = new System.Drawing.Size(23, 23);
+            this.btnDeletedFile.TabIndex = 8;
+            this.btnDeletedFile.Text = "...";
+            this.btnDeletedFile.UseVisualStyleBackColor = true;
+            this.btnDeletedFile.Click += new System.EventHandler(this.btnDeletedFile_Click);
             // 
             // MainForm
             // 
@@ -316,6 +351,9 @@
         private System.Windows.Forms.Button btnBrowseOutput;
         private System.Windows.Forms.NumericUpDown edtMinFilesToSave;
         private System.Windows.Forms.Label lblMinFilesToUpdate;
+        private System.Windows.Forms.Label lblFileWithDeleted;
+        private System.Windows.Forms.TextBox txtDeletedFile;
+        private System.Windows.Forms.Button btnDeletedFile;
     }
 }
 

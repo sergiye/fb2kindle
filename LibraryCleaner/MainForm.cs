@@ -77,6 +77,13 @@ namespace LibraryCleaner
             txtOutput.Text = dlg.SelectedPath;
         }
      
+        private void btnDeletedFile_Click(object sender, EventArgs e)
+        {
+            var dlg = new OpenFileDialog {CheckFileExists = true, Filter = "Text file (*.txt)|*.txt"};
+            if (dlg.ShowDialog() != DialogResult.OK) return;
+            txtDeletedFile.Text = dlg.FileName;
+        }
+        
         private void btnAllGenres_Click(object sender, EventArgs e)
         {
             for (var i = 0; i < clsGenres.Items.Count; i++)
@@ -106,6 +113,7 @@ namespace LibraryCleaner
                 _cleaner.RemoveDeleted = cbxRemoveDeleted.Checked;
                 _cleaner.RemoveMissingArchivesFromDb = cbxRemoveMissedArchives.Checked;// && !analyzeOnly;
                 _cleaner.MinFilesToUpdateZip = (int) edtMinFilesToSave.Value;
+                _cleaner.FileWithDeletedBooksIds = txtDeletedFile.Text;
 
                 if (!_cleaner.CheckParameters())
                 {
@@ -171,5 +179,6 @@ namespace LibraryCleaner
             btnStart.Enabled = true;
             Cursor = Cursors.Default;
         }
+
     }
 }
