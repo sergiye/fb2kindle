@@ -19,8 +19,8 @@ namespace LibraryCleaner
             Icon = Icon.ExtractAssociatedIcon(Process.GetCurrentProcess().MainModule.FileName);
             var asm = Assembly.GetExecutingAssembly();
             var ver = asm.GetName().Version;
-            Text = string.Format("{0} Version: {1}; Build time: {2:yyyy/MM/dd HH:mm:ss}", 
-                asm.GetName().Name, ver.ToString(3), Util.GetBuildTime(ver);
+            Text = string.Format("{0} Version: {1}; Build: {2:yyyy/MM/dd HH:mm:ss}", 
+                asm.GetName().Name, ver.ToString(3), GetBuildTime(ver));
             _cleaner = new Cleaner(null);
             _cleaner.OnStateChanged += AddToLog;
 
