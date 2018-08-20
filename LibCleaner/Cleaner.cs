@@ -38,8 +38,10 @@ namespace LibCleaner
         public string ArchivesOutputPath { private get; set; }
         public int MinFilesToUpdateZip { get; set; }
         public string FileWithDeletedBooksIds { get; set; }
+        public bool UpdateHashInfo { get; set; }
         public bool RemoveDeleted { get; set; }
         public bool RemoveForeign { get; set; }
+        public bool RemoveNotRegisteredFilesFromZip { get; set; }
         public bool RemoveMissingArchivesFromDb { get; set; }
         public string[] GenresToRemove { private get; set; }
 
@@ -162,7 +164,7 @@ namespace LibCleaner
             //CompressLibrary();
         }
 
-        private void OptimizeArchivesOnDisk(bool removeNotRegistered)
+        private void OptimizeArchivesOnDisk()
         {
             if (!string.IsNullOrWhiteSpace(ArchivesOutputPath))
                 Directory.CreateDirectory(ArchivesOutputPath);
@@ -181,7 +183,7 @@ namespace LibCleaner
             //get all database items data (some would be removed if not found on disk)
             using (var connection = SqlHelper.GetConnection())
             {
-                var sql = @"select DISTINCT b.id id_book, b.md5sum md5sum, a.file_name archive_file_name, b.file_name file_name, b.id_archive id_archive from books b
+                var sql = @"select DISTINCT b.id id_book, b.md5sum md5sum, b.file_size fileSize, b.created created, a.file_name archive_file_name, b.file_name file_name, b.id_archive id_archive from books b
 JOIN archives a on a.id=b.id_archive and b.file_name is not NULL and b.file_name<>''";
                 using (var command = SqlHelper.GetCommand(sql, connection))
                 using (var reader = command.ExecuteReader())
@@ -192,7 +194,9 @@ JOIN archives a on a.id=b.id_archive and b.file_name is not NULL and b.file_name
                             SqlHelper.GetInt(reader, "id_book"), 
                             SqlHelper.GetInt(reader, "id_archive"), 
                             SqlHelper.GetString(reader, "archive_file_name").ToLower(),
-                            SqlHelper.GetString(reader, "md5sum"));
+                            SqlHelper.GetString(reader, "md5sum"), 
+                            SqlHelper.GetInt(reader, "fileSize"), 
+                            SqlHelper.GetInt(reader, "created"));
                         List<BookFileInfo> archiveFiles;
                         if (dbFiles.ContainsKey(fi.archive_file_name))
                         {
@@ -238,12 +242,33 @@ JOIN archives a on a.id=b.id_archive and b.file_name is not NULL and b.file_name
                     }
                     using (var zip = new ZipFile(archPath))
                     {
-                        var zipFilesToRemove = new List<string>();
-                        var zipFiles = zip.EntryFileNames;
                         var dbArchiveFiles = dbFiles[archiveName.ToLower()];
                         if (Debugger.IsAttached)
                             dbArchiveFiles.Sort((b1, b2) => string.Compare(b1.file_name, b2.file_name, StringComparison.OrdinalIgnoreCase));
-                        
+                        if (UpdateHashInfo)
+                        {
+                            foreach(var zipEntry in zip.Entries)
+                            {
+                                string md5Sum = CalcFileHash(zipEntry);
+                                var size = zipEntry.UncompressedSize;
+                                var created = CalcCreatedDate(zipEntry.LastModified);
+                                 var info = dbArchiveFiles.Find(f=>f.file_name == zipEntry.FileName);
+                                if (info == null) continue;
+                                if (info.md5sum != md5Sum || info.fileSize != size || (info.created > 130000 && info.created != created))
+                                {
+                                    //update db value
+                                    info.md5sum = md5Sum;
+                                    info.fileSize = size;
+                                    if (info.created > 130000)
+                                        info.created = created;
+                                    SqlHelper.ExecuteNonQuery(string.Format("update books set md5sum='{0}', file_size={1}, created={2} where id={1}", 
+                                        md5Sum, size, created, info.id_book));
+                                }
+                            }
+                        }
+
+                        var zipFilesToRemove = new List<string>();
+                        var zipFiles = zip.EntryFileNames;
                         //remove files from external file with deleted books list 
                         foreach (var ext in externallyRemoved)
                         {
@@ -284,7 +309,7 @@ JOIN archives a on a.id=b.id_archive and b.file_name is not NULL and b.file_name
                         dbArchiveFiles.RemoveAll(fi => !zipFiles.Contains(fi.file_name));
                         var filesFound = dbArchiveFiles.Where(fi => zipFiles.Contains(fi.file_name)).ToList();
 
-                        if (removeNotRegistered)
+                        if (RemoveNotRegisteredFilesFromZip)
                         {
                             //get files that are not registered in DB
                             foreach (var zipFile in zipFiles)
@@ -297,64 +322,7 @@ JOIN archives a on a.id=b.id_archive and b.file_name is not NULL and b.file_name
                         }
                         else
                         {
-                            //collect all hashes in one place
-                            var allHashes = new Dictionary<string, BookFileInfo>();
-                            foreach (var info in filesFound)
-                            {
-                                if (allHashes.ContainsKey(info.md5sum))
-                                {
-                                    if (allHashes[info.md5sum].id_book.Equals(info.id_book) ||
-                                        allHashes[info.md5sum].file_name.Equals(info.file_name, StringComparison.OrdinalIgnoreCase))
-                                        continue;
-                                    //remove file from zip and all lists
-                                    zipFilesToRemove.Add(info.file_name);
-                                    //remove duplicated records from DB
-                                    SqlHelper.ExecuteNonQuery(string.Format(
-                                        "delete from books where id={0} and id_archive={1} and file_name='{2}'",
-                                        info.id_book, info.id_archive, info.file_name));
-
-                                }
-                                else
-                                {
-                                    allHashes.Add(info.md5sum, info);
-                                }
-                            }
-                            //get file hashes that are not listed in DB
-                            foreach (var zipFile in zipFiles)
-                            {
-                                if (filesFound.Any(f => f.file_name.Equals(zipFile)))
-                                    continue;
-                                //calculate zip file hash
-                                var zipEntry = zip.Entries.FirstOrDefault(e => e.FileName.Equals(zipFile));
-                                if (zipEntry == null)
-                                {
-                                    UpdateState(string.Format("Zip entry not found: {0}", zipFile), StateKind.Warning);
-                                    continue;
-                                }
-                                string md5Sum;
-                                //calculate hash from real zip file
-                                using (var ms = new MemoryStream())
-                                {
-                                    zipEntry.Extract(ms);
-                                    ms.Seek(0, SeekOrigin.Begin);
-                                    using (var alg = MD5.Create())
-                                        md5Sum = BitConverter.ToString(alg.ComputeHash(ms)).Replace("-", "").ToLower();
-                                }
-                                //check hash already exists
-                                if (allHashes.ContainsKey(md5Sum))
-                                {
-                                    if (allHashes[md5Sum].file_name.Equals(zipFile, StringComparison.OrdinalIgnoreCase))
-                                        continue;
-                                    //remove file from zip and all lists
-                                    zipFilesToRemove.Add(zipFile);
-                                }
-                                else
-                                {
-                                    var fi = new BookFileInfo(zipFile, 0, 0, archiveName, md5Sum);
-                                    allHashes.Add(md5Sum, fi);
-                                    filesFound.Add(fi);
-                                }
-                            }
+                            VerifyHashesInDatabase(archiveName, filesFound, zipFilesToRemove, zipFiles, zip);
                         }
                         if (zipFilesToRemove.Count == 0) continue;
                         if (zipFilesToRemove.Count < MinFilesToUpdateZip) 
@@ -390,6 +358,79 @@ JOIN archives a on a.id=b.id_archive and b.file_name is not NULL and b.file_name
             SqlHelper.ExecuteNonQuery("delete from authors where id not in (select DISTINCT id_author FROM books) and id<0");
             SqlHelper.ExecuteNonQuery("delete from fts_book where docid not in (select DISTINCT id FROM books)");
             SqlHelper.ExecuteNonQuery("VACUUM");
+        }
+
+        private void VerifyHashesInDatabase(string archiveName, ICollection<BookFileInfo> filesFound, ICollection<string> zipFilesToRemove, ICollection<string> zipFiles, ZipFile zip)
+        {
+            return;
+            //collect all hashes in one place
+            var allHashes = new Dictionary<string, BookFileInfo>();
+            foreach (var info in filesFound)
+            {
+                if (allHashes.ContainsKey(info.md5sum))
+                {
+                    if (allHashes[info.md5sum].id_book.Equals(info.id_book) ||
+                        allHashes[info.md5sum].file_name.Equals(info.file_name, StringComparison.OrdinalIgnoreCase))
+                        continue;
+                    //remove file from zip and all lists
+                    zipFilesToRemove.Add(info.file_name);
+                    //remove duplicated records from DB
+                    SqlHelper.ExecuteNonQuery(string.Format(
+                        "delete from books where id={0} and id_archive={1} and file_name='{2}'",
+                        info.id_book, info.id_archive, info.file_name));
+
+                }
+                else
+                {
+                    allHashes.Add(info.md5sum, info);
+                }
+            }
+            //get file hashes that are not listed in DB
+            foreach (var zipFile in zipFiles)
+            {
+                if (filesFound.Any(f => f.file_name.Equals(zipFile)))
+                    continue;
+                //calculate zip file hash
+                var zipEntry = zip.Entries.FirstOrDefault(e => e.FileName.Equals(zipFile));
+                if (zipEntry == null)
+                {
+                    UpdateState(string.Format("Zip entry not found: {0}", zipFile), StateKind.Warning);
+                    continue;
+                }
+                string md5Sum = CalcFileHash(zipEntry);
+                //check hash already exists
+                if (allHashes.ContainsKey(md5Sum))
+                {
+                    if (allHashes[md5Sum].file_name.Equals(zipFile, StringComparison.OrdinalIgnoreCase))
+                        continue;
+                    //remove file from zip and all lists
+                    zipFilesToRemove.Add(zipFile);
+                }
+                else
+                {
+                    var fi = new BookFileInfo(zipFile, 0, 0, archiveName, md5Sum, zipEntry.UncompressedSize, CalcCreatedDate(zipEntry.LastModified));
+                    allHashes.Add(md5Sum, fi);
+                    filesFound.Add(fi);
+                }
+            }
+        }
+
+        private int CalcCreatedDate(DateTime realDate)
+        {
+            //.ToString("yyMMdd")
+            return realDate.Day + realDate.Month * 100 + (realDate.Year-2000) * 10000;
+        }
+        
+        private string CalcFileHash(ZipEntry zipEntry)
+        {
+            //calculate hash from real zip file
+            using (var ms = new MemoryStream())
+            {
+                zipEntry.Extract(ms);
+                ms.Seek(0, SeekOrigin.Begin);
+                using (var alg = MD5.Create())
+                    return BitConverter.ToString(alg.ComputeHash(ms)).Replace("-", "").ToLower();
+            }
         }
 
         private void FixFlibustaIdsLinks()
@@ -457,6 +498,39 @@ JOIN archives a on a.id=b.id_archive and b.file_name is not NULL and b.file_name
                         tr.Rollback();
                     }
                 }
+            }
+         
+            UpdateState("Updating archives ids...", StateKind.Message);
+            using (var connection = SqlHelper.GetConnection())
+            {
+                var archives = new List<KeyValuePair<int, string>>();
+                using (var command = SqlHelper.GetCommand(@"select a.id, a.file_name from archives a ORDER BY a.file_name", connection))
+                using (var reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        archives.Add(new KeyValuePair<int, string>(SqlHelper.GetInt(reader, "id"), SqlHelper.GetString(reader, "file_name")));
+                    }
+                }
+                var errors = false;
+                do
+                {
+                    for(var i=0; i<archives.Count; i++)
+                    {
+                        var newId = i+1;
+                        if (archives[i].Key == newId) continue;
+                        try
+                        {
+                            SqlHelper.ExecuteNonQuery(string.Format("update archives set id={0} where id={1}", newId, archives[i].Key), connection);
+                            SqlHelper.ExecuteNonQuery(string.Format("update books set id_archive={0} where id_archive={1}", newId, archives[i].Key), connection);
+                        }
+                        catch (Exception ex)
+                        {
+                            UpdateState(string.Format("Error updating archive id from {0} to {1} : {2}", archives[i].Key, newId, ex.Message), StateKind.Error);
+                            errors = true;
+                        }
+                    }
+                } while(errors);
             }
         }
      
@@ -627,7 +701,7 @@ JOIN archives a on a.id=b.id_archive and b.file_name is not NULL and b.file_name
 
             UpdateState(string.Format("Total unregistered books: {0}", totalRemoved), StateKind.Message);
 
-            OptimizeArchivesOnDisk(true);
+            OptimizeArchivesOnDisk();
         }
 
         private bool CheckGenres(string genres, string[] genresToRemove)

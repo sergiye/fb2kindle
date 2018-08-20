@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
+using System.Reflection;
 using System.Windows.Forms;
 using LibCleaner;
 
@@ -16,7 +17,10 @@ namespace LibraryCleaner
             InitializeComponent();
 
             Icon = Icon.ExtractAssociatedIcon(Process.GetCurrentProcess().MainModule.FileName);
-
+            var asm = Assembly.GetExecutingAssembly();
+            var ver = asm.GetName().Version;
+            Text = string.Format("{0} Version: {1}; Build time: {2:yyyy/MM/dd HH:mm:ss}", 
+                asm.GetName().Name, ver.ToString(3), Util.GetBuildTime(ver);
             _cleaner = new Cleaner(null);
             _cleaner.OnStateChanged += AddToLog;
 
@@ -27,7 +31,7 @@ namespace LibraryCleaner
                 clsGenres.Items.Add(genre, genre.Selected);
             }
 
-            cbxRemoveForeign.Checked = _cleaner.RemoveForeign;
+            cbxUpdateHashes.Checked = _cleaner.UpdateHashInfo;
             cbxRemoveDeleted.Checked = _cleaner.RemoveDeleted;
             cbxRemoveMissedArchives.Checked = _cleaner.RemoveMissingArchivesFromDb;
 
@@ -36,6 +40,14 @@ namespace LibraryCleaner
 
         #region GUI helper methods
 
+        internal static DateTime GetBuildTime(Version ver)
+        {
+            var buildTime = new DateTime(2000, 1, 1).AddDays(ver.Build).AddSeconds(ver.Revision * 2);
+            if (TimeZone.IsDaylightSavingTime(DateTime.Now, TimeZone.CurrentTimeZone.GetDaylightChanges(DateTime.Now.Year)))
+                buildTime = buildTime.AddHours(1);
+            return buildTime;
+        }
+        
         private void AddToLog(string message, Cleaner.StateKind state)
         {
             if (InvokeRequired)
@@ -109,7 +121,7 @@ namespace LibraryCleaner
                 _cleaner.GenresToRemove = genresToRemove;
                 _cleaner.DatabasePath = txtDatabase.Text;
                 _cleaner.ArchivesOutputPath = txtOutput.Text;
-                _cleaner.RemoveForeign = cbxRemoveForeign.Checked;
+                _cleaner.UpdateHashInfo = cbxUpdateHashes.Checked;
                 _cleaner.RemoveDeleted = cbxRemoveDeleted.Checked;
                 _cleaner.RemoveMissingArchivesFromDb = cbxRemoveMissedArchives.Checked;// && !analyzeOnly;
                 _cleaner.MinFilesToUpdateZip = (int) edtMinFilesToSave.Value;
