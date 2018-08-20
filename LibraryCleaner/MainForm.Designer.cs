@@ -31,10 +31,13 @@
             this.panSettings = new System.Windows.Forms.Panel();
             this.clsGenres = new System.Windows.Forms.CheckedListBox();
             this.panel2 = new System.Windows.Forms.Panel();
+            this.lblFileWithDeleted = new System.Windows.Forms.Label();
+            this.txtDeletedFile = new System.Windows.Forms.TextBox();
+            this.btnDeletedFile = new System.Windows.Forms.Button();
             this.lblMinFilesToUpdate = new System.Windows.Forms.Label();
             this.edtMinFilesToSave = new System.Windows.Forms.NumericUpDown();
             this.btnAnalyze = new System.Windows.Forms.Button();
-            this.cbxRemoveForeign = new System.Windows.Forms.CheckBox();
+            this.cbxUpdateHashes = new System.Windows.Forms.CheckBox();
             this.cbxRemoveMissedArchives = new System.Windows.Forms.CheckBox();
             this.lblOutput = new System.Windows.Forms.Label();
             this.btnStart = new System.Windows.Forms.Button();
@@ -48,9 +51,6 @@
             this.btnAllGenres = new System.Windows.Forms.Button();
             this.panLog = new System.Windows.Forms.Panel();
             this.txtLog = new LibraryCleaner.SimplTextBox();
-            this.lblFileWithDeleted = new System.Windows.Forms.Label();
-            this.txtDeletedFile = new System.Windows.Forms.TextBox();
-            this.btnDeletedFile = new System.Windows.Forms.Button();
             this.panSettings.SuspendLayout();
             this.panel2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.edtMinFilesToSave)).BeginInit();
@@ -89,7 +89,7 @@
             this.panel2.Controls.Add(this.lblMinFilesToUpdate);
             this.panel2.Controls.Add(this.edtMinFilesToSave);
             this.panel2.Controls.Add(this.btnAnalyze);
-            this.panel2.Controls.Add(this.cbxRemoveForeign);
+            this.panel2.Controls.Add(this.cbxUpdateHashes);
             this.panel2.Controls.Add(this.cbxRemoveMissedArchives);
             this.panel2.Controls.Add(this.lblOutput);
             this.panel2.Controls.Add(this.btnStart);
@@ -106,6 +106,33 @@
             this.panel2.Name = "panel2";
             this.panel2.Size = new System.Drawing.Size(239, 214);
             this.panel2.TabIndex = 12;
+            // 
+            // lblFileWithDeleted
+            // 
+            this.lblFileWithDeleted.AutoSize = true;
+            this.lblFileWithDeleted.Location = new System.Drawing.Point(9, 81);
+            this.lblFileWithDeleted.Name = "lblFileWithDeleted";
+            this.lblFileWithDeleted.Size = new System.Drawing.Size(121, 13);
+            this.lblFileWithDeleted.TabIndex = 6;
+            this.lblFileWithDeleted.Text = "Use file with deleted IDs";
+            // 
+            // txtDeletedFile
+            // 
+            this.txtDeletedFile.Location = new System.Drawing.Point(10, 98);
+            this.txtDeletedFile.Name = "txtDeletedFile";
+            this.txtDeletedFile.ReadOnly = true;
+            this.txtDeletedFile.Size = new System.Drawing.Size(200, 20);
+            this.txtDeletedFile.TabIndex = 7;
+            // 
+            // btnDeletedFile
+            // 
+            this.btnDeletedFile.Location = new System.Drawing.Point(213, 95);
+            this.btnDeletedFile.Name = "btnDeletedFile";
+            this.btnDeletedFile.Size = new System.Drawing.Size(23, 23);
+            this.btnDeletedFile.TabIndex = 8;
+            this.btnDeletedFile.Text = "...";
+            this.btnDeletedFile.UseVisualStyleBackColor = true;
+            this.btnDeletedFile.Click += new System.EventHandler(this.btnDeletedFile_Click);
             // 
             // lblMinFilesToUpdate
             // 
@@ -143,17 +170,15 @@
             this.btnAnalyze.UseVisualStyleBackColor = true;
             this.btnAnalyze.Click += new System.EventHandler(this.btnAnalyze_Click);
             // 
-            // cbxRemoveForeign
+            // cbxUpdateHashes
             // 
-            this.cbxRemoveForeign.AutoSize = true;
-            this.cbxRemoveForeign.Checked = true;
-            this.cbxRemoveForeign.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.cbxRemoveForeign.Location = new System.Drawing.Point(10, 124);
-            this.cbxRemoveForeign.Name = "cbxRemoveForeign";
-            this.cbxRemoveForeign.Size = new System.Drawing.Size(133, 17);
-            this.cbxRemoveForeign.TabIndex = 9;
-            this.cbxRemoveForeign.Text = "Remove foreign books";
-            this.cbxRemoveForeign.UseVisualStyleBackColor = true;
+            this.cbxUpdateHashes.AutoSize = true;
+            this.cbxUpdateHashes.Location = new System.Drawing.Point(10, 124);
+            this.cbxUpdateHashes.Name = "cbxUpdateHashes";
+            this.cbxUpdateHashes.Size = new System.Drawing.Size(103, 17);
+            this.cbxUpdateHashes.TabIndex = 9;
+            this.cbxUpdateHashes.Text = "Update md5sum";
+            this.cbxUpdateHashes.UseVisualStyleBackColor = true;
             // 
             // cbxRemoveMissedArchives
             // 
@@ -282,33 +307,6 @@
             this.txtLog.TabIndex = 0;
             this.txtLog.Text = "";
             // 
-            // lblFileWithDeleted
-            // 
-            this.lblFileWithDeleted.AutoSize = true;
-            this.lblFileWithDeleted.Location = new System.Drawing.Point(9, 81);
-            this.lblFileWithDeleted.Name = "lblFileWithDeleted";
-            this.lblFileWithDeleted.Size = new System.Drawing.Size(121, 13);
-            this.lblFileWithDeleted.TabIndex = 6;
-            this.lblFileWithDeleted.Text = "Use file with deleted IDs";
-            // 
-            // txtDeletedFile
-            // 
-            this.txtDeletedFile.Location = new System.Drawing.Point(10, 98);
-            this.txtDeletedFile.Name = "txtDeletedFile";
-            this.txtDeletedFile.ReadOnly = true;
-            this.txtDeletedFile.Size = new System.Drawing.Size(200, 20);
-            this.txtDeletedFile.TabIndex = 7;
-            // 
-            // btnDeletedFile
-            // 
-            this.btnDeletedFile.Location = new System.Drawing.Point(213, 95);
-            this.btnDeletedFile.Name = "btnDeletedFile";
-            this.btnDeletedFile.Size = new System.Drawing.Size(23, 23);
-            this.btnDeletedFile.TabIndex = 8;
-            this.btnDeletedFile.Text = "...";
-            this.btnDeletedFile.UseVisualStyleBackColor = true;
-            this.btnDeletedFile.Click += new System.EventHandler(this.btnDeletedFile_Click);
-            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -341,7 +339,7 @@
         private System.Windows.Forms.CheckedListBox clsGenres;
         private System.Windows.Forms.Button btnNoneGenres;
         private System.Windows.Forms.Button btnAllGenres;
-        private System.Windows.Forms.CheckBox cbxRemoveForeign;
+        private System.Windows.Forms.CheckBox cbxUpdateHashes;
         private System.Windows.Forms.CheckBox cbxRemoveDeleted;
         private System.Windows.Forms.CheckBox cbxRemoveMissedArchives;
         private System.Windows.Forms.Panel panel2;
