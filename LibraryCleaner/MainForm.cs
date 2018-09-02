@@ -123,6 +123,7 @@ namespace LibraryCleaner
                 _cleaner.ArchivesOutputPath = txtOutput.Text;
                 _cleaner.UpdateHashInfo = cbxUpdateHashes.Checked;
                 _cleaner.RemoveDeleted = cbxRemoveDeleted.Checked;
+                _cleaner.RemoveNotRegisteredFilesFromZip = cbxRemoveDeleted.Checked;
                 _cleaner.RemoveMissingArchivesFromDb = cbxRemoveMissedArchives.Checked;// && !analyzeOnly;
                 _cleaner.MinFilesToUpdateZip = (int) edtMinFilesToSave.Value;
                 _cleaner.FileWithDeletedBooksIds = txtDeletedFile.Text;
