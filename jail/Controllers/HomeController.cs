@@ -457,7 +457,7 @@ namespace jail.Controllers
         public FileResult GetConverter()
         {
             return File(BookHelper.ConverterPath, 
-                System.Net.Mime.MediaTypeNames.Application.Octet, BookHelper.ConverterName);
+                System.Net.Mime.MediaTypeNames.Application.Octet, SettingsHelper.ConverterName);
         }
 
         #endregion
