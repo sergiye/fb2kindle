@@ -285,7 +285,7 @@ namespace jail.Controllers
                 if (!System.IO.File.Exists(sourceFileName))
                     BookHelper.ExtractZipFile(archPath, book.FileName, sourceFileName);
 
-                if (!BookHelper.ConvertBook(sourceFileName, false))
+                if (!BookHelper.ConvertBook(sourceFileName))
                     throw new ArgumentException("Error converting book for kindle");
             }
             var fileBytes = System.IO.File.ReadAllBytes(resultFile);
@@ -310,7 +310,7 @@ namespace jail.Controllers
                 if (!System.IO.File.Exists(sourceFileName))
                     BookHelper.ExtractZipFile(archPath, book.FileName, sourceFileName);
 
-                if (!BookHelper.ConvertBook(sourceFileName, false))
+                if (!BookHelper.ConvertBook(sourceFileName))
                     throw new ArgumentException("Error converting book for kindle");
             }
             try
@@ -448,7 +448,7 @@ namespace jail.Controllers
             using (var fileStream = new FileStream(originRealPath, FileMode.OpenOrCreate))
                 Request.InputStream.CopyTo(fileStream);
 
-            if (!BookHelper.ConvertBook(originRealPath, false))
+            if (!BookHelper.ConvertBook(originRealPath))
                 throw new ArgumentException("Error converting book for kindle");
 
             return Json(new { success = true, link = mobiRelativePath, fileName = mobiDisplayName });

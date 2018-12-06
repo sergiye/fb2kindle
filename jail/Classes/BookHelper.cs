@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Xml;
 using System.Xml.Linq;
 using System.Xml.XPath;
@@ -16,6 +17,16 @@ namespace jail.Classes
 {
     public static class BookHelper
     {
+        private static readonly CommonQueue<string> _converterQueue;
+
+        static BookHelper()
+        {
+            _converterQueue = new CommonQueue<string>("Book converter");
+            //_converterQueue.OnExecuteTasks += ConverterQueueOnExecuteTasks;
+            _converterQueue.OnExecuteTask += ConverterQueueOnExecuteTask;
+            _converterQueue.Start();
+        }
+
         public static string Transliterate(this string str)
         {
             string[] lat_up = { "A", "B", "V", "G", "D", "E", "Yo", "Zh", "Z", "I", "Y", "K", "L", "M", "N", "O", "P", "R", "S", "T", "U", "F", "Kh", "Ts", "Ch", "Sh", "Shch", "\"", "Y", "'", "E", "Yu", "Ya" };
@@ -135,15 +146,44 @@ namespace jail.Classes
             }
         }
 
-        internal static bool ConvertBook(string inputFile, bool writeLog)
+        private static void ConverterQueueOnExecuteTask(string sourceFileName)
         {
-            var res = StartProcess(ConverterPath, inputFile, writeLog);
-            if (res == 2)
+            try
             {
-                Logger.WriteWarning("Error converting to mobi");
-                return false;
+                if (!File.Exists(sourceFileName))
+                    throw new FileNotFoundException("Book source file not found");
+
+                var resultFile = Path.ChangeExtension(sourceFileName, ".mobi");
+                if (!File.Exists(resultFile))
+                {
+                    var res = StartProcess(ConverterPath, sourceFileName, false);
+                    if (res == 2)
+                    {
+                        Logger.WriteWarning("Error converting to mobi");
+                        throw new ArgumentException("Error converting book for kindle");
+                    }
+                }
+                Logger.WriteTrace(string.Format("Book converted: {0}", sourceFileName));
             }
-            return true;
+            catch (Exception ex)
+            {
+                Logger.WriteError(ex, string.Format("Error converting book for kindle: {0}", sourceFileName));
+            }
+        }
+
+        internal static bool ConvertBook(string inputFile)
+        {
+            var resultFile = Path.ChangeExtension(inputFile, ".mobi");
+            _converterQueue.EnqueueTask(inputFile);
+            var startTime = Environment.TickCount;
+            while(true)
+            {
+                Thread.Sleep(500);
+                if (File.Exists(resultFile))
+                    return true;
+                if (Environment.TickCount > startTime + 30 * 1000)
+                    return false;
+            }
         }
 
         public static void SaveCover(string inputFile, string outputFile)
