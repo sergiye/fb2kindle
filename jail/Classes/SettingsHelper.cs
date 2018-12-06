@@ -9,6 +9,7 @@ namespace jail.Classes
     /// </summary>
     public static class SettingsHelper
     {
+        public static string ConverterName { get; set; }
         public static string DatabasePath { get; set; }
         public static string ArchivesPath { get; set; }
         public static long MaxRequestLength { get; set; }
@@ -19,6 +20,7 @@ namespace jail.Classes
         /// </summary>
         static SettingsHelper()
         {
+            ConverterName = ConfigurationManager.AppSettings["ConverterName"];
             DatabasePath = ConfigurationManager.AppSettings["DatabasePath"];
             ArchivesPath = ConfigurationManager.AppSettings["ArchivesPath"];
 

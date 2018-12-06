@@ -130,19 +130,11 @@ namespace jail.Classes
             //            return directoryInfo != null ? directoryInfo.FullName : Path.GetDirectoryName(asm.Location);
         }
 
-        internal static string ConverterName
-        {
-            get
-            {
-                return "Fb2KindleP.exe";
-            }
-        }
-
         internal static string ConverterPath
         {
             get
             {
-                return string.Format("{0}bin\\{1}", GetApplicationPath(), ConverterName);
+                return string.Format("{0}bin\\{1}", GetApplicationPath(), SettingsHelper.ConverterName);
             }
         }
 
