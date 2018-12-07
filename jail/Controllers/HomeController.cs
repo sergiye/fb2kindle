@@ -333,16 +333,16 @@ namespace jail.Controllers
             if (book == null)
                 throw new FileNotFoundException("Book not found in db");
 
-            var tempFile = Server.MapPath(string.Format("~/b/{0}", book.FileName));
-            if (!System.IO.File.Exists(tempFile))
+            var sourceFileName = Server.MapPath(string.Format("~/b/{0}", book.FileName));
+            if (!System.IO.File.Exists(sourceFileName))
             {
                 var archPath = Path.Combine(SettingsHelper.ArchivesPath, book.ArchiveFileName);
                 if (!System.IO.File.Exists(archPath))
                     throw new FileNotFoundException("Book archive not found");
-                BookHelper.ExtractZipFile(archPath, book.FileName, tempFile);
+                BookHelper.ExtractZipFile(archPath, book.FileName, sourceFileName);
             }
 
-            var detailsFolder = Path.Combine(Path.GetDirectoryName(tempFile), Path.GetFileNameWithoutExtension(tempFile));
+            var detailsFolder = Path.Combine(Path.GetDirectoryName(sourceFileName), Path.GetFileNameWithoutExtension(sourceFileName));
             if (string.IsNullOrWhiteSpace(detailsFolder))
                 throw new DirectoryNotFoundException("Details folder is empty");
             Directory.CreateDirectory(detailsFolder);
@@ -350,7 +350,8 @@ namespace jail.Controllers
             if (!System.IO.File.Exists(readingPath))
             {
                 //BookHelper.Transform(tempFile, readingPath, Server.MapPath("~/xhtml.xsl"));
-                BookHelper.Transform2(tempFile, detailsFolder);
+                if (!BookHelper.ConvertBook(sourceFileName))
+                    throw new ArgumentException("Error converting book for kindle");
             }
             ViewBag.Title = book.Title;
             return new RedirectResult(Path.Combine(@"../" + readingPath.Replace(Server.MapPath("~"), "").Replace('\\', '/')));

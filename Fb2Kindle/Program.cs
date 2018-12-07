@@ -89,6 +89,10 @@ namespace Fb2Kindle
                     {
                         switch (args[j].ToLower().Trim())
                         {
+                            case "-preview":
+                                currentSettings.CleanupMode = ConverterCleanupMode.Partial;
+                                currentSettings.UseSourceAsTempFolder = true;
+                                break;
                             case "-nch":
                                 currentSettings.NoChapters = true;
                                 break;
@@ -181,7 +185,7 @@ namespace Fb2Kindle
                 if (string.IsNullOrEmpty(bookPath))
                     bookPath = allBooksPattern;
                 var conv = new Convertor(currentSettings, cssStyles, detailedOutput) { MailTo = mailTo };
-                ProcessFolder(conv, workPath, bookPath, recursive, join, debug);
+                ProcessFolder(conv, workPath, bookPath, recursive, join);
             }
             catch (Exception ex)
             {
@@ -201,7 +205,7 @@ namespace Fb2Kindle
             }
         }
 
-        private static void ProcessFolder(Convertor conv, string workPath, string searchMask, bool recursive, bool join, bool debug)
+        private static void ProcessFolder(Convertor conv, string workPath, string searchMask, bool recursive, bool join)
         {
             var files = new List<string>();
             files.AddRange(Directory.GetFiles(workPath, searchMask, SearchOption.TopDirectoryOnly));
@@ -209,14 +213,14 @@ namespace Fb2Kindle
             {
                 files.Sort();
                 if (join)
-                    conv.ConvertBookSequence(files.ToArray(), debug);
+                    conv.ConvertBookSequence(files.ToArray());
                 else
                     foreach (var file in files)
-                        conv.ConvertBook(file, debug);
+                        conv.ConvertBook(file);
             }
             if (!recursive) return;
             foreach (var folder in Directory.GetDirectories(workPath))
-                ProcessFolder(conv, folder, searchMask, true, join, debug);
+                ProcessFolder(conv, folder, searchMask, true, join);
         }
     }
 }
