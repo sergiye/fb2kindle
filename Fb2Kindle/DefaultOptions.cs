@@ -2,6 +2,13 @@
 
 namespace Fb2Kindle
 {
+    internal enum ConverterCleanupMode
+    {
+        Full = 0,
+        Partial, //keep html files, styles & images
+        No //for debug
+    }
+
     [Serializable]
     internal class DefaultOptions
     {
@@ -13,5 +20,7 @@ namespace Fb2Kindle
         public bool Sequence { get; set; }
         public bool Grayscaled { get; set; }
         public bool Jpeg { get; set; }
+        public ConverterCleanupMode CleanupMode { get; set; }
+        public bool UseSourceAsTempFolder { get; set; }
     }
 }

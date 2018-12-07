@@ -48,10 +48,14 @@ namespace Fb2Kindle
             _defaultCss = Util.GetScriptFromResource("Fb2Kindle.css");
         }
 
-        internal bool ConvertBookSequence(string[] books, bool debug, string tempDir = null)
+        internal bool ConvertBookSequence(string[] books)
         {
+            string tempDir = null;
             try
             {
+                if (_currentSettings.UseSourceAsTempFolder)
+                    tempDir = Path.Combine(Path.GetDirectoryName(books[0]), Path.GetFileNameWithoutExtension(books[0]));
+
                 //create temp working folder
                 if (string.IsNullOrWhiteSpace(tempDir))
                     tempDir = string.Format("{0}\\{1}", Path.GetTempPath(), Guid.NewGuid());
@@ -155,10 +159,12 @@ namespace Fb2Kindle
             }
             finally
             {
-                if (!debug)
                 try
                 {
-                    if (tempDir != null) Directory.Delete(tempDir, true);
+                    if (_currentSettings.CleanupMode == ConverterCleanupMode.Full)
+                    {
+                        if (tempDir != null) Directory.Delete(tempDir, true);
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -168,9 +174,9 @@ namespace Fb2Kindle
             }
         }
 
-        internal bool ConvertBook(string bookPath, bool debug, string tempDir = null)
+        internal bool ConvertBook(string bookPath)
         {
-            return ConvertBookSequence(new[] { bookPath }, debug, tempDir);
+            return ConvertBookSequence(new[] { bookPath });
         }
 
         #endregion public
@@ -463,6 +469,22 @@ namespace Fb2Kindle
                 }
 
                 File.Move(tmpBookPath, string.Format("{0}\\{1}.mobi", resultPath, resultName));
+
+                if (_currentSettings.CleanupMode == ConverterCleanupMode.Partial)
+                {
+                    if (!string.IsNullOrWhiteSpace(tempDir))
+                    {
+                        foreach (var f in Directory.EnumerateFiles(tempDir, "*.opf"))
+                            File.Delete(f);
+                        //File.Delete(Path.Combine(tempDir, Path.GetFileNameWithoutExtension(inputFile) + ".opf"));
+                        File.Delete(Path.Combine(tempDir, "kindlegen.exe"));
+                        File.Delete(Path.Combine(tempDir, "toc.ncx"));
+
+                        var destFolder = string.Format("{0}\\{1}", resultPath, resultName);
+                        if (!tempDir.Equals(destFolder, StringComparison.OrdinalIgnoreCase))
+                            Directory.Move(tempDir, destFolder);
+                    }
+                }
             }
             else
             {

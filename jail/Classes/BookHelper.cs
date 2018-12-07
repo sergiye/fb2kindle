@@ -8,7 +8,6 @@ using System.Xml;
 using System.Xml.Linq;
 using System.Xml.XPath;
 using System.Xml.Xsl;
-using Fb2Kindle;
 using Ionic.Zip;
 using jail.Models;
 using Simpl.Extensions;
@@ -148,7 +147,7 @@ namespace jail.Classes
                 var resultFile = Path.ChangeExtension(sourceFileName, ".mobi");
                 if (!File.Exists(resultFile))
                 {
-                    var res = StartProcess(ConverterPath, sourceFileName, false);
+                    var res = StartProcess(ConverterPath, string.Format("{0} -preview", sourceFileName), false);
                     if (res == 2)
                     {
                         Logger.WriteWarning("Error converting to mobi");
@@ -177,6 +176,15 @@ namespace jail.Classes
                     return false;
             }
         }
+
+//        public static void ConvertPartial(string inputFile, string detailsFolder)
+//        {
+//            var conv = new Convertor(new DefaultOptions
+//            {
+//                CleanupMode = ConverterCleanupMode.Partial
+//            }, null, false);
+//            conv.ConvertBook(inputFile, detailsFolder);
+//        }
 
         public static void SaveCover(string inputFile, string outputFile)
         {
@@ -234,12 +242,6 @@ namespace jail.Classes
                     writer.Close();
                 }
             }
-        }
-
-        public static void Transform2(string inputFile, string detailsFolder)
-        {
-            var conv = new Convertor(new DefaultOptions(), null, false);
-            conv.ConvertBook(inputFile, true, detailsFolder);
         }
 
         public static void ExtractZipFile(string archivePath, string fileName, string outputFileName)
