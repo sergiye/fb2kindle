@@ -110,8 +110,8 @@ namespace jail.Classes
                                 FileName = fileName,
                                 Arguments = args,
                                 UseShellExecute = false,
-                                RedirectStandardOutput = true,
-                                CreateNoWindow = true,
+                                RedirectStandardOutput = addToConsole,
+                                CreateNoWindow = addToConsole,
                             };
             var process = Process.Start(startInfo);
             if (addToConsole)
@@ -172,7 +172,7 @@ namespace jail.Classes
                 Thread.Sleep(500);
                 if (File.Exists(resultFile))
                     return true;
-                if (Environment.TickCount > startTime + 30 * 1000)
+                if (Environment.TickCount > startTime + 120 * 1000)
                     return false;
             }
         }
