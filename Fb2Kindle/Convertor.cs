@@ -94,7 +94,7 @@ namespace Fb2Kindle
 
                         //update images (extract and rewrite refs)
                         Directory.CreateDirectory(string.Format(tempDir + "\\Images"));
-                        if (ProcessImages(book, tempDir, string.Format("Images\\{0}", bookPostfix), _currentSettings.NoImages))
+                        if (ProcessImages(book, tempDir, string.Format("Images\\{0}", bookPostfix), coverDone))
                         {
                             var imgSrc = Util.AttributeValue(book.Elements("description").Elements("title-info").Elements("coverpage").Elements("div").Elements("img"), "src");
                             if (!string.IsNullOrEmpty(imgSrc))
@@ -766,9 +766,9 @@ namespace Fb2Kindle
 
         #region Images
      
-        private bool ProcessImages(XElement book, string workFolder, string imagesPrefix, bool removeImages)
+        private bool ProcessImages(XElement book, string workFolder, string imagesPrefix, bool coverDone)
         {
-            var imagesCreated = !removeImages && ExtractImages(book, workFolder, imagesPrefix);
+            var imagesCreated = (!coverDone || !_currentSettings.NoImages) && ExtractImages(book, workFolder, imagesPrefix);
             var list = Util.RenameTags(book, "image", "div", "image");
             foreach (var element in list)
             {
@@ -776,6 +776,14 @@ namespace Fb2Kindle
                     element.Remove();
                 else
                 {
+                    if (_currentSettings.NoImages && 
+                        (element.Parent == null || !element.Parent.Name.LocalName.Equals("coverpage", StringComparison.OrdinalIgnoreCase)))
+                    {
+                        //keep coverpage only
+                        element.Remove();
+                        continue;
+                    }
+
                     var src = element.Attribute("href").Value;
                     element.RemoveAll();
                     if (string.IsNullOrEmpty(src)) continue;
