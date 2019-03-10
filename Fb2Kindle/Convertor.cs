@@ -20,6 +20,7 @@ namespace Fb2Kindle
         private const string TocElement = "ul"; //"ol";
         private const string NcxName = "toc.ncx";
         private const string DropCap = "АБВГДЕЖЗИКЛМНОПРСТУФХЦЧЩШЭЮЯ"; //"АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧЩШЬЪЫЭЮЯQWERTYUIOPASDFGHJKLZXCVBNM";
+        private const string NoAuthorText = "без автора";
         private readonly string _workingFolder;
         private readonly string _defaultCss;
         private readonly bool _addGuideLine;
@@ -537,16 +538,19 @@ namespace Fb2Kindle
             return false;
         }
 
-        private static XElement AddAuthorsInfo(IEnumerable<XElement> avtorbook)
+        private static List<string> GetAuthors(IEnumerable<XElement> avtorbook)
         {
-            var info = new XElement("h2");
+            var result = new List<string>();
             foreach (var ai in avtorbook)
             {
-                info.Add(Util.Value(ai.Elements("last-name"), "Неизвестный"), new XElement("br"), 
-                    Util.Value(ai.Elements("first-name")), new XElement("br"), 
-                    Util.Value(ai.Elements("middle-name")), new XElement("br"));
+                var author = string.Format("{0} {1} {2}", Util.Value(ai.Elements("last-name")),
+                    Util.Value(ai.Elements("first-name")), Util.Value(ai.Elements("middle-name")));
+                if (!string.IsNullOrWhiteSpace(author))
+                    result.Add(author.Trim());
             }
-            return info;
+            if (result.Count == 0)
+                result.Add(NoAuthorText);
+            return result;
         }
 
         private static XElement CreateTitlePage(XElement book)
@@ -554,7 +558,14 @@ namespace Fb2Kindle
             var linkEl = new XElement("div", new XAttribute("id", "it"));
             linkEl.Add(new XAttribute("class", "supertitle"));
             linkEl.Add(new XAttribute("align", "center"));
-            linkEl.Add(AddAuthorsInfo(book.Elements("description").Elements("title-info").Elements("author")));
+            
+            var authorsInfo = new XElement("h2");
+            var authors = GetAuthors(book.Elements("description").Elements("title-info").Elements("author"));
+            foreach (var author in authors)
+            {
+                authorsInfo.Add(author, new XElement("br"));
+            }
+            linkEl.Add(authorsInfo);
             linkEl.Add(new XElement("p", string.Format("{0} {1}", Util.AttributeValue(book.Elements("description").Elements("title-info").Elements("sequence"), "name"), 
                 Util.AttributeValue(book.Elements("description").Elements("title-info").Elements("sequence"), "number"))));
             linkEl.Add(new XElement("br"));
@@ -694,7 +705,8 @@ namespace Fb2Kindle
 
             linkEl.Add(content);
             content = new XElement(dc + "Creator");
-            content.Add(Util.Value(book.Elements("description").Elements("title-info").Elements("author").First().Elements("last-name"), "Вася") + " " + Util.Value(book.Elements("description").Elements("title-info").Elements("author").First().Elements("first-name")) + " " + Util.Value(book.Elements("description").Elements("title-info").Elements("author").First().Elements("middle-name")));
+            var authors = GetAuthors(book.Elements("description").Elements("title-info").Elements("author"));
+            content.Add(string.Join(", ", authors));
             linkEl.Add(content);
             content = new XElement(dc + "Publisher");
             content.Add(Util.Value(book.Elements("description").Elements("publish-info").Elements("publisher")));
