@@ -67,7 +67,7 @@ namespace Fb2Kindle
                 ShowMainInfo(asm);
 
                 var appPath = Util.GetAppPath();
-                var settingsFile = appPath + @"\config.xml";
+                var settingsFile = Path.ChangeExtension(Assembly.GetExecutingAssembly().Location, ".xml");
                 var currentSettings = Util.ReadObjectFromFile<DefaultOptions>(settingsFile) ?? new DefaultOptions();
                 var bookPath = string.Empty;
                 string cssStyles = null;

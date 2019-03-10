@@ -502,18 +502,18 @@ namespace Fb2Kindle
             Util.Write(string.Format("Sending to {0}...", MailTo), ConsoleColor.White);
             try
             {
-                const string smtpLogin = "trial.develop@gmail.com";
-                const string smtpPassword = "TrI@lDeVeL0peR";
-                const string smtpServer = "smtp.gmail.com";
-                using (var smtp = new SmtpClient(smtpServer, 587)
+                if (string.IsNullOrWhiteSpace(_currentSettings.SmtpServer) || _currentSettings.SmtpPort <= 0)
                 {
-                    Credentials = new NetworkCredential(smtpLogin, smtpPassword),
+                    Util.WriteLine("Mail delivery failed: smtp not configured", ConsoleColor.Red);
+                    return false;
+                }
+                using (var smtp = new SmtpClient(_currentSettings.SmtpServer, _currentSettings.SmtpPort)
+                {
+                    Credentials = new NetworkCredential(_currentSettings.SmtpLogin, _currentSettings.SmtpPassword),
                     EnableSsl = true,
-//                    UseDefaultCredentials = false,
-//                    DeliveryMethod = SmtpDeliveryMethod.Network,
                 })
                 {
-                    using (var message = new MailMessage(new MailAddress(smtpLogin, "Simpl's converter"),
+                    using (var message = new MailMessage(new MailAddress(_currentSettings.SmtpLogin, "Simpl's converter"),
                             new MailAddress(MailTo))
                                       {
                                           Subject = bookName,
