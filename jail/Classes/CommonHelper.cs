@@ -77,18 +77,18 @@ namespace jail.Classes
         internal static void SendBookByMail(string bookName, string tmpBookPath, string mailTo)
         {
             Logger.WriteDebug(string.Format("Sending to {0}...", mailTo));
-            const string smtpLogin = "trial.develop@gmail.com";
-            const string smtpPassword = "TrI@lDeVeL0peR";
-            const string smtpServer = "smtp.gmail.com";
-            using (var smtp = new SmtpClient(smtpServer, 587)
+            if (string.IsNullOrWhiteSpace(SettingsHelper.SmtpServer) || SettingsHelper.SmtpPort <= 0)
             {
-                Credentials = new NetworkCredential(smtpLogin, smtpPassword),
-                EnableSsl = true,
-//                    UseDefaultCredentials = false,
-//                    DeliveryMethod = SmtpDeliveryMethod.Network,
+                Logger.WriteWarning("Mail delivery failed: smtp not configured");
+                return;
+            }
+            using (var smtp = new SmtpClient(SettingsHelper.SmtpServer, SettingsHelper.SmtpPort)
+            {
+                Credentials = new NetworkCredential(SettingsHelper.SmtpLogin, SettingsHelper.SmtpPassword),
+                EnableSsl = true
             })
             {
-                using (var message = new MailMessage(new MailAddress(smtpLogin, "Simpl's converter"),
+                using (var message = new MailMessage(new MailAddress(SettingsHelper.SmtpLogin, "Simpl's converter"),
                         new MailAddress(mailTo))
                 {
                     Subject = bookName,
