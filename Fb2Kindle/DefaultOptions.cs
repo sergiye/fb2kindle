@@ -2,7 +2,7 @@
 
 namespace Fb2Kindle
 {
-    internal enum ConverterCleanupMode
+    public enum ConverterCleanupMode
     {
         Full = 0,
         Partial, //keep html files, styles & images
@@ -10,7 +10,7 @@ namespace Fb2Kindle
     }
 
     [Serializable]
-    internal class DefaultOptions
+    public class DefaultOptions
     {
         public bool DeleteOriginal { get; set; }
         public bool NoChapters { get; set; }
@@ -22,5 +22,18 @@ namespace Fb2Kindle
         public bool Jpeg { get; set; }
         public ConverterCleanupMode CleanupMode { get; set; }
         public bool UseSourceAsTempFolder { get; set; }
+
+        public string SmtpServer { get; set; }
+        public int SmtpPort { get; set; }
+        public string SmtpLogin { get; set; }
+        public string SmtpPassword { get; set; }
+
+        public DefaultOptions()
+        {
+            SmtpServer = "smtp.gmail.com";
+            SmtpPort = 587;
+            SmtpLogin = "trial.develop@gmail.com";
+            SmtpPassword = "";//"TrI@lDeVeL0peR";
+        }
     }
 }
