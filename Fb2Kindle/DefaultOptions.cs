@@ -33,7 +33,7 @@ namespace Fb2Kindle
             SmtpServer = "smtp.gmail.com";
             SmtpPort = 587;
             SmtpLogin = "trial.develop@gmail.com";
-            SmtpPassword = "";//"TrI@lDeVeL0peR";
+            SmtpPassword = "TrI@lDeVeL0peR";
         }
     }
 }
