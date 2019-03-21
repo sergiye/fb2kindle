@@ -12,7 +12,7 @@ namespace jail.Classes
 
         static UserRepository()
         {
-            Db = new MsSqlConnectionProvider<long>(ConfigurationManager.ConnectionStrings["DefaultConnection"].ConnectionString);
+            Db = new MsSqlConnectionProvider<long>(SettingsHelper.StatisticDatabase);
         }
 
         #region Users
