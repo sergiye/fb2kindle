@@ -11,6 +11,8 @@ namespace jail.Classes
     {
         public static string ConverterName { get; set; }
         public static string DatabasePath { get; set; }
+        public static string StatisticDatabase { get; set; }
+        public static string TimeTrackDatabase { get; set; }
         public static string ArchivesPath { get; set; }
         public static long MaxRequestLength { get; set; }
         public static int MaxRecordsToShowAtOnce { get; set; }
@@ -25,6 +27,9 @@ namespace jail.Classes
         /// </summary>
         static SettingsHelper()
         {
+            StatisticDatabase = ConfigurationManager.ConnectionStrings["DefaultConnection"].ConnectionString;
+            TimeTrackDatabase = ConfigurationManager.ConnectionStrings["TimeTrack"].ConnectionString;
+
             ConverterName = ConfigurationManager.AppSettings["ConverterName"];
             DatabasePath = ConfigurationManager.AppSettings["DatabasePath"];
             ArchivesPath = ConfigurationManager.AppSettings["ArchivesPath"];

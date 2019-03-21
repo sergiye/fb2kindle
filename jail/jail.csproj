@@ -141,6 +141,7 @@
     <Compile Include="Classes\SettingsHelper.cs" />
     <Compile Include="Classes\SqLiteConnectionProvider.cs" />
     <Compile Include="Classes\SystemRepository.cs" />
+    <Compile Include="Classes\TimeTrackRepository.cs" />
     <Compile Include="Classes\UserRepository.cs" />
     <Compile Include="Controllers\ErrorController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
