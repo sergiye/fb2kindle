@@ -2,68 +2,72 @@
 @model IEnumerable<UserProfile>
     
 @{var user = (UserProfile)HttpContext.Current.Session["User"];}
-<table  class="table table-striped table-bordered table-condensed table-hover sortable" id="usersGrid">
+<table  class="table table-striped table-bordered table-condensed table-hover" id="usersGrid">
     <thead>
         <tr>
             <th data-defaultsort="asc">@Html.DisplayNameFor(model => model.Email)</th>
             <th style="min-width: 125px; width: 125px;">@Html.DisplayNameFor(model => model.RegisteredTime)</th>
             <th style="min-width: 60px; width: 60px;">@Html.DisplayNameFor(model => model.Active)</th>
+            <th style="min-width: 60px; width: 60px;">@Html.DisplayNameFor(model => model.TimeTrackId)</th>
             <th style="min-width: 185px; width: 185px;" data-defaultsort='disabled'></th>
         </tr>
     </thead>
     <tbody>
         @foreach (var item in Model)
         {
-            <tr>
-                <td class="@(item.UserType == UserType.User ? "success" : item.UserType == UserType.Administrator ? "danger" : "info")">
-                    @Html.HiddenFor(modelItem => item.Id)
-                    @Html.HiddenFor(modelItem => item.UserType)
-                    @Html.DisplayFor(modelItem => item.Email)
-                </td>
-                <td>
-                    @Html.DisplayFor(modelItem => item.RegisteredTime)
-                </td>
-                <td class="@(item.Active ? "success" : "warning")">
-                    @Html.DisplayFor(modelItem => item.ActiveText)
-                </td>
-                <td class="col-md-2">
-                    <div class="dropdown">
-                        <a href="#" onclick="EditUser(@item.Id);" class="btn btn-success">
-                            <span class="glyphicon glyphicon-pencil"></span>
-                        </a>
-                        <button class="btn btn-primary dropdown-toggle" type="button" id="userDropdownMenu" data-toggle="dropdown"
-                                aria-haspopup="true" aria-expanded="true">
-                            Manage<span class="caret"></span>
-                        </button>
-                        <ul class="dropdown-menu" aria-labelledby="userDropdownMenu">
-                            <li>
-                                <a href="#" onclick="ResetUserPassword(@item.Id);" class="btn-warning">
-                                    <span class="glyphicon glyphicon-phone"></span>Reset Password
-                                </a>
-                            </li>
-                            <li>
-                                <a href="#" onclick="EditPassword(@item.Id);" class="btn-block">
-                                    <span class="glyphicon glyphicon-lock"></span>
-                                    @if (item.HasPassword)
-                                    {
-                                        <text>Change Password</text>
-                                    }
-                                    else
-                                    {
-                                        <text>Set Password</text>
-                                    }
-                                </a>
-                            </li>
-                        </ul>
-                        @if (user.Id != item.Id)
-                        {
-                            <a href="#" onclick="DeleteUser(@item.Id);" class="btn btn-danger">
-                                <span class="glyphicon glyphicon-trash"></span>
+        <tr>
+            <td class="@(item.UserType == UserType.User ? "success" : item.UserType == UserType.Administrator ? "danger" : "info")">
+                @Html.HiddenFor(modelItem => item.Id)
+                @Html.HiddenFor(modelItem => item.UserType)
+                @Html.DisplayFor(modelItem => item.Email)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.RegisteredTime)
+            </td>
+            <td class="@(item.Active ? "success" : "warning")">
+                @Html.DisplayFor(modelItem => item.ActiveText)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.TimeTrackId)
+            </td>
+            <td class="col-md-2">
+                <div class="dropdown">
+                    <a href="#" onclick="EditUser(@item.Id);" class="btn btn-success">
+                        <span class="glyphicon glyphicon-pencil"></span>
+                    </a>
+                    <button class="btn btn-primary dropdown-toggle" type="button" id="userDropdownMenu" data-toggle="dropdown"
+                            aria-haspopup="true" aria-expanded="true">
+                        Manage<span class="caret"></span>
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="userDropdownMenu">
+                        <li>
+                            <a href="#" onclick="ResetUserPassword(@item.Id);" class="btn-warning">
+                                <span class="glyphicon glyphicon-phone"></span>Reset Password
                             </a>
-                        }
-                    </div>
-                </td>
-            </tr>
+                        </li>
+                        <li>
+                            <a href="#" onclick="EditPassword(@item.Id);" class="btn-block">
+                                <span class="glyphicon glyphicon-lock"></span>
+                                @if (item.HasPassword)
+                                {
+                                    <text>Change Password</text>
+                                }
+                                else
+                                {
+                                    <text>Set Password</text>
+                                }
+                            </a>
+                        </li>
+                    </ul>
+                    @if (user.Id != item.Id)
+                    {
+                        <a href="#" onclick="DeleteUser(@item.Id);" class="btn btn-danger">
+                            <span class="glyphicon glyphicon-trash"></span>
+                        </a>
+                    }
+                </div>
+            </td>
+        </tr>
         }
     </tbody>
 </table>

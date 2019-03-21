@@ -142,6 +142,7 @@
     <Compile Include="Classes\SqLiteConnectionProvider.cs" />
     <Compile Include="Classes\SystemRepository.cs" />
     <Compile Include="Classes\TimeTrackRepository.cs" />
+    <Compile Include="Models\TimeUserInfo.cs" />
     <Compile Include="Classes\UserRepository.cs" />
     <Compile Include="Controllers\ErrorController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
@@ -236,6 +237,8 @@
     <Content Include="Views\Home\UserEdit.cshtml" />
     <Content Include="Scripts\jquery-3.3.1.slim.min.map" />
     <Content Include="Scripts\jquery-3.3.1.min.map" />
+    <Content Include="Views\Home\Time.cshtml" />
+    <Content Include="Views\Home\TimePartial.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

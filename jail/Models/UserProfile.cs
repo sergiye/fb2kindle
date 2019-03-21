@@ -30,6 +30,9 @@ namespace jail.Models
         [DataMember, DisplayName("User Type")]
         public virtual UserType UserType { get; set; }
 
+        [DataMember]
+        public int TimeTrackId { get; set; }
+
         [DapperReadOnly, DisplayName("Registered Time")]
         [DataType(DataType.Date), DisplayFormat(DataFormatString = "{0:yyyy-MM-dd HH:mm:ss}", ApplyFormatInEditMode = true)]
         public virtual DateTime RegisteredTime { get; set; }

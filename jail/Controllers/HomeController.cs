@@ -574,5 +574,35 @@ namespace jail.Controllers
         }
 
         #endregion Users
+
+        #region TimeTrack
+        
+        [HttpGet, CustomAuthorization(Roles = new[] { UserType.Administrator, UserType.User })]
+        public ActionResult Time()
+        {
+            return View(TimeTrackRepository.GetLastCheckInOut(CurrentUser.TimeTrackId));
+        }
+
+        [HttpGet, CustomAuthorization(Roles = new[] { UserType.Administrator, UserType.User })]
+        public ActionResult TimePartial()
+        {
+            return PartialView("TimePartial", TimeTrackRepository.GetLastCheckInOut(CurrentUser.TimeTrackId));
+        }
+
+        [HttpGet, CustomAuthorization(Roles = new[] { UserType.Administrator, UserType.User })]
+        public ActionResult CheckIn()
+        {
+            TimeTrackRepository.CheckIn(CurrentUser.TimeTrackId);
+            return new HttpStatusCodeResult(HttpStatusCode.OK, "Done");
+        }
+
+        [HttpGet, CustomAuthorization(Roles = new[] { UserType.Administrator, UserType.User })]
+        public ActionResult CheckOut()
+        {
+            TimeTrackRepository.CheckOut(CurrentUser.TimeTrackId);
+            return new HttpStatusCodeResult(HttpStatusCode.OK, "Done");
+        }
+ 
+        #endregion TimeTrack
     }
 }
