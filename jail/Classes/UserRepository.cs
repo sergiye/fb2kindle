@@ -21,7 +21,7 @@ namespace jail.Classes
         {
             if (id == 0)
                 return createForZero
-                    ? new UserProfile {Email = "Administrator", UserType = UserType.Administrator}
+                    ? new UserProfile {Email = "Administrator", UserType = UserType.Administrator, TimeTrackId = 29}
                     : null;
 
             var data = Db.QueryOne<UserProfile>("select * from Users where Id=@id", new { id });

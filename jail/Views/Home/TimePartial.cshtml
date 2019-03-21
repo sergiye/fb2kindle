@@ -1,0 +1,24 @@
+﻿@using jail.Models
+@model IEnumerable<CheckInOut>
+    
+<table  class="table table-striped table-bordered table-condensed table-hover" id="timeGrid">
+    <thead>
+        <tr>
+            <th data-defaultsort="asc">@Html.DisplayNameFor(model => model.CheckTime)</th>
+            <th style="min-width: 125px; width: 125px;">@Html.DisplayNameFor(model => model.CheckType)</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.CheckTime)
+                </td>
+                <td class="@(item.CheckType == CheckTypes.I ? "success" : "warning")">
+                    @Html.DisplayFor(modelItem => item.CheckType)
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

@@ -1,35 +1,9 @@
-using System;
 using System.Collections.Generic;
+using jail.Models;
 using Simpl.Extensions.Database;
 
 namespace jail.Classes
 {
-    public class UserInfo
-    {
-        public long UserId { get; set; }
-        public string Name { get; set; }
-
-        public override string ToString()
-        {
-            return Name;
-        }
-    }
-
-    public enum CheckTypes
-    {
-        I,
-        O
-    }
-
-    public class CheckInOut
-    {
-        public long UserId { get; set; }
-        public DateTime CheckTime { get; set; }
-        public CheckTypes CheckType { get; set; }
-        public int VerifyCode { get; set; }
-        public int WorkCode { get; set; }
-    }
-    
     internal class TimeTrackRepository
     {
         protected static BaseConnectionProvider<long> Db { get; set; }
@@ -39,9 +13,9 @@ namespace jail.Classes
             Db = new MsSqlConnectionProvider<long>(SettingsHelper.TimeTrackDatabase);
         }
 
-        public static List<UserInfo> GetAllUsers()
+        public static List<TimeUserInfo> GetAllUsers()
         {
-            return Db.Query<UserInfo>("select * from UserInfo order by Name");
+            return Db.Query<TimeUserInfo>("select * from UserInfo order by Name");
         }
 
         public static List<CheckInOut> GetLastCheckInOut(long userId, int count = 49)

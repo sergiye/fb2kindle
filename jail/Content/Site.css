@@ -32,6 +32,9 @@ body {
     padding-left: 10%;
     padding-right: 10%;
 }
+.control-buttons {
+    float: right;
+}
 #searchBlock {
     width: 100%;
 }
