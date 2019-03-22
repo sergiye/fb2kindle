@@ -107,6 +107,20 @@ namespace jail.Controllers
 
         public ActionResult LogOn()
         {
+//            HttpCookie authCookie = HttpContext.Request.Cookies.Get(FormsAuthentication.FormsCookieName);
+//            if (authCookie != null && !string.IsNullOrEmpty(authCookie.Value))
+//            {
+//                var ticket = FormsAuthentication.Decrypt(authCookie.Value);
+//                if (ticket != null && !ticket.Expired)
+//                {
+//                    return LogOn(new LogOnModel
+//                    {
+//                        UserName = ticket.Name, 
+//                        Password = ticket.UserData
+//                    }, null);
+//                }
+//            }
+
             return View(new LogOnModel());
         }
 
@@ -135,19 +149,23 @@ namespace jail.Controllers
                     if (ControllerContext.HttpContext.Session != null)
                     {
                         ControllerContext.HttpContext.Session["User"] = user;
-                        ControllerContext.HttpContext.Session.Timeout = 20;
+                        ControllerContext.HttpContext.Session.Timeout = 24 * 60;
                     }
 //                    if (model.RememberMe)
 //                    {
                         var ticket = new FormsAuthenticationTicket(1, model.UserName,
                             DateTime.Now, DateTime.Now.AddDays(7), false,
-                            string.Format("{0},{1}", user.Id, user.UserType));
+                            string.Format("{0},{1}", user.Id, user.UserType), 
+                            FormsAuthentication.FormsCookiePath);
                         var strEncryptedTicket = FormsAuthentication.Encrypt(ticket);
                         var cookie = new HttpCookie(FormsAuthentication.FormsCookieName, strEncryptedTicket)
                                      {
-                                         Expires = DateTime.MaxValue
+                                         Expires = DateTime.Now.AddDays(60)
                                      };
                         HttpContext.Response.Cookies.Add(cookie);
+                        FormsAuthentication.SetAuthCookie(model.UserName, true);
+                        if (!string.IsNullOrWhiteSpace(returnUrl))
+                            FormsAuthentication.RedirectFromLoginPage(model.UserName, true);
 //                    }
 //                    else
 //                    {
