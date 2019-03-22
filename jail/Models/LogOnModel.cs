@@ -11,6 +11,8 @@ namespace jail.Models
         [DataType(DataType.Password), DisplayName("Password")]
         public string Password { get; set; }
 
+        public string RedirectUrl { get; set; }
+
 //        [DisplayName("Remember me")]
 //        public bool RememberMe { get; set; }
     }
