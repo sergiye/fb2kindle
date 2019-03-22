@@ -549,6 +549,7 @@ namespace jail.Controllers
         public ActionResult UserEdit(long id = 0)
         {
             var user = UserRepository.GetUserById(id);
+            ViewBag.TimeTrackUsers = TimeTrackRepository.GetAllUsers();
             return user != null
                 ? PartialView(user)
                 : PartialView(new UserProfile
@@ -573,6 +574,7 @@ namespace jail.Controllers
                 }
                 //ModelState.AddModelError("", "User email or phone already registered. Please enter another one.");
             }
+            ViewBag.TimeTrackUsers = TimeTrackRepository.GetAllUsers();
             return PartialView(model);
         }
 
