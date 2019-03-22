@@ -105,7 +105,7 @@ namespace jail.Controllers
 
         #region Login-logout
 
-        public ActionResult LogOn()
+        public ActionResult LogOn(string returnUrl)
         {
 //            HttpCookie authCookie = HttpContext.Request.Cookies.Get(FormsAuthentication.FormsCookieName);
 //            if (authCookie != null && !string.IsNullOrEmpty(authCookie.Value))
@@ -120,12 +120,11 @@ namespace jail.Controllers
 //                    }, null);
 //                }
 //            }
-
-            return View(new LogOnModel());
+            return View(new LogOnModel{RedirectUrl = returnUrl});
         }
 
         [HttpPost]
-        public ActionResult LogOn(LogOnModel model, string returnUrl)
+        public ActionResult LogOn(LogOnModel model)
         {
             if (ModelState.IsValid)
             {
@@ -164,17 +163,14 @@ namespace jail.Controllers
                                      };
                         HttpContext.Response.Cookies.Add(cookie);
                         FormsAuthentication.SetAuthCookie(model.UserName, true);
-                        if (!string.IsNullOrWhiteSpace(returnUrl))
-                            FormsAuthentication.RedirectFromLoginPage(model.UserName, true);
+                        if (!string.IsNullOrWhiteSpace(model.RedirectUrl))
+                            return Redirect(model.RedirectUrl);
 //                    }
 //                    else
 //                    {
 //                        //FormsAuthentication.SetAuthCookie(model.UserName, false);
 //                        FormsAuthentication.RedirectFromLoginPage(model.UserName, false);
 //                    }
-                    //                    if (Url.IsLocalUrl(returnUrl) && returnUrl.Length > 1 && returnUrl.StartsWith("/")
-                    //                        && !returnUrl.StartsWith("//") && !returnUrl.StartsWith("/\\"))
-                    //                        return Redirect(returnUrl);
                     return RedirectToAction(user.UserType == UserType.Administrator ? "Log" : "Index", "Home");
                 }
             }

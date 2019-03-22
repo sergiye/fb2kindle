@@ -21,6 +21,8 @@
         <br />
         @Html.LabelFor(m => m.Password, new { @for = "inputPassword", @class = "sr-only" })
         @Html.PasswordFor(m => m.Password, new { id = "inputPassword", @class = "form-control", placeholder = "Password" })
+
+        @Html.HiddenFor(m => m.RedirectUrl)
 @*            <div class="checkbox">*@
 @*                @Html.CheckBoxFor(m => m.RememberMe)*@
 @*                @Html.LabelFor(m => m.RememberMe)*@
