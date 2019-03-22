@@ -35,7 +35,7 @@ namespace jail.Models
     {
         public long UserId { get; set; }
 
-        [DisplayFormat(DataFormatString="{0:dd/MM/yyyy}", ApplyFormatInEditMode = true)]
+        [DisplayFormat(DataFormatString="{0:ddd dd MMM}", ApplyFormatInEditMode = true)]
         public DateTime Date
         {
             get { return Items.Values[0].CheckTime.Date; }
