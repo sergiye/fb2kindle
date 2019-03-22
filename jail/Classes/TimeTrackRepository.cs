@@ -15,7 +15,9 @@ namespace jail.Classes
 
         public static List<TimeUserInfo> GetAllUsers()
         {
-            return Db.Query<TimeUserInfo>("select * from UserInfo order by Name");
+            var result = Db.Query<TimeUserInfo>("select * from UserInfo order by Name");
+            result.Insert(0, new TimeUserInfo{Name = "Empty", UserId = 0});
+            return result;
         }
 
         public static List<CheckInOut> GetLastCheckInOut(long userId, int count = 49)
