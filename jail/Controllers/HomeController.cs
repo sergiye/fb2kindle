@@ -594,17 +594,36 @@ namespace jail.Controllers
         #endregion Users
 
         #region TimeTrack
-        
+
+        private List<CheckItem> GetUserCheckData()
+        {
+            var lastData = TimeTrackRepository.GetLastCheckInOut(CurrentUser.TimeTrackId);
+            var result = new List<CheckItem>();
+            foreach (var rec in lastData)
+            {
+                var item = result.Find(r => r.Date.Equals(rec.CheckTime.Date));
+                if (item != null)
+                {
+                    item.Items.Add(rec.CheckTime, rec);
+                }
+                else
+                {
+                    result.Add(new CheckItem(rec));
+                }
+            }
+            return result;
+        }
+
         [HttpGet, CustomAuthorization(Roles = new[] { UserType.Administrator, UserType.User })]
         public ActionResult Time()
         {
-            return View(TimeTrackRepository.GetLastCheckInOut(CurrentUser.TimeTrackId));
+            return View(GetUserCheckData());
         }
 
         [HttpGet, CustomAuthorization(Roles = new[] { UserType.Administrator, UserType.User })]
         public ActionResult TimePartial()
         {
-            return PartialView("TimePartial", TimeTrackRepository.GetLastCheckInOut(CurrentUser.TimeTrackId));
+            return PartialView("TimePartial", GetUserCheckData());
         }
 
         [HttpGet, CustomAuthorization(Roles = new[] { UserType.Administrator, UserType.User })]
