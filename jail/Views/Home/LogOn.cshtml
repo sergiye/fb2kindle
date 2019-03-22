@@ -1,6 +1,8 @@
 ﻿@using jail.Controllers
 @model jail.Models.LogOnModel
-
+@{
+    ViewBag.Title = "Login";
+}
 @using (Html.BeginForm("LogOn", "Home", FormMethod.Post, new { @class = "form-signin", @style = "width:400px;" }))
 {
     <div>
