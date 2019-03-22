@@ -41,21 +41,21 @@ namespace jail.Models
             get { return Items.Values[0].CheckTime.Date; }
         }
 
-        [DisplayFormat(DataFormatString="{0:hh\\:mm}", ApplyFormatInEditMode = true)]
+        [DisplayFormat(DataFormatString="{0:hh\\:mm\\:ss}", ApplyFormatInEditMode = true)]
         [DisplayName("In Time")]
         public TimeSpan CheckInTime
         {
             get { return Items.Values[0].CheckTime.TimeOfDay; }
         }
         
-        [DisplayFormat(DataFormatString="{0:hh\\:mm}", ApplyFormatInEditMode = true)]
+        [DisplayFormat(DataFormatString="{0:hh\\:mm\\:ss}", ApplyFormatInEditMode = true)]
         [DisplayName("Out Time")]
         public TimeSpan CheckOutTime
         {
-            get { return Items.Values[Items.Count - 1].CheckTime.TimeOfDay; }
+            get { return Items.Count == 1 ? DateTime.Now.TimeOfDay : Items.Values[Items.Count - 1].CheckTime.TimeOfDay; }
         }
 
-        [DisplayFormat(DataFormatString="{0:hh\\:mm}", ApplyFormatInEditMode = true)]
+        [DisplayFormat(DataFormatString="{0:hh\\:mm\\:ss}", ApplyFormatInEditMode = true)]
         public TimeSpan Duration
         {
             get { return CheckOutTime.Subtract(CheckInTime); }
