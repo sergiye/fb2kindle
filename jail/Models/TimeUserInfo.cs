@@ -67,5 +67,23 @@ namespace jail.Models
         {
             Items = new SortedList<DateTime, CheckInOut> {{subItem.CheckTime, subItem}};
         }
+
+        public static List<CheckItem> FromUserCheckData(List<CheckInOut> data)
+        {
+            var result = new List<CheckItem>();
+            foreach (var rec in data)
+            {
+                var item = result.Find(r => r.Date.Equals(rec.CheckTime.Date));
+                if (item != null)
+                {
+                    item.Items.Add(rec.CheckTime, rec);
+                }
+                else
+                {
+                    result.Add(new CheckItem(rec));
+                }
+            }
+            return result;
+        }
     }
 }
