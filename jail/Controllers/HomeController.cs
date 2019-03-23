@@ -51,24 +51,15 @@ namespace jail.Controllers
             }
         }
 
-//        public bool IsAdmin()
-//        {
-//            var user = User as UserProfile;
-//            if (user == null)
-//                return false;
-//            return user.UserType == UserType.Administrator;
-//        }
-
-        private string AppBaseUrl { get { return Url.Content("~/"); } }
-
-        private string AppBaseUrl2
+        private string AppBaseUrl
         {
             get
             {
-                if (Request == null || Request.Url == null || Request.ApplicationPath == null)
-                    return null;
-                return string.Format("{0}://{1}:{2}{3}/", Request.Url.Scheme, Request.Url.Host, Request.Url.Port,
-                    Request.ApplicationPath.TrimEnd('/'));
+                return Url.Content("~/");
+//                if (Request == null || Request.Url == null || Request.ApplicationPath == null)
+//                    return null;
+//                return string.Format("{0}://{1}:{2}{3}/", Request.Url.Scheme, Request.Url.Host, Request.Url.Port,
+//                    Request.ApplicationPath.TrimEnd('/'));
             }
         }
 
@@ -91,11 +82,13 @@ namespace jail.Controllers
                 Assembly.GetExecutingAssembly().GetName().Version, buildTime);
         }
 
+        [Route("about")]
         public ActionResult About()
         {
             return View();
         }
 
+        [Route("contact")]
         public ActionResult Contact()
         {
             return View();
@@ -105,6 +98,7 @@ namespace jail.Controllers
 
         #region Login-logout
 
+        [Route("login")]
         public ActionResult LogOn(string returnUrl)
         {
 //            HttpCookie authCookie = HttpContext.Request.Cookies.Get(FormsAuthentication.FormsCookieName);
@@ -123,6 +117,7 @@ namespace jail.Controllers
             return View(new LogOnModel{RedirectUrl = returnUrl});
         }
 
+        [Route("login")]
         [HttpPost]
         public ActionResult LogOn(LogOnModel model)
         {
@@ -177,12 +172,12 @@ namespace jail.Controllers
             return View(model);
         }
 
+        [Route("logout")]
         public ActionResult LogOff()
         {
             if (CurrentUser != null && CurrentUser.UserType != UserType.Administrator)
                 Logger.WriteInfo("Logout from admin zone", CommonHelper.GetClientAddress(), User.Identity.Name);
-            if (HttpContext.Session != null)
-                HttpContext.Session["User"] = null;
+            HttpContext.Session["User"] = null;
             Request.Cookies.Remove(FormsAuthentication.FormsCookieName);
             FormsAuthentication.SignOut();
             return RedirectToAction("Index");
@@ -192,6 +187,7 @@ namespace jail.Controllers
 
         #region Logging
 
+        [Route("log")]
         [CustomAuthorization(Roles = new[] { UserType.Administrator })]
         public ActionResult Log()
         {
@@ -199,6 +195,7 @@ namespace jail.Controllers
             return View(SystemRepository.GetErrorLogData(SettingsHelper.MaxRecordsToShowAtOnce));
         }
 
+        [Route("logp")]
         [HttpGet, CustomAuthorization(Roles = new[] { UserType.Administrator })]
         public ActionResult LogPartial(string key, SystemLog.LogItemType searchType)
         {
@@ -206,6 +203,7 @@ namespace jail.Controllers
             return PartialView(SystemRepository.GetErrorLogData(SettingsHelper.MaxRecordsToShowAtOnce, key, searchType));
         }
 
+        [Route("clrlog")]
         [HttpPost, CustomAuthorization(Roles = new[] { UserType.Administrator })]
         public string ClearSelectedLog(string selection)
         {
@@ -222,6 +220,7 @@ namespace jail.Controllers
             }
         }
 
+        [Route("calclog")]
         [HttpPost, CustomAuthorization(Roles = new[] { UserType.Administrator })]
         public string CalcSelectedLog(string selection)
         {
@@ -479,6 +478,7 @@ namespace jail.Controllers
 
         #region PasswordChange
 
+        [Route("passwd")]
         [HttpGet, CustomAuthorization(Roles = new[] { UserType.Administrator, UserType.User })]
         public ActionResult PasswordChange(long id)
         {
@@ -487,6 +487,7 @@ namespace jail.Controllers
             return PartialView("_PasswordChange", item);
         }
 
+        [Route("passwd")]
         [HttpPost, CustomAuthorization(Roles = new[] { UserType.Administrator, UserType.User })]
         public ActionResult PasswordChange(ChangePasswordModel model)
         {
@@ -509,18 +510,21 @@ namespace jail.Controllers
 
         #region Users
 
+        [Route("users")]
         [HttpGet, CustomAuthorization(Roles = new[] { UserType.Administrator })]
         public ActionResult Users()
         {
             return View(UserRepository.GetUsers(string.Empty));
         }
 
+        [Route("usersp")]
         [HttpGet, CustomAuthorization(Roles = new[] { UserType.Administrator })]
         public ActionResult UsersSearch(string key)
         {
             return PartialView("UsersPartial", UserRepository.GetUsers(key));
         }
 
+        [Route("userdel")]
         [HttpGet, CustomAuthorization(Roles = new[] { UserType.Administrator })]
         public ActionResult UserDelete(long id)
         {
@@ -541,6 +545,7 @@ namespace jail.Controllers
             }
         }
 
+        [Route("useradd")]
         [HttpGet, CustomAuthorization(Roles = new[] { UserType.Administrator })]
         public ActionResult UserEdit(long id = 0)
         {
@@ -554,6 +559,7 @@ namespace jail.Controllers
                 });
         }
 
+        [Route("useradd")]
         [HttpPost, CustomAuthorization(Roles = new[] { UserType.Administrator })]
         public ActionResult UserEdit(UserProfile model)
         {
@@ -574,6 +580,7 @@ namespace jail.Controllers
             return PartialView(model);
         }
 
+        [Route("passwdreset")]
         [HttpGet, CustomAuthorization(Roles = new[] { UserType.Administrator })]
         public string ResetUserPassword(long id)
         {
@@ -593,37 +600,21 @@ namespace jail.Controllers
 
         #region TimeTrack
 
-        private List<CheckItem> GetUserCheckData()
-        {
-            var lastData = TimeTrackRepository.GetLastCheckInOut(CurrentUser.TimeTrackId);
-            var result = new List<CheckItem>();
-            foreach (var rec in lastData)
-            {
-                var item = result.Find(r => r.Date.Equals(rec.CheckTime.Date));
-                if (item != null)
-                {
-                    item.Items.Add(rec.CheckTime, rec);
-                }
-                else
-                {
-                    result.Add(new CheckItem(rec));
-                }
-            }
-            return result;
-        }
-
+        [Route("t")]
         [HttpGet, CustomAuthorization(Roles = new[] { UserType.Administrator, UserType.User })]
         public ActionResult Time()
         {
-            return View(GetUserCheckData());
+            return View(CheckItem.FromUserCheckData(TimeTrackRepository.GetLastCheckInOut(CurrentUser.TimeTrackId)));
         }
 
+        [Route("tp")]
         [HttpGet, CustomAuthorization(Roles = new[] { UserType.Administrator, UserType.User })]
         public ActionResult TimePartial()
         {
-            return PartialView("TimePartial", GetUserCheckData());
+            return PartialView("TimePartial", CheckItem.FromUserCheckData(TimeTrackRepository.GetLastCheckInOut(CurrentUser.TimeTrackId)));
         }
 
+        [Route("in")]
         [HttpGet, CustomAuthorization(Roles = new[] { UserType.Administrator, UserType.User })]
         public ActionResult CheckIn()
         {
@@ -631,6 +622,7 @@ namespace jail.Controllers
             return new HttpStatusCodeResult(HttpStatusCode.OK, "Done");
         }
 
+        [Route("out")]
         [HttpGet, CustomAuthorization(Roles = new[] { UserType.Administrator, UserType.User })]
         public ActionResult CheckOut()
         {
