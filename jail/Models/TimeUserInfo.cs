@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.ComponentModel.DataAnnotations;
 
 namespace jail.Models
 {
@@ -35,27 +34,28 @@ namespace jail.Models
     {
         public long UserId { get; set; }
 
-        [DisplayFormat(DataFormatString="{0:ddd dd MMM}", ApplyFormatInEditMode = true)]
+        [DisplayName("Date")]
+//        [DisplayFormat(DataFormatString="{0:dd MMM}", ApplyFormatInEditMode = true)]
         public DateTime Date
         {
             get { return Items.Values[0].CheckTime.Date; }
         }
 
-        [DisplayFormat(DataFormatString="{0:hh\\:mm\\:ss}", ApplyFormatInEditMode = true)]
+//        [DisplayFormat(DataFormatString="{0:hh\\:mm\\:ss}", ApplyFormatInEditMode = true)]
         [DisplayName("In Time")]
         public TimeSpan CheckInTime
         {
             get { return Items.Values[0].CheckTime.TimeOfDay; }
         }
         
-        [DisplayFormat(DataFormatString="{0:hh\\:mm\\:ss}", ApplyFormatInEditMode = true)]
+//        [DisplayFormat(DataFormatString="{0:hh\\:mm\\:ss}", ApplyFormatInEditMode = true)]
         [DisplayName("Out Time")]
         public TimeSpan CheckOutTime
         {
             get { return Items.Count == 1 ? DateTime.Now.TimeOfDay : Items.Values[Items.Count - 1].CheckTime.TimeOfDay; }
         }
 
-        [DisplayFormat(DataFormatString="{0:hh\\:mm\\:ss}", ApplyFormatInEditMode = true)]
+//        [DisplayFormat(DataFormatString="{0:hh\\:mm\\:ss}", ApplyFormatInEditMode = true)]
         public TimeSpan Duration
         {
             get { return CheckOutTime.Subtract(CheckInTime); }
