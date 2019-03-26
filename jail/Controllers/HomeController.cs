@@ -49,6 +49,10 @@ namespace jail.Controllers
                     ? (UserProfile)ControllerContext.HttpContext.Session["User"]
                     : null;
             }
+            set
+            {
+                ControllerContext.HttpContext.Session["User"] =  value;
+            }
         }
 
         private string AppBaseUrl
@@ -140,11 +144,8 @@ namespace jail.Controllers
                 {
                     if (user.UserType != UserType.Administrator)
                         Logger.WriteInfo(string.Format("{0} logged into admin", user.UserType), CommonHelper.GetClientAddress(), model.UserName);
-                    if (ControllerContext.HttpContext.Session != null)
-                    {
-                        ControllerContext.HttpContext.Session["User"] = user;
-                        ControllerContext.HttpContext.Session.Timeout = 24 * 60;
-                    }
+                    CurrentUser = user;
+                    ControllerContext.HttpContext.Session.Timeout = 24 * 60;
 //                    if (model.RememberMe)
 //                    {
                         var ticket = new FormsAuthenticationTicket(1, model.UserName,
@@ -571,6 +572,11 @@ namespace jail.Controllers
                     Logger.WriteInfo(string.Format("User '{0}' was {2} by '{1}'", model.Email,
                         CurrentUser.Email, model.Id > 0 ? "modified" : "created"), CommonHelper.GetClientAddress(), CurrentUser.Email);
                     UserRepository.SaveUser(model);
+
+                    if (model.Id == CurrentUser.Id)
+                    {
+                        CurrentUser.MergeWith(model);
+                    }
                     ModelState.Clear();
                     return Json(new { message = "User successfully saved.", itemId = model.Id });
                 }
