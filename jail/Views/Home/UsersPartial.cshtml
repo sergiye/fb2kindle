@@ -6,9 +6,9 @@
     <thead>
         <tr>
             <th data-defaultsort="asc">@Html.DisplayNameFor(model => model.Email)</th>
-            <th style="min-width: 125px; width: 125px;">@Html.DisplayNameFor(model => model.RegisteredTime)</th>
-            <th style="min-width: 60px; width: 60px;">@Html.DisplayNameFor(model => model.Active)</th>
             <th style="min-width: 60px; width: 60px;">@Html.DisplayNameFor(model => model.TimeTrackId)</th>
+            <th style="min-width: 60px; width: 60px;">@Html.DisplayNameFor(model => model.Active)</th>
+            <th style="min-width: 125px; width: 125px;">@Html.DisplayNameFor(model => model.RegisteredTime)</th>
             <th style="min-width: 185px; width: 185px;" data-defaultsort='disabled'></th>
         </tr>
     </thead>
@@ -22,13 +22,13 @@
                 @Html.DisplayFor(modelItem => item.Email)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.RegisteredTime)
+                @Html.DisplayFor(modelItem => item.TimeTrackId)
             </td>
             <td class="@(item.Active ? "success" : "warning")">
                 @Html.DisplayFor(modelItem => item.ActiveText)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.TimeTrackId)
+                @Html.DisplayFor(modelItem => item.RegisteredTime)
             </td>
             <td class="col-md-2">
                 <div class="dropdown">
