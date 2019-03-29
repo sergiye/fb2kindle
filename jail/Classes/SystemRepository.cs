@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Configuration;
 using System.Diagnostics;
 using System.Text;
 using jail.Models;
@@ -15,6 +14,7 @@ namespace jail.Classes
         static SystemRepository()
         {
             Db = new MsSqlConnectionProvider<long>(SettingsHelper.StatisticDatabase);
+//            SqlMapper.AddTypeHandler(new UtcTimeHandler());
         }
 
         #region Logging
@@ -25,7 +25,7 @@ namespace jail.Classes
             var sql = new StringBuilder(@"select top(@count) EnteredDate, Level, Message, MachineName, UserName, 
 Exception, CallerAddress from SystemLogs where 1=1");
             if (!string.IsNullOrWhiteSpace(key))
-                sql.Append(" and (([Message] like @key) or ([UserName]=@cryptedKey) or ([CallerAddress] like @key))");
+                sql.Append(" and (Message like @key or Exception like @key or UserName like @key or CallerAddress like @key)");
             if (searchType != SystemLog.LogItemType.All)
             {
                 sql.Append(" and Level='").Append(searchType).Append("'");
@@ -41,6 +41,7 @@ Exception, CallerAddress from SystemLogs where 1=1");
             }
             sql.Append(" order by EnteredDate desc");
             var result = Db.Query<SystemLog>(sql.ToString(), new { count, key = string.Format("%{0}%", key) });
+            //foreach (var item in result) item.EnteredDate = item.EnteredDate.ToLocalTime();
             return result;
         }
 

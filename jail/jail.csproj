@@ -142,6 +142,7 @@
     <Compile Include="Classes\SqLiteConnectionProvider.cs" />
     <Compile Include="Classes\SystemRepository.cs" />
     <Compile Include="Classes\TimeTrackRepository.cs" />
+    <Compile Include="Classes\UtcTimeHandler.cs" />
     <Compile Include="Models\TimeUserInfo.cs" />
     <Compile Include="Classes\UserRepository.cs" />
     <Compile Include="Controllers\ErrorController.cs" />
