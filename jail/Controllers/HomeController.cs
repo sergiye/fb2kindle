@@ -566,7 +566,7 @@ namespace jail.Controllers
         {
             if (ModelState.IsValid)
             {
-                var old = UserRepository.GetUserById(model.Id);
+                //var old = UserRepository.GetUserById(model.Id);
                 //if (UserRepository.IsUserContactsUnique(model.Contacts, model.Id))
                 {
                     Logger.WriteInfo(string.Format("User '{0}' was {2} by '{1}'", model.Email,

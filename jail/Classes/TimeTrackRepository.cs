@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Dapper;
 using jail.Models;
 using Simpl.Extensions.Database;
 
