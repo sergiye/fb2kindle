@@ -9,7 +9,7 @@
     function RefreshData() {
         $.ajax({
             type: "GET",
-            url: '@Url.Action("TimePartial")',
+            url: '@Url.Action("TimePartial", new { id = ViewBag.Id })',
             success: function (response) {
                 $("#gridDataContainer").html(response);
             },
@@ -22,7 +22,7 @@
         if (!confirm("Are you sure you want to check IN?"))
             return;
         $.ajax({
-            url: '@Url.Action("CheckIn")',
+            url: '@Url.Action("CheckIn", new { id = ViewBag.Id })',
             success: RefreshData,
             error: function (response, status, error) {
                 window.Helper.ShowError(error);
@@ -33,7 +33,7 @@
         if (!confirm("Are you sure you want to check OUT?"))
             return;
         $.ajax({
-            url: '@Url.Action("CheckOut")',
+            url: '@Url.Action("CheckOut", new { id = ViewBag.Id })',
             success: RefreshData,
             error: function (response, status, error) {
                 window.Helper.ShowError(error);
