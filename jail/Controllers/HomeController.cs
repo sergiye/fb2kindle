@@ -608,31 +608,35 @@ namespace jail.Controllers
 
         [Route("t")]
         [HttpGet, CustomAuthorization(Roles = new[] { UserType.Administrator, UserType.User })]
-        public ActionResult Time()
+        public ActionResult Time(long id = 0)
         {
-            return View(CheckItem.FromUserCheckData(TimeTrackRepository.GetLastCheckInOut(CurrentUser.TimeTrackId)));
+            ViewBag.Id = id;
+            return View(CheckItem.FromUserCheckData(TimeTrackRepository.GetLastCheckInOut(id > 0 ? id : CurrentUser.TimeTrackId)));
         }
 
         [Route("tp")]
         [HttpGet, CustomAuthorization(Roles = new[] { UserType.Administrator, UserType.User })]
-        public ActionResult TimePartial()
+        public ActionResult TimePartial(long id = 0)
         {
-            return PartialView("TimePartial", CheckItem.FromUserCheckData(TimeTrackRepository.GetLastCheckInOut(CurrentUser.TimeTrackId)));
+            ViewBag.Id = id;
+            return PartialView("TimePartial", CheckItem.FromUserCheckData(TimeTrackRepository.GetLastCheckInOut(id > 0 ? id : CurrentUser.TimeTrackId)));
         }
 
         [Route("in")]
         [HttpGet, CustomAuthorization(Roles = new[] { UserType.Administrator, UserType.User })]
-        public ActionResult CheckIn()
+        public ActionResult CheckIn(long id = 0)
         {
-            TimeTrackRepository.CheckIn(CurrentUser.TimeTrackId);
+            TimeTrackRepository.CheckIn(id > 0 ? id : CurrentUser.TimeTrackId);
+            Logger.WriteInfo("User checked IN", CommonHelper.GetClientAddress(), CurrentUser.Email);
             return new HttpStatusCodeResult(HttpStatusCode.OK, "Done");
         }
 
         [Route("out")]
         [HttpGet, CustomAuthorization(Roles = new[] { UserType.Administrator, UserType.User })]
-        public ActionResult CheckOut()
+        public ActionResult CheckOut(long id = 0)
         {
-            TimeTrackRepository.CheckOut(CurrentUser.TimeTrackId);
+            TimeTrackRepository.CheckOut(id > 0 ? id : CurrentUser.TimeTrackId);
+            Logger.WriteInfo("User checked OUT", CommonHelper.GetClientAddress(), CurrentUser.Email);
             return new HttpStatusCodeResult(HttpStatusCode.OK, "Done");
         }
  
