@@ -1,13 +1,15 @@
-p{margin-bottom: 1pt; margin-top: 1pt;margin-left: -7px;margin-right: -7px;font-size: 100%;}
-.text-name{font-size: 130%;font-weight:bolder;}
-.text-author{font-size: 150%;font-weight:bold;}
+p{margin-bottom:1pt;margin-top:1pt;margin-left:-8px;margin-right:-8px;font-size:100%;}
+.text-name{font-size:130%;font-weight:bolder;}
+.text-author{font-size:150%;font-weight:bold;}
 .image{text-indent:0;text-align:center;}
-.book{text-indent:35px;margin-top: 10%;page-break-before : always;}
+.book{text-indent: 35px;margin-top:10%;page-break-before:always;}
 .title{font-size: 130%;text-align:center;font-weight:bold;margin-top: 15%;page-break-before:always;}
 .epigraph{font-style:italic;margin-left:20%;width:80%}
 .supertitle{text-align:center;}
 .subtitle{font-style:italic;font-weight: bold;text-align:center;}
 .cite{font-style:italic;font-size: 95%;}
-.poem{text-indent:0;font-style:italic;text-align:center;}
+.poem{font-style:italic;text-align:center;}
 ul{text-align:left;}
 sup{font-size: 60%;}
+span.dc{float:left;font-size:4em;margin-bottom:-0.3em;}
+span.dc2{text-shadow:1px 1px #505050;}
