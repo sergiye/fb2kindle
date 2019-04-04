@@ -1,6 +1,6 @@
 p{margin-bottom: 1pt; margin-top: 1pt;margin-left: -7px;margin-right: -7px;font-size: 100%;}
-.text-name{text-indent:0;font-size: 130%;font-weight:bolder;}
-.text-author{text-indent:0;font-size: 120%;font-style:italic;font-weight:bold;}
+.text-name{font-size: 130%;font-weight:bolder;}
+.text-author{font-size: 150%;font-weight:bold;}
 .image{text-indent:0;text-align:center;}
 .book{text-indent:35px;margin-top: 10%;page-break-before : always;}
 .title{font-size: 130%;text-align:center;font-weight:bold;margin-top: 15%;page-break-before:always;}
