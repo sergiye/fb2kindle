@@ -1,13 +1,13 @@
-p{margin-bottom: 3pt; margin-top: 3pt;margin-left: -10px;margin-right: -10px;font-size: 100%;}
-p.text-name{text-indent:0;font-size: 150%;font-weight:bolder;}
-p.text-author{text-indent:0;font-style:italic;font-weight:bold;text-align:right;}
-div.image{text-indent:0;text-align:center;}
-div.book{text-indent:35px;padding-bottom: 50px;page-break-before : always;}
-div.title{font-size: 130%;text-align:center;font-weight:bold;page-break-before:always;}
-div.epigraph{font-style:italic;margin-left : 20%;width:80%}
-div.supertitle{text-align:center;}
-div.subtitle{font-style:italic;font-weight: bold;text-align:center;}
-div.cite{font-style:italic;font-size: 90%;}
-div.poem{text-indent:0;font-style:italic;text-align:center;}
+p{margin-bottom: 1pt; margin-top: 1pt;margin-left: -7px;margin-right: -7px;font-size: 100%;}
+.text-name{text-indent:0;font-size: 130%;font-weight:bolder;}
+.text-author{text-indent:0;font-style:italic;font-weight:bold;text-align:right;}
+.image{text-indent:0;text-align:center;}
+.book{text-indent:35px;margin-top: 10%;page-break-before : always;}
+.title{font-size: 130%;text-align:center;font-weight:bold;margin-top: 15%;page-break-before:always;}
+.epigraph{font-style:italic;margin-left:20%;width:80%}
+.supertitle{text-align:center;}
+.subtitle{font-style:italic;font-weight: bold;text-align:center;}
+.cite{font-style:italic;font-size: 95%;}
+.poem{text-indent:0;font-style:italic;text-align:center;}
 ul{text-align:left;}
-sup{font-size: 60%;color:#555555;}
+sup{font-size: 60%;}
