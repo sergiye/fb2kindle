@@ -555,35 +555,41 @@ namespace Fb2Kindle
 
         private static XElement CreateTitlePage(XElement book)
         {
-            var linkEl = new XElement("div", new XAttribute("id", "it"));
-            linkEl.Add(new XAttribute("class", "supertitle"));
-            linkEl.Add(new XAttribute("align", "center"));
-            
+            var root = new XElement("div", new XAttribute("id", "it"));
+            root.Add(new XAttribute("class", "supertitle"));
+            root.Add(new XAttribute("align", "center"));
+
+            //author(s)
             var authorsInfo = new XElement("div");
             authorsInfo.Add(new XAttribute("class", "text-author"));
             var authors = GetAuthors(book.Elements("description").Elements("title-info").Elements("author"));
-            foreach (var author in authors)
-            {
-                authorsInfo.Add(new XElement("div", author));
-            }
-            linkEl.Add(authorsInfo);
-            linkEl.Add(new XElement("p", string.Format("{0} {1}", Util.AttributeValue(book.Elements("description").Elements("title-info").Elements("sequence"), "name"), 
+            authorsInfo.Add(new XElement("div", string.Join(", ", authors)));
+            root.Add(authorsInfo, new XElement("br"));
+
+            //title
+            var title = new XElement("p");
+            title.Add(new XAttribute("class", "text-name"));
+            title.Add(Util.Value(book.Elements("description").Elements("title-info").Elements("book-title"), ""));
+            root.Add(title, new XElement("br"));
+
+            //sequence
+            root.Add(new XElement("p", string.Format("{0} {1}", Util.AttributeValue(book.Elements("description").Elements("title-info").Elements("sequence"), "name"), 
                 Util.AttributeValue(book.Elements("description").Elements("title-info").Elements("sequence"), "number"))));
-            linkEl.Add(new XElement("br"));
-            var pEl = new XElement("p");
-            pEl.Add(new XAttribute("class", "text-name"));
-            pEl.Add(Util.Value(book.Elements("description").Elements("title-info").Elements("book-title"), "Книга"));
-            linkEl.Add(pEl, new XElement("br"));
-            linkEl.Add(new XElement("p", Util.Value(book.Elements("description").Elements("title-info").Elements("annotation"))));
-            linkEl.Add(new XElement("br"), new XElement("br"));
-            linkEl.Add(new XElement("p", Util.Value(book.Elements("description").Elements("publish-info").Elements("publisher"))));
-            linkEl.Add(new XElement("p", Util.Value(book.Elements("description").Elements("publish-info").Elements("city"))));
-            linkEl.Add(new XElement("p", Util.Value(book.Elements("description").Elements("publish-info").Elements("year"))));
-            linkEl.Add(new XElement("br"), new XElement("br"), new XElement("br"));
-            linkEl.Add(new XElement("p", string.Format("Converted by © Fb2Kindle (ver. {0})", 
+            root.Add(new XElement("br"));
+
+            //annotation
+            root.Add(new XElement("p", Util.Value(book.Elements("description").Elements("title-info").Elements("annotation"))));
+            root.Add(new XElement("br"), new XElement("br"));
+            root.Add(new XElement("p", Util.Value(book.Elements("description").Elements("publish-info").Elements("publisher"))));
+            root.Add(new XElement("p", Util.Value(book.Elements("description").Elements("publish-info").Elements("city"))));
+            root.Add(new XElement("p", Util.Value(book.Elements("description").Elements("publish-info").Elements("year"))));
+            
+            //footer
+            root.Add(new XElement("br"), new XElement("br"), new XElement("br"));
+            root.Add(new XElement("p", string.Format("Converted by © Fb2Kindle (ver. {0})", 
                 Assembly.GetExecutingAssembly().GetName().Version.ToString(3))));
-            linkEl.Add(new XElement("p", "developed by Sergiy Yegoshyn (egoshin.sergey@gmail.com)"));
-            return linkEl;
+            root.Add(new XElement("p", "developed by Sergiy Yegoshyn (egoshin.sergey@gmail.com)"));
+            return root;
         }
 
         #region helper methods
