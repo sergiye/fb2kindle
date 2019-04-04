@@ -559,11 +559,12 @@ namespace Fb2Kindle
             linkEl.Add(new XAttribute("class", "supertitle"));
             linkEl.Add(new XAttribute("align", "center"));
             
-            var authorsInfo = new XElement("h2");
+            var authorsInfo = new XElement("div");
+            authorsInfo.Add(new XAttribute("class", "text-author"));
             var authors = GetAuthors(book.Elements("description").Elements("title-info").Elements("author"));
             foreach (var author in authors)
             {
-                authorsInfo.Add(author, new XElement("br"));
+                authorsInfo.Add(new XElement("div", author));
             }
             linkEl.Add(authorsInfo);
             linkEl.Add(new XElement("p", string.Format("{0} {1}", Util.AttributeValue(book.Elements("description").Elements("title-info").Elements("sequence"), "name"), 
