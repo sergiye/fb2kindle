@@ -28,10 +28,11 @@ namespace jail.Classes
             return data;
         }
 
-        public static UserProfile GetUser(string login, string password)
+        public static UserProfile GetUser(string login, string password = null)
         {
             var result = string.IsNullOrEmpty(password)
-                ? Db.QueryOne<UserProfile>("select * from Users where Email like @login and Password is null",
+//                ? Db.QueryOne<UserProfile>("select * from Users where Email like @login and Password is null",
+                ? Db.QueryOne<UserProfile>("select * from Users where Email like @login",
                     new { login })
                 : Db.QueryOne<UserProfile>("select * from Users where Email like @login and Password=@password",
                     new { login, password = password.GetHash()});
