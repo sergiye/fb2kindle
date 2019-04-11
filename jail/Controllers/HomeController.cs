@@ -105,19 +105,25 @@ namespace jail.Controllers
         [Route("login")]
         public ActionResult LogOn(string returnUrl)
         {
-//            HttpCookie authCookie = HttpContext.Request.Cookies.Get(FormsAuthentication.FormsCookieName);
-//            if (authCookie != null && !string.IsNullOrEmpty(authCookie.Value))
-//            {
-//                var ticket = FormsAuthentication.Decrypt(authCookie.Value);
-//                if (ticket != null && !ticket.Expired)
-//                {
-//                    return LogOn(new LogOnModel
-//                    {
-//                        UserName = ticket.Name, 
-//                        Password = ticket.UserData
-//                    }, null);
-//                }
-//            }
+            HttpCookie authCookie = HttpContext.Request.Cookies.Get(FormsAuthentication.FormsCookieName);
+            if (authCookie != null && !string.IsNullOrEmpty(authCookie.Value))
+            {
+                var ticket = FormsAuthentication.Decrypt(authCookie.Value);
+                if (ticket != null && !ticket.Expired && !string.IsNullOrWhiteSpace(ticket.Name))
+                {
+                    //restore from cookie
+                    var user = UserRepository.GetUser(ticket.Name);
+                    if (user != null)
+                    {
+                        CurrentUser = user;
+                        ControllerContext.HttpContext.Session.Timeout = 24 * 60;
+                        FormsAuthentication.SetAuthCookie(ticket.Name, true);
+                        return !string.IsNullOrWhiteSpace(returnUrl)
+                            ? (ActionResult) Redirect(returnUrl)
+                            : RedirectToAction(user.UserType == UserType.Administrator ? "Log" : "Index", "Home");
+                    }
+                }
+            }
             return View(new LogOnModel{RedirectUrl = returnUrl});
         }
 
