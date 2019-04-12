@@ -116,6 +116,7 @@ namespace jail.Controllers
                         CurrentUser = user;
                         ControllerContext.HttpContext.Session.Timeout = 24 * 60;
                         FormsAuthentication.SetAuthCookie(ticket.Name, true);
+                        Logger.WriteInfo(string.Format("{0} session restored", user.UserType), CommonHelper.GetClientAddress(), user.Email);
                         return !string.IsNullOrWhiteSpace(returnUrl)
                             ? (ActionResult) Redirect(returnUrl)
                             : RedirectToAction(user.UserType == UserType.Administrator ? "Log" : "Index", "Home");
@@ -142,8 +143,7 @@ namespace jail.Controllers
 //                }
                 else
                 {
-                    if (user.UserType != UserType.Administrator)
-                        Logger.WriteInfo(string.Format("{0} logged into admin", user.UserType), CommonHelper.GetClientAddress(), model.UserName);
+                    Logger.WriteInfo(string.Format("{0} logged in", user.UserType), CommonHelper.GetClientAddress(), model.UserName);
                     CurrentUser = user;
                     ControllerContext.HttpContext.Session.Timeout = 24 * 60;
 //                    if (model.RememberMe)
@@ -177,7 +177,7 @@ namespace jail.Controllers
         public ActionResult LogOff()
         {
             if (CurrentUser != null && CurrentUser.UserType != UserType.Administrator)
-                Logger.WriteInfo("Logout from admin zone", CommonHelper.GetClientAddress(), User.Identity.Name);
+                Logger.WriteInfo("Logout", CommonHelper.GetClientAddress(), User.Identity.Name);
             HttpContext.Session["User"] = null;
             Request.Cookies.Remove(FormsAuthentication.FormsCookieName);
             FormsAuthentication.SignOut();
