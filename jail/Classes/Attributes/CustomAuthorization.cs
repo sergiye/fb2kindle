@@ -25,7 +25,7 @@ namespace jail.Classes.Attributes
                 var user = UserRepository.GetUserById(int.Parse(userData[0]));
                 if (user == null) return false;
                 httpContext.Session["User"] = user;
-                Logger.WriteInfo(string.Format("{0} re-entered admin zone", user.UserType), CommonHelper.GetClientAddress(), user.Email);
+                Logger.WriteInfo(string.Format("{0} is back", user.UserType), CommonHelper.GetClientAddress(), user.Email);
             }
 
             if (Roles == null || Roles.Length <= 0) return false;
