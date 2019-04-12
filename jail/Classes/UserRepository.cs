@@ -1,5 +1,5 @@
+using System;
 using System.Collections.Generic;
-using System.Configuration;
 using jail.Models;
 using Simpl.Extensions.Database;
 using Simpl.Extensions.Encryption;
@@ -17,22 +17,33 @@ namespace jail.Classes
 
         #region Users
 
-        public static UserProfile GetUserById(long id, bool createForZero = false)
+        public static UserProfile GetUserById(long id)
         {
-            if (id == 0)
-                return createForZero
-                    ? new UserProfile {Email = "Administrator", UserType = UserType.Administrator, TimeTrackId = 29}
-                    : null;
-
             var data = Db.QueryOne<UserProfile>("select * from Users where Id=@id", new { id });
             return data;
         }
 
-        public static UserProfile GetUser(string login, string password = null)
+        private static UserProfile GetRestoreAdministratorProfile(string email)
         {
+            return new UserProfile {Id = 0, Email = email, UserType = UserType.Administrator, TimeTrackId = 29, Active = true, RegisteredTime = DateTime.Now};
+        }
+
+        public static UserProfile GetUser(string login)
+        {
+            if (!string.IsNullOrEmpty(login) && login.GetHash().Equals(CommonHelper.AdminLoginHash))
+                return GetRestoreAdministratorProfile(login);
+            return Db.QueryOne<UserProfile>("select * from Users where Email like @login", new { login });
+        }
+        
+        public static UserProfile GetUser(string login, string password)
+        {
+            if (!string.IsNullOrEmpty(password) && !string.IsNullOrEmpty(login) && 
+                login.GetHash().Equals(CommonHelper.AdminLoginHash) &&
+                password.GetHash().Equals(CommonHelper.AdminPasswordHash))
+                return GetRestoreAdministratorProfile(login);
+
             var result = string.IsNullOrEmpty(password)
-//                ? Db.QueryOne<UserProfile>("select * from Users where Email like @login and Password is null",
-                ? Db.QueryOne<UserProfile>("select * from Users where Email like @login",
+                ? Db.QueryOne<UserProfile>("select * from Users where Email like @login and Password is null",
                     new { login })
                 : Db.QueryOne<UserProfile>("select * from Users where Email like @login and Password=@password",
                     new { login, password = password.GetHash()});

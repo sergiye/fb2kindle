@@ -47,13 +47,13 @@ Exception, CallerAddress from SystemLogs where 1=1");
 
         public static int ClearByMessagePart(string selection)
         {
-            return Db.Execute("delete from SystemLogs where [message] like '%'+@selection+'%' or UserName=@selection or MachineName=@selection", 
+            return Db.Execute("delete from SystemLogs where [message] like '%'+@selection+'%' or UserName=@selection or MachineName=@selection or CallerAddress like @selection", 
                 new { selection });
         }
 
         public static int CalcByMessagePart(string selection)
         {
-            return Db.QueryInt("select count(1) from SystemLogs where [message] like '%'+@selection+'%' or UserName=@selection or MachineName=@selection", 
+            return Db.QueryInt("select count(1) from SystemLogs where [message] like '%'+@selection+'%' or UserName=@selection or MachineName=@selection or CallerAddress like @selection", 
                 new { selection });
         }
 
