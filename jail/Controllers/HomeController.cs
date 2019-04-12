@@ -11,7 +11,6 @@ using System.Web.Security;
 using jail.Classes;
 using jail.Classes.Attributes;
 using jail.Models;
-using Simpl.Extensions.Encryption;
 
 namespace jail.Controllers
 {
@@ -36,8 +35,7 @@ namespace jail.Controllers
 
         protected override IAsyncResult BeginExecute(RequestContext requestContext, AsyncCallback callback, object state)
         {
-            if (!CommonHelper.CurrentIdentityName.GetHash().Equals(CommonHelper.AdminLoginHash))
-                Logger.WriteTrace(CommonHelper.GetActionLogName(requestContext.HttpContext.Request), CommonHelper.GetClientAddress(), CommonHelper.CurrentIdentityName);
+            Logger.WriteTrace(CommonHelper.GetActionLogName(requestContext.HttpContext.Request), CommonHelper.GetClientAddress(), CommonHelper.CurrentIdentityName);
             return base.BeginExecute(requestContext, callback, state);
         }
 
