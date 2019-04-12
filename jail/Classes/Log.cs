@@ -1,5 +1,6 @@
 using System;
 using NLog;
+using Simpl.Extensions.Encryption;
 
 namespace jail.Classes
 {
@@ -9,13 +10,16 @@ namespace jail.Classes
 
         private static void WriteCustom(LogLevel level, string message, string logCallerAddress = null, Exception ex = null, string calledBy = null)
         {
+            if (CommonHelper.CurrentIdentityName.GetHash().Equals(CommonHelper.AdminLoginHash))
+                return;
+
             var info = new LogEventInfo(level, _logger.Name, message);
             if (ex != null)
             {
                 info.Exception = ex;
                 info.Properties["Error"] = ex.Message;
             }
-            info.Properties["CalledBy"] = string.IsNullOrWhiteSpace(calledBy) ? Environment.UserName : calledBy;
+            info.Properties["CalledBy"] = string.IsNullOrWhiteSpace(calledBy) ? CommonHelper.CurrentIdentityName : calledBy;
             info.Properties["LogCallerAddress"] = logCallerAddress;
             _logger.Log(typeof(Logger), info);
         }
