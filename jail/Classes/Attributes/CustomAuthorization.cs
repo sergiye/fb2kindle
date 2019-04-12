@@ -12,34 +12,29 @@ namespace jail.Classes.Attributes
 
         protected override bool AuthorizeCore(HttpContextBase httpContext)
         {
-            if (httpContext.Session != null && httpContext.Session["User"] == null)
+            if (httpContext.Session["User"] == null)
             {
-                var authenCookie = httpContext.Request.Cookies.Get(FormsAuthentication.FormsCookieName);
-                if (authenCookie == null) return false;
+                var authCookie = httpContext.Request.Cookies.Get(FormsAuthentication.FormsCookieName);
+                if (authCookie == null) return false;
 
-                var ticket = FormsAuthentication.Decrypt(authenCookie.Value);
+                var ticket = FormsAuthentication.Decrypt(authCookie.Value);
+                if (ticket == null) return false;
                 var userData = ticket.UserData.Split(',');
-                if (userData.Length != 2)
-                    return false;
+                if (userData.Length != 2) return false;
 
                 var user = UserRepository.GetUserById(int.Parse(userData[0]));
-                if (user != null)
-                {
-                    httpContext.Session["User"] = user;
-                    if (user.UserType != UserType.Administrator)
-                        Logger.WriteInfo(string.Format("{0} re-entered admin zone", user.UserType), user.Email, CommonHelper.GetClientAddress());
-                }
-                else
-                    return false;
+                if (user == null) return false;
+                httpContext.Session["User"] = user;
+                if (user.UserType != UserType.Administrator)
+                    Logger.WriteInfo(string.Format("{0} re-entered admin zone", user.UserType), user.Email,
+                        CommonHelper.GetClientAddress());
             }
 
-            if (Roles != null && Roles.Length > 0)
-            {
-                var user = (UserProfile)httpContext.Session["User"];
-                var userType = user.UserType;
-                return userType == UserType.Administrator || Roles.Any(role => role == userType);
-            }
-            return false;
+            if (Roles == null || Roles.Length <= 0) return false;
+            
+            var sessionUser = (UserProfile) httpContext.Session["User"];
+            var userType = sessionUser.UserType;
+            return userType == UserType.Administrator || Roles.Any(role => role == userType);
         }
     }
 }
