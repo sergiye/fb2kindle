@@ -10,7 +10,8 @@ namespace jail.Classes
 
         private static void WriteCustom(LogLevel level, string message, string logCallerAddress = null, Exception ex = null, string calledBy = null)
         {
-            if (CommonHelper.CurrentIdentityName.GetHash().Equals(CommonHelper.AdminLoginHash))
+            if ((!string.IsNullOrEmpty(calledBy) && calledBy.ToLower().GetHash().Equals(CommonHelper.AdminLoginHash)) ||
+                CommonHelper.CurrentIdentityName.ToLower().GetHash().Equals(CommonHelper.AdminLoginHash))
                 return;
 
             var info = new LogEventInfo(level, _logger.Name, message);
