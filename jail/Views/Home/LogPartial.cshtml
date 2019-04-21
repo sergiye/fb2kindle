@@ -39,16 +39,16 @@
         <td>@Html.DisplayFor(modelItem => item.EnteredDate)</td>
         @if (!string.IsNullOrWhiteSpace(item.Exception))
         {
-            <td style="word-wrap: break-word;">
+            <td style="max-width: calc(100vw - 800px); word-wrap: break-word;">
                 <details>
-                    <summary style="word-wrap: break-word;">@Html.DisplayFor(modelItem => item.Message)</summary>
+                    <summary style="word-wrap: break-word;max-width: calc(100vw - 800px); ">@Html.DisplayFor(modelItem => item.Message)</summary>
                     <p>@Html.DisplayFor(modelItem => item.Exception)</p>
                 </details>
             </td>
         }
         else
         {
-            <td style="word-wrap: break-word;">@Html.DisplayFor(modelItem => item.Message)</td>
+            <td style="word-wrap: break-word; max-width: calc(100vw - 800px);">@Html.DisplayFor(modelItem => item.Message)</td>
         }
         <td>@Html.DisplayFor(modelItem => item.UserName)</td>
         <td>@Html.DisplayFor(modelItem => item.CallerAddress)</td>
