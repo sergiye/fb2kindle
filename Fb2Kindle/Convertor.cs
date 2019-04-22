@@ -49,7 +49,7 @@ namespace Fb2Kindle
             _defaultCss = Util.GetScriptFromResource("Fb2Kindle.css");
         }
 
-        internal bool ConvertBookSequence(string[] books)
+        internal async Task<bool> ConvertBookSequence(string[] books)
         {
             string tempDir = null;
             try
@@ -145,7 +145,7 @@ namespace Fb2Kindle
                 SaveXmlToFile(_opfFile, tempDir + @"\" + commonTitle + ".opf");
                 _opfFile.RemoveAll();
 
-                var result = CreateMobi(_workingFolder, tempDir, commonTitle, books[0], _currentSettings.Compression, _detailedOutput);
+                var result = await CreateMobi(_workingFolder, tempDir, commonTitle, books[0], _currentSettings.Compression, _detailedOutput);
                 if (result && _currentSettings.DeleteOriginal)
                 {
                     foreach (var book in books)
@@ -175,9 +175,9 @@ namespace Fb2Kindle
             }
         }
 
-        internal bool ConvertBook(string bookPath)
+        internal async Task<bool> ConvertBook(string bookPath)
         {
-            return ConvertBookSequence(new[] { bookPath });
+            return await ConvertBookSequence(new[] { bookPath });
         }
 
         #endregion public
@@ -329,7 +329,7 @@ namespace Fb2Kindle
             }
 
             bodies[0].Name = "section";
-            if (_defaultCss.Contains("span.dc{"))
+            if (_currentSettings.DropCaps && _defaultCss.Contains("span.dc{"))
                 SetBigFirstLetters(bodies[0]);
 
             if (_currentSettings.NoChapters)
@@ -426,7 +426,7 @@ namespace Fb2Kindle
             }
         }
 
-        private bool CreateMobi(string workFolder, string tempDir, string bookName, string bookPath, bool compress, bool showOutput)
+        private async Task<bool> CreateMobi(string workFolder, string tempDir, string bookName, string bookPath, bool compress, bool showOutput)
         {
             Util.WriteLine("Creating mobi (KF8)...", ConsoleColor.White);
             var kindleGenPath = string.Format("{0}\\kindlegen.exe", workFolder);
@@ -453,7 +453,7 @@ namespace Fb2Kindle
             if (!string.IsNullOrWhiteSpace(MailTo))
             {
                 // Wait for it to finish
-                saveLocal = !SendBookByMail(bookName, tmpBookPath).GetAwaiter().GetResult();
+                saveLocal = !await SendBookByMail(bookName, tmpBookPath);
                 //Task.Run(async() => await SendBookByMail(bookName, tmpBookPath));
             }
 

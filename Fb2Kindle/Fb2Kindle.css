@@ -1,6 +1,22 @@
 p{margin-bottom: 1pt;margin-top: 1pt;margin-left: -1pt;margin-right: -1pt;font-size:100%;}
 p.text-name{text-indent:0;font-size:130%;font-weight:bolder;}
 p.text-author{text-indent:0;font-style:italic;font-weight:bold;text-align:right;}
+/*p:first-child:first-letter {
+  color: #903;
+  float: left;
+  font-family: Georgia;
+  font-size: 75px;
+  line-height: 60px;
+  padding-top: 4px;
+  padding-right: 8px;
+  padding-left: 3px;
+}
+*//*p:first-child:first-letter {
+  color: #903; 
+  font-family: Georgia;
+  initial-letter: 2;
+}
+*/
 div.text-author{text-indent:0;font-size:150%;font-weight:bold;}
 div.image{text-indent:0;text-align:center;}
 div.book{text-indent: 35px;page-break-before: always;}
