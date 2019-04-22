@@ -14,6 +14,7 @@ namespace Fb2Kindle
     {
         public bool DeleteOriginal { get; set; }
         public bool NoChapters { get; set; }
+        public bool DropCaps { get; set; }
         public bool NoImages { get; set; }
         public bool NoToc { get; set; }
         public bool Compression { get; set; }
