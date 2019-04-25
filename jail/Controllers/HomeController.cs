@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Reflection;
+using System.Threading.Tasks;
 using System.Web;
 using System.Web.Mvc;
 using System.Web.Routing;
@@ -291,24 +292,14 @@ namespace jail.Controllers
             var sourceFileName = Server.MapPath(string.Format("~/b/{0}", book.FileName));
             var resultFile = Path.ChangeExtension(sourceFileName, ".mobi");
             if (!System.IO.File.Exists(resultFile))
-            {
-                var archPath = Path.Combine(SettingsHelper.ArchivesPath, book.ArchiveFileName);
-                if (!System.IO.File.Exists(archPath))
-                    throw new FileNotFoundException("Book archive not found");
-
-                if (!System.IO.File.Exists(sourceFileName))
-                    BookHelper.ExtractZipFile(archPath, book.FileName, sourceFileName);
-
-                if (!BookHelper.ConvertBook(sourceFileName))
-                    throw new ArgumentException("Error converting book for kindle");
-            }
+                throw new FileNotFoundException("File not found", resultFile);
             var fileBytes = System.IO.File.ReadAllBytes(resultFile);
             return File(fileBytes, System.Net.Mime.MediaTypeNames.Application.Octet, 
                 BookHelper.GetBookDownloadFileName(book, ".mobi"));
         }
 
         [Route("deliver/{id}")]
-        public ActionResult Deliver(long id)
+        public async Task<ActionResult> Deliver(long id)
         {
             var book = DataRepository.GetBook(id);
             if (book == null)
@@ -317,19 +308,14 @@ namespace jail.Controllers
             var resultFile = Path.ChangeExtension(sourceFileName, ".mobi");
             if (!System.IO.File.Exists(resultFile))
             {
-                var archPath = Path.Combine(SettingsHelper.ArchivesPath, book.ArchiveFileName);
-                if (!System.IO.File.Exists(archPath))
-                    throw new FileNotFoundException("Book archive not found");
-
-                if (!System.IO.File.Exists(sourceFileName))
-                    BookHelper.ExtractZipFile(archPath, book.FileName, sourceFileName);
-
-                if (!BookHelper.ConvertBook(sourceFileName))
-                    throw new ArgumentException("Error converting book for kindle");
+                Response.StatusCode = (int) HttpStatusCode.NotFound;
+                return Json("File not found", JsonRequestBehavior.AllowGet);
+                //return new HttpStatusCodeResult(HttpStatusCode.NotFound);
+                //throw new FileNotFoundException("File not found", resultFile);
             }
             try
             {
-                CommonHelper.SendBookByMail(book.Title, resultFile, CurrentUser.Email);
+                await CommonHelper.SendBookByMail(book.Title, resultFile, CurrentUser.Email);
                 return Json("Please check your Kindle for new doc", JsonRequestBehavior.AllowGet);
             }
             catch (Exception ex)
@@ -338,6 +324,27 @@ namespace jail.Controllers
                 return Json(ex.Message, JsonRequestBehavior.AllowGet);
 //                return new HttpStatusCodeResult(HttpStatusCode.BadRequest, ex.Message);
             }
+        }
+
+        [Route("generate/{id}")]
+        public ActionResult Generate(long id)
+        {
+            var book = DataRepository.GetBook(id);
+            if (book == null)
+                throw new FileNotFoundException("Book not found in db");
+            var sourceFileName = Server.MapPath(string.Format("~/b/{0}", book.FileName));
+            var resultFile = Path.ChangeExtension(sourceFileName, ".mobi");
+            if (System.IO.File.Exists(resultFile))
+                return Json("Done", JsonRequestBehavior.AllowGet);
+            
+            var archPath = Path.Combine(SettingsHelper.ArchivesPath, book.ArchiveFileName);
+            if (!System.IO.File.Exists(archPath))
+                throw new FileNotFoundException("Book archive not found");
+
+            if (!System.IO.File.Exists(sourceFileName))
+                BookHelper.ExtractZipFile(archPath, book.FileName, sourceFileName);
+            BookHelper.ConvertBookNoWait(sourceFileName);
+            return Json("Please wait a bit and refresh the page", JsonRequestBehavior.AllowGet);
         }
 
         [Route("r/{id}")]
@@ -363,6 +370,7 @@ namespace jail.Controllers
             var readingPath = Path.Combine(detailsFolder, "toc.html");
             if (!System.IO.File.Exists(readingPath))
             {
+                throw new FileNotFoundException("Book not found, please prepare it first");
                 //BookHelper.Transform(tempFile, readingPath, Server.MapPath("~/xhtml.xsl"));
                 if (!BookHelper.ConvertBook(sourceFileName))
                     throw new ArgumentException("Error converting book for kindle");
@@ -385,22 +393,27 @@ namespace jail.Controllers
             if (!System.IO.File.Exists(archPath))
                 throw new FileNotFoundException("Book archive not found");
 
-            var tempFile = Server.MapPath(string.Format("~/b/{0}", book.FileName));
-            if (!System.IO.File.Exists(tempFile))
-                BookHelper.ExtractZipFile(archPath, book.FileName, tempFile);
-            var detailsFolder = Path.Combine(Path.GetDirectoryName(tempFile), Path.GetFileNameWithoutExtension(tempFile));
+            var sourceFileName = Server.MapPath(string.Format("~/b/{0}", book.FileName));
+            if (!System.IO.File.Exists(sourceFileName))
+                BookHelper.ExtractZipFile(archPath, book.FileName, sourceFileName);
+            var detailsFolder = Path.Combine(Path.GetDirectoryName(sourceFileName), Path.GetFileNameWithoutExtension(sourceFileName));
             if (string.IsNullOrWhiteSpace(detailsFolder))
                 throw new DirectoryNotFoundException("Details folder is empty");
             Directory.CreateDirectory(detailsFolder);
             var coverImagePath = Path.Combine(detailsFolder, "cover.jpg");
             var annotationsPath = Path.Combine(detailsFolder, "annotation.txt");
             if (!System.IO.File.Exists(coverImagePath))
-                BookHelper.SaveCover(tempFile, coverImagePath);
+                BookHelper.SaveCover(sourceFileName, coverImagePath);
             if (string.IsNullOrWhiteSpace(book.Description))
-                book.Description = BookHelper.GetAnnotation(tempFile, annotationsPath);
+                book.Description = BookHelper.GetAnnotation(sourceFileName, annotationsPath);
             ViewBag.Title = book.Title;
             if (System.IO.File.Exists(coverImagePath))
                 ViewBag.Image = GetLinkToFile(coverImagePath);
+
+            var mobiFile = Path.ChangeExtension(sourceFileName, ".mobi");
+            ViewBag.MobiFileFound = System.IO.File.Exists(mobiFile);
+
+
             return View(book);
         }
 

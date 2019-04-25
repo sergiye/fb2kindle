@@ -162,6 +162,11 @@ namespace jail.Classes
             }
         }
 
+        internal static void ConvertBookNoWait(string inputFile)
+        {
+            _converterQueue.EnqueueTask(inputFile);
+        }
+        
         internal static bool ConvertBook(string inputFile)
         {
             var resultFile = Path.ChangeExtension(inputFile, ".mobi");
