@@ -128,7 +128,11 @@ order by CASE WHEN b.lang = 'ru' THEN '1'
 
         public static IEnumerable<BookHistoryInfo> GetHistory(IEnumerable<BookHistoryInfo> data)
         {
-            long[] ids = data.Select(b => b.Id).ToArray();
+            if (data == null) return null;
+            var books = data.ToArray();
+            if (books.Length == 0) return null;
+
+            var ids = books.Select(b => b.Id).ToArray();
             var sql = new StringBuilder(@"select b.id, b.title, b.id_archive, b.file_name, b.file_size, b.md5sum, 
 b.created, b.lang, s.*, bs.number BookOrder, 
 a.id, a.full_name, a.first_name, a.middle_name, a.last_name from books b
@@ -140,7 +144,7 @@ where b.id in @ids");
                 b => b.Id, b => b.Sequences, b => b.Authors, new { ids }).ToArray();
             foreach (var bookInfo in info)
             {
-                bookInfo.GeneratedTime = data.First(i => i.Id == bookInfo.Id).GeneratedTime;
+                bookInfo.GeneratedTime = books.First(i => i.Id == bookInfo.Id).GeneratedTime;
             }
             return info.OrderByDescending(i=>i.GeneratedTime);
         }

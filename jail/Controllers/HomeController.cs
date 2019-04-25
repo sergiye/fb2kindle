@@ -263,7 +263,25 @@ namespace jail.Controllers
         [Route("history")]
         public ActionResult History()
         {
-            var info = new DirectoryInfo(Server.MapPath("~/b"));
+            var path = Server.MapPath("~/b");
+            var info = new DirectoryInfo(path);
+
+            try
+            {
+                double total = Directory.GetFiles(path,"*",SearchOption.AllDirectories).Sum(t => new FileInfo(t).Length);
+                string[] sizes = { "B", "KB", "MB", "GB", "TB" };
+                var order = 0;
+                while (total >= 1024 && order < sizes.Length - 1) 
+                {
+                    order++;
+                    total = total/1024;
+                }
+                ViewBag.TotalSize = string.Format("{0:0.##} {1}", total, sizes[order]);
+            }
+            catch (Exception ex)
+            {
+                Logger.WriteError(ex, "Error calculating allocated files total size");
+            }
             var files = info.GetFiles().Where(f=>f.Extension.Equals(".fb2", StringComparison.OrdinalIgnoreCase)).OrderBy(p => p.CreationTime).ToList();
             //remove too old files from drive
 //            var oldItems = files.Where(f => f.CreationTime < DateTime.Now.AddYears(-1));
@@ -283,6 +301,27 @@ namespace jail.Controllers
 
             //leave only first N in list
             return View(DataRepository.GetHistory(books.Take(SettingsHelper.MaxRecordsToShowAtOnce)));
+        }
+
+        [Route("historyitemdel")]
+        [HttpGet, CustomAuthorization(Roles = new[] { UserType.Administrator })]
+        public ActionResult HistoryItemDelete(long id)
+        {
+            try
+            {
+                var workingPath = Server.MapPath("~/b");
+                System.IO.File.Delete(Path.Combine(workingPath, string.Format("{0}.fb2", id)));
+                System.IO.File.Delete(Path.Combine(workingPath, string.Format("{0}.mobi", id)));
+                Directory.Delete(Path.Combine(workingPath, string.Format("{0}", id)), true);
+                Logger.WriteWarning(string.Format("History item '{0}' was deleted by user '{1}'", id, CurrentUser.Email), 
+                    CommonHelper.GetClientAddress(), CurrentUser.Email);
+                return new HttpStatusCodeResult(HttpStatusCode.OK, "Done");
+            }
+            catch (Exception ex)
+            {
+                Logger.WriteError(ex, string.Format("Error deleting history item {0}: {1}", id, ex.Message), CommonHelper.GetClientAddress(), CurrentUser.Email);
+                throw;
+            }
         }
 
         #endregion
