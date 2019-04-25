@@ -125,5 +125,24 @@ order by CASE WHEN b.lang = 'ru' THEN '1'
             }
             return author;
         }
+
+        public static IEnumerable<BookHistoryInfo> GetHistory(IEnumerable<BookHistoryInfo> data)
+        {
+            long[] ids = data.Select(b => b.Id).ToArray();
+            var sql = new StringBuilder(@"select b.id, b.title, b.id_archive, b.file_name, b.file_size, b.md5sum, 
+b.created, b.lang, s.*, bs.number BookOrder, 
+a.id, a.full_name, a.first_name, a.middle_name, a.last_name from books b
+join authors a on a.id=b.id_author
+left join bookseq bs on bs.id_book=b.id
+left join sequences s on s.id=bs.id_seq
+where b.id in @ids");
+            var info = Db.QueryMultiple<BookHistoryInfo, SequenceInfo, AuthorInfo, long>(sql.ToString(), 
+                b => b.Id, b => b.Sequences, b => b.Authors, new { ids }).ToArray();
+            foreach (var bookInfo in info)
+            {
+                bookInfo.GeneratedTime = data.First(i => i.Id == bookInfo.Id).GeneratedTime;
+            }
+            return info.OrderByDescending(i=>i.GeneratedTime);
+        }
     }
 }

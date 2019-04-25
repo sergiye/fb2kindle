@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -257,6 +258,31 @@ namespace jail.Controllers
         {
             return PartialView(string.IsNullOrWhiteSpace(k) ? new List<BookInfo>() : 
                 DataRepository.GetSearchData(k, l));
+        }
+
+        [Route("history")]
+        public ActionResult History()
+        {
+            var info = new DirectoryInfo(Server.MapPath("~/b"));
+            var files = info.GetFiles().Where(f=>f.Extension.Equals(".fb2", StringComparison.OrdinalIgnoreCase)).OrderBy(p => p.CreationTime).ToList();
+            //remove too old files from drive
+//            var oldItems = files.Where(f => f.CreationTime < DateTime.Now.AddYears(-1));
+//            foreach (var oldItem in oldItems)
+//            {
+//                System.IO.File.Delete(oldItem.FullName);
+                //remove work folder & all generated content
+//            }
+
+            //fill files data to books info
+            var books = new List<BookHistoryInfo>();
+            foreach (var fi in files)
+            {
+                if (!int.TryParse(Path.GetFileNameWithoutExtension(fi.Name), out var bookId)) continue;
+                books.Add(new BookHistoryInfo{Id = bookId, GeneratedTime = fi.CreationTime});
+            }
+
+            //leave only first N in list
+            return View(DataRepository.GetHistory(books.Take(SettingsHelper.MaxRecordsToShowAtOnce)));
         }
 
         #endregion
