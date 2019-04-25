@@ -102,7 +102,7 @@ namespace jail.Controllers
         #region Login-logout
 
         [Route("login")]
-        public ActionResult LogOn(string returnUrl)
+        public ActionResult Login(string returnUrl)
         {
             HttpCookie authCookie = HttpContext.Request.Cookies.Get(FormsAuthentication.FormsCookieName);
             if (authCookie != null && !string.IsNullOrEmpty(authCookie.Value))
@@ -129,7 +129,7 @@ namespace jail.Controllers
 
         [Route("login")]
         [HttpPost]
-        public ActionResult LogOn(LogOnModel model)
+        public ActionResult Login(LogOnModel model)
         {
             if (ModelState.IsValid)
             {
@@ -175,7 +175,7 @@ namespace jail.Controllers
         }
 
         [Route("logout")]
-        public ActionResult LogOff()
+        public ActionResult Logout()
         {
             if (CurrentUser != null && CurrentUser.UserType != UserType.Administrator)
                 Logger.WriteInfo("Logout", CommonHelper.GetClientAddress(), User.Identity.Name);
