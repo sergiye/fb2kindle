@@ -53,22 +53,18 @@ GO
 
 INSERT INTO [dbo].[Users] ([Id], [Email], [Password], [UserType], [RegisteredTime], [Active])
 VALUES 
-  (2, NULL, NULL, 0, '20170101', 0)
+  (1, NULL, NULL, 0, getdate(), 0)
 GO
 
 INSERT INTO [dbo].[Users] ([Id], [Email], [Password], [UserType], [RegisteredTime], [Active])
 VALUES 
-  (4, N'egoshin.sergey@kindle.com', N'2a3dfa66c2d8e8c67b77f2a25886e3cf', 1, '20170101', 1)
+  (2, N'egoshin.sergey@kindle.com', N'2a3dfa66c2d8e8c67b77f2a25886e3cf', 1, getdate(), 1)
 GO
+
 
 INSERT INTO [dbo].[Users] ([Id], [Email], [Password], [UserType], [RegisteredTime], [Active])
 VALUES 
-  (5, N'MwdnDevice@kindle.com', N'2a3dfa66c2d8e8c67b77f2a25886e3cf', 0, '20170101', 1)
-GO
-
-INSERT INTO [dbo].[Users] ([Id], [Email], [Password], [UserType], [RegisteredTime], [Active])
-VALUES 
-  (6, N'simpl2000@kindle.com', N'2a3dfa66c2d8e8c67b77f2a25886e3cf', 0, '20170101', 1)
+  (3, N'simpl2000@kindle.com', N'2a3dfa66c2d8e8c67b77f2a25886e3cf', 0, getdate(), 1)
 GO
 
 SET IDENTITY_INSERT [dbo].[Users] OFF

@@ -7,6 +7,20 @@
 
 
 <script type="text/javascript">
+    function GenerateBook() {
+        $.ajax({
+            type: 'POST',
+            url: '@Url.Action("Generate")',
+            data: { id: "@Model.Id" },
+            success: function (data) {
+                window.Helper.ShowSuccess('' + data);
+                setTimeout(function () { window.location.reload(false); }, 10000);
+            },
+            error: function(data) {
+                window.Helper.ShowError('' + data);
+            }
+        });
+    }
     function DeliverBook() {
         $.ajax({
             type: 'POST',
@@ -39,25 +53,33 @@
 </div>
 <br />
 <div>
-    <a class="btn btn-default" href='@Url.Action("read", new { id = Model.Id })' title="Read .fb2 file">Read book</a>
     <a class="btn btn-success" href='@Url.Action("download", new { id = Model.Id })' title="Get FB2 file">FB2 file</a>
-    <a class="btn btn-info" href='@Url.Action("mobi", new { id = Model.Id })' title="Get MOBI file">File for kindle</a>
- @{
-     var user = Request.IsAuthenticated ? HttpContext.Current.Session["User"] as UserProfile : null;
-     if (user != null)
-     {
-     <button type="button" class="btn btn-warning" onclick="DeliverBook();" title="Deliver">
-        <i class="glyphicon glyphicon-envelope"></i> Deliver
-    </button>
-     }
- }
+    @if (ViewBag.MobiFileFound)
+    {
+        <a class="btn btn-info" href='@Url.Action("mobi", new { id = Model.Id })' title="Get MOBI file">File for kindle</a>
+        <a class="btn btn-default" href='@Url.Action("read", new { id = Model.Id })' title="Read .fb2 file">Read book</a>
+        
+        var user = Request.IsAuthenticated ? HttpContext.Current.Session["User"] as UserProfile : null;
+        if (user != null)
+        {
+            <button type="button" class="btn btn-warning" onclick="DeliverBook();" title="Deliver">
+                <i class="glyphicon glyphicon-envelope"></i> Deliver
+            </button>
+        }
+    }
+    else
+    {
+        <button type="button" class="btn btn-warning" onclick="GenerateBook();" title="Generate MOBI">
+            <i class="glyphicon glyphicon-book"></i> Generate MOBI
+        </button>
+    }
 </div>
 <hr />
 <div class="panel-body">
     <div class="col-md-2">
         @if (ViewBag.Image != null)
         {
-            @: <img src="@ViewBag.Image" style="width: 100%; height: auto;"/>
+            @: <img src="@ViewBag.Image" style="width: 100%; height: auto;" />
         }
     </div>
     <div class="col-md-10">

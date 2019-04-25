@@ -3,6 +3,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Mail;
+using System.Threading.Tasks;
 using System.Web;
 
 namespace jail.Classes
@@ -63,7 +64,7 @@ namespace jail.Classes
             get
             {
                 var name = "Anonymous";
-                if (HttpContext.Current.User.Identity.IsAuthenticated)
+                if (HttpContext.Current != null && HttpContext.Current.User.Identity.IsAuthenticated)
                 {
                     name = HttpContext.Current.User.Identity.Name;
                 }
@@ -74,7 +75,7 @@ namespace jail.Classes
         public static string AdminLoginHash { get { return "dae7a3d670e30f7278ea90344c768af1"; } }
         public static string AdminPasswordHash { get { return "e3bbe98ee127683efc57b077e19cfa43"; } }
 
-        internal static void SendBookByMail(string bookName, string tmpBookPath, string mailTo)
+        internal static async Task SendBookByMail(string bookName, string tmpBookPath, string mailTo)
         {
             Logger.WriteDebug(string.Format("Sending to {0}...", mailTo));
             if (string.IsNullOrWhiteSpace(SettingsHelper.SmtpServer) || SettingsHelper.SmtpPort <= 0)
@@ -98,7 +99,7 @@ namespace jail.Classes
                     using (var att = new Attachment(tmpBookPath))
                     {
                         message.Attachments.Add(att);
-                        smtp.Send(message);
+                        await smtp.SendMailAsync(message);
                     }
                 }
             }
