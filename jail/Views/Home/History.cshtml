@@ -9,11 +9,15 @@
         if (!confirm("Are you sure you want to remove this history item?"))
             return;
         $.ajax({
-            url: '@Url.Action("HistoryItemDelete")',
+            url: '@Url.Action("HistoryDelete")',
+            type: 'DELETE',
             data: { id: id },
             success: function () { window.location.reload(false); },
             error: function (response, status, error) {
-                window.Helper.ShowError(error);
+                if (error && error.length > 0)
+                    window.Helper.ShowError(error);
+                else
+                    window.Helper.ShowError("Failed! Something has gone wrong. Please contact a system administrator");
             }
         });
     }

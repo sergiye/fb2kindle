@@ -17,6 +17,7 @@ using jail.Models;
 namespace jail.Controllers
 {
     [OutputCache(NoStore = true, Duration = 0, VaryByParam = "None")]
+    [SessionRestore]
     public class HomeController : Controller
     {
         #region Logging
@@ -191,7 +192,7 @@ namespace jail.Controllers
         #region Logging
 
         [Route("log")]
-        [CustomAuthorization(Roles = new[] { UserType.Administrator })]
+        [UserTypeFilter(Roles = new[] { UserType.Administrator })]
         public ActionResult Log()
         {
             ViewBag.DebugMode = Debugger.IsAttached;
@@ -199,7 +200,7 @@ namespace jail.Controllers
         }
 
         [Route("logp")]
-        [HttpGet, CustomAuthorization(Roles = new[] { UserType.Administrator })]
+        [HttpGet, UserTypeFilter(Roles = new[] { UserType.Administrator })]
         public ActionResult LogPartial(string key, SystemLog.LogItemType searchType)
         {
             ViewBag.DebugMode = Debugger.IsAttached;
@@ -207,7 +208,7 @@ namespace jail.Controllers
         }
 
         [Route("clrlog")]
-        [HttpPost, CustomAuthorization(Roles = new[] { UserType.Administrator })]
+        [HttpPost, UserTypeFilter(Roles = new[] { UserType.Administrator })]
         public string ClearSelectedLog(string selection)
         {
             try
@@ -224,7 +225,7 @@ namespace jail.Controllers
         }
 
         [Route("calclog")]
-        [HttpPost, CustomAuthorization(Roles = new[] { UserType.Administrator })]
+        [HttpPost, UserTypeFilter(Roles = new[] { UserType.Administrator })]
         public string CalcSelectedLog(string selection)
         {
             try
@@ -303,9 +304,9 @@ namespace jail.Controllers
             return View(DataRepository.GetHistory(books.Take(SettingsHelper.MaxRecordsToShowAtOnce)));
         }
 
-        [Route("historyitemdel")]
-        [HttpGet, CustomAuthorization(Roles = new[] { UserType.Administrator })]
-        public ActionResult HistoryItemDelete(long id)
+        [Route("history")]
+        [HttpDelete, UserTypeFilter(Roles = new[] { UserType.Administrator })]
+        public ActionResult HistoryDelete(long id)
         {
             try
             {
@@ -558,7 +559,7 @@ namespace jail.Controllers
         #region PasswordChange
 
         [Route("passwd")]
-        [HttpGet, CustomAuthorization(Roles = new[] { UserType.Administrator, UserType.User })]
+        [HttpGet, UserTypeFilter(Roles = new[] { UserType.Administrator, UserType.User })]
         public ActionResult PasswordChange(long id)
         {
             var user = UserRepository.GetUserById(id) ?? CurrentUser;
@@ -567,7 +568,7 @@ namespace jail.Controllers
         }
 
         [Route("passwd")]
-        [HttpPost, CustomAuthorization(Roles = new[] { UserType.Administrator, UserType.User })]
+        [HttpPost, UserTypeFilter(Roles = new[] { UserType.Administrator, UserType.User })]
         public ActionResult PasswordChange(ChangePasswordModel model)
         {
             if (ModelState.IsValid)
@@ -590,21 +591,21 @@ namespace jail.Controllers
         #region Users
 
         [Route("users")]
-        [HttpGet, CustomAuthorization(Roles = new[] { UserType.Administrator })]
+        [HttpGet, UserTypeFilter(Roles = new[] { UserType.Administrator })]
         public ActionResult Users()
         {
             return View(UserRepository.GetUsers(string.Empty));
         }
 
         [Route("usersp")]
-        [HttpGet, CustomAuthorization(Roles = new[] { UserType.Administrator })]
+        [HttpGet, UserTypeFilter(Roles = new[] { UserType.Administrator })]
         public ActionResult UsersSearch(string key)
         {
             return PartialView("UsersPartial", UserRepository.GetUsers(key));
         }
 
         [Route("userdel")]
-        [HttpGet, CustomAuthorization(Roles = new[] { UserType.Administrator })]
+        [HttpGet, UserTypeFilter(Roles = new[] { UserType.Administrator })]
         public ActionResult UserDelete(long id)
         {
             try
@@ -625,7 +626,7 @@ namespace jail.Controllers
         }
 
         [Route("useradd")]
-        [HttpGet, CustomAuthorization(Roles = new[] { UserType.Administrator })]
+        [HttpGet, UserTypeFilter(Roles = new[] { UserType.Administrator })]
         public ActionResult UserEdit(long id = 0)
         {
             var user = UserRepository.GetUserById(id);
@@ -639,7 +640,7 @@ namespace jail.Controllers
         }
 
         [Route("useradd")]
-        [HttpPost, CustomAuthorization(Roles = new[] { UserType.Administrator })]
+        [HttpPost, UserTypeFilter(Roles = new[] { UserType.Administrator })]
         public ActionResult UserEdit(UserProfile model)
         {
             if (ModelState.IsValid)
@@ -665,7 +666,7 @@ namespace jail.Controllers
         }
 
         [Route("passwdreset")]
-        [HttpGet, CustomAuthorization(Roles = new[] { UserType.Administrator })]
+        [HttpGet, UserTypeFilter(Roles = new[] { UserType.Administrator })]
         public string ResetUserPassword(long id)
         {
             try
@@ -685,7 +686,7 @@ namespace jail.Controllers
         #region TimeTrack
 
         [Route("t")]
-        [HttpGet, CustomAuthorization(Roles = new[] { UserType.Administrator, UserType.User })]
+        [HttpGet, UserTypeFilter(Roles = new[] { UserType.Administrator, UserType.User })]
         public ActionResult Time(long id = 0)
         {
             ViewBag.Id = id;
@@ -693,7 +694,7 @@ namespace jail.Controllers
         }
 
         [Route("tp")]
-        [HttpGet, CustomAuthorization(Roles = new[] { UserType.Administrator, UserType.User })]
+        [HttpGet, UserTypeFilter(Roles = new[] { UserType.Administrator, UserType.User })]
         public ActionResult TimePartial(long id = 0)
         {
             ViewBag.Id = id;
@@ -701,7 +702,7 @@ namespace jail.Controllers
         }
 
         [Route("in")]
-        [HttpGet, CustomAuthorization(Roles = new[] { UserType.Administrator, UserType.User })]
+        [HttpGet, UserTypeFilter(Roles = new[] { UserType.Administrator, UserType.User })]
         public ActionResult CheckIn(long id = 0)
         {
             TimeTrackRepository.CheckIn(id > 0 ? id : CurrentUser.TimeTrackId);
@@ -710,7 +711,7 @@ namespace jail.Controllers
         }
 
         [Route("out")]
-        [HttpGet, CustomAuthorization(Roles = new[] { UserType.Administrator, UserType.User })]
+        [HttpGet, UserTypeFilter(Roles = new[] { UserType.Administrator, UserType.User })]
         public ActionResult CheckOut(long id = 0)
         {
             TimeTrackRepository.CheckOut(id > 0 ? id : CurrentUser.TimeTrackId);
