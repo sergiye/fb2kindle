@@ -8,7 +8,6 @@ using System.Reflection;
 using System.Threading.Tasks;
 using System.Web;
 using System.Web.Mvc;
-using System.Web.Routing;
 using System.Web.Security;
 using jail.Classes;
 using jail.Classes.Attributes;
@@ -271,15 +270,8 @@ namespace jail.Controllers
 
             try
             {
-                double total = Directory.GetFiles(path,"*",SearchOption.AllDirectories).Sum(t => new FileInfo(t).Length);
-                string[] sizes = { "B", "KB", "MB", "GB", "TB" };
-                var order = 0;
-                while (total >= 1024 && order < sizes.Length - 1) 
-                {
-                    order++;
-                    total = total/1024;
-                }
-                ViewBag.TotalSize = string.Format("{0:0.##} {1}", total, sizes[order]);
+                long total = Directory.GetFiles(path,"*",SearchOption.AllDirectories).Sum(t => new FileInfo(t).Length);
+                ViewBag.TotalSize = Simpl.Extensions.StringHelper.FileSizeStr(total);
             }
             catch (Exception ex)
             {
