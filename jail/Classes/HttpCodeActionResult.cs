@@ -1,7 +1,7 @@
 ﻿using System.Net;
 using System.Web.Mvc;
 
-namespace jail.Classes.Attributes
+namespace jail.Classes
 {
     internal class HttpCodeActionResult : ActionResult
     {

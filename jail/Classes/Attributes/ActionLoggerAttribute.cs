@@ -1,4 +1,5 @@
-﻿using System.Web.Mvc;
+﻿using System;
+using System.Web.Mvc;
 
 namespace jail.Classes.Attributes
 {
@@ -8,10 +9,14 @@ namespace jail.Classes.Attributes
     public class ActionLoggerAttribute : ActionFilterAttribute
     {
         /// <inheritdoc />
-        public override void OnActionExecuting(HttpActionContext actionContext)
+        public override void OnActionExecuting(ActionExecutingContext filterContext)
         {
-            Log.WriteDebug(string.Format("{0} - {1}", CommonHelper.GetActionLogName(actionContext.Request), "requested"), 
-                CommonHelper.CurrentIdentityName, CommonHelper.GetClientAddress());
+            var request = filterContext.HttpContext.Request;
+            if (request.HttpMethod == "GET"
+                && (request.Path.Equals("/log", StringComparison.OrdinalIgnoreCase) || request.Path.Equals("/logp", StringComparison.OrdinalIgnoreCase)))
+                return;
+            Logger.WriteTrace(CommonHelper.GetActionLogName(request), 
+                CommonHelper.GetClientAddress(), CommonHelper.CurrentIdentityName);
         }
     }
 }
