@@ -26,9 +26,6 @@ namespace jail.Classes.Attributes
                 if (a.GetType() == typeof(SkipLoggingAttribute))
                     return;
             }
-//            if (request.HttpMethod == "GET"
-//                && (request.Path.Equals("/log", StringComparison.OrdinalIgnoreCase) || request.Path.Equals("/logp", StringComparison.OrdinalIgnoreCase)))
-//                return;
 
             Logger.WriteTrace(CommonHelper.GetActionLogName(request), 
                 CommonHelper.GetClientAddress(), CommonHelper.CurrentIdentityName);
