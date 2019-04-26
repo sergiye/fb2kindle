@@ -134,6 +134,9 @@
     <Compile Include="App_Start\FilterConfig.cs" />
     <Compile Include="App_Start\RouteConfig.cs" />
     <Compile Include="Classes\Attributes\CustomAuthorization.cs" />
+    <Compile Include="Classes\Attributes\UserTypeFilterAttribute.cs" />
+    <Compile Include="Classes\Attributes\HttpCodeActionResult.cs" />
+    <Compile Include="Classes\Attributes\SessionRestoreAttribute.cs" />
     <Compile Include="Classes\CommonHelper.cs" />
     <Compile Include="Classes\DataRepository.cs" />
     <Compile Include="Classes\Log.cs" />
