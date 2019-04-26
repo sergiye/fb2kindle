@@ -191,7 +191,7 @@ namespace jail.Controllers
 
         #region Logging
 
-        [Route("log")]
+        [Route("log"), SkipLogging]
         [UserTypeFilter(Roles = new[] { UserType.Administrator })]
         public ActionResult Log()
         {
@@ -199,7 +199,7 @@ namespace jail.Controllers
             return View(SystemRepository.GetErrorLogData(SettingsHelper.MaxRecordsToShowAtOnce));
         }
 
-        [Route("logp")]
+        [Route("logp"), SkipLogging]
         [HttpGet, UserTypeFilter(Roles = new[] { UserType.Administrator })]
         public ActionResult LogPartial(string key, SystemLog.LogItemType searchType)
         {
@@ -207,12 +207,13 @@ namespace jail.Controllers
             return PartialView(SystemRepository.GetErrorLogData(SettingsHelper.MaxRecordsToShowAtOnce, key, searchType));
         }
 
-        [Route("clrlog")]
+        [Route("clrlog"), SkipLogging]
         [HttpPost, UserTypeFilter(Roles = new[] { UserType.Administrator })]
         public string ClearSelectedLog(string selection)
         {
             try
             {
+                selection = selection.Trim();
                 if (string.IsNullOrWhiteSpace(selection))
                     return "Empty selection!";
                 var removed = SystemRepository.ClearByMessagePart(selection);
@@ -224,12 +225,13 @@ namespace jail.Controllers
             }
         }
 
-        [Route("calclog")]
+        [Route("calclog"), SkipLogging]
         [HttpPost, UserTypeFilter(Roles = new[] { UserType.Administrator })]
         public string CalcSelectedLog(string selection)
         {
             try
             {
+                selection = selection.Trim();
                 if (string.IsNullOrWhiteSpace(selection))
                     return "Empty selection!";
                 var found = SystemRepository.CalcByMessagePart(selection);
