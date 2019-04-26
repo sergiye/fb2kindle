@@ -13,6 +13,10 @@
             {
                 <th style="min-width: 150px; width: 150px;">Sequence</th>
             }
+            else
+            {
+                <th style="min-width: 30px; width: 30px;">#</th>
+            }
             <th style="min-width: 90px; width: 90px;">Registered</th>
             <th style="min-width: 90px; width: 90px;">File</th>
         </tr>
@@ -21,34 +25,44 @@
         {
             foreach (var item in Model)
             {
-                <tr>
-                    <td>
-                        <a href='@Url.Action("details", new {id = item.Id})' title="Book details">
-                            <b>@Html.DisplayFor(modelItem => item.Title)</b> 
-                        </a>
-                        <small style="float: right;">@Html.DisplayFor(modelItem => item.Lang)</small>
-                    </td>
-                    @if (ViewBag.AuthorMode == null || !ViewBag.AuthorMode)
-                    {
-                        <td>@{ Html.RenderPartial("AuthorsList", item.Authors); }</td>
-                    }
-                    @if (ViewBag.SequenceMode == null || !ViewBag.SequenceMode)
-                    {
-                        <td>
-                            @if (item.Sequences.Count > 0)
-                            {
-                                Html.RenderPartial("SequencesList", item.Sequences);
-                            }
-                        </td>
-                    }
-                    <td>@Html.DisplayFor(modelItem => item.CreatedDate)</td>
-                    <td>
-                        <a class="btn btn-default" href='@Url.Action("download", new { id = item.Id })' title="Get FB2 file">
-                            <span class="glyphicon glyphicon-save"></span>
-                            @Html.DisplayFor(modelItem => item.FileSizeStr)
-                        </a>
-                    </td>
-                </tr>
+    <tr>
+        <td>
+            @Html.HiddenFor(modelItem => item.Id)
+            @Html.HiddenFor(modelItem => item.IdArchive)
+            @Html.HiddenFor(modelItem => item.FileName)
+            <a href='@Url.Action("details", new {id = item.Id})' title="Book details">
+                <b>@Html.DisplayFor(modelItem => item.Title)</b>
+            </a>
+            <small style="float: right;">@Html.DisplayFor(modelItem => item.Lang)</small>
+        </td>
+        @if (ViewBag.AuthorMode == null || !ViewBag.AuthorMode)
+        {
+            <td>@{ Html.RenderPartial("AuthorsList", item.Authors); }</td>
+        }
+        <td>
+            @if (ViewBag.SequenceMode == null || !ViewBag.SequenceMode)
+            {
+                if (item.Sequences.Count > 0)
+                {
+                    Html.RenderPartial("SequencesList", item.Sequences);
+                }
+            }
+            else
+            {
+                if (item.BookOrder > 0)
+                {
+                    @Html.DisplayFor(modelItem => item.BookOrder)
+                }
+            }
+        </td>
+        <td>@Html.DisplayFor(modelItem => item.CreatedDate)</td>
+        <td>
+            <a class="btn btn-default" href='@Url.Action("download", new { id = item.Id })' title="Get FB2 file">
+                <span class="glyphicon glyphicon-save"></span>
+                @Html.DisplayFor(modelItem => item.FileSizeStr)
+            </a>
+        </td>
+    </tr>
             }
         }
     </table>
