@@ -17,7 +17,7 @@ using jail.Models;
 namespace jail.Controllers
 {
     [OutputCache(NoStore = true, Duration = 0, VaryByParam = "None")]
-    [SessionRestore]
+    [ActionLogger, SessionRestore]
     public class HomeController : Controller
     {
         #region Logging
@@ -36,11 +36,11 @@ namespace jail.Controllers
             base.OnException(filterContext);
         }
 
-        protected override IAsyncResult BeginExecute(RequestContext requestContext, AsyncCallback callback, object state)
-        {
-            Logger.WriteTrace(CommonHelper.GetActionLogName(requestContext.HttpContext.Request), CommonHelper.GetClientAddress(), CommonHelper.CurrentIdentityName);
-            return base.BeginExecute(requestContext, callback, state);
-        }
+//        protected override IAsyncResult BeginExecute(RequestContext requestContext, AsyncCallback callback, object state)
+//        {
+//            Logger.WriteTrace(CommonHelper.GetActionLogName(requestContext.HttpContext.Request), CommonHelper.GetClientAddress(), CommonHelper.CurrentIdentityName);
+//            return base.BeginExecute(requestContext, callback, state);
+//        }
 
         public UserProfile CurrentUser
         {
