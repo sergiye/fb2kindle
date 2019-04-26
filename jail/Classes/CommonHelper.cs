@@ -53,7 +53,10 @@ namespace jail.Classes
         /// <returns></returns>
         public static string GetActionLogName(HttpRequestBase request)
         {
-            return string.Format("{0} {1}", request.HttpMethod, request.RawUrl);
+            var queryString = HttpUtility.UrlDecode(request.QueryString.ToString());
+            if (!string.IsNullOrWhiteSpace(queryString))
+                queryString = string.Format("?{0}", queryString);
+            return string.Format("{0} {1}{2}", request.HttpMethod, request.Path, queryString);
         }
 
         /// <summary>
