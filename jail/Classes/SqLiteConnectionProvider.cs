@@ -1,6 +1,7 @@
 using System;
 using System.Data;
 using System.Data.SQLite;
+using System.Threading.Tasks;
 using DapperExtensions.Sql;
 using Simpl.Extensions.Database;
 
@@ -25,6 +26,13 @@ namespace jail.Classes
         {
             var cn = new SQLiteConnection(SqLiteConnectionString);            
             cn.Open();                        
+            return cn;
+        }
+
+        public override async Task<IDbConnection> GetConnectionAsync()
+        {
+            var cn = new SQLiteConnection(SqLiteConnectionString);            
+            await cn.OpenAsync();                        
             return cn;
         }
 
