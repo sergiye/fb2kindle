@@ -1,9 +1,10 @@
-﻿@using jail.Models
+﻿@using jail.Controllers
+@using jail.Models
 @model IEnumerable<SystemLog>
 
 @{
     ViewBag.Title = "Log";
-//    var user = HttpContext.Current.Session["User"] as UserProfile;
+    //    var user = HttpContext.Current.Session["User"] as UserProfile;
 }
 <script type="text/javascript">
     var autorefreshTimer = null;
@@ -96,12 +97,14 @@
 </script>
 <div class="search-wrapper">
     <div class="input-group pull-left">
-        <input id="filterBlock" type="text" class="form-control" aria-label="..." 
-               data-search-type="@SystemLog.LogItemType.All" 
+        <input id="filterBlock" type="text" class="form-control" aria-label="..."
+               data-search-type="@SystemLog.LogItemType.All"
                placeholder="Search by message, user or IP...">
         <div class="input-group-btn">
-            <button id="searchTypeBtn" type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" 
-                    aria-haspopup="true" aria-expanded="false">All<span class="caret"></span></button>
+            <button id="searchTypeBtn" type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown"
+                    aria-haspopup="true" aria-expanded="false">
+                All<span class="caret"></span>
+            </button>
             <ul class="dropdown-menu dropdown-menu-right change-name" data-change-item-id="searchTypeBtn">
                 @foreach (var item in Enum.GetValues(typeof(SystemLog.LogItemType)))
                 {
@@ -127,6 +130,13 @@
     </div>
 </div>
 <div class="clearfix"></div>
-<div id="gridDataContainer">
+<div id="gridDataContainer" style="height: calc(100% - 25px);">
     @{Html.RenderPartial("LogPartial", Model);}
+</div>
+<div class="clearfix"></div>
+<div id="footer">
+    <footer>
+        &copy; @DateTime.Now.Year - JAIL (Just Another Internet Library)
+        <p>@HomeController.GetVersionString(); Build time: @HomeController.GetVersionBuildTime()</p>
+    </footer>
 </div>
