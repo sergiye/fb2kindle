@@ -4,10 +4,9 @@
 
 @{
     ViewBag.Title = "Log";
-    //    var user = HttpContext.Current.Session["User"] as UserProfile;
 }
 <script type="text/javascript">
-    var autorefreshTimer = null;
+    var autoRefreshTimer = null;
     $(document).ready(function () {
         $("#filterBlock").keyup(function () {
             window.Helper.delay(function () { RefreshData(true); }, 1000);
@@ -44,11 +43,11 @@
             success: function (response) {
                 $("#gridDataContainer").html(response);
 
-                if (autorefreshTimer) {
-                    window.clearTimeout(autorefreshTimer);
+                if (autoRefreshTimer) {
+                    window.clearTimeout(autoRefreshTimer);
                 }
-                autorefreshTimer = window.setTimeout(function () {
-                    autorefreshTimer = null;
+                autoRefreshTimer = window.setTimeout(function () {
+                    autoRefreshTimer = null;
                     RefreshData(true);
                 }, 60000);
             },
@@ -64,7 +63,7 @@
         var text = "";
         if (window.getSelection) {
             text = window.getSelection().toString();
-        } else if (document.selection && document.selection.type != "Control") {
+        } else if (document.selection && document.selection.type !== "Control") {
             text = document.selection.createRange().text;
         }
         $.ajax({
@@ -81,7 +80,7 @@
         var text = "";
         if (window.getSelection) {
             text = window.getSelection().toString();
-        } else if (document.selection && document.selection.type != "Control") {
+        } else if (document.selection && document.selection.type !== "Control") {
             text = document.selection.createRange().text;
         }
         $.ajax({
