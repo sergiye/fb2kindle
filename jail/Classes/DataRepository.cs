@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using jail.Models;
 using Simpl.Extensions.Database;
 
@@ -35,7 +36,7 @@ namespace jail.Classes
             }
         }
 
-        public static IEnumerable<BookInfo> GetSearchData(string key, string searchLang)
+        public static async Task<IEnumerable<BookInfo>> GetSearchDataAsync(string key, string searchLang)
         {
             var sql = new StringBuilder(@"select b.id, b.title, b.id_archive, b.file_name, b.file_size, b.md5sum, 
 b.created, b.lang, s.*, bs.number BookOrder, 
@@ -55,7 +56,7 @@ where (REPLACE(b.title, ' ', '') like @key or REPLACE(a.search_name, ' ', '') li
               WHEN b.lang = 'ua' THEN '3'
               WHEN b.lang = 'uk' THEN '4'
               ELSE b.lang END ASC, b.title, b.created DESC LIMIT 100");
-            var info = Db.QueryMultiple<BookInfo, SequenceInfo, AuthorInfo, long>(sql.ToString(), 
+            var info = await Db.QueryMultipleAsync<BookInfo, SequenceInfo, AuthorInfo, long>(sql.ToString(), 
                 b => b.Id, b => b.Sequences, b => b.Authors, new { key = string.Format("%{0}%", key.ToLower().Replace(" ", "")), lang = searchLang });
             return info;
         }
@@ -126,7 +127,7 @@ order by CASE WHEN b.lang = 'ru' THEN '1'
             return author;
         }
 
-        public static IEnumerable<BookHistoryInfo> GetHistory(IEnumerable<BookHistoryInfo> data)
+        public static async Task<IEnumerable<BookHistoryInfo>> GetHistoryAsync(IEnumerable<BookHistoryInfo> data)
         {
             if (data == null) return null;
             var books = data.ToArray();
@@ -140,8 +141,8 @@ join authors a on a.id=b.id_author
 left join bookseq bs on bs.id_book=b.id
 left join sequences s on s.id=bs.id_seq
 where b.id in @ids");
-            var info = Db.QueryMultiple<BookHistoryInfo, SequenceInfo, AuthorInfo, long>(sql.ToString(), 
-                b => b.Id, b => b.Sequences, b => b.Authors, new { ids }).ToArray();
+            var info = (await Db.QueryMultipleAsync<BookHistoryInfo, SequenceInfo, AuthorInfo, long>(sql.ToString(), 
+                b => b.Id, b => b.Sequences, b => b.Authors, new { ids })).ToArray();
             foreach (var bookInfo in info)
             {
                 bookInfo.GeneratedTime = books.First(i => i.Id == bookInfo.Id).GeneratedTime;

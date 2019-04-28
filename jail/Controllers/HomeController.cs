@@ -246,24 +246,24 @@ namespace jail.Controllers
 
         #region Search
 
-        public ActionResult Index(string k = null, string l = "ru")
+        public async Task<ActionResult> Index(string k = null, string l = "ru")
         {
             ViewBag.Key = k;
             ViewBag.Lang = l;
             return View(string.IsNullOrWhiteSpace(k) ? new List<BookInfo>() :
-                DataRepository.GetSearchData(k, l));
+                await DataRepository.GetSearchDataAsync(k, l));
         }
 
         [ValidateInput(false)]
         [Route("search")]
-        public ActionResult SearchResults(string k = null, string l = "ru")
+        public async Task<ActionResult> SearchResults(string k = null, string l = "ru")
         {
             return PartialView(string.IsNullOrWhiteSpace(k) ? new List<BookInfo>() : 
-                DataRepository.GetSearchData(k, l));
+                await DataRepository.GetSearchDataAsync(k, l));
         }
 
         [Route("history")]
-        public ActionResult History()
+        public async Task<ActionResult> History()
         {
             var path = Server.MapPath("~/b");
             var info = new DirectoryInfo(path);
@@ -295,7 +295,7 @@ namespace jail.Controllers
             }
 
             //leave only first N in list
-            return View(DataRepository.GetHistory(books.Take(SettingsHelper.MaxRecordsToShowAtOnce)));
+            return View(await DataRepository.GetHistoryAsync(books.Take(SettingsHelper.MaxRecordsToShowAtOnce)));
         }
 
         [Route("history")]
