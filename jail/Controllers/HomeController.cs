@@ -76,14 +76,18 @@ namespace jail.Controllers
 
         #region basic methods
 
-        public static string GetVersionString()
+        public static string GetVersionBuildTime()
         {
             var ver = Assembly.GetExecutingAssembly().GetName().Version;
             var buildTime = new DateTime(2000, 1, 1).AddDays(ver.Build).AddSeconds(ver.Revision * 2);
 //            if (TimeZone.IsDaylightSavingTime(DateTime.Now, TimeZone.CurrentTimeZone.GetDaylightChanges(DateTime.Now.Year)))
 //                buildTime = buildTime.AddHours(1);
-            return string.Format("Version: {0}; Updated: {1:yyyy-MM-dd HH:mm}",
-                Assembly.GetExecutingAssembly().GetName().Version, buildTime);
+            return string.Format("{0:yyyy-MM-dd HH:mm}", buildTime);
+        }
+
+        public static string GetVersionString()
+        {
+            return string.Format("Version: {0}", Assembly.GetExecutingAssembly().GetName().Version);
         }
 
         [Route("about")]
