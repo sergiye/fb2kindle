@@ -436,12 +436,12 @@ namespace jail.Controllers
             {
                 throw new FileNotFoundException("Book not found, please prepare it first");
                 //BookHelper.Transform(tempFile, readingPath, Server.MapPath("~/xhtml.xsl"));
-                if (!BookHelper.ConvertBook(sourceFileName))
-                    throw new ArgumentException("Error converting book for kindle");
+//                if (!BookHelper.ConvertBook(sourceFileName))
+//                    throw new ArgumentException("Error converting book for kindle");
             }
             ViewBag.Title = book.Title;
             return new RedirectResult(Path.Combine(@"../" + readingPath.Replace(Server.MapPath("~"), "").Replace('\\', '/')));
-            return new FilePathResult(GetLinkToFile(readingPath), "text/html");
+//            return new FilePathResult(GetLinkToFile(readingPath), "text/html");
             //ViewBag.BookContent = GetLinkToFile(readingPath);//Path.Combine(@"../" + readingPath.Replace(Server.MapPath("~"), "").Replace('\\', '/'));
             //return View(book);
         }
