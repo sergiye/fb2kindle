@@ -1,9 +1,0 @@
-<?xml version='1.0'?>
-<Obfuscator>
-  <Var name="InPath" value="." />
-  <Var name="OutPath" value=".\Obfuscator" />
-  <Var name="HidePrivateApi" value="true" />
-  <Var name="KeyFile" value=".\test.snk" />
-
-  <Module file="$(InPath)\Simpl.Extensions.Database.dll" />
-</Obfuscator>

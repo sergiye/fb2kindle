@@ -64,11 +64,11 @@
     <Reference Include="NLog, Version=4.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
       <HintPath>c:\temp\nuget\NLog.4.6.2\lib\net45\NLog.dll</HintPath>
     </Reference>
-    <Reference Include="Simpl.Extensions, Version=1.0.7057.19009, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>c:\temp\nuget\Simpl.Extensions.1.0.7057.19009\lib\net461\Simpl.Extensions.dll</HintPath>
+    <Reference Include="Simpl.Extensions, Version=1.0.7059.17655, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>c:\temp\nuget\Simpl.Extensions.1.0.7059.17655\lib\net461\Simpl.Extensions.dll</HintPath>
     </Reference>
-    <Reference Include="Simpl.Extensions.Database, Version=1.0.7057.36000, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>c:\temp\nuget\Simpl.Extensions.Database.1.0.7057.36000\lib\net461\Simpl.Extensions.Database.dll</HintPath>
+    <Reference Include="Simpl.Extensions.Database, Version=1.0.7059.17655, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>c:\temp\nuget\Simpl.Extensions.Database.1.0.7059.17655\lib\net461\Simpl.Extensions.Database.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
@@ -186,7 +186,6 @@
     <Content Include="Content\bootstrap-theme.min.css.map" />
     <Content Include="Content\bootstrap-theme.css.map" />
     <None Include="Scripts\jquery-3.3.1.intellisense.js" />
-    <Content Include="obfuscar.xml" />
     <Content Include="Scripts\bootstrap.js" />
     <Content Include="Scripts\bootstrap.min.js" />
     <Content Include="Scripts\jquery-3.3.1.js" />
@@ -207,10 +206,6 @@
     <Content Include="Images\logo.png" />
     <Content Include="Scripts\helper.js" />
     <Content Include="Scripts\modernizr-2.8.3.js" />
-    <Content Include="Scripts\respond.js" />
-    <Content Include="Scripts\respond.matchmedia.addListener.js" />
-    <Content Include="Scripts\respond.matchmedia.addListener.min.js" />
-    <Content Include="Scripts\respond.min.js" />
     <Content Include="Web.config">
       <SubType>Designer</SubType>
     </Content>
