@@ -623,14 +623,29 @@ namespace Fb2Kindle
             return xDocument;
         }
 
+        public static Stream GenerateStreamFromString(string s)
+        {
+            var stream = new MemoryStream();
+            var writer = new StreamWriter(stream);
+            writer.Write(s);
+            writer.Flush();
+            stream.Position = 0;
+            return stream;
+        }
+
         private static XElement LoadBookWithoutNs(string bookPath)
         {
             try
             {
                 XElement book;
+                //remove extra spaces from file
+                var fileData = File.ReadAllText(bookPath);
+                fileData = Regex.Replace(fileData, @"\s{2,}", " ");
+
                 //book = XDocument.Parse(File.ReadAllText(bookPath), LoadOptions.PreserveWhitespace).Root;
                 //book = ReadXDocumentWithInvalidCharacters(bookPath).Root;
-                using (Stream file = File.OpenRead(bookPath))
+//                using (Stream file = File.OpenRead(bookPath))
+                using (Stream file = GenerateStreamFromString(fileData))
                 {
                     book = XElement.Load(file, LoadOptions.PreserveWhitespace);
                 }
