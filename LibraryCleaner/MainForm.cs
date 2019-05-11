@@ -11,16 +11,17 @@ namespace LibraryCleaner
     public partial class MainForm : Form
     {
         private readonly Cleaner _cleaner;
+        private readonly Timer timer;
 
         public MainForm()
         {
             InitializeComponent();
 
             Icon = Icon.ExtractAssociatedIcon(Process.GetCurrentProcess().MainModule.FileName);
-            var asm = Assembly.GetExecutingAssembly();
-            var ver = asm.GetName().Version;
-            Text = string.Format("{0} Version: {1}; Build: {2:yyyy/MM/dd HH:mm:ss}", 
-                asm.GetName().Name, ver.ToString(3), GetBuildTime(ver));
+
+            timer = new Timer {Interval = 1000, Enabled = true};
+            timer.Tick += UpdateWindowText;
+
             _cleaner = new Cleaner(null);
             _cleaner.OnStateChanged += AddToLog;
 
@@ -109,6 +110,19 @@ namespace LibraryCleaner
         }
 
         #endregion GUI helper methods
+
+        private void UpdateWindowText(object sender, EventArgs eventArgs)
+        {
+            var dt = DateTime.Now;
+            var build = dt.Subtract(new DateTime(2000, 1, 1)).Days;
+            var revision = (dt.Second + dt.Minute * 60 + dt.Hour * 60 * 60) / 2;
+//            Text = string.Format("TT - {0}.{1}", build, revision);        
+            
+            var asm = Assembly.GetExecutingAssembly();
+            var ver = asm.GetName().Version;
+            Text = string.Format("{0} Version: {1}; Build: {2:yyyy/MM/dd HH:mm:ss}; Now: {3}.{4}", 
+                asm.GetName().Name, ver.ToString(3), GetBuildTime(ver), build, revision);
+        }
 
         private void ProcessCleanupTasks(bool analyzeOnly)
         {
