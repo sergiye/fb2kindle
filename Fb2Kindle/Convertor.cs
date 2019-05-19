@@ -8,6 +8,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Mail;
 using System.Reflection;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Xml;
@@ -623,7 +624,7 @@ namespace Fb2Kindle
             return xDocument;
         }
 
-        public static Stream GenerateStreamFromString(string s)
+        private static Stream GenerateStreamFromString(string s)
         {
             var stream = new MemoryStream();
             var writer = new StreamWriter(stream);
@@ -633,19 +634,13 @@ namespace Fb2Kindle
             return stream;
         }
 
-        private static XElement LoadBookWithoutNs(string bookPath)
+        private static XElement LoadBookWithoutNs(string fileName)
         {
             try
             {
                 XElement book;
-                //remove extra spaces from file
-                var fileData = File.ReadAllText(bookPath);
-                fileData = Regex.Replace(fileData, @"\s{2,}", " ");
-
-                //book = XDocument.Parse(File.ReadAllText(bookPath), LoadOptions.PreserveWhitespace).Root;
-                //book = ReadXDocumentWithInvalidCharacters(bookPath).Root;
-//                using (Stream file = File.OpenRead(bookPath))
-                using (Stream file = GenerateStreamFromString(fileData))
+//                book = ReadXDocumentWithInvalidCharacters(fileName).Root;
+                using (Stream file = File.OpenRead(fileName))
                 {
                     book = XElement.Load(file, LoadOptions.PreserveWhitespace);
                 }
@@ -668,12 +663,14 @@ namespace Fb2Kindle
             }
         }
 
-        private static void SaveXmlToFile(XElement xml, string file)
+        private static void SaveXmlToFile(XNode xml, string file)
         {
-            if (Debugger.IsAttached)
-                xml.Save(file);
-            else
-                xml.Save(file, SaveOptions.DisableFormatting);
+//            xml.Save(file, Debugger.IsAttached ? SaveOptions.None : SaveOptions.DisableFormatting);
+            var doc = XDocument.Load(xml.CreateReader());
+            doc.Declaration = new XDeclaration("1.0", "utf-8", null);
+            var writer = new XmlEncodeWriter(Encoding.UTF8);
+            doc.Save(writer, Debugger.IsAttached ? SaveOptions.None : SaveOptions.DisableFormatting);
+            File.WriteAllText(file, writer.ToString());
         }
 
         private static void SaveAsHtmlBook(XElement bodyEl, string fileName)

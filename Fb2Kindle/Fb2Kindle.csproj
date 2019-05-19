@@ -67,6 +67,7 @@
     <Compile Include="Convertor.cs" />
     <Compile Include="DefaultOptions.cs" />
     <Compile Include="Util.cs" />
+    <Compile Include="XmlEncodeWriter.cs" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Xml" />
     <Reference Include="System.Xml.Linq" />
