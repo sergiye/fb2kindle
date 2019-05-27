@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using jail.Models;
 using Simpl.Extensions.Database;
 
@@ -17,20 +16,19 @@ namespace jail.Classes
 
         public static List<TimeUserInfo> GetAllUsers()
         {
-            List<TimeUserInfo> result = new List<TimeUserInfo>();
-            if (!Debugger.IsAttached)
+            var result = new List<TimeUserInfo>();
+            try
             {
-                try
-                {
-                    result = Db.Query<TimeUserInfo>("select * from UserInfo order by Name");
-                }
-                catch (Exception ex)
-                {
-                    Logger.WriteError(ex, "Error getting timetrack users");
-                }
+                result = Db.Query<TimeUserInfo>("select * from UserInfo order by Name");
             }
-            result.Insert(0, new TimeUserInfo{Name = "Empty", UserId = 0});
-            return result;    }
+            catch (Exception ex)
+            {
+                Logger.WriteError(ex, "Error getting timetrack users");
+            }
+
+            result.Insert(0, new TimeUserInfo {Name = "Empty", UserId = 0});
+            return result;
+        }
 
         public static List<CheckInOut> GetLastCheckInOut(long userId, int count = 49)
         {
