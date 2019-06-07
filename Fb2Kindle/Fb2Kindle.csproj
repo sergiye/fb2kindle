@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" DefaultTargets="Build">
-  <Import Project="d:\temp\nuget\Obfuscar.2.2.19\build\obfuscar.props" Condition="Exists('d:\temp\nuget\Obfuscar.2.2.19\build\obfuscar.props')" />
+  <Import Project="..\..\nuget\Obfuscar.2.2.19\build\obfuscar.props" Condition="Exists('..\..\nuget\Obfuscar.2.2.19\build\obfuscar.props')" />
   <PropertyGroup>
     <ProjectType>local</ProjectType>
     <ProjectVersion>7.10.377</ProjectVersion>
@@ -119,6 +119,6 @@
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
-    <Error Condition="!Exists('d:\temp\nuget\Obfuscar.2.2.19\build\obfuscar.props')" Text="$([System.String]::Format('$(ErrorText)', 'd:\temp\nuget\Obfuscar.2.2.19\build\obfuscar.props'))" />
+    <Error Condition="!Exists('..\..\nuget\Obfuscar.2.2.19\build\obfuscar.props')" Text="$([System.String]::Format('$(ErrorText)', '..\..\nuget\Obfuscar.2.2.19\build\obfuscar.props'))" />
   </Target>
 </Project>
