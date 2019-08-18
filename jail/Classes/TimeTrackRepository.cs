@@ -17,6 +17,7 @@ namespace jail.Classes
         public static List<TimeUserInfo> GetAllUsers()
         {
             var result = new List<TimeUserInfo>();
+            if (SettingsHelper.TimeTrack)
             try
             {
                 result = Db.Query<TimeUserInfo>("select * from UserInfo order by Name");
@@ -32,21 +33,21 @@ namespace jail.Classes
 
         public static List<CheckInOut> GetLastCheckInOut(long userId, int count = 49)
         {
-            if (userId <= 0) return new List<CheckInOut>();
+            if (userId <= 0 || !SettingsHelper.TimeTrack) return new List<CheckInOut>();
             return Db.Query<CheckInOut>("select top(@count) * from CHECKINOUT c where c.USERID=@userId order by c.CHECKTIME desc"
                 , new {count, userId});
         }
 
         public static int CheckIn(long userId)
         {
-            if (userId <= 0) return 0;
+            if (userId <= 0 || !SettingsHelper.TimeTrack) return 0;
             return Db.Execute("INSERT INTO TimeTrack.dbo.CHECKINOUT (USERID, CHECKTIME, CHECKTYPE, VERIFYCODE, WorkCode, UserExtFmt) VALUES (@userId, GETDATE(), 'I', 1, 0, 0)"
                 , new {userId});
         }
 
         public static int CheckOut(long userId)
         {
-            if (userId <= 0) return 0;
+            if (userId <= 0 || !SettingsHelper.TimeTrack) return 0;
             return Db.Execute("INSERT INTO TimeTrack.dbo.CHECKINOUT (USERID, CHECKTIME, CHECKTYPE, VERIFYCODE, WorkCode, UserExtFmt) VALUES (@userId, GETDATE(), 'O', 1, 0, 0)"
                 , new {userId});
         }

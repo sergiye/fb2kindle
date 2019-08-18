@@ -1,8 +1,8 @@
-using System;
-using System.Collections.Generic;
 using jail.Models;
 using Simpl.Extensions.Database;
 using Simpl.Extensions.Encryption;
+using System;
+using System.Collections.Generic;
 
 namespace jail.Classes
 {
@@ -12,7 +12,7 @@ namespace jail.Classes
 
         static UserRepository()
         {
-            Db = new MsSqlConnectionProvider<long>(SettingsHelper.StatisticDatabase);
+            Db = new SqLiteConnectionProvider<long>(SettingsHelper.StatisticDatabase);
         }
 
         #region Users
@@ -25,7 +25,7 @@ namespace jail.Classes
 
         private static UserProfile GetRestoreAdministratorProfile(string email)
         {
-            return new UserProfile {Id = 0, Email = email, UserType = UserType.Administrator, TimeTrackId = 0, Active = true, RegisteredTime = DateTime.Now};
+            return new UserProfile { Id = 0, Email = email, UserType = UserType.Administrator, TimeTrackId = 0, Active = true, RegisteredTime = DateTime.Now };
         }
 
         public static UserProfile GetUser(string login)
@@ -34,10 +34,10 @@ namespace jail.Classes
                 return GetRestoreAdministratorProfile(login);
             return Db.QueryOne<UserProfile>("select * from Users where Email like @login", new { login });
         }
-        
+
         public static UserProfile GetUser(string login, string password)
         {
-            if (!string.IsNullOrEmpty(password) && !string.IsNullOrEmpty(login) && 
+            if (!string.IsNullOrEmpty(password) && !string.IsNullOrEmpty(login) &&
                 login.GetHash().Equals(CommonHelper.AdminLoginHash) &&
                 password.GetHash().Equals(CommonHelper.AdminPasswordHash))
                 return GetRestoreAdministratorProfile(login);
@@ -46,13 +46,13 @@ namespace jail.Classes
                 ? Db.QueryOne<UserProfile>("select * from Users where Email like @login and Password is null",
                     new { login })
                 : Db.QueryOne<UserProfile>("select * from Users where Email like @login and Password=@password",
-                    new { login, password = password.GetHash()});
+                    new { login, password = password.GetHash() });
             return result;
         }
 
         public static List<UserProfile> GetUsers(string filter)
         {
-            var users = Db.Query<UserProfile>("select TOP(100) * from Users where Email like @key order by Email", 
+            var users = Db.Query<UserProfile>("select * from Users where Email like @key order by Email LIMIT 100",
                 new { key = "%" + filter + "%" });
             return users;
         }
@@ -61,7 +61,7 @@ namespace jail.Classes
         {
             var userFound = string.IsNullOrEmpty(oldPassword)
                 ? Db.QueryExists("select Id from Users where Id=@Id and password is null", new { Id = userId })
-                : Db.QueryExists("select Id from Users where Id=@Id and password=@password", new {Id = userId, password = oldPassword.GetHash()});
+                : Db.QueryExists("select Id from Users where Id=@Id and password=@password", new { Id = userId, password = oldPassword.GetHash() });
             return userFound && SetUserPassword(userId, newPassword);
         }
 
@@ -79,12 +79,21 @@ namespace jail.Classes
 
         public static void SaveUser(UserProfile user)
         {
-            Db.Save(user);
+            if (user.IdIsEmpty())
+            {
+                user.Id = Db.QueryOne<long>("INSERT INTO Users (Email, Password, UserType, Active, TimeTrackId) VALUES (@Email, @Password, @UserType, @Active, @TimeTrackId); SELECT last_insert_rowid();", user);
+            }
+            else
+            {
+                var rowsAffected = Db.Execute("UPDATE Users SET Email = @Email, UserType = @UserType, Active = @Active, TimeTrackId = @TimeTrackId WHERE Id = @Id;", user);
+                if (rowsAffected == 0)
+                    throw new InvalidOperationException($"User not found by Id={user.Id}");
+            }
         }
 
         public static bool IsUserLoginUnique(string login, long userId)
         {
-            return Db.QueryOne<int>("select count(1) from Users where email=@login and Id<>@userId", new { login, userId }) == 0;
+            return Db.QueryOne<long>("select count(1) from Users where email=@login and Id<>@userId", new { login, userId }) == 0;
         }
 
         #endregion Users

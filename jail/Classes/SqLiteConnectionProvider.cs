@@ -9,15 +9,18 @@ namespace jail.Classes
 {
     internal class SqLiteConnectionProvider<IdType> : BaseConnectionProvider<IdType> where IdType : IEquatable<IdType>
     {
+        private readonly bool failIfMissing;
+
         protected string SqLiteConnectionString
         {
-            get { return string.Format("Data Source='{0}';Version=3;FailIfMissing=True;DateTimeKind=Utc;UTF8Encoding=True;synchronous = OFF;journal_mode = MEMORY;Page Size=4096;Cache Size=2000;", ConnectionString); }
+            get { return $"Data Source='{ConnectionString}';Version=3;FailIfMissing={failIfMissing};DateTimeKind=Utc;UTF8Encoding=True;synchronous = OFF;journal_mode = MEMORY;Page Size=4096;Cache Size=2000;"; }
         }
 
-        internal SqLiteConnectionProvider(string databasePath)
+        internal SqLiteConnectionProvider(string databasePath, bool failIfMissing = true)
             : base(databasePath)
         {
             DapperExtensions.DapperExtensions.SqlDialect = new SqliteDialect();
+            this.failIfMissing = failIfMissing;
         }
 
         #region Basic Methods
