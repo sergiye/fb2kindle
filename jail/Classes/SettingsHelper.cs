@@ -16,6 +16,7 @@ namespace jail.Classes
         public static string ArchivesPath { get; set; }
         public static long MaxRequestLength { get; set; }
         public static int MaxRecordsToShowAtOnce { get; set; }
+        public static bool TimeTrack { get; set; }
        
         public static string SmtpServer { get; set; }
         public static int SmtpPort { get; set; }
@@ -27,14 +28,15 @@ namespace jail.Classes
         /// </summary>
         static SettingsHelper()
         {
-            StatisticDatabase = ConfigurationManager.ConnectionStrings["DefaultConnection"].ConnectionString;
             TimeTrackDatabase = ConfigurationManager.ConnectionStrings["TimeTrack"].ConnectionString;
 
             ConverterName = ConfigurationManager.AppSettings["ConverterName"];
             DatabasePath = ConfigurationManager.AppSettings["DatabasePath"];
+            StatisticDatabase = ConfigurationManager.AppSettings["StatisticsDBPath"];
             ArchivesPath = ConfigurationManager.AppSettings["ArchivesPath"];
 
             MaxRecordsToShowAtOnce = Convert.ToInt32(ConfigurationManager.AppSettings["MaxRecordsToShowAtOnce"]);
+            TimeTrack = Convert.ToBoolean(ConfigurationManager.AppSettings["TimeTrack"]);
 
             SmtpServer = ConfigurationManager.AppSettings["SmtpServer"];
             SmtpPort =  Convert.ToInt32(ConfigurationManager.AppSettings["SmtpPort"]);

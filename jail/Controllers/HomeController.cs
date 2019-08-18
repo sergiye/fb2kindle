@@ -1,4 +1,7 @@
-﻿using System;
+﻿using jail.Classes;
+using jail.Classes.Attributes;
+using jail.Models;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -9,9 +12,6 @@ using System.Threading.Tasks;
 using System.Web;
 using System.Web.Mvc;
 using System.Web.Security;
-using jail.Classes;
-using jail.Classes.Attributes;
-using jail.Models;
 
 namespace jail.Controllers
 {
@@ -23,47 +23,42 @@ namespace jail.Controllers
 
         protected override void OnException(ExceptionContext filterContext)
         {
-//            if (filterContext.Exception != null)
-//            {
-//                if (filterContext.Exception is TaskCanceledException ||
-//                    filterContext.Exception is OperationCanceledException)
-//                    return;
-//            }
+            //            if (filterContext.Exception != null)
+            //            {
+            //                if (filterContext.Exception is TaskCanceledException ||
+            //                    filterContext.Exception is OperationCanceledException)
+            //                    return;
+            //            }
             var name = CommonHelper.GetActionLogName(filterContext.HttpContext.Request);
             Logger.WriteError(filterContext.Exception, string.Format("{0} - {1}", name,
                 filterContext.Exception != null ? filterContext.Exception.Message : null), CommonHelper.GetClientAddress(), CommonHelper.CurrentIdentityName);
             base.OnException(filterContext);
         }
 
-//        protected override IAsyncResult BeginExecute(RequestContext requestContext, AsyncCallback callback, object state)
-//        {
-//            Logger.WriteTrace(CommonHelper.GetActionLogName(requestContext.HttpContext.Request), CommonHelper.GetClientAddress(), CommonHelper.CurrentIdentityName);
-//            return base.BeginExecute(requestContext, callback, state);
-//        }
+        //        protected override IAsyncResult BeginExecute(RequestContext requestContext, AsyncCallback callback, object state)
+        //        {
+        //            Logger.WriteTrace(CommonHelper.GetActionLogName(requestContext.HttpContext.Request), CommonHelper.GetClientAddress(), CommonHelper.CurrentIdentityName);
+        //            return base.BeginExecute(requestContext, callback, state);
+        //        }
 
-        public UserProfile CurrentUser
-        {
-            get
-            {
+        public UserProfile CurrentUser {
+            get {
                 return Request.IsAuthenticated
                     ? (UserProfile)ControllerContext.HttpContext.Session["User"]
                     : null;
             }
-            set
-            {
-                ControllerContext.HttpContext.Session["User"] =  value;
+            set {
+                ControllerContext.HttpContext.Session["User"] = value;
             }
         }
 
-        private string AppBaseUrl
-        {
-            get
-            {
+        private string AppBaseUrl {
+            get {
                 return Url.Content("~/");
-//                if (Request == null || Request.Url == null || Request.ApplicationPath == null)
-//                    return null;
-//                return string.Format("{0}://{1}:{2}{3}/", Request.Url.Scheme, Request.Url.Host, Request.Url.Port,
-//                    Request.ApplicationPath.TrimEnd('/'));
+                //                if (Request == null || Request.Url == null || Request.ApplicationPath == null)
+                //                    return null;
+                //                return string.Format("{0}://{1}:{2}{3}/", Request.Url.Scheme, Request.Url.Host, Request.Url.Port,
+                //                    Request.ApplicationPath.TrimEnd('/'));
             }
         }
 
@@ -80,8 +75,8 @@ namespace jail.Controllers
         {
             var ver = Assembly.GetExecutingAssembly().GetName().Version;
             var buildTime = new DateTime(2000, 1, 1).AddDays(ver.Build).AddSeconds(ver.Revision * 2);
-//            if (TimeZone.IsDaylightSavingTime(DateTime.Now, TimeZone.CurrentTimeZone.GetDaylightChanges(DateTime.Now.Year)))
-//                buildTime = buildTime.AddHours(1);
+            //            if (TimeZone.IsDaylightSavingTime(DateTime.Now, TimeZone.CurrentTimeZone.GetDaylightChanges(DateTime.Now.Year)))
+            //                buildTime = buildTime.AddHours(1);
             return string.Format("{0:yyyy-MM-dd HH:mm}", buildTime);
         }
 
@@ -124,12 +119,12 @@ namespace jail.Controllers
                         FormsAuthentication.SetAuthCookie(ticket.Name, true);
                         Logger.WriteInfo(string.Format("{0} session restored", user.UserType), CommonHelper.GetClientAddress(), user.Email);
                         return !string.IsNullOrWhiteSpace(returnUrl)
-                            ? (ActionResult) Redirect(returnUrl)
+                            ? (ActionResult)Redirect(returnUrl)
                             : RedirectToAction(user.UserType == UserType.Administrator ? "Log" : "Index", "Home");
                     }
                 }
             }
-            return View(new LogOnModel{RedirectUrl = returnUrl});
+            return View(new LogOnModel { RedirectUrl = returnUrl });
         }
 
         [Route("login")]
@@ -143,36 +138,36 @@ namespace jail.Controllers
                 {
                     ModelState.AddModelError("", "The user name or password provided is incorrect.");
                 }
-//                else if (user.UserType != UserType.Administrator && user.Id != 0)
-//                {
-//                    ModelState.AddModelError("", string.Format("'{0}' user type is not allowed to login", user.UserType));
-//                }
+                //                else if (user.UserType != UserType.Administrator && user.Id != 0)
+                //                {
+                //                    ModelState.AddModelError("", string.Format("'{0}' user type is not allowed to login", user.UserType));
+                //                }
                 else
                 {
                     Logger.WriteInfo(string.Format("{0} logged in", user.UserType), CommonHelper.GetClientAddress(), model.UserName);
                     CurrentUser = user;
                     ControllerContext.HttpContext.Session.Timeout = 24 * 60;
-//                    if (model.RememberMe)
-//                    {
-                        var ticket = new FormsAuthenticationTicket(1, model.UserName,
-                            DateTime.Now, DateTime.Now.AddDays(7), false,
-                            string.Format("{0},{1}", user.Id, user.UserType), 
-                            FormsAuthentication.FormsCookiePath);
-                        var strEncryptedTicket = FormsAuthentication.Encrypt(ticket);
-                        var cookie = new HttpCookie(FormsAuthentication.FormsCookieName, strEncryptedTicket)
-                                     {
-                                         Expires = DateTime.Now.AddDays(60)
-                                     };
-                        HttpContext.Response.Cookies.Add(cookie);
-                        FormsAuthentication.SetAuthCookie(model.UserName, true);
-                        if (!string.IsNullOrWhiteSpace(model.RedirectUrl))
-                            return Redirect(model.RedirectUrl);
-//                    }
-//                    else
-//                    {
-//                        //FormsAuthentication.SetAuthCookie(model.UserName, false);
-//                        FormsAuthentication.RedirectFromLoginPage(model.UserName, false);
-//                    }
+                    //                    if (model.RememberMe)
+                    //                    {
+                    var ticket = new FormsAuthenticationTicket(1, model.UserName,
+                        DateTime.Now, DateTime.Now.AddDays(7), false,
+                        string.Format("{0},{1}", user.Id, user.UserType),
+                        FormsAuthentication.FormsCookiePath);
+                    var strEncryptedTicket = FormsAuthentication.Encrypt(ticket);
+                    var cookie = new HttpCookie(FormsAuthentication.FormsCookieName, strEncryptedTicket)
+                    {
+                        Expires = DateTime.Now.AddDays(60)
+                    };
+                    HttpContext.Response.Cookies.Add(cookie);
+                    FormsAuthentication.SetAuthCookie(model.UserName, true);
+                    if (!string.IsNullOrWhiteSpace(model.RedirectUrl))
+                        return Redirect(model.RedirectUrl);
+                    //                    }
+                    //                    else
+                    //                    {
+                    //                        //FormsAuthentication.SetAuthCookie(model.UserName, false);
+                    //                        FormsAuthentication.RedirectFromLoginPage(model.UserName, false);
+                    //                    }
                     return RedirectToAction(user.UserType == UserType.Administrator ? "Log" : "Index", "Home");
                 }
             }
@@ -262,7 +257,7 @@ namespace jail.Controllers
         [Route("search")]
         public async Task<ActionResult> SearchResults(string k = null, string l = "ru")
         {
-            return PartialView(string.IsNullOrWhiteSpace(k) ? new List<BookInfo>() : 
+            return PartialView(string.IsNullOrWhiteSpace(k) ? new List<BookInfo>() :
                 await DataRepository.GetSearchDataAsync(k, l));
         }
 
@@ -274,28 +269,28 @@ namespace jail.Controllers
 
             try
             {
-                long total = Directory.GetFiles(path,"*",SearchOption.AllDirectories).Sum(t => new FileInfo(t).Length);
+                long total = Directory.GetFiles(path, "*", SearchOption.AllDirectories).Sum(t => new FileInfo(t).Length);
                 ViewBag.TotalSize = Simpl.Extensions.StringHelper.FileSizeStr(total);
             }
             catch (Exception ex)
             {
                 Logger.WriteError(ex, "Error calculating allocated files total size");
             }
-            var files = info.GetFiles().Where(f=>f.Extension.Equals(".fb2", StringComparison.OrdinalIgnoreCase)).OrderBy(p => p.CreationTime).ToList();
+            var files = info.GetFiles().Where(f => f.Extension.Equals(".fb2", StringComparison.OrdinalIgnoreCase)).OrderBy(p => p.CreationTime).ToList();
             //remove too old files from drive
-//            var oldItems = files.Where(f => f.CreationTime < DateTime.Now.AddYears(-1));
-//            foreach (var oldItem in oldItems)
-//            {
-//                System.IO.File.Delete(oldItem.FullName);
-                //remove work folder & all generated content
-//            }
+            //            var oldItems = files.Where(f => f.CreationTime < DateTime.Now.AddYears(-1));
+            //            foreach (var oldItem in oldItems)
+            //            {
+            //                System.IO.File.Delete(oldItem.FullName);
+            //remove work folder & all generated content
+            //            }
 
             //fill files data to books info
             var books = new List<BookHistoryInfo>();
             foreach (var fi in files)
             {
                 if (!int.TryParse(Path.GetFileNameWithoutExtension(fi.Name), out var bookId)) continue;
-                books.Add(new BookHistoryInfo{Id = bookId, GeneratedTime = fi.CreationTime});
+                books.Add(new BookHistoryInfo { Id = bookId, GeneratedTime = fi.CreationTime });
             }
 
             //leave only first N in list
@@ -312,7 +307,7 @@ namespace jail.Controllers
                 System.IO.File.Delete(Path.Combine(workingPath, string.Format("{0}.fb2", id)));
                 System.IO.File.Delete(Path.Combine(workingPath, string.Format("{0}.mobi", id)));
                 Directory.Delete(Path.Combine(workingPath, string.Format("{0}", id)), true);
-                Logger.WriteWarning(string.Format("History item '{0}' was deleted by user '{1}'", id, CurrentUser.Email), 
+                Logger.WriteWarning(string.Format("History item '{0}' was deleted by user '{1}'", id, CurrentUser.Email),
                     CommonHelper.GetClientAddress(), CurrentUser.Email);
                 return new HttpStatusCodeResult(HttpStatusCode.OK, "Done");
             }
@@ -343,7 +338,7 @@ namespace jail.Controllers
                 BookHelper.ExtractZipFile(archPath, book.FileName, sourceFileName);
             }
             var fileData = System.IO.File.ReadAllBytes(sourceFileName);
-            return File(fileData, System.Net.Mime.MediaTypeNames.Application.Octet, 
+            return File(fileData, System.Net.Mime.MediaTypeNames.Application.Octet,
                 BookHelper.GetBookDownloadFileName(book));
         }
 
@@ -358,7 +353,7 @@ namespace jail.Controllers
             if (!System.IO.File.Exists(resultFile))
                 throw new FileNotFoundException("File not found", resultFile);
             var fileBytes = System.IO.File.ReadAllBytes(resultFile);
-            return File(fileBytes, System.Net.Mime.MediaTypeNames.Application.Octet, 
+            return File(fileBytes, System.Net.Mime.MediaTypeNames.Application.Octet,
                 BookHelper.GetBookDownloadFileName(book, ".mobi"));
         }
 
@@ -372,7 +367,7 @@ namespace jail.Controllers
             var resultFile = Path.ChangeExtension(sourceFileName, ".mobi");
             if (!System.IO.File.Exists(resultFile))
             {
-                Response.StatusCode = (int) HttpStatusCode.NotFound;
+                Response.StatusCode = (int)HttpStatusCode.NotFound;
                 return Json("File not found", JsonRequestBehavior.AllowGet);
                 //return new HttpStatusCodeResult(HttpStatusCode.NotFound);
                 //throw new FileNotFoundException("File not found", resultFile);
@@ -386,7 +381,7 @@ namespace jail.Controllers
             {
                 Response.StatusCode = 500; // Replace .AddHeader
                 return Json(ex.Message, JsonRequestBehavior.AllowGet);
-//                return new HttpStatusCodeResult(HttpStatusCode.BadRequest, ex.Message);
+                //                return new HttpStatusCodeResult(HttpStatusCode.BadRequest, ex.Message);
             }
         }
 
@@ -400,7 +395,7 @@ namespace jail.Controllers
             var resultFile = Path.ChangeExtension(sourceFileName, ".mobi");
             if (System.IO.File.Exists(resultFile))
                 return Json("Done", JsonRequestBehavior.AllowGet);
-            
+
             var archPath = Path.Combine(SettingsHelper.ArchivesPath, book.ArchiveFileName);
             if (!System.IO.File.Exists(archPath))
                 throw new FileNotFoundException("Book archive not found");
@@ -436,12 +431,12 @@ namespace jail.Controllers
             {
                 throw new FileNotFoundException("Book not found, please prepare it first");
                 //BookHelper.Transform(tempFile, readingPath, Server.MapPath("~/xhtml.xsl"));
-//                if (!BookHelper.ConvertBook(sourceFileName))
-//                    throw new ArgumentException("Error converting book for kindle");
+                //                if (!BookHelper.ConvertBook(sourceFileName))
+                //                    throw new ArgumentException("Error converting book for kindle");
             }
             ViewBag.Title = book.Title;
             return new RedirectResult(Path.Combine(@"../" + readingPath.Replace(Server.MapPath("~"), "").Replace('\\', '/')));
-//            return new FilePathResult(GetLinkToFile(readingPath), "text/html");
+            //            return new FilePathResult(GetLinkToFile(readingPath), "text/html");
             //ViewBag.BookContent = GetLinkToFile(readingPath);//Path.Combine(@"../" + readingPath.Replace(Server.MapPath("~"), "").Replace('\\', '/'));
             //return View(book);
         }
@@ -524,7 +519,7 @@ namespace jail.Controllers
             var originFileName = Request.Headers["X-File-Name"];
             if (string.IsNullOrEmpty(originFileName))
                 return Json(new { success = false });
-            var originRealPath = Server.MapPath(string.Format("~/b/{0}", 
+            var originRealPath = Server.MapPath(string.Format("~/b/{0}",
                 BookHelper.GetCorrectedFileName(originFileName)));
             if (string.IsNullOrEmpty(originRealPath))
                 return Json(new { success = false });
@@ -534,7 +529,7 @@ namespace jail.Controllers
             if (System.IO.File.Exists(originRealPath))
             {
                 if (System.IO.File.Exists(mobiRealPath))
-                    return Json(new {success = true, link = mobiRelativePath, fileName = mobiDisplayName});
+                    return Json(new { success = true, link = mobiRelativePath, fileName = mobiDisplayName });
                 System.IO.File.Delete(originRealPath); //delete old uploaded file to re-convert new one
             }
             using (var fileStream = new FileStream(originRealPath, FileMode.OpenOrCreate))
@@ -548,7 +543,7 @@ namespace jail.Controllers
 
         public FileResult GetConverter()
         {
-            return File(BookHelper.ConverterPath, 
+            return File(BookHelper.ConverterPath,
                 System.Net.Mime.MediaTypeNames.Application.Octet, SettingsHelper.ConverterName);
         }
 
@@ -716,7 +711,7 @@ namespace jail.Controllers
             Logger.WriteInfo("User checked OUT", CommonHelper.GetClientAddress(), CurrentUser.Email);
             return new HttpStatusCodeResult(HttpStatusCode.OK, "Done");
         }
- 
+
         #endregion TimeTrack
     }
 }

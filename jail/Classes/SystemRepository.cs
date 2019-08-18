@@ -1,9 +1,9 @@
+using jail.Models;
+using Simpl.Extensions.Database;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
-using jail.Models;
-using Simpl.Extensions.Database;
 
 namespace jail.Classes
 {
@@ -13,16 +13,16 @@ namespace jail.Classes
 
         static SystemRepository()
         {
-            Db = new MsSqlConnectionProvider<long>(SettingsHelper.StatisticDatabase);
-//            SqlMapper.AddTypeHandler(new UtcTimeHandler());
+            Db = new SqLiteConnectionProvider<long>(SettingsHelper.StatisticDatabase);
+            //SqlMapper.AddTypeHandler(new UtcTimeHandler());
         }
 
         #region Logging
 
-        public static IList<SystemLog> GetErrorLogData(int count, string key = null, 
+        public static IList<SystemLog> GetErrorLogData(int count, string key = null,
             SystemLog.LogItemType searchType = SystemLog.LogItemType.All, bool hideTrace = true)
         {
-            var sql = new StringBuilder(@"select top(@count) EnteredDate, Level, Message, MachineName, UserName, 
+            var sql = new StringBuilder(@"select EnteredDate, Level, Message, MachineName, UserName, 
 Exception, CallerAddress from SystemLogs where 1=1");
             if (!string.IsNullOrWhiteSpace(key))
                 sql.Append(" and (Message like @key or Exception like @key or UserName like @key or CallerAddress like @key)");
@@ -39,7 +39,7 @@ Exception, CallerAddress from SystemLogs where 1=1");
             {
                 sql.Append(" and MachineName='").Append(Environment.MachineName).Append("'");
             }
-            sql.Append(" order by EnteredDate desc");
+            sql.Append(" order by EnteredDate desc LIMIT @count ");
             var result = Db.Query<SystemLog>(sql.ToString(), new { count, key = string.Format("%{0}%", key) });
             //foreach (var item in result) item.EnteredDate = item.EnteredDate.ToLocalTime();
             return result;
@@ -47,19 +47,14 @@ Exception, CallerAddress from SystemLogs where 1=1");
 
         public static int ClearByMessagePart(string selection)
         {
-            return Db.Execute("delete from SystemLogs where [message] like '%'+@selection+'%' or UserName=@selection or MachineName=@selection or CallerAddress like @selection", 
+            return Db.Execute("delete from SystemLogs where Message like '%' || @selection || '%' or UserName=@selection or MachineName=@selection or CallerAddress like @selection",
                 new { selection });
         }
 
-        public static int CalcByMessagePart(string selection)
+        public static long CalcByMessagePart(string selection)
         {
-            return Db.QueryInt("select count(1) from SystemLogs where [message] like '%'+@selection+'%' or UserName=@selection or MachineName=@selection or CallerAddress like @selection", 
+            return Db.QueryOne<long>("select count(1) from SystemLogs where Message like '%' || @selection || '%' or UserName=@selection or MachineName=@selection or CallerAddress like @selection",
                 new { selection });
-        }
-
-        public static int ClearByDays(int days)
-        {
-            return Db.Execute("delete from SystemLogs where EnteredDate<DATEADD(day,-@days,getutcdate()) and (Level='Trace' or Level='Debug')", new { days });
         }
 
         #endregion
