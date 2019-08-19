@@ -133,7 +133,7 @@ order by CASE WHEN b.lang = 'ru' THEN '1'
             var books = data.ToArray();
             if (books.Length == 0) return null;
 
-            var ids = books.Select(b => b.Id).ToArray();
+            var ids = books.Select(b => b.Id).Distinct().ToArray();
             var sql = new StringBuilder(@"select b.id, b.title, b.id_archive, b.file_name, b.file_size, b.md5sum, 
 b.created, b.lang, s.*, bs.number BookOrder, 
 a.id, a.full_name, a.first_name, a.middle_name, a.last_name from books b
@@ -142,11 +142,12 @@ left join bookseq bs on bs.id_book=b.id
 left join sequences s on s.id=bs.id_seq
 where b.id in @ids");
             var info = (await Db.QueryMultipleAsync<BookHistoryInfo, SequenceInfo, AuthorInfo, long>(sql.ToString(), 
-                b => b.Id, b => b.Sequences, b => b.Authors, new { ids })).ToArray();
+                b => b.Id, b => b.Sequences, b => b.Authors, new { ids })).ToList();
             foreach (var bookInfo in info)
             {
                 bookInfo.GeneratedTime = books.First(i => i.Id == bookInfo.Id).GeneratedTime;
             }
+            info.AddRange(books.Where(b=>b.Id == 0));
             return info.OrderByDescending(i=>i.GeneratedTime);
         }
     }

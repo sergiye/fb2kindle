@@ -289,8 +289,8 @@ namespace jail.Controllers
             var books = new List<BookHistoryInfo>();
             foreach (var fi in files)
             {
-                if (!int.TryParse(Path.GetFileNameWithoutExtension(fi.Name), out var bookId)) continue;
-                books.Add(new BookHistoryInfo { Id = bookId, GeneratedTime = fi.CreationTime });
+                int.TryParse(Path.GetFileNameWithoutExtension(fi.Name), out var bookId);
+                books.Add(new BookHistoryInfo { Id = bookId, GeneratedTime = fi.CreationTime, FileName = fi.Name, Title = fi.Name });
             }
 
             //leave only first N in list
@@ -299,21 +299,27 @@ namespace jail.Controllers
 
         [Route("history")]
         [HttpDelete, UserTypeFilter(Roles = new[] { UserType.Administrator })]
-        public ActionResult HistoryDelete(long id)
+        public ActionResult HistoryDelete(long id, string fileName)
         {
             try
             {
+                fileName = Server.UrlDecode(fileName);
+                fileName = Path.GetFileNameWithoutExtension(fileName);
+                if (id > 0)
+                {
+                    fileName = id.ToString();
+                }
                 var workingPath = Server.MapPath("~/b");
-                System.IO.File.Delete(Path.Combine(workingPath, string.Format("{0}.fb2", id)));
-                System.IO.File.Delete(Path.Combine(workingPath, string.Format("{0}.mobi", id)));
-                Directory.Delete(Path.Combine(workingPath, string.Format("{0}", id)), true);
-                Logger.WriteWarning(string.Format("History item '{0}' was deleted by user '{1}'", id, CurrentUser.Email),
+                System.IO.File.Delete(Path.Combine(workingPath, string.Format("{0}.fb2", fileName)));
+                System.IO.File.Delete(Path.Combine(workingPath, string.Format("{0}.mobi", fileName)));
+                Directory.Delete(Path.Combine(workingPath, string.Format("{0}", fileName)), true);
+                Logger.WriteWarning(string.Format("History item '{0}' was deleted by user '{1}'", fileName, CurrentUser.Email),
                     CommonHelper.GetClientAddress(), CurrentUser.Email);
                 return new HttpStatusCodeResult(HttpStatusCode.OK, "Done");
             }
             catch (Exception ex)
             {
-                Logger.WriteError(ex, string.Format("Error deleting history item {0}: {1}", id, ex.Message), CommonHelper.GetClientAddress(), CurrentUser.Email);
+                Logger.WriteError(ex, string.Format("Error deleting history item {0}/{1}: {2}", id, fileName, ex.Message), CommonHelper.GetClientAddress(), CurrentUser.Email);
                 throw;
             }
         }

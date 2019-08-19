@@ -5,13 +5,13 @@
     var user = (UserProfile)HttpContext.Current.Session["User"];
 }
 <script type="text/javascript">
-    function DeleteHistoryItem(id) {
-        if (!confirm("Are you sure you want to remove this history item?"))
+    function DeleteHistoryItem(id, fileName) {
+        if (!confirm("Are you sure you want to remove '" + fileName + "' from history?"))
             return;
         $.ajax({
             url: '@Url.Action("HistoryDelete")',
             type: 'DELETE',
-            data: { id: id },
+            data: { id: id, fileName: fileName },
             success: function () { window.location.reload(false); },
             error: function (response, status, error) {
                 if (error && error.length > 0)
@@ -64,7 +64,7 @@
                     @if (user != null && user.UserType == UserType.Administrator)
                     {
                         <td>
-                            <a href="#" onclick="DeleteHistoryItem(@item.Id);" class="btn btn-danger" title="Delete">
+                            <a href="#" onclick="DeleteHistoryItem(@item.Id, encodeURI('@item.FileName'));" class="btn btn-danger" title="Delete">
                                 <span class="glyphicon glyphicon-trash"></span>
                             </a>
                         </td>
