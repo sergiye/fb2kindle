@@ -516,7 +516,7 @@ namespace jail.Controllers
         [HttpPost]
         public ActionResult HandleFileUpload()
         {
-            var originFileName = Request.Headers["X-File-Name"];
+            var originFileName = Server.UrlDecode(Request.Headers["X-File-Name"]);
             if (string.IsNullOrEmpty(originFileName))
                 return Json(new { success = false });
             var originRealPath = Server.MapPath(string.Format("~/b/{0}",
