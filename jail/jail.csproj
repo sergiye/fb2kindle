@@ -136,6 +136,7 @@
     <Compile Include="Classes\Attributes\ActionLoggerAttribute.cs" />
     <Compile Include="Classes\Attributes\CustomAuthorization.cs" />
     <Compile Include="Classes\Attributes\UserTypeFilterAttribute.cs" />
+    <Compile Include="Classes\BaseRepository.cs" />
     <Compile Include="Classes\HttpCodeActionResult.cs" />
     <Compile Include="Classes\Attributes\SessionRestoreAttribute.cs" />
     <Compile Include="Classes\CommonHelper.cs" />

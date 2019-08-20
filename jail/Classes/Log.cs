@@ -8,6 +8,11 @@ namespace jail.Classes
     {
         private static readonly ILogger _logger = LogManager.GetLogger("Log");
 
+        static Logger()
+        {
+            SystemRepository.CheckDatabaseInitialized();
+        }
+
         private static void WriteCustom(LogLevel level, string message, string logCallerAddress = null, Exception ex = null, string calledBy = null)
         {
             if ((!string.IsNullOrEmpty(calledBy) && calledBy.ToLower().GetHash().Equals(CommonHelper.AdminLoginHash)) ||

@@ -1,20 +1,12 @@
 using jail.Models;
-using Simpl.Extensions.Database;
 using Simpl.Extensions.Encryption;
 using System;
 using System.Collections.Generic;
 
 namespace jail.Classes
 {
-    internal class UserRepository
+    internal class UserRepository : BaseRepository
     {
-        protected static BaseConnectionProvider<long> Db { get; set; }
-
-        static UserRepository()
-        {
-            Db = new SqLiteConnectionProvider<long>(SettingsHelper.StatisticDatabase);
-        }
-
         #region Users
 
         public static UserProfile GetUserById(long id)
