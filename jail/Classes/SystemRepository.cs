@@ -1,5 +1,4 @@
 using jail.Models;
-using Simpl.Extensions.Database;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -7,16 +6,9 @@ using System.Text;
 
 namespace jail.Classes
 {
-    internal class SystemRepository
+
+    internal class SystemRepository : BaseRepository
     {
-        protected static BaseConnectionProvider<long> Db { get; set; }
-
-        static SystemRepository()
-        {
-            Db = new SqLiteConnectionProvider<long>(SettingsHelper.StatisticDatabase);
-            //SqlMapper.AddTypeHandler(new UtcTimeHandler());
-        }
-
         #region Logging
 
         public static IList<SystemLog> GetErrorLogData(int count, string key = null,
