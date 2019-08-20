@@ -10,7 +10,7 @@ namespace jail.Classes
 
         static Logger()
         {
-            SystemRepository.CheckDatabaseInitialized();
+            BaseRepository.CheckDatabaseInitialized();
         }
 
         private static void WriteCustom(LogLevel level, string message, string logCallerAddress = null, Exception ex = null, string calledBy = null)
