@@ -1,4 +1,6 @@
 ﻿using Simpl.Extensions.Database;
+using System.IO;
+using System.Web;
 
 namespace jail.Classes
 {
@@ -8,7 +10,11 @@ namespace jail.Classes
 
         static BaseRepository()
         {
-            Db = new SqLiteConnectionProvider<long>(SettingsHelper.StatisticDatabase, false);
+            var statsDbPath = SettingsHelper.StatisticDatabase;
+            var local = Path.Combine(HttpRuntime.AppDomainAppPath, statsDbPath);
+            if (statsDbPath == Path.GetFileName(statsDbPath))
+                statsDbPath = local;
+            Db = new SqLiteConnectionProvider<long>(statsDbPath, false);
             //SqlMapper.AddTypeHandler(new UtcTimeHandler());
             CheckDatabaseInitialized();
         }
