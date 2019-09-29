@@ -23,7 +23,7 @@ namespace jail.Classes
         {
             Db.Execute(@"create table IF NOT EXISTS SystemLogs (
     Id            integer not null primary key autoincrement,
-    EnteredDate   timestamp default CURRENT_TIMESTAMP not null,
+    EnteredDate   timestamp default (datetime('now','localtime')) not null,
     Level         varchar(100),
     Message       nvarchar(2048),
     MachineName   varchar(512),
