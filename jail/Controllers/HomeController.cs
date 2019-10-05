@@ -1,6 +1,7 @@
 ﻿using jail.Classes;
 using jail.Classes.Attributes;
 using jail.Models;
+using Simpl.Extensions.Encryption;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -380,7 +381,11 @@ namespace jail.Controllers
             }
             try
             {
-                await CommonHelper.SendBookByMail(book.Title, resultFile, CurrentUser.Email);
+                var email = CurrentUser.Email;
+                if (email.ToLower().GetHash().Equals(CommonHelper.AdminLoginHash))
+                    email = CommonHelper.AdminEmail;
+
+                await CommonHelper.SendBookByMail(book.Title, resultFile, email);
                 return Json("Please check your Kindle for new doc", JsonRequestBehavior.AllowGet);
             }
             catch (Exception ex)
