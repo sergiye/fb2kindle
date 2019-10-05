@@ -24,23 +24,23 @@ namespace jail.Controllers
 
         protected override void OnException(ExceptionContext filterContext)
         {
-            //            if (filterContext.Exception != null)
-            //            {
-            //                if (filterContext.Exception is TaskCanceledException ||
-            //                    filterContext.Exception is OperationCanceledException)
-            //                    return;
-            //            }
+            //if (filterContext.Exception != null)
+            //{
+            //    if (filterContext.Exception is TaskCanceledException ||
+            //        filterContext.Exception is OperationCanceledException)
+            //        return;
+            //}
             var name = CommonHelper.GetActionLogName(filterContext.HttpContext.Request);
             Logger.WriteError(filterContext.Exception, string.Format("{0} - {1}", name,
                 filterContext.Exception != null ? filterContext.Exception.Message : null), CommonHelper.GetClientAddress(), CommonHelper.CurrentIdentityName);
             base.OnException(filterContext);
         }
 
-        //        protected override IAsyncResult BeginExecute(RequestContext requestContext, AsyncCallback callback, object state)
-        //        {
-        //            Logger.WriteTrace(CommonHelper.GetActionLogName(requestContext.HttpContext.Request), CommonHelper.GetClientAddress(), CommonHelper.CurrentIdentityName);
-        //            return base.BeginExecute(requestContext, callback, state);
-        //        }
+        //protected override IAsyncResult BeginExecute(RequestContext requestContext, AsyncCallback callback, object state)
+        //{
+        //    Logger.WriteTrace(CommonHelper.GetActionLogName(requestContext.HttpContext.Request), CommonHelper.GetClientAddress(), CommonHelper.CurrentIdentityName);
+        //    return base.BeginExecute(requestContext, callback, state);
+        //}
 
         public UserProfile CurrentUser {
             get {
@@ -56,10 +56,10 @@ namespace jail.Controllers
         private string AppBaseUrl {
             get {
                 return Url.Content("~/");
-                //                if (Request == null || Request.Url == null || Request.ApplicationPath == null)
-                //                    return null;
-                //                return string.Format("{0}://{1}:{2}{3}/", Request.Url.Scheme, Request.Url.Host, Request.Url.Port,
-                //                    Request.ApplicationPath.TrimEnd('/'));
+                //if (Request == null || Request.Url == null || Request.ApplicationPath == null)
+                //    return null;
+                //return string.Format("{0}://{1}:{2}{3}/", Request.Url.Scheme, Request.Url.Host, Request.Url.Port,
+                //    Request.ApplicationPath.TrimEnd('/'));
             }
         }
 
@@ -139,17 +139,17 @@ namespace jail.Controllers
                 {
                     ModelState.AddModelError("", "The user name or password provided is incorrect.");
                 }
-                //                else if (user.UserType != UserType.Administrator && user.Id != 0)
-                //                {
-                //                    ModelState.AddModelError("", string.Format("'{0}' user type is not allowed to login", user.UserType));
-                //                }
+                //else if (user.UserType != UserType.Administrator && user.Id != 0)
+                //{
+                //    ModelState.AddModelError("", string.Format("'{0}' user type is not allowed to login", user.UserType));
+                //}
                 else
                 {
                     Logger.WriteInfo(string.Format("{0} logged in", user.UserType), CommonHelper.GetClientAddress(), model.UserName);
                     CurrentUser = user;
                     ControllerContext.HttpContext.Session.Timeout = 24 * 60;
-                    //                    if (model.RememberMe)
-                    //                    {
+                    //if (model.RememberMe)
+                    //{
                     var ticket = new FormsAuthenticationTicket(1, model.UserName,
                         DateTime.Now, DateTime.Now.AddDays(7), false,
                         string.Format("{0},{1}", user.Id, user.UserType),
@@ -163,12 +163,12 @@ namespace jail.Controllers
                     FormsAuthentication.SetAuthCookie(model.UserName, true);
                     if (!string.IsNullOrWhiteSpace(model.RedirectUrl))
                         return Redirect(model.RedirectUrl);
-                    //                    }
-                    //                    else
-                    //                    {
-                    //                        //FormsAuthentication.SetAuthCookie(model.UserName, false);
-                    //                        FormsAuthentication.RedirectFromLoginPage(model.UserName, false);
-                    //                    }
+                    //}
+                    //else
+                    //{
+                    //    //FormsAuthentication.SetAuthCookie(model.UserName, false);
+                    //    FormsAuthentication.RedirectFromLoginPage(model.UserName, false);
+                    //}
                     return RedirectToAction(user.UserType == UserType.Administrator ? "Log" : "Index", "Home");
                 }
             }
@@ -192,10 +192,12 @@ namespace jail.Controllers
 
         [Route("log"), SkipLogging]
         [UserTypeFilter(Roles = new[] { UserType.Administrator })]
-        public ActionResult Log()
+        public ActionResult Log(string k = null, SystemLog.LogItemType t = SystemLog.LogItemType.All)
         {
             ViewBag.DebugMode = Debugger.IsAttached;
-            return View(SystemRepository.GetErrorLogData(SettingsHelper.MaxRecordsToShowAtOnce));
+            ViewBag.Key = k;
+            ViewBag.SearchType = t;
+            return View(SystemRepository.GetErrorLogData(SettingsHelper.MaxRecordsToShowAtOnce, k, t));
         }
 
         [Route("logp"), SkipLogging]
@@ -203,6 +205,8 @@ namespace jail.Controllers
         public ActionResult LogPartial(string key, SystemLog.LogItemType searchType)
         {
             ViewBag.DebugMode = Debugger.IsAttached;
+            ViewBag.Key = key;
+            ViewBag.SearchType = searchType;
             return PartialView(SystemRepository.GetErrorLogData(SettingsHelper.MaxRecordsToShowAtOnce, key, searchType));
         }
 
@@ -442,12 +446,13 @@ namespace jail.Controllers
             {
                 throw new FileNotFoundException("Book not found, please prepare it first");
                 //BookHelper.Transform(tempFile, readingPath, Server.MapPath("~/xhtml.xsl"));
-                //                if (!BookHelper.ConvertBook(sourceFileName))
-                //                    throw new ArgumentException("Error converting book for kindle");
+                //if (!BookHelper.ConvertBook(sourceFileName))
+                //    throw new ArgumentException("Error converting book for kindle");
             }
             ViewBag.Title = book.Title;
+            Logger.WriteInfo($"Reading book: '{book.Title}'", CommonHelper.GetClientAddress(), CurrentUser.Email);
             return new RedirectResult(Path.Combine(@"../" + readingPath.Replace(Server.MapPath("~"), "").Replace('\\', '/')));
-            //            return new FilePathResult(GetLinkToFile(readingPath), "text/html");
+            //return new FilePathResult(GetLinkToFile(readingPath), "text/html");
             //ViewBag.BookContent = GetLinkToFile(readingPath);//Path.Combine(@"../" + readingPath.Replace(Server.MapPath("~"), "").Replace('\\', '/'));
             //return View(book);
         }
@@ -482,7 +487,6 @@ namespace jail.Controllers
 
             var mobiFile = Path.ChangeExtension(sourceFileName, ".mobi");
             ViewBag.MobiFileFound = System.IO.File.Exists(mobiFile);
-
 
             return View(book);
         }
