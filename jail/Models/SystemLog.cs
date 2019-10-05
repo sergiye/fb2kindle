@@ -16,7 +16,8 @@ namespace jail.Models
             Warn,
             Info,
             Debug,
-            Trace
+            Trace,
+            Full
         }
 
         [DataMember]

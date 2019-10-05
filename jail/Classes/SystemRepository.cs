@@ -12,20 +12,30 @@ namespace jail.Classes
         #region Logging
 
         public static IList<SystemLog> GetErrorLogData(int count, string key = null,
-            SystemLog.LogItemType searchType = SystemLog.LogItemType.All, bool hideTrace = true)
+            SystemLog.LogItemType searchType = SystemLog.LogItemType.All)
         {
             var sql = new StringBuilder(@"select EnteredDate, Level, Message, MachineName, UserName, 
 Exception, CallerAddress from SystemLogs where 1=1");
             if (!string.IsNullOrWhiteSpace(key))
                 sql.Append(" and (Message like @key or Exception like @key or UserName like @key or CallerAddress like @key)");
-            if (searchType != SystemLog.LogItemType.All)
+            switch (searchType)
             {
-                sql.Append(" and Level='").Append(searchType).Append("'");
-            }
-            else
-            {
-                if (hideTrace)
+                case SystemLog.LogItemType.Full:
+                    //no filter
+                    break;
+                case SystemLog.LogItemType.All:
+                    //all except trace
                     sql.Append(" and Level<>'Trace'");
+                    break;
+                case SystemLog.LogItemType.Fatal:
+                case SystemLog.LogItemType.Error:
+                case SystemLog.LogItemType.Warn:
+                case SystemLog.LogItemType.Info:
+                case SystemLog.LogItemType.Debug:
+                case SystemLog.LogItemType.Trace:
+                default:
+                    sql.Append(" and Level='").Append(searchType).Append("'");
+                    break;
             }
             if (!Debugger.IsAttached)
             {
