@@ -27,8 +27,9 @@ namespace jail.Classes.Attributes
                     return;
             }
 
-            Logger.WriteTrace(CommonHelper.GetActionLogName(request), 
-                CommonHelper.GetClientAddress(), CommonHelper.CurrentIdentityName);
+            var actionName = CommonHelper.GetActionLogName(request);
+            if (!actionName.Equals("GET /", StringComparison.OrdinalIgnoreCase))
+                Logger.WriteTrace(actionName, CommonHelper.GetClientAddress(), CommonHelper.CurrentIdentityName);
         }
     }
 }
