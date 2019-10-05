@@ -22,20 +22,16 @@
             $("#" + btnIdToChange).html(selectedItemText + " <span class='caret'></span>");
             RefreshData(true);
         });
-        $(".dropdown-menu.change-devType").on('click', 'li a', function () {
-            var selectedItemText = $(this).text();
 
-            $(this).parents("li").addClass("selected");
-            $(this).parents("ul").find("li").removeClass("selected");
-            var btnIdToChange = $(this).parents(".dropdown-menu.change-devType").attr("data-change-item-id");
-            $("#" + btnIdToChange).html(selectedItemText + " <span class='caret'></span>");
-            RefreshData(true);
-        });
+        $("#filterBlock").val('@ViewBag.Key');
+        $("#filterBlock").attr("data-search-type", @ViewBag.SearchType);
     });
     function RefreshData(reloadOnError) {
         var search = $("#filterBlock");
         var key = $.trim(search.val());
         var searchType = search.attr("data-search-type");
+        var link = '/log?t=' + searchType + '&k=' + key;
+        window.history.pushState({ state: link }, 'Log', link);
         $.ajax({
             type: "GET",
             url: '@Url.Action("LogPartial")',
@@ -97,12 +93,12 @@
 <div class="search-wrapper">
     <div class="input-group pull-left">
         <input id="filterBlock" type="text" class="form-control" aria-label="..."
-               data-search-type="@SystemLog.LogItemType.All"
+               data-search-type="@ViewBag.SearchType"
                placeholder="Search by message, user or IP...">
         <div class="input-group-btn">
             <button id="searchTypeBtn" type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown"
                     aria-haspopup="true" aria-expanded="false">
-                All<span class="caret"></span>
+                @ViewBag.SearchType<span class="caret"></span>
             </button>
             <ul class="dropdown-menu dropdown-menu-right change-name" data-change-item-id="searchTypeBtn">
                 @foreach (var item in Enum.GetValues(typeof(SystemLog.LogItemType)))

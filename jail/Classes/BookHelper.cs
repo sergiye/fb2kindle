@@ -154,7 +154,7 @@ namespace jail.Classes
                         throw new ArgumentException("Error converting book for kindle");
                     }
                 }
-                Logger.WriteTrace(string.Format("Book converted: {0}", sourceFileName));
+                Logger.WriteInfo(string.Format("Book converted: {0}", sourceFileName));
             }
             catch (Exception ex)
             {
