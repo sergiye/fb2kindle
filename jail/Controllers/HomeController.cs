@@ -388,7 +388,7 @@ namespace jail.Controllers
             {
                 var email = CurrentUser.Email;
                 if (email.ToLower().GetHash().Equals(CommonHelper.AdminLoginHash))
-                    email = CommonHelper.AdminEmail;
+                    email = SettingsHelper.AdminDefaultEmail;
 
                 await CommonHelper.SendBookByMail(book.Title, resultFile, email);
                 return Json("Please check your Kindle for new doc", JsonRequestBehavior.AllowGet);

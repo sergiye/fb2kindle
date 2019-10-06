@@ -22,6 +22,8 @@ namespace jail.Classes
         public static int SmtpPort { get; set; }
         public static string SmtpLogin { get; set; }
         public static string SmtpPassword { get; set; }
+        
+        public static string AdminDefaultEmail { get; set; }
 
         /// <summary>
         /// constructor
@@ -42,6 +44,8 @@ namespace jail.Classes
             SmtpPort =  Convert.ToInt32(ConfigurationManager.AppSettings["SmtpPort"]);
             SmtpLogin = ConfigurationManager.AppSettings["SmtpLogin"];
             SmtpPassword = ConfigurationManager.AppSettings["SmtpPassword"];
+            
+            AdminDefaultEmail = ConfigurationManager.AppSettings["AdminDefaultEmail"];
             
             var section = ConfigurationManager.GetSection("system.web/httpRuntime") as HttpRuntimeSection;
             MaxRequestLength = section != null ? (long)section.MaxRequestLength * 1024 : 4096 * 1024;

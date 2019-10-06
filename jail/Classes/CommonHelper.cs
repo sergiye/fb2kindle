@@ -77,7 +77,6 @@ namespace jail.Classes
 
         public static string AdminLoginHash { get { return "dae7a3d670e30f7278ea90344c768af1"; } }
         public static string AdminPasswordHash { get { return "e3bbe98ee127683efc57b077e19cfa43"; } }
-        public static string AdminEmail { get { return "egoshin.sergey@kindle.com"; } }
 
         internal static async Task SendBookByMail(string bookName, string tmpBookPath, string mailTo)
         {
