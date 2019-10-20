@@ -6,6 +6,22 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>JAIL - @ViewBag.Title</title>
+    <meta property="og:title" content="@ViewBag.Title" />
+    <meta property="og:description" content="JAIL page description" />
+    <meta property="og:site_name" content="JAIL" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="@ViewBag.Url" />
+    <meta property="og:image:alt" content="sorry, no image" />
+    @{if (ViewBag.Image != null)
+        {
+            <meta property="og:image" content="@ViewBag.Image" />
+        }
+        else
+        {
+            <meta property="og:image" content="~/favicon.ico" />
+        }
+    }
+
     <link rel="icon" type="image/png" href="~/favicon.ico" />
     @Styles.Render("~/Content/css")
     @Scripts.Render("~/bundles/modernizr")

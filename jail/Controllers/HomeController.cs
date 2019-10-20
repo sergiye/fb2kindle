@@ -20,6 +20,7 @@ namespace jail.Controllers
     [ActionLogger, SessionRestore]
     public class HomeController : Controller
     {
+
         #region Logging
 
         protected override void OnException(ExceptionContext filterContext)
@@ -729,5 +730,32 @@ namespace jail.Controllers
         }
 
         #endregion TimeTrack
+
+        #region Overrides
+
+        protected override void HandleUnknownAction(string actionName)
+        {
+            Logger.WriteWarning($"HandleUnknownAction - {actionName}", CommonHelper.GetClientAddress());
+            base.HandleUnknownAction(actionName);
+        }
+
+        //protected override void OnActionExecuting(ActionExecutingContext filterContext)
+        //{
+        //    base.OnActionExecuting(filterContext);
+        //}
+
+        //protected override void OnActionExecuted(ActionExecutedContext filterContext)
+        //{
+        //    base.OnActionExecuted(filterContext);
+        //}
+
+        protected override void EndExecute(IAsyncResult asyncResult)
+        {
+            ViewBag.Url = Request.Url.LocalPath;
+            //ViewBag.Url = Url.Action("Edit", "Posts", new { id = 5 }, this.Request.Url.Scheme);
+            base.EndExecute(asyncResult);
+        }
+
+        #endregion Overrides
     }
 }
