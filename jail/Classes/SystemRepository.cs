@@ -37,10 +37,10 @@ Exception, CallerAddress from SystemLogs where 1=1");
                     sql.Append(" and Level='").Append(searchType).Append("'");
                     break;
             }
-            if (!Debugger.IsAttached)
-            {
-                sql.Append(" and MachineName='").Append(Environment.MachineName).Append("'");
-            }
+            //if (!Debugger.IsAttached)
+            //{
+            //    sql.Append(" and MachineName='").Append(Environment.MachineName).Append("'");
+            //}
             sql.Append(" order by EnteredDate desc LIMIT @count ");
             var result = Db.Query<SystemLog>(sql.ToString(), new { count, key = string.Format("%{0}%", key) });
             //foreach (var item in result) item.EnteredDate = item.EnteredDate.ToLocalTime();
