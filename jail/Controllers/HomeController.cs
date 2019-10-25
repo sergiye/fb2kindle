@@ -20,6 +20,32 @@ namespace jail.Controllers
     [ActionLogger, SessionRestore]
     public class HomeController : Controller
     {
+
+        #region Overrides
+
+        protected override void HandleUnknownAction(string actionName)
+        {
+            Logger.WriteWarning($"HandleUnknownAction - {actionName}", CommonHelper.GetClientAddress());
+            base.HandleUnknownAction(actionName);
+        }
+
+        protected override void OnActionExecuted(ActionExecutedContext filterContext)
+        {
+            base.OnActionExecuted(filterContext);
+        }
+
+        protected override void EndExecute(IAsyncResult asyncResult)
+        {
+            var appPath = Request.ApplicationPath.TrimEnd('/');
+            var localPath = Request.Url.PathAndQuery;
+            if (!string.IsNullOrWhiteSpace(appPath))
+                localPath = localPath.Substring(appPath.Length);
+            ViewBag.Url = AppBaseUrl + localPath.TrimStart('/'); ;
+            base.EndExecute(asyncResult);
+        }
+
+        #endregion Overrides
+
         public new RedirectToRouteResult RedirectToAction(string action, string controller)
         {
             return base.RedirectToAction(action, controller);
@@ -65,14 +91,13 @@ namespace jail.Controllers
                 return SettingsHelper.SiteRemotePath + '/';
                 //if (Request == null || Request.Url == null || Request.ApplicationPath == null)
                 //    return null;
-                //return string.Format("{0}://{1}:{2}{3}/", Request.Url.Scheme, Request.Url.Host, Request.Url.Port,
-                //    Request.ApplicationPath.TrimEnd('/'));
+                //return string.Format("{0}://{1}:{2}{3}/", Request.Url.Scheme, Request.Url.Host, Request.Url.Port, Request.ApplicationPath.TrimEnd('/'));
             }
         }
 
         private string GetLinkToFile(string fileName)
         {
-            return AppBaseUrl + fileName.Replace(Server.MapPath("~"), "").Replace('\\', '/');
+            return AppBaseUrl + fileName.Replace(Server.MapPath("~"), "").Replace('\\', '/').TrimStart('/');
         }
 
         #endregion
@@ -736,32 +761,5 @@ namespace jail.Controllers
         }
 
         #endregion TimeTrack
-
-        #region Overrides
-
-        protected override void HandleUnknownAction(string actionName)
-        {
-            Logger.WriteWarning($"HandleUnknownAction - {actionName}", CommonHelper.GetClientAddress());
-            base.HandleUnknownAction(actionName);
-        }
-
-        //protected override void OnActionExecuting(ActionExecutingContext filterContext)
-        //{
-        //    base.OnActionExecuting(filterContext);
-        //}
-
-        //protected override void OnActionExecuted(ActionExecutedContext filterContext)
-        //{
-        //    base.OnActionExecuted(filterContext);
-        //}
-
-        protected override void EndExecute(IAsyncResult asyncResult)
-        {
-            ViewBag.Url = Request.Url.LocalPath;
-            //ViewBag.Url = Url.Action("Edit", "Posts", new { id = 5 }, this.Request.Url.Scheme);
-            base.EndExecute(asyncResult);
-        }
-
-        #endregion Overrides
     }
 }
