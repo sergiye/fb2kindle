@@ -20,6 +20,10 @@ namespace jail.Controllers
     [ActionLogger, SessionRestore]
     public class HomeController : Controller
     {
+        public new RedirectToRouteResult RedirectToAction(string action, string controller)
+        {
+            return base.RedirectToAction(action, controller);
+        }
 
         #region Logging
 
@@ -56,7 +60,9 @@ namespace jail.Controllers
 
         private string AppBaseUrl {
             get {
-                return Url.Content("~/");
+                if (Request.UserHostAddress.Equals("::1"))
+                    return Url.Content("~/");
+                return SettingsHelper.SiteRemotePath + '/';
                 //if (Request == null || Request.Url == null || Request.ApplicationPath == null)
                 //    return null;
                 //return string.Format("{0}://{1}:{2}{3}/", Request.Url.Scheme, Request.Url.Host, Request.Url.Port,

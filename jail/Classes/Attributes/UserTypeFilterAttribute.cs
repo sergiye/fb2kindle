@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq;
-using System.Net;
 using System.Web.Mvc;
+using System.Web.Routing;
 using jail.Models;
 
 namespace jail.Classes.Attributes
@@ -28,7 +28,11 @@ namespace jail.Classes.Attributes
             Logger.WriteWarning(string.Format("Access was blocked: {0}", CommonHelper.GetActionLogName(filterContext.HttpContext.Request)), 
                 CommonHelper.GetClientAddress(), CommonHelper.CurrentIdentityName);
             //filterContext.Result = new HttpCodeActionResult(HttpStatusCode.MethodNotAllowed, "This user type is not allowed");
-            filterContext.Result = new RedirectResult("\\login");
+            //filterContext.Result = new RedirectResult(Url.Action("Login"));
+            //filterContext.Result = new RedirectToRouteResult("Login", null);
+            filterContext.Result = new RedirectToRouteResult(new RouteValueDictionary(new { controller = "Home", action = "Login" }));
+            //var controller = (HomeController)filterContext.Controller;
+            //filterContext.Result = controller.RedirectToAction("Login", "home");
         }
     }
 }

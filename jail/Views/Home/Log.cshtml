@@ -30,7 +30,7 @@
         var search = $("#filterBlock");
         var key = $.trim(search.val());
         var searchType = search.attr("data-search-type");
-        var link = '/log?t=' + searchType + '&k=' + key;
+        var link = '@Url.Action("Log")' + '?t=' + searchType + '&k=' + key;
         window.history.pushState({ state: link }, 'Log', link);
         $.ajax({
             type: "GET",
