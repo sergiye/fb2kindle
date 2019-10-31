@@ -364,7 +364,7 @@ namespace jail.Controllers
 
         #region book
 
-        [Route("f/{id}")]
+        [Route("f/{id:long}")]
         public FileResult Download(long id)
         {
             var book = DataRepository.GetBook(id);
@@ -385,7 +385,7 @@ namespace jail.Controllers
                 BookHelper.GetBookDownloadFileName(book));
         }
 
-        [Route("m/{id}")]
+        [Route("m/{id:long}")]
         public FileResult Mobi(long id)
         {
             var book = DataRepository.GetBook(id);
@@ -401,7 +401,7 @@ namespace jail.Controllers
                 BookHelper.GetBookDownloadFileName(book, ".mobi"));
         }
 
-        [Route("deliver/{id}")]
+        [Route("deliver/{id:long}")]
         public async Task<ActionResult> Deliver(long id)
         {
             var book = DataRepository.GetBook(id);
@@ -433,7 +433,7 @@ namespace jail.Controllers
             }
         }
 
-        [Route("generate/{id}")]
+        [Route("generate/{id:long}")]
         public ActionResult Generate(long id)
         {
             var book = DataRepository.GetBook(id);
@@ -454,7 +454,7 @@ namespace jail.Controllers
             return Json("Please wait a bit and refresh the page", JsonRequestBehavior.AllowGet);
         }
 
-        [Route("r/{id}")]
+        [Route("r/{id:long}")]
         public ActionResult Read(long id)
         {
             var book = DataRepository.GetBook(id);
@@ -490,7 +490,7 @@ namespace jail.Controllers
             //return View(book);
         }
 
-        [Route("d/{id}")]
+        [Route("d/{id:long}")]
         public ActionResult Details(long id)
         {
             var book = DataRepository.GetBook(id);
@@ -529,7 +529,7 @@ namespace jail.Controllers
 
         #region sequence
 
-        [Route("s/{id}")]
+        [Route("s/{id:long}")]
         public ActionResult Sequence(long id)
         {
             var data = DataRepository.GetSequenceData(id);
@@ -542,7 +542,7 @@ namespace jail.Controllers
 
         #region author
 
-        [Route("a/{id}")]
+        [Route("a/{id:long}")]
         public ActionResult Author(long id)
         {
             var data = DataRepository.GetAuthorData(id);
