@@ -334,6 +334,27 @@ namespace jail.Controllers
             return View(await DataRepository.GetHistoryAsync(books.Take(SettingsHelper.MaxRecordsToShowAtOnce)));
         }
 
+        private static void TryToDelete(string path, bool isFile)
+        {
+            try
+            {
+                if (isFile)
+                {
+                    if (System.IO.File.Exists(path))
+                        System.IO.File.Delete(path);
+                }
+                else
+                {
+                    if (Directory.Exists(path))
+                        Directory.Delete(path, true);
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.WriteError(ex, $"Error deleting history item '{path}': {ex.Message}", CommonHelper.GetClientAddress());
+            }
+        }
+
         [Route("history")]
         [HttpDelete, UserTypeFilter(Roles = new[] { UserType.Administrator })]
         public ActionResult HistoryDelete(long id, string fileName)
@@ -347,9 +368,9 @@ namespace jail.Controllers
                     fileName = id.ToString();
                 }
                 var workingPath = Server.MapPath("~/b");
-                System.IO.File.Delete(Path.Combine(workingPath, string.Format("{0}.fb2", fileName)));
-                System.IO.File.Delete(Path.Combine(workingPath, string.Format("{0}.mobi", fileName)));
-                Directory.Delete(Path.Combine(workingPath, string.Format("{0}", fileName)), true);
+                TryToDelete(Path.Combine(workingPath, string.Format("{0}.fb2", fileName)), true);
+                TryToDelete(Path.Combine(workingPath, string.Format("{0}.mobi", fileName)), true);
+                TryToDelete(Path.Combine(workingPath, string.Format("{0}", fileName)), false);
                 Logger.WriteWarning(string.Format("History item '{0}' was deleted by user '{1}'", fileName, CurrentUser.Email), CommonHelper.GetClientAddress());
                 return new HttpStatusCodeResult(HttpStatusCode.OK, "Done");
             }
