@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Xml.Serialization;
 
 namespace Fb2Kindle
 {
@@ -27,14 +28,15 @@ namespace Fb2Kindle
         public string SmtpServer { get; set; }
         public int SmtpPort { get; set; }
         public string SmtpLogin { get; set; }
+        [XmlIgnore]
         public string SmtpPassword { get; set; }
 
         public DefaultOptions()
         {
             SmtpServer = "smtp.gmail.com";
             SmtpPort = 587;
-            SmtpLogin = "trial.develop@gmail.com";
-            SmtpPassword = "TrI@lDeVeL0peR";
+            SmtpLogin = "fbtokindle@gmail.com";
+            SmtpPassword = "RbylkYtYfdctulf123";
         }
     }
 }
