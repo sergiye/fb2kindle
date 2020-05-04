@@ -61,7 +61,6 @@ namespace Fb2Kindle
             var save = false;
             var recursive = false;
             var detailedOutput = true;
-            var debug = Debugger.IsAttached;
             var startedTime = DateTime.Now;
             try
             {
@@ -139,9 +138,6 @@ namespace Fb2Kindle
                                 break;
                             case "-o":
                                 detailedOutput = false;
-                                break;
-                            case "-nc":
-                                debug = true;
                                 break;
                             case "-css":
                                 if (args.Length > (j + 1))
