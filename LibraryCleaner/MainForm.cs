@@ -92,7 +92,11 @@ namespace LibraryCleaner
      
         private void btnDeletedFile_Click(object sender, EventArgs e)
         {
-            var dlg = new OpenFileDialog {CheckFileExists = true, Filter = "Text file (*.txt)|*.txt"};
+            var dlg = new OpenFileDialog 
+            {
+                CheckFileExists = true, 
+                Filter = "Csv file (*.csv)|*.csv|Text file (*.txt)|*.txt|All files (*.*)|*.*" 
+            };
             if (dlg.ShowDialog() != DialogResult.OK) return;
             txtDeletedFile.Text = dlg.FileName;
         }
@@ -188,6 +192,7 @@ namespace LibraryCleaner
                 Invoke(new Action(SetStartedState));
                 return;
             }
+            panSettings.Visible = false;
             btnAnalyze.Enabled = false;
             btnStart.Enabled = false;
             Cursor = Cursors.WaitCursor;
@@ -202,6 +207,7 @@ namespace LibraryCleaner
             }
             var timeWasted = DateTime.Now - startedTime;
             AddToLog(string.Format("Time wasted: {0:G}", timeWasted), Cleaner.StateKind.Log);
+            panSettings.Visible = true;
             btnAnalyze.Enabled = true;
             btnStart.Enabled = true;
             Cursor = Cursors.Default;
