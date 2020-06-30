@@ -11,15 +11,21 @@ namespace LibraryCleaner
     public partial class MainForm : Form
     {
         private readonly Cleaner _cleaner;
-        private readonly Timer timer;
+        private readonly string _mainTitleText;
 
         public MainForm()
         {
             InitializeComponent();
 
-            Icon = Icon.ExtractAssociatedIcon(Process.GetCurrentProcess().MainModule.FileName);
+            var module = Process.GetCurrentProcess().MainModule;
+            if (module != null)
+                Icon = Icon.ExtractAssociatedIcon(module.FileName);
 
-            timer = new Timer {Interval = 1000, Enabled = true};
+            var asm = Assembly.GetExecutingAssembly().GetName();
+            var ver = asm.Version;
+            _mainTitleText = $"{asm.Name} Version: {ver.ToString(3)}; Build: {GetBuildTime(ver):yyyy/MM/dd HH:mm:ss}";
+
+            var timer = new Timer {Interval = 1000, Enabled = true};
             timer.Tick += UpdateWindowText;
 
             _cleaner = new Cleaner(null);
@@ -56,7 +62,7 @@ namespace LibraryCleaner
                 Invoke(new Action<string, Cleaner.StateKind>(AddToLog), message, state);
                 return;
             }
-            txtLog.AppendLine(string.Format("{0:T} - ", DateTime.Now), Color.LightGray, false);
+            txtLog.AppendLine($"{DateTime.Now:T} - ", Color.LightGray, false);
             switch (state)
             {
                 case Cleaner.StateKind.Error:
@@ -120,12 +126,8 @@ namespace LibraryCleaner
             var dt = DateTime.Now;
             var build = dt.Subtract(new DateTime(2000, 1, 1)).Days;
             var revision = (dt.Second + dt.Minute * 60 + dt.Hour * 60 * 60) / 2;
-//            Text = string.Format("TT - {0}.{1}", build, revision);        
-            
-            var asm = Assembly.GetExecutingAssembly();
-            var ver = asm.GetName().Version;
-            Text = string.Format("{0} Version: {1}; Build: {2:yyyy/MM/dd HH:mm:ss}; Now: {3}.{4}", 
-                asm.GetName().Name, ver.ToString(3), GetBuildTime(ver), build, revision);
+            // Text = string.Format("TT - {0}.{1}", build, revision);        
+            Text = $"{_mainTitleText}; Now: {build}.{revision}";
         }
 
         private void ProcessCleanupTasks(bool analyzeOnly)
@@ -206,7 +208,7 @@ namespace LibraryCleaner
                 return;
             }
             var timeWasted = DateTime.Now - startedTime;
-            AddToLog(string.Format("Time wasted: {0:G}", timeWasted), Cleaner.StateKind.Log);
+            AddToLog($"Time wasted: {timeWasted:G}", Cleaner.StateKind.Log);
             panSettings.Visible = true;
             btnAnalyze.Enabled = true;
             btnStart.Enabled = true;
