@@ -6,7 +6,7 @@
         <th style="min-width: 220px;">Title</th>
         <th style="min-width: 150px; width: 150px;">Author</th>
         <th style="min-width: 150px; width: 150px;">Sequence</th>
-        <th style="min-width: 80px; width: 80px;">Date</th>
+        <th style="min-width: 140px; width: 120px;">Date</th>
         <th style="min-width: 80px; width: 80px;">User Id</th>
     </tr>
 
@@ -32,7 +32,10 @@
                     }
                 </td>
                 <td>@Html.DisplayFor(modelItem => item.DateAdded)</td>
-                <td>@Html.DisplayFor(modelItem => item.UserId)</td>
+                <td>
+                    @{ var flibustaLink = "http://flibusta.is/user/" + item.UserId; }
+                    <a href=@flibustaLink> @Html.DisplayFor(modelItem => item.UserId)</a>
+                </td>
             </tr>
         }
     }

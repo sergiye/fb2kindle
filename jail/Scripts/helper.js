@@ -73,6 +73,13 @@ window.HelperItem.prototype.ShowNotificationPopup = function (msg, type, callbac
             callback();
         }
     };
+
+    $(document).keydown(function(event) {
+        if (event.keyCode == 27) {
+            self.HidePopup(popup[0].id);
+        }
+    });
+    
     this.ShowPopup(popup[0].id);
 };
 

@@ -3,7 +3,12 @@
 @{
     ViewBag.Title = "Favorites";
 }
-<h2>Last user books</h2>
+    <script type="text/javascript">
+    //function RedirectToFlibusta(id) {
+    //    window.location = 'http://flibusta.is/user/' + id;
+    //}
+    </script>
+<h2>Favorites</h2>
 <div id="gridDataContainer">
     @{Html.RenderPartial("FavoritesPartial", Model);}
 </div>

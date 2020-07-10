@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -162,12 +163,26 @@ from books b
     join favorites f on b.id = f.BookId
     join authors a on a.id = b.id_author
     left join bookseq bs on bs.id_book = b.id
-    left join sequences s on s.id = bs.id_seq
-where f.UserId=@userId order by f.DateAdded desc limit @skip, @take";
+    left join sequences s on s.id = bs.id_seq";
+            if (userId > 0)
+                sql += " where f.UserId=@userId ";
+            sql += " order by f.DateAdded desc limit @skip, @take";
             var info = (await Db.QueryMultipleAsync<BookFavoritesInfo, SequenceInfo, AuthorInfo, long>(sql, 
                 b => b.Id, b => b.Sequences, b => b.Authors, new { userId, skip, take })).ToList();
 
             return info;//.OrderByDescending(i=>i.DateAdded);
+        }
+
+        public static async Task<long> GetFavorite(long bookId, long userId, DateTime dateAdded)
+        {
+            return await Db.QueryOneAsync<long>("select Id from favorites where BookId=@bookId and UserId=@userId and DateAdded=@dateAdded"
+                , new {bookId, userId, dateAdded});
+        }
+
+        public static async Task<long> SaveFavorite(long bookId, long userId, DateTime dateAdded)
+        {
+            return await Db.ExecuteAsync("INSERT INTO favorites (BookId, UserId, DateAdded) VALUES (@bookId, @userId, @dateAdded)"
+                , new {bookId, userId, dateAdded});
         }
     }
 }
