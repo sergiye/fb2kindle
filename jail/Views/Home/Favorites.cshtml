@@ -1,0 +1,9 @@
+﻿@using jail.Models
+@model IEnumerable<BookFavoritesInfo>
+@{
+    ViewBag.Title = "Favorites";
+}
+<h2>Last user books</h2>
+<div id="gridDataContainer">
+    @{Html.RenderPartial("FavoritesPartial", Model);}
+</div>

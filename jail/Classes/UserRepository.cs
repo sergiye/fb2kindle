@@ -17,7 +17,7 @@ namespace jail.Classes
 
         private static UserProfile GetRestoreAdministratorProfile(string email)
         {
-            return new UserProfile { Id = 0, Email = email, UserType = UserType.Administrator, TimeTrackId = 0, Active = true, RegisteredTime = DateTime.Now };
+            return new UserProfile { Id = 0, Email = email, UserType = UserType.Administrator, TimeTrackId = 0, FlibustaId = 0, Active = true, RegisteredTime = DateTime.Now };
         }
 
         public static UserProfile GetUser(string login)
@@ -73,11 +73,11 @@ namespace jail.Classes
         {
             if (user.IdIsEmpty())
             {
-                user.Id = Db.QueryOne<long>("INSERT INTO Users (Email, Password, UserType, Active, TimeTrackId) VALUES (@Email, @Password, @UserType, @Active, @TimeTrackId); SELECT last_insert_rowid();", user);
+                user.Id = Db.QueryOne<long>("INSERT INTO Users (Email, Password, UserType, Active, TimeTrackId, FlibustaId) VALUES (@Email, @Password, @UserType, @Active, @TimeTrackId, @FlibustaId); SELECT last_insert_rowid();", user);
             }
             else
             {
-                var rowsAffected = Db.Execute("UPDATE Users SET Email = @Email, UserType = @UserType, Active = @Active, TimeTrackId = @TimeTrackId WHERE Id = @Id;", user);
+                var rowsAffected = Db.Execute("UPDATE Users SET Email = @Email, UserType = @UserType, Active = @Active, TimeTrackId = @TimeTrackId, FlibustaId = @FlibustaId WHERE Id = @Id;", user);
                 if (rowsAffected == 0)
                     throw new InvalidOperationException($"User not found by Id={user.Id}");
             }

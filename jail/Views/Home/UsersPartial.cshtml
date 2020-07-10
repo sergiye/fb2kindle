@@ -7,6 +7,7 @@
         <tr>
             <th data-defaultsort="asc">@Html.DisplayNameFor(model => model.Email)</th>
             <th style="min-width: 60px; width: 60px;">@Html.DisplayNameFor(model => model.TimeTrackId)</th>
+            <th style="min-width: 60px; width: 60px;">@Html.DisplayNameFor(model => model.FlibustaId)</th>
             <th style="min-width: 60px; width: 60px;">@Html.DisplayNameFor(model => model.Active)</th>
             <th style="min-width: 125px; width: 125px;">@Html.DisplayNameFor(model => model.RegisteredTime)</th>
             <th style="min-width: 185px; width: 185px;" data-defaultsort='disabled'></th>
@@ -23,6 +24,9 @@
             </td>
             <td>
                 @Html.DisplayFor(modelItem => item.TimeTrackId)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.FlibustaId)
             </td>
             <td class="@(item.Active ? "success" : "warning")">
                 @Html.DisplayFor(modelItem => item.ActiveText)
@@ -45,6 +49,19 @@
                             <li>
                                 <a href="#" onclick="UserTimeTrack(@item.TimeTrackId);" class="btn-default">
                                     <span class="glyphicon glyphicon-time"></span> Time
+                                </a>
+                            </li>
+                        }
+                        @if (item.FlibustaId > 0)
+                        {
+                            <li>
+                                <a href="#" onclick="UserFavorites(@item.FlibustaId);" class="btn-default">
+                                    <span class="glyphicon glyphicon-time"></span> Favorites
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#" onclick="UpdateUserFavorites(@item.FlibustaId);" class="btn-default">
+                                    <span class="glyphicon glyphicon-time"></span> Fetch favorites
                                 </a>
                             </li>
                         }

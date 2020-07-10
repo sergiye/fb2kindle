@@ -782,5 +782,43 @@ namespace jail.Controllers
         }
 
         #endregion TimeTrack
+
+        #region flibusta recomendations
+
+        [Route("fav")]
+        [HttpGet, UserTypeFilter(Roles = new[] { UserType.Administrator, UserType.User })]
+        public async Task<ActionResult> Favorites(long id = 0)
+        {
+            ViewBag.Id = id;
+            var books = await DataRepository.GetFavoritesAsync(id, 0, SettingsHelper.MaxRecordsToShowAtOnce);
+            return View(books);
+        }
+
+        [Route("favp")]
+        [HttpGet, UserTypeFilter(Roles = new[] { UserType.Administrator, UserType.User })]
+        public async Task<ActionResult> FavoritesPartial(long id = 0)
+        {
+            ViewBag.Id = id;
+            var books = await DataRepository.GetFavoritesAsync(id, 0, SettingsHelper.MaxRecordsToShowAtOnce);
+            return PartialView("FavoritesPartial", books);
+        }
+
+        [Route("favupdate")]
+        [HttpGet, UserTypeFilter(Roles = new[] { UserType.Administrator })]
+        public string UpdateFavorites(long id)
+        {
+            try
+            {
+                //if (UserRepository.SetUserPassword(id, null))
+                //    return "Password was cleaned for user";
+                return "Sorry, not implemented yet: " + id;
+            }
+            catch (Exception ex)
+            {
+                return ex.Message;
+            }
+        }
+
+        #endregion flibusta recomendations
     }
 }

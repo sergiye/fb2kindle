@@ -134,14 +134,14 @@ order by CASE WHEN b.lang = 'ru' THEN '1'
             if (books.Length == 0) return null;
 
             var ids = books.Select(b => b.Id).Distinct().ToArray();
-            var sql = new StringBuilder(@"select b.id, b.title, b.id_archive, b.file_name, b.file_size, b.md5sum, 
+            var sql = @"select b.id, b.title, b.id_archive, b.file_name, b.file_size, b.md5sum, 
 b.created, b.lang, s.*, bs.number BookOrder, 
 a.id, a.full_name, a.first_name, a.middle_name, a.last_name from books b
 join authors a on a.id=b.id_author
 left join bookseq bs on bs.id_book=b.id
 left join sequences s on s.id=bs.id_seq
-where b.id in @ids");
-            var info = (await Db.QueryMultipleAsync<BookHistoryInfo, SequenceInfo, AuthorInfo, long>(sql.ToString(), 
+where b.id in @ids";
+            var info = (await Db.QueryMultipleAsync<BookHistoryInfo, SequenceInfo, AuthorInfo, long>(sql, 
                 b => b.Id, b => b.Sequences, b => b.Authors, new { ids })).ToList();
             foreach (var bookInfo in info)
             {
@@ -149,6 +149,25 @@ where b.id in @ids");
             }
             info.AddRange(books.Where(b=>b.Id == 0));
             return info.OrderByDescending(i=>i.GeneratedTime);
+        }
+
+        public static async Task<IEnumerable<BookFavoritesInfo>> GetFavoritesAsync(long userId, int skip, int take)
+        {
+            var sql = @"select b.id, b.title, b.id_archive, b.file_name, b.file_size,
+       b.md5sum, b.created, b.lang, f.UserId, f.DateAdded,
+       s.*,
+       bs.number BookOrder,
+       a.id, a.full_name, a.first_name, a.middle_name, a.last_name
+from books b
+    join favorites f on b.id = f.BookId
+    join authors a on a.id = b.id_author
+    left join bookseq bs on bs.id_book = b.id
+    left join sequences s on s.id = bs.id_seq
+where f.UserId=@userId order by f.DateAdded desc limit @skip, @take";
+            var info = (await Db.QueryMultipleAsync<BookFavoritesInfo, SequenceInfo, AuthorInfo, long>(sql, 
+                b => b.Id, b => b.Sequences, b => b.Authors, new { userId, skip, take })).ToList();
+
+            return info;//.OrderByDescending(i=>i.DateAdded);
         }
     }
 }

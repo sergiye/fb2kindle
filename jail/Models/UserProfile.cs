@@ -33,6 +33,9 @@ namespace jail.Models
         [DataMember]
         public int TimeTrackId { get; set; }
 
+        [DataMember]
+        public int FlibustaId { get; set; }
+
         [DapperReadOnly, DisplayName("Registered Time")]
         [DataType(DataType.Date), DisplayFormat(DataFormatString = "{0:yyyy-MM-dd HH:mm:ss}", ApplyFormatInEditMode = true)]
         public DateTime RegisteredTime { get; set; }

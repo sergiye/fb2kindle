@@ -1,0 +1,39 @@
+﻿@using jail.Models
+@model IEnumerable<BookFavoritesInfo>
+    
+<table class="table table-striped table-bordered table-hover">
+    <tr>
+        <th style="min-width: 220px;">Title</th>
+        <th style="min-width: 150px; width: 150px;">Author</th>
+        <th style="min-width: 150px; width: 150px;">Sequence</th>
+        <th style="min-width: 80px; width: 80px;">Date</th>
+        <th style="min-width: 80px; width: 80px;">User Id</th>
+    </tr>
+
+    @if (Model != null && Model.Any())
+    {
+        foreach (var item in Model)
+        {
+            <tr>
+                <td>
+                    <a href='@Url.Action("details", new {id = item.Id})' title="Book details">
+                        <b>@Html.DisplayFor(modelItem => item.Title)</b>
+                    </a>
+                </td>
+                <td>@{ Html.RenderPartial("AuthorsList", item.Authors); }</td>
+                <td>
+                    @if (item.Sequences.Count > 0)
+                    {
+                        Html.RenderPartial("SequencesList", item.Sequences);
+                    }
+                    else
+                    {
+                        <br />
+                    }
+                </td>
+                <td>@Html.DisplayFor(modelItem => item.DateAdded)</td>
+                <td>@Html.DisplayFor(modelItem => item.UserId)</td>
+            </tr>
+        }
+    }
+</table>

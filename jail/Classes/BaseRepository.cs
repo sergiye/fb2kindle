@@ -38,7 +38,8 @@ create table IF NOT EXISTS Users (
     UserType       int     not null,
     RegisteredTime timestamp default current_timestamp not null,
     Active         bit,
-    TimeTrackId    int
+    TimeTrackId    int,
+    FlibustaId     int
 );");
         }
     }
