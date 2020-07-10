@@ -148,6 +148,7 @@
     <Compile Include="Classes\SystemRepository.cs" />
     <Compile Include="Classes\TimeTrackRepository.cs" />
     <Compile Include="Classes\UtcTimeHandler.cs" />
+    <Compile Include="Models\BookFavoritesInfo.cs" />
     <Compile Include="Models\BookHistoryInfo.cs" />
     <Compile Include="Models\TimeUserInfo.cs" />
     <Compile Include="Classes\UserRepository.cs" />
@@ -245,6 +246,8 @@
     <Content Include="Views\Home\Time.cshtml" />
     <Content Include="Views\Home\TimePartial.cshtml" />
     <Content Include="Views\Home\History.cshtml" />
+    <Content Include="Views\Home\Favorites.cshtml" />
+    <Content Include="Views\Home\FavoritesPartial.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
