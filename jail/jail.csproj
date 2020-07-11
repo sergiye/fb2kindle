@@ -247,7 +247,6 @@
     <Content Include="Views\Home\TimePartial.cshtml" />
     <Content Include="Views\Home\History.cshtml" />
     <Content Include="Views\Home\Favorites.cshtml" />
-    <Content Include="Views\Home\FavoritesPartial.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
