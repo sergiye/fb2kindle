@@ -26,7 +26,8 @@
                 @Html.DisplayFor(modelItem => item.TimeTrackId)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.FlibustaId)
+                @{ var flibustaLink = "http://flibusta.is/user/" + item.FlibustaId; }
+                <a href=@flibustaLink> @Html.DisplayFor(modelItem => item.FlibustaId)</a>
             </td>
             <td class="@(item.Active ? "success" : "warning")">
                 @Html.DisplayFor(modelItem => item.ActiveText)

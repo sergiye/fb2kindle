@@ -38,6 +38,11 @@ body {
 #searchBlock {
     width: 100%;
 }
+#headerBlock {
+    width: 100%;
+    padding-top: 20px;
+    height: 20px;
+}
 #main {
     height: 100%;
 }
@@ -53,12 +58,14 @@ footer {
 }
 #gridContainer {
     overflow: auto;
+    width: 100%;
     height: 100%;
     margin-top: 20px;
     font-size: 14px;
 }
 #gridDataContainer {
     overflow: auto;
+    width:100%;
     height: 100%;
     margin-top: 20px;
     font-size: 12px;

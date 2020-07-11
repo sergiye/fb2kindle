@@ -798,23 +798,8 @@ namespace jail.Controllers
                 id = CurrentUser.FlibustaId;
             }
             ViewBag.Id = id;
-            var books = await DataRepository.GetFavoritesAsync(id, pageNum * SettingsHelper.MaxRecordsToShowAtOnce, SettingsHelper.MaxRecordsToShowAtOnce);
+            var books = await DataRepository.GetFavorites(id, pageNum, SettingsHelper.MaxRecordsToShowAtOnce);
             return View(books);
-        }
-
-        [Route("favp")]
-        [HttpGet, UserTypeFilter(Roles = new[] { UserType.Administrator, UserType.User })]
-        public async Task<ActionResult> FavoritesPartial(long id = 0, int pageNum = 0)
-        {
-            if (id == 0 && CurrentUser.UserType != UserType.Administrator)
-            {
-                if (CurrentUser.FlibustaId <= 0)
-                    throw new ArgumentException("FlibustaId should be passed as parameter.");
-                id = CurrentUser.FlibustaId;
-            }
-            ViewBag.Id = id;
-            var books = await DataRepository.GetFavoritesAsync(id, pageNum * SettingsHelper.MaxRecordsToShowAtOnce, SettingsHelper.MaxRecordsToShowAtOnce);
-            return PartialView("FavoritesPartial", books);
         }
 
         [Route("favupdate")]
@@ -830,7 +815,7 @@ namespace jail.Controllers
                 {
                     while (true)
                     {
-                        var pageData = await client.DownloadStringTaskAsync($"https://flibusta.is/rec?view=recs&adata=name&bdata=id&udata=id&user={id}&page={pageNum}");
+                        var pageData = await client.DownloadStringTaskAsync($"https://flibusta.is/rec?view=recs&adata=name&bdata=id&udata=id&user={id}&page={pageNum++}");
                         byte[] bytes = Encoding.Default.GetBytes(pageData);
                         pageData = Encoding.UTF8.GetString(bytes);
                         var regex = new Regex(@"<tr>[\s\S]*?<td><a href=\""\/b\/([\d]+)\"">(.+)<\/a>[\s\S]*?user\/([\d]+)[\s\S]*?<td>(.+)<\/td>[\s\S]*?\/tr>");
@@ -856,13 +841,11 @@ namespace jail.Controllers
                             newBooksFetched = true;
                             booksFetched++;
                         }
-                        if (newBooksFetched)
-                            pageNum++;
-                        else
+                        if (!newBooksFetched)
                             break;
                     }
                 }
-                return $"Successfully fetched {booksFetched} books for user '{id}' from {pageNum+1} processed page(s).";
+                return $"Successfully fetched {booksFetched} books for user '{id}' from {pageNum} processed page(s).";
             }
             catch (Exception ex)
             {

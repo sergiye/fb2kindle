@@ -1,14 +1,77 @@
 ﻿@using jail.Models
-@model IEnumerable<BookFavoritesInfo>
+@model BookFavoritesViewModel
 @{
     ViewBag.Title = "Favorites";
 }
-    <script type="text/javascript">
-    //function RedirectToFlibusta(id) {
-    //    window.location = 'http://flibusta.is/user/' + id;
-    //}
-    </script>
-<h2>Favorites</h2>
+    <div id="headerBlock">
+        <div class="pull-left">
+            <b>Favorite books:</b>
+            <span>
+                @(1 + Model.Skipped) - @(Model.Skipped + Model.Data.Count()) of @Model.TotalCount total
+            </span>
+        </div>
+        <div class="pull-right">
+            <span>
+                <a class="btn btn-default btn-xs @(Model.Page > 0 ? "" : "disabled")" role="button"
+                   href='@Url.Action("Favorites", new { id = ViewBag.Id, pageNum = 0 })' title="First page">
+                    First
+                </a>
+                <a class="btn btn-default btn-xs @(Model.Page > 0 ? "" : "disabled")" role="button"
+                   href='@Url.Action("Favorites", new { id = ViewBag.Id, pageNum = @Model.Page - 1 })' title="Prev page">
+                    Prev
+                </a>
+                <span>
+                    Page @(Model.NumberOfPages < Model.Page ? 1 : Model.Page+1) of @Model.NumberOfPages
+                </span>
+                <a class="page-item btn btn-default btn-xs @(Model.Page < Model.NumberOfPages-1 ? "" : "disabled")" role="button"
+                   href='@Url.Action("Favorites", new { id = ViewBag.Id, pageNum = @Model.Page + 1 })' title="Next page">
+                    Next
+                </a>
+                <a class="page-link btn btn-default btn-xs @(Model.Page < Model.NumberOfPages-1 ? "" : "disabled")" role="button"
+                   href='@Url.Action("Favorites", new { id = ViewBag.Id, pageNum = @Model.NumberOfPages-1 })' title="Last page">
+                    Last
+                </a>
+            </span>
+        </div>
+    </div>
+<br />
 <div id="gridDataContainer">
-    @{Html.RenderPartial("FavoritesPartial", Model);}
+    <table class="table table-bordered table-hover">
+        <tr>
+            <th style="min-width: 220px;">Title</th>
+            <th style="min-width: 150px; width: 25%;">Author</th>
+            <th style="min-width: 150px; width: 25%;">Sequence</th>
+            <th style="min-width: 140px; width: 120px;">Date</th>
+            @*<th style="min-width: 80px; width: 80px;">User Id</th>*@
+        </tr>
+
+        @if (Model != null && Model.Data.Any())
+        {
+            foreach (var item in Model.Data)
+            {
+                <tr>
+                    <td>
+                        <a href='@Url.Action("details", new {id = item.Id})' title="Book details">
+                            <b>@Html.DisplayFor(modelItem => item.Title)</b>
+                        </a>
+                    </td>
+                    <td>@{ Html.RenderPartial("AuthorsList", item.Authors); }</td>
+                    <td>
+                        @if (item.Sequences.Count > 0)
+                        {
+                            Html.RenderPartial("SequencesList", item.Sequences);
+                        }
+                        else
+                        {
+                            <br />}
+                    </td>
+                    <td>@Html.DisplayFor(modelItem => item.DateAdded)</td>
+                    @*<td>
+                            @{ var flibustaLink = "http://flibusta.is/user/" + item.UserId; }
+                            <a href=@flibustaLink> @Html.DisplayFor(modelItem => item.UserId)</a>
+                        </td>*@
+                </tr>
+            }
+        }
+    </table>
 </div>
