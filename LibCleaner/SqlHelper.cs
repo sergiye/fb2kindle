@@ -45,13 +45,23 @@ namespace LibCleaner
             }
         }
 
-        public static int GetIntFromQuery(string sql)
+        public static int GetIntFromQuery(string sql, IDbConnection connection = null)
         {
+            if (connection != null)
+            {
+                using (var cmd = GetCommand(sql, connection))
+                {
+                    var result = cmd.ExecuteScalar();
+                    return result == null ? 0 : int.Parse(result.ToString());
+                }
+            }
             using (IDbConnection cn = GetConnection())
             {
-                var cmd = GetCommand(sql, cn);
-                var result = cmd.ExecuteScalar();
-                return result == null ? 0 : int.Parse(result.ToString());
+                using (var cmd = GetCommand(sql, cn))
+                {
+                    var result = cmd.ExecuteScalar();
+                    return result == null ? 0 : int.Parse(result.ToString());
+                }
             }
         }
 

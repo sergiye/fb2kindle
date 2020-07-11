@@ -1,4 +1,3 @@
-using Fb2Kindle;
 using System;
 using System.IO;
 using System.Text;
