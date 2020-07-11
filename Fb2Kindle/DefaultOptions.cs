@@ -28,7 +28,6 @@ namespace Fb2Kindle
         public string SmtpServer { get; set; }
         public int SmtpPort { get; set; }
         public string SmtpLogin { get; set; }
-        [XmlIgnore]
         public string SmtpPassword { get; set; }
 
         public DefaultOptions()

@@ -69,7 +69,7 @@ namespace Fb2Kindle
 
                 var appPath = Util.GetAppPath();
                 var settingsFile = Path.ChangeExtension(Assembly.GetExecutingAssembly().Location, ".xml");
-                var currentSettings = Util.ReadObjectFromFile<DefaultOptions>(settingsFile) ?? new DefaultOptions();
+                var currentSettings = XmlSerializerHelper.DeserializeFile<DefaultOptions>(settingsFile);
                 var bookPath = string.Empty;
                 string cssStyles = null;
                 string mailTo = null;
@@ -176,7 +176,11 @@ namespace Fb2Kindle
                     return;
                 }
                 if (save)
-                    Util.WriteObjectToFile(settingsFile, currentSettings, true);
+                {
+                    var settingsToSave = currentSettings.XmlCopy();
+                    settingsToSave.SmtpPassword = null;
+                    settingsToSave.ToXmlFile(settingsFile, true);
+                }
 
                 var workPath = Path.GetDirectoryName(bookPath);
                 if (string.IsNullOrEmpty(workPath))
