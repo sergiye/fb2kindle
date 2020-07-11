@@ -212,15 +212,15 @@ JOIN archives a on a.id=b.id_archive and b.file_name is not NULL and b.file_name
                     }
                 }
             }
-            UpdateState(string.Format("Found archives in database: {0}", dbFiles.Count), StateKind.Message);
+            UpdateState($"Found archives in database: {dbFiles.Count}", StateKind.Message);
             //process all archives on disk
             var archivesFound = Directory.GetFiles(ArchivesPath, "*fb2*.zip", SearchOption.TopDirectoryOnly);
-            UpdateState(string.Format("Found {0} archives to optimize", archivesFound.Length), StateKind.Message);
+            UpdateState($"Found {archivesFound.Length} archives to optimize", StateKind.Message);
 
             //get ids of deleted books from external file (if exists)
             var externallyRemoved = GetExternalIdsFromFile(FileWithDeletedBooksIds);
             if (externallyRemoved != null && externallyRemoved.Count > 0)
-                UpdateState(string.Format("Books removed in external list: {0}", externallyRemoved.Count), StateKind.Warning);
+                UpdateState($"Books removed in external list: {externallyRemoved.Count}", StateKind.Warning);
             
             //get all files not found on disk (to remove from db)
             var totalRemoved = 0;
@@ -228,16 +228,16 @@ JOIN archives a on a.id=b.id_archive and b.file_name is not NULL and b.file_name
             {
                 try
                 {
-                    UpdateState(string.Format("Processing: {0}", archPath), StateKind.Log);
+                    UpdateState($"Processing: {archPath}", StateKind.Log);
                     var archiveName = Path.GetFileName(archPath);
                     if (string.IsNullOrWhiteSpace(archiveName))
                     {
-                        UpdateState(string.Format("Skipped as invalid file name: {0}", archPath), StateKind.Warning);
+                        UpdateState($"Skipped as invalid file name: {archPath}", StateKind.Warning);
                         continue;
                     }
                     if (!dbFiles.ContainsKey(archiveName.ToLower()))
                     {
-                        UpdateState(string.Format("Skipped as not registered in DB: {0}", archPath), StateKind.Warning);
+                        UpdateState($"Skipped as not registered in DB: {archPath}", StateKind.Warning);
                         continue;
                     }
                     using (var zip = new ZipFile(archPath))
@@ -275,12 +275,12 @@ JOIN archives a on a.id=b.id_archive and b.file_name is not NULL and b.file_name
                             var info = dbArchiveFiles.Find(f=>f.id_book == ext);
                             if (info == null)
                                 continue; 
-                            SqlHelper.ExecuteNonQuery(string.Format("delete from books where id={0}", info.id_book));
+                            SqlHelper.ExecuteNonQuery($"delete from books where id={info.id_book}");
                             var zipFile = zipFiles.FirstOrDefault(f=>f == info.file_name);
                             if (!string.IsNullOrWhiteSpace(zipFile))
                             {
                                 zipFilesToRemove.Add(zipFile); 
-                                UpdateState(string.Format("Book removed by external list: {0}", info.file_name), StateKind.Warning);
+                                UpdateState($"Book removed by external list: {info.file_name}", StateKind.Warning);
                             }
                         }
 
@@ -288,23 +288,22 @@ JOIN archives a on a.id=b.id_archive and b.file_name is not NULL and b.file_name
                         if (filesNotFound.Length > 0)
                         {
                             //remove not found files from DB
-                            UpdateState(string.Format("{0} db records marked to remove", filesNotFound.Length), StateKind.Message);
+                            UpdateState($"{filesNotFound.Length} db records marked to remove", StateKind.Message);
                             var dbRemoved = 0;
                             foreach (var info in filesNotFound)
                             {
                                 try
                                 {
-                                    SqlHelper.ExecuteNonQuery(string.Format("delete from books where id={0}", info.id_book));
+                                    SqlHelper.ExecuteNonQuery($"delete from books where id={info.id_book}");
                                     dbRemoved++;
                                 }
                                 catch (Exception ex)
                                 {
-                                    UpdateState(string.Format("Error removing DB record: {0}/{1}/{2}: {3}",
-                                        info.id_book, info.id_archive, info.file_name, ex.Message), StateKind.Error);
+                                    UpdateState($"Error removing DB record: {info.id_book}/{info.id_archive}/{info.file_name}: {ex.Message}", StateKind.Error);
                                 }
                             }
                             if (dbRemoved > 0)
-                                UpdateState(string.Format("{0} db records removed", dbRemoved), StateKind.Warning);
+                                UpdateState($"{dbRemoved} db records removed", StateKind.Warning);
                         }
                         dbArchiveFiles.RemoveAll(fi => !zipFiles.Contains(fi.file_name));
                         var filesFound = dbArchiveFiles.Where(fi => zipFiles.Contains(fi.file_name)).ToList();
@@ -316,7 +315,7 @@ JOIN archives a on a.id=b.id_archive and b.file_name is not NULL and b.file_name
                             {
                                 if (filesFound.Any(f => f.file_name.Equals(zipFile)))
                                     continue;
-                                UpdateState(string.Format("Book not registered: {0}", zipFile), StateKind.Warning);
+                                UpdateState($"Book not registered: {zipFile}", StateKind.Warning);
                                 zipFilesToRemove.Add(zipFile);
                             }
                         }
@@ -328,13 +327,13 @@ JOIN archives a on a.id=b.id_archive and b.file_name is not NULL and b.file_name
                         if (zipFilesToRemove.Count < MinFilesToUpdateZip) 
                         {
                             //don't waste time for re-saving zip if there are not many files to remove
-                            UpdateState(string.Format("Not registered books to remove: {0}", zipFilesToRemove.Count), StateKind.Message);
+                            UpdateState($"Not registered books to remove: {zipFilesToRemove.Count}", StateKind.Message);
                             continue;
                         }
                         //update zip
                         foreach (var zipfile in zipFilesToRemove)
                             zip.RemoveSelectedEntries(zipfile);
-                        UpdateState(string.Format("Saving archive {0}", archPath), StateKind.Log);
+                        UpdateState($"Saving archive {archPath}", StateKind.Log);
                         zip.CompressionLevel = CompressionLevel.BestSpeed;
                         if (!string.IsNullOrWhiteSpace(ArchivesOutputPath))
                             zip.Save(Path.Combine(ArchivesOutputPath, archiveName));
@@ -346,10 +345,10 @@ JOIN archives a on a.id=b.id_archive and b.file_name is not NULL and b.file_name
                 }
                 catch (Exception ex)
                 {
-                    UpdateState(string.Format("Error Processing: {0}: {1}", archPath, ex.Message), StateKind.Error);
+                    UpdateState($"Error Processing: {archPath}: {ex.Message}", StateKind.Error);
                 }
             }
-            UpdateState(string.Format("Total removed {0} files", totalRemoved), StateKind.Message);
+            UpdateState($"Total removed {totalRemoved} files", StateKind.Message);
 
             SqlHelper.ExecuteNonQuery("delete from books where id_archive not in (select id from archives)");
             SqlHelper.ExecuteNonQuery("delete from bookseq where id_book not in (select DISTINCT id FROM books)");
@@ -375,9 +374,7 @@ JOIN archives a on a.id=b.id_archive and b.file_name is not NULL and b.file_name
                     //remove file from zip and all lists
                     zipFilesToRemove.Add(info.file_name);
                     //remove duplicated records from DB
-                    SqlHelper.ExecuteNonQuery(string.Format(
-                        "delete from books where id={0} and id_archive={1} and file_name='{2}'",
-                        info.id_book, info.id_archive, info.file_name));
+                    SqlHelper.ExecuteNonQuery($"delete from books where id={info.id_book} and id_archive={info.id_archive} and file_name='{info.file_name}'");
 
                 }
                 else
@@ -394,7 +391,7 @@ JOIN archives a on a.id=b.id_archive and b.file_name is not NULL and b.file_name
                 var zipEntry = zip.Entries.FirstOrDefault(e => e.FileName.Equals(zipFile));
                 if (zipEntry == null)
                 {
-                    UpdateState(string.Format("Zip entry not found: {0}", zipFile), StateKind.Warning);
+                    UpdateState($"Zip entry not found: {zipFile}", StateKind.Warning);
                     continue;
                 }
                 string md5Sum = CalcFileHash(zipEntry);
@@ -462,7 +459,7 @@ JOIN archives a on a.id=b.id_archive and b.file_name is not NULL and b.file_name
                     }
                 }
             }
-            UpdateState(string.Format("Found {0} links to update...", booksToUpdate.Count), StateKind.Message);
+            UpdateState($"Found {booksToUpdate.Count} links to update...", StateKind.Message);
             using (var connection = SqlHelper.GetConnection())
             {
                 using (var tr = connection.BeginTransaction())
@@ -473,24 +470,36 @@ JOIN archives a on a.id=b.id_archive and b.file_name is not NULL and b.file_name
                         {
                             try
                             {
-                                SqlHelper.ExecuteNonQuery(string.Format("update books set id={0} where id={1}", item.Value, item.Key), connection);
-                                SqlHelper.ExecuteNonQuery(string.Format("update bookseq set id_book={0} where id_book={1}", item.Value, item.Key), connection);
-                                SqlHelper.ExecuteNonQuery(string.Format("update fts_book_content set docid={0} where docid={1}", item.Value, item.Key), connection);
-                                SqlHelper.ExecuteNonQuery(string.Format("update genres set id_book={0} where id_book={1}", item.Value, item.Key), connection);
-                                updatedBooks++;
-                                if (updatedBooks % 100 == 0)
+                                //check book already registered with correct id
+                                var oldIdOccupied = SqlHelper.GetIntFromQuery($"select count(*) from books where id={item.Value}", connection);
+                                if (oldIdOccupied == 0)
                                 {
-                                    UpdateState(string.Format("{0} records ({1}%) done...", updatedBooks, updatedBooks * 100 / booksToUpdate.Count), StateKind.Message);
+                                    SqlHelper.ExecuteNonQuery($"update books set id={item.Value} where id={item.Key}", connection);
+                                    SqlHelper.ExecuteNonQuery($"update bookseq set id_book={item.Value} where id_book={item.Key}", connection);
+                                    SqlHelper.ExecuteNonQuery($"update fts_book_content set docid={item.Value} where docid={item.Key}", connection);
+                                    SqlHelper.ExecuteNonQuery($"update genres set id_book={item.Value} where id_book={item.Key}", connection);
+                                    updatedBooks++;
+                                    if (updatedBooks % 100 == 0)
+                                    {
+                                        UpdateState($"{updatedBooks} records ({updatedBooks * 100 / booksToUpdate.Count}%) done...", StateKind.Message);
+                                    }
+                                }
+                                else
+                                {
+                                    SqlHelper.ExecuteNonQuery($"delete from books where id={item.Key}", connection);
+                                    // SqlHelper.ExecuteNonQuery($"delete from bookseq id_book={item.Key}", connection);
+                                    // SqlHelper.ExecuteNonQuery($"delete from fts_book_content where docid={item.Key}", connection);
+                                    // SqlHelper.ExecuteNonQuery($"delete from genres where id_book={item.Key}", connection);
                                 }
                             }
                             catch (Exception ex)
                             {
-                                UpdateState(string.Format("Error in item {0}: {1}", item.Key, ex.Message), StateKind.Error);
+                                UpdateState($"Error in item {item.Key}: {ex.Message}", StateKind.Error);
                             }
                         }
 
                         tr.Commit();
-                        UpdateState(string.Format("Updated {0} links", updatedBooks), StateKind.Message);
+                        UpdateState($"Updated {updatedBooks} links", StateKind.Message);
                     }
                     catch (Exception ex)
                     {
@@ -521,12 +530,12 @@ JOIN archives a on a.id=b.id_archive and b.file_name is not NULL and b.file_name
                         if (archives[i].Key == newId) continue;
                         try
                         {
-                            SqlHelper.ExecuteNonQuery(string.Format("update archives set id={0} where id={1}", newId, archives[i].Key), connection);
-                            SqlHelper.ExecuteNonQuery(string.Format("update books set id_archive={0} where id_archive={1}", newId, archives[i].Key), connection);
+                            SqlHelper.ExecuteNonQuery($"update archives set id={newId} where id={archives[i].Key}", connection);
+                            SqlHelper.ExecuteNonQuery($"update books set id_archive={newId} where id_archive={archives[i].Key}", connection);
                         }
                         catch (Exception ex)
                         {
-                            UpdateState(string.Format("Error updating archive id from {0} to {1} : {2}", archives[i].Key, newId, ex.Message), StateKind.Error);
+                            UpdateState($"Error updating archive id from {archives[i].Key} to {newId} : {ex.Message}", StateKind.Error);
                             errors = true;
                         }
                     }
@@ -576,7 +585,7 @@ JOIN archives a on a.id=b.id_archive and b.file_name is not NULL and b.file_name
                                 continue;
                             }
                             idsToRemove += SqlHelper.GetInt(reader, "id") + ",";
-                            UpdateState(string.Format("Archive not found in local folder: '{0}'", archName), StateKind.Warning);
+                            UpdateState($"Archive not found in local folder: '{archName}'", StateKind.Warning);
                         }
                     }
                 }
@@ -585,7 +594,7 @@ JOIN archives a on a.id=b.id_archive and b.file_name is not NULL and b.file_name
 //                    var archiveFileName = Path.GetFileName(archiveName);
                     if (!dbArchives.Any(f => archiveName.EndsWith(f, StringComparison.OrdinalIgnoreCase)))
                     {
-                        UpdateState(string.Format("Archive not registered in DB: {0}", archiveName), StateKind.Warning);
+                        UpdateState($"Archive not registered in DB: {archiveName}", StateKind.Warning);
 //                        SqlHelper.ExecuteNonQuery(string.Format("insert into archives (file_name) values ('{0}')", archiveFileName));
 //                        UpdateState(string.Format("Archive added to DB: {0}", archiveFileName), StateKind.Message);
                     }
@@ -593,20 +602,20 @@ JOIN archives a on a.id=b.id_archive and b.file_name is not NULL and b.file_name
                 if (unregisterNotFound)
                 {
                     idsToRemove = idsToRemove.TrimEnd(',');
-                    SqlHelper.ExecuteNonQuery(string.Format("delete from archives where id in ({0})", idsToRemove));
+                    SqlHelper.ExecuteNonQuery($"delete from archives where id in ({idsToRemove})");
                 }
                 if (!string.IsNullOrWhiteSpace(ArchivesOutputPath))
-                    SqlHelper.ExecuteNonQuery(string.Format("update params set text='{0}' where id=9", ArchivesOutputPath));
+                    SqlHelper.ExecuteNonQuery($"update params set text='{ArchivesOutputPath}' where id=9");
             }
         }
    
         private void CalculateStats()
         {
-            UpdateState(string.Format("Loading DB: '{0}' archives: '{1}' ...", SqlHelper.DataBasePath, ArchivesPath), StateKind.Log);
+            UpdateState($"Loading DB: '{SqlHelper.DataBasePath}' archives: '{ArchivesPath}' ...", StateKind.Log);
             UpdateState("Calculating DB stats...", StateKind.Log);
 
             var archivesRegistered = SqlHelper.GetIntFromQuery("select count(1) from archives");
-            UpdateState(string.Format("Found archives to process: {0}", archivesRegistered), StateKind.Message);
+            UpdateState($"Found archives to process: {archivesRegistered}", StateKind.Message);
 
             var totalToRemove = SqlHelper.GetIntFromQuery("select count(1) from books b where b.id_archive not in (select id from archives)");
             
@@ -625,7 +634,7 @@ JOIN archives a on a.id=b.id_archive and b.file_name is not NULL and b.file_name
                 sql.Append(@"select count(1) from books b join genres g on g.id_book=b.id where 1=0");
                 foreach (var g in GenresToRemove)
                 {
-                    sql.Append(string.Format(" or g.id_genre='{0}' ", g));
+                    sql.Append($" or g.id_genre='{g}' ");
                 }
                 totalToRemove += SqlHelper.GetIntFromQuery(sql.ToString());
             }
@@ -659,7 +668,7 @@ JOIN archives a on a.id=b.id_archive and b.file_name is not NULL and b.file_name
 //                }
 //            }
 
-            UpdateState(string.Format("Found files to remove: {0}", totalToRemove), StateKind.Message);
+            UpdateState($"Found files to remove: {totalToRemove}", StateKind.Message);
         }
 
         private void CompressLibrary()
@@ -682,7 +691,7 @@ JOIN archives a on a.id=b.id_archive and b.file_name is not NULL and b.file_name
             if (RemoveForeign)
                 sql.Append(" or (lang not like 'ru%' and lang not like 'ua%' and lang not like 'uk%' and lang not like 'en%' and lang<>'') ");
             removedCount = SqlHelper.ExecuteNonQuery(sql.ToString());
-            UpdateState(string.Format("Unregistered books: {0}", removedCount), StateKind.Message);
+            UpdateState($"Unregistered books: {removedCount}", StateKind.Message);
             totalRemoved += removedCount;
 
             //by genres
@@ -691,15 +700,15 @@ JOIN archives a on a.id=b.id_archive and b.file_name is not NULL and b.file_name
                 sql.Clear();
                 sql.Append(@"delete from books where id in (select b.id from books b join genres g on g.id_book=b.id where 1=0");
                 foreach (var g in GenresToRemove)
-                    sql.Append(string.Format(" or g.id_genre='{0}' ", g));
+                    sql.Append($" or g.id_genre='{g}' ");
                 sql.Append(")");
 
                 removedCount = SqlHelper.ExecuteNonQuery(sql.ToString());
-                UpdateState(string.Format("Unregistered books: {0}", removedCount), StateKind.Message);
+                UpdateState($"Unregistered books: {removedCount}", StateKind.Message);
                 totalRemoved += removedCount;
             }
 
-            UpdateState(string.Format("Total unregistered books: {0}", totalRemoved), StateKind.Message);
+            UpdateState($"Total unregistered books: {totalRemoved}", StateKind.Message);
 
             OptimizeArchivesOnDisk();
         }
