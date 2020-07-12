@@ -204,9 +204,7 @@
     <Content Include="Scripts\jquery.validate.unobtrusive.min.js" />
     <Content Include="Scripts\modal.popup.control.js" />
     <Content Include="Scripts\uploadHelper.js" />
-    <Content Include="xhtml.xsl">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
+    <None Include="xhtml.xsl" />
     <None Include="Properties\PublishProfiles\CustomProfile.pubxml" />
     <Content Include="Images\loader.gif" />
     <Content Include="Images\logo.png" />

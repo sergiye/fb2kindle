@@ -615,8 +615,9 @@ namespace jail.Controllers
 
         public FileResult GetConverter()
         {
-            return File(BookHelper.ConverterPath,
-                System.Net.Mime.MediaTypeNames.Application.Octet, SettingsHelper.ConverterName);
+            var name = Path.GetFileName(SettingsHelper.ConverterPath);
+            return File(SettingsHelper.ConverterPath,
+                System.Net.Mime.MediaTypeNames.Application.Octet, name);
         }
 
         #endregion
@@ -811,23 +812,23 @@ namespace jail.Controllers
                 var culture = CultureInfo.GetCultureInfo("en-US");
                 var booksFetched = 0;
                 var pageNum = 0;
+                var fetchMore = true;
                 using (var client = new WebClient())
                 {
-                    while (true)
+                    while (fetchMore)
                     {
                         var pageData = await client.DownloadStringTaskAsync($"https://flibusta.is/rec?view=recs&adata=name&bdata=id&udata=id&user={id}&page={pageNum++}");
                         byte[] bytes = Encoding.Default.GetBytes(pageData);
                         pageData = Encoding.UTF8.GetString(bytes);
                         var regex = new Regex(@"<tr>[\s\S]*?<td><a href=\""\/b\/([\d]+)\"">(.+)<\/a>[\s\S]*?user\/([\d]+)[\s\S]*?<td>(.+)<\/td>[\s\S]*?\/tr>");
                         var matches = regex.Matches(pageData);
-                        var newBooksFetched = false;
                         foreach (Match m in matches)
                         {
                             if (!m.Success || m.Groups.Count != 5)
                                 throw new InvalidDataException("Error parsing page data");
 
                             var bookId = long.Parse(m.Groups[1].Value);
-                            var bookTitle = m.Groups[2].Value;
+                            // var bookTitle = m.Groups[2].Value;
                             var userId = long.Parse(m.Groups[3].Value);
                             var dateAdded = DateTime.Parse(m.Groups[4].Value, culture);
 
@@ -836,13 +837,13 @@ namespace jail.Controllers
 
                             var bookFound = await DataRepository.GetFavorite(bookId, userId, dateAdded);
                             if (bookFound != 0)
+                            {
+                                fetchMore = false;
                                 break;
+                            }
                             await DataRepository.SaveFavorite(bookId, userId, dateAdded);
-                            newBooksFetched = true;
                             booksFetched++;
                         }
-                        if (!newBooksFetched)
-                            break;
                     }
                 }
                 return $"Successfully fetched {booksFetched} books for user '{id}' from {pageNum} processed page(s).";
