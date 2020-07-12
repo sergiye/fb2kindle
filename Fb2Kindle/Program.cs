@@ -69,7 +69,7 @@ namespace Fb2Kindle
 
                 var appPath = Util.GetAppPath();
                 var settingsFile = Path.ChangeExtension(Assembly.GetExecutingAssembly().Location, ".xml");
-                var currentSettings = XmlSerializerHelper.DeserializeFile<DefaultOptions>(settingsFile);
+                var currentSettings = XmlSerializerHelper.DeserializeFile<DefaultOptions>(settingsFile) ?? new DefaultOptions();
                 var bookPath = string.Empty;
                 string cssStyles = null;
                 string mailTo = null;
