@@ -20,8 +20,8 @@ namespace LibCleaner
 
         private class QueueTask
         {
-            public CleanActions ActionType { get; private set; }
-            public Action OnActionFinish { get; private set; }
+            public CleanActions ActionType { get; }
+            public Action OnActionFinish { get; }
 
             public QueueTask(CleanActions actionType, Action onActionFinish)
             {
@@ -47,7 +47,7 @@ namespace LibCleaner
 
         public string DatabasePath
         {
-            set { SqlHelper.DataBasePath = value; }
+            set => SqlHelper.DataBasePath = value;
         }
 
         public enum StateKind
@@ -91,8 +91,7 @@ namespace LibCleaner
 
         private void UpdateState(string state, StateKind kind)
         {
-            if (OnStateChanged != null)
-                OnStateChanged(state, kind);
+            OnStateChanged?.Invoke(state, kind);
         }
 
         public bool CheckParameters()
@@ -111,8 +110,7 @@ namespace LibCleaner
             //try to get archves folder from db
             if (string.IsNullOrEmpty(ArchivesPath) || !Directory.Exists(ArchivesPath))
             {
-                var dbPath = SqlHelper.GetScalarFromQuery("select text from params where id=9") as string;
-                if (dbPath != null)
+                if (SqlHelper.GetScalarFromQuery("select text from params where id=9") is string dbPath)
                 {
                     var dbFolder = Path.GetDirectoryName(SqlHelper.DataBasePath);
                     if (dbFolder != null)
@@ -261,8 +259,7 @@ JOIN archives a on a.id=b.id_archive and b.file_name is not NULL and b.file_name
                                     info.fileSize = size;
                                     if (info.created > 130000)
                                         info.created = created;
-                                    SqlHelper.ExecuteNonQuery(string.Format("update books set md5sum='{0}', file_size={1}, created={2} where id={1}", 
-                                        md5Sum, size, created, info.id_book));
+                                    SqlHelper.ExecuteNonQuery($"update books set md5sum='{md5Sum}', file_size={size}, created={created} where id={info.id_book}");
                                 }
                             }
                         }
@@ -446,8 +443,7 @@ JOIN archives a on a.id=b.id_archive and b.file_name is not NULL and b.file_name
                         {
                             var oldId = SqlHelper.GetInt(reader, "id");
                             var fileName = SqlHelper.GetString(reader, "file_name").Replace(".fb2", "");
-                            int newId;
-                            if (int.TryParse(fileName, out newId))
+                            if (int.TryParse(fileName, out var newId))
                             {
                                 booksToUpdate.Add(oldId, newId);
                             }
@@ -554,8 +550,7 @@ JOIN archives a on a.id=b.id_archive and b.file_name is not NULL and b.file_name
                     if (!string.IsNullOrWhiteSpace(line))
                     {
                         var txtId = line.Trim();
-                        long id;
-                        if (long.TryParse(txtId, out id))
+                        if (long.TryParse(txtId, out var id))
                             result.Add(id);
                     }
                 }
@@ -678,9 +673,6 @@ JOIN archives a on a.id=b.id_archive and b.file_name is not NULL and b.file_name
 
             OptimizeRegisteredArchives(RemoveMissingArchivesFromDb);
 
-            var totalRemoved = 0;
-            var removedCount = 0;
-
             //general optimization
             UpdateState("Optimizing db tables...", StateKind.Log);
 
@@ -690,9 +682,9 @@ JOIN archives a on a.id=b.id_archive and b.file_name is not NULL and b.file_name
                 sql.Append(" or deleted=1 ");
             if (RemoveForeign)
                 sql.Append(" or (lang not like 'ru%' and lang not like 'ua%' and lang not like 'uk%' and lang not like 'en%' and lang<>'') ");
-            removedCount = SqlHelper.ExecuteNonQuery(sql.ToString());
+            var removedCount = SqlHelper.ExecuteNonQuery(sql.ToString());
             UpdateState($"Unregistered books: {removedCount}", StateKind.Message);
-            totalRemoved += removedCount;
+            var totalRemoved = removedCount;
 
             //by genres
             if (GenresToRemove.Length > 0)

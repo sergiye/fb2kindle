@@ -60,7 +60,7 @@ namespace Fb2Kindle
 
                 //create temp working folder
                 if (string.IsNullOrWhiteSpace(tempDir))
-                    tempDir = string.Format("{0}\\{1}", Path.GetTempPath(), Guid.NewGuid());
+                    tempDir = $"{Path.GetTempPath()}\\{Guid.NewGuid()}";
                 if (!Directory.Exists(tempDir))
                     Directory.CreateDirectory(tempDir);
 
@@ -92,11 +92,11 @@ namespace Fb2Kindle
                             AddPackItem("ncx", NcxName, "application/x-dtbncx+xml", false);
                         }
 
-                        var bookPostfix = idx == 0 ? "" : string.Format("_{0}", idx);
+                        var bookPostfix = idx == 0 ? "" : $"_{idx}";
 
                         //update images (extract and rewrite refs)
                         Directory.CreateDirectory(string.Format(tempDir + "\\Images"));
-                        if (ProcessImages(book, tempDir, string.Format("Images\\{0}", bookPostfix), coverDone))
+                        if (ProcessImages(book, tempDir, $"Images\\{bookPostfix}", coverDone))
                         {
                             var imgSrc = Util.AttributeValue(book.Elements("description").Elements("title-info").Elements("coverpage").Elements("div").Elements("img"), "src");
                             if (!string.IsNullOrEmpty(imgSrc))
@@ -110,14 +110,14 @@ namespace Fb2Kindle
                                 }
                                 else
                                 {
-                                    AddGuideItem(string.Format("Cover{0}", bookPostfix), imgSrc);
-                                    AddPackItem(string.Format("Cover{0}", bookPostfix), imgSrc, "image/jpeg");
+                                    AddGuideItem($"Cover{bookPostfix}", imgSrc);
+                                    AddPackItem($"Cover{bookPostfix}", imgSrc, "image/jpeg");
                                 }
                             }
                         }
 
                         //book root element to contain all the sections
-                        var bookFileName = string.Format("book{0}.html", bookPostfix);
+                        var bookFileName = $"book{bookPostfix}.html";
                         var bookRoot = new XElement("div");
                         //add title
                         bookRoot.Add(CreateTitlePage(book));
@@ -188,7 +188,7 @@ namespace Fb2Kindle
         private static XElement AddNcxItem(XElement parent, int playOrder, string label, string href)
         {
             var navPoint = new XElement("navPoint");
-            navPoint.Add(new XAttribute("id", string.Format("p{0}", playOrder)));
+            navPoint.Add(new XAttribute("id", $"p{playOrder}"));
             navPoint.Add(new XAttribute("playOrder", playOrder.ToString()));
             navPoint.Add(new XElement("navLabel", new XElement("text", label)));
             navPoint.Add(new XElement("content", new XAttribute("src", href)));
@@ -252,7 +252,7 @@ namespace Fb2Kindle
             //store new link targets in dictionary
             foreach (var idEl in book.DescendantsAndSelf().Where(el => el.Name != "div" && el.Attribute("id") != null))
             {
-                links.Add(string.Format("#{0}", (string)idEl.Attribute("id")), filename);
+                links.Add($"#{(string) idEl.Attribute("id")}", filename);
             }
             //update found links hrefs
             foreach (var a in book.Descendants("a"))
@@ -286,14 +286,13 @@ namespace Fb2Kindle
                 t.RemoveNodes();
                 t.Add(inner);
                 //t.SetAttributeValue("id", string.Format("title{0}", bookNum + 2));
-                var li = GetListItem(t.Value.Trim(), string.Format("{0}#{1}", bookFileName, bookId)); 
+                var li = GetListItem(t.Value.Trim(), $"{bookFileName}#{bookId}"); 
                 toc.Add(li);
                 toc = li;
             }
             bookNum++;
             foreach (var subSection in section.Descendants("section"))
             {
-                if (subSection == null) continue;
                 var si = toc.Descendants(TocElement).FirstOrDefault();
                 if (si == null)
                 {
@@ -326,7 +325,7 @@ namespace Fb2Kindle
 //                    bodies[0].Add(bodies[i]);
 //                    continue;
 //                }
-                additionalParts.Add(new KeyValuePair<string, XElement>(string.Format("body{0}", i), bodies[i]));
+                additionalParts.Add(new KeyValuePair<string, XElement>($"body{i}", bodies[i]));
             }
 
             bodies[0].Name = "section";
@@ -340,11 +339,11 @@ namespace Fb2Kindle
                 foreach (var t in ts)
                 {
                     if (!string.IsNullOrEmpty(t.Value))
-                        listItem.Add(GetListItem(t.Value.Trim(), string.Format("{0}#title{1}", bookFileName, i + 2)));
+                        listItem.Add(GetListItem(t.Value.Trim(), $"{bookFileName}#title{i + 2}"));
                     Util.RenameTag(t, "div", "title");
                     var inner = new XElement("div");
                     inner.SetAttributeValue("class", i == 0 ? "title0" : "title1");
-                    inner.SetAttributeValue("id", string.Format("title{0}", i + 2));
+                    inner.SetAttributeValue("id", $"title{i + 2}");
                     inner.Add(t.Nodes());
                     t.RemoveNodes();
                     t.Add(inner);
@@ -372,7 +371,7 @@ namespace Fb2Kindle
                     bodyName = (string)item.Attribute("name");
                 }
                 bookRoot.Add(item);
-                listItem.Add(GetListItem(bodyName, string.Format("{0}#{1}", bookFileName, part.Key)));
+                listItem.Add(GetListItem(bodyName, $"{bookFileName}#{part.Key}"));
             }
 
             Util.WriteLine("(OK)", ConsoleColor.Green);
@@ -430,10 +429,10 @@ namespace Fb2Kindle
         private async Task<bool> CreateMobi(string workFolder, string tempDir, string bookName, string bookPath, bool compress, bool showOutput)
         {
             Util.WriteLine("Creating mobi (KF8)...", ConsoleColor.White);
-            var kindleGenPath = string.Format("{0}\\kindlegen.exe", workFolder);
+            var kindleGenPath = $"{workFolder}\\kindlegen.exe";
             if (!File.Exists(kindleGenPath))
             {
-                kindleGenPath = string.Format("{0}\\kindlegen.exe", tempDir);
+                kindleGenPath = $"{tempDir}\\kindlegen.exe";
                 if (!Util.GetFileFromResource("kindlegen.exe", kindleGenPath))
                 {
                     Util.WriteLine("kindlegen.exe not found", ConsoleColor.Red);
@@ -441,7 +440,7 @@ namespace Fb2Kindle
                 }
             }
 
-            var args = string.Format("\"{0}\\{1}.opf\" {2}", tempDir, bookName, compress ? "-c2" : "-c0");
+            var args = $"\"{tempDir}\\{bookName}.opf\" {(compress ? "-c2" : "-c0")}";
             var res = Util.StartProcess(kindleGenPath, args, showOutput);
             if (res == 2)
             {
@@ -449,7 +448,7 @@ namespace Fb2Kindle
                 return false;
             }
 
-            var tmpBookPath = string.Format("{0}\\{1}.mobi", tempDir, bookName);
+            var tmpBookPath = $"{tempDir}\\{bookName}.mobi";
             bool saveLocal = true;
             if (!string.IsNullOrWhiteSpace(MailTo))
             {
@@ -464,13 +463,13 @@ namespace Fb2Kindle
                 var versionNumber = 1;
                 var resultPath = Path.GetDirectoryName(bookPath);
                 var resultName = bookName;
-                while (File.Exists(string.Format("{0}\\{1}.mobi", resultPath, resultName)))
+                while (File.Exists($"{resultPath}\\{resultName}.mobi"))
                 {
                     resultName = bookName + "(v" + versionNumber + ")";
                     versionNumber++;
                 }
 
-                File.Move(tmpBookPath, string.Format("{0}\\{1}.mobi", resultPath, resultName));
+                File.Move(tmpBookPath, $"{resultPath}\\{resultName}.mobi");
 
                 if (_currentSettings.CleanupMode == ConverterCleanupMode.Partial)
                 {
@@ -482,7 +481,7 @@ namespace Fb2Kindle
                         File.Delete(Path.Combine(tempDir, "kindlegen.exe"));
                         File.Delete(Path.Combine(tempDir, "toc.ncx"));
 
-                        var destFolder = string.Format("{0}\\{1}", resultPath, resultName);
+                        var destFolder = $"{resultPath}\\{resultName}";
                         if (!tempDir.Equals(destFolder, StringComparison.OrdinalIgnoreCase))
                             Directory.Move(tempDir, destFolder);
                     }
@@ -501,7 +500,7 @@ namespace Fb2Kindle
 
         private async Task<bool> SendBookByMail(string bookName, string tmpBookPath)
         {
-            Util.Write(string.Format("Sending to {0}...", MailTo), ConsoleColor.White);
+            Util.Write($"Sending to {MailTo}...", ConsoleColor.White);
             try
             {
                 if (string.IsNullOrWhiteSpace(_currentSettings.SmtpServer) || _currentSettings.SmtpPort <= 0)
@@ -534,7 +533,7 @@ namespace Fb2Kindle
             }
             catch (Exception ex)
             {
-                Util.WriteLine(string.Format("Error: {0}", ex.Message), ConsoleColor.Red);
+                Util.WriteLine($"Error: {ex.Message}", ConsoleColor.Red);
             }
             return false;
         }
@@ -544,8 +543,7 @@ namespace Fb2Kindle
             var result = new List<string>();
             foreach (var ai in avtorbook)
             {
-                var author = string.Format("{0} {1} {2}", Util.Value(ai.Elements("last-name")),
-                    Util.Value(ai.Elements("first-name")), Util.Value(ai.Elements("middle-name")));
+                var author = $"{Util.Value(ai.Elements("last-name"))} {Util.Value(ai.Elements("first-name"))} {Util.Value(ai.Elements("middle-name"))}";
                 if (!string.IsNullOrWhiteSpace(author))
                     result.Add(author.Trim());
             }
@@ -574,8 +572,7 @@ namespace Fb2Kindle
             root.Add(title, new XElement("br"));
 
             //sequence
-            root.Add(new XElement("p", string.Format("{0} {1}", Util.AttributeValue(book.Elements("description").Elements("title-info").Elements("sequence"), "name"), 
-                Util.AttributeValue(book.Elements("description").Elements("title-info").Elements("sequence"), "number"))));
+            root.Add(new XElement("p", $"{Util.AttributeValue(book.Elements("description").Elements("title-info").Elements("sequence"), "name")} {Util.AttributeValue(book.Elements("description").Elements("title-info").Elements("sequence"), "number")}"));
             root.Add(new XElement("br"));
 
             //annotation
@@ -587,9 +584,8 @@ namespace Fb2Kindle
             
             //footer
             root.Add(new XElement("br"), new XElement("br"), new XElement("br"));
-            root.Add(new XElement("p", string.Format("Converted by © Fb2Kindle (ver. {0})", 
-                Assembly.GetExecutingAssembly().GetName().Version.ToString(3))));
-            root.Add(new XElement("p", "developed by Sergiy Yegoshyn (egoshin.sergey@gmail.com)"));
+            root.Add(new XElement("p", $"Converted by © Fb2Kindle {Assembly.GetExecutingAssembly().GetName().Version.ToString(3)}"));
+            root.Add(new XElement("p", "(egoshin.sergey@gmail.com)"));
             return root;
         }
 
@@ -711,14 +707,12 @@ namespace Fb2Kindle
             var seqName = Util.AttributeValue(book.Elements("description").Elements("title-info").Elements("sequence"), "name");
             if (useSequenceNameOnly)
             {
-                 bookTitle = string.IsNullOrEmpty(seqName) ? string.Format("{0} (Сборник)", bookTitle) : seqName;
+                 bookTitle = string.IsNullOrEmpty(seqName) ? bookTitle : seqName;
             }
             else
             {
                 if (addSequenceToTitle)
-                    bookTitle = string.Format("{0} {1} {2}", seqName,
-                                              Util.AttributeValue(book.Elements("description").Elements("title-info").Elements("sequence"), "number"),
-                                              bookTitle);
+                    bookTitle = $"{seqName} {Util.AttributeValue(book.Elements("description").Elements("title-info").Elements("sequence"), "number")} {bookTitle}";
             }
             content.Add(bookTitle);
 
@@ -820,7 +814,7 @@ namespace Fb2Kindle
                     if (string.IsNullOrEmpty(src)) continue;
                     src = src.Replace("#", "");
                     var imgEl = new XElement("img");
-                    imgEl.SetAttributeValue("src", GetImageNameWithExt(string.Format("{0}{1}", imagesPrefix, src)));
+                    imgEl.SetAttributeValue("src", GetImageNameWithExt($"{imagesPrefix}{src}"));
                     element.Add(imgEl);
                 }
             }
@@ -843,7 +837,7 @@ namespace Fb2Kindle
             {
                 try
                 {
-                    var file = GetImageNameWithExt(string.Format("{0}\\{1}{2}", workFolder, imagesPrefix, binEl.Attribute("id").Value));
+                    var file = GetImageNameWithExt($"{workFolder}\\{imagesPrefix}{binEl.Attribute("id").Value}");
                     var format = GetImageFormatFromMimeType(binEl.Attribute("content-type").Value, _currentSettings.Jpeg ? ImageFormat.Jpeg : ImageFormat.Png);
                     //todo: we can get format from img.RawFormat
                     var fileBytes = Convert.FromBase64String(binEl.Value);
