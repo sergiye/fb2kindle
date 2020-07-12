@@ -175,12 +175,7 @@ namespace Fb2Kindle
                     Util.WriteLine("No input file", ConsoleColor.Red);
                     return;
                 }
-                if (save)
-                {
-                    var settingsToSave = currentSettings.XmlCopy();
-                    settingsToSave.SmtpPassword = null;
-                    settingsToSave.ToXmlFile(settingsFile, true);
-                }
+                if (save) currentSettings.ToXmlFile(settingsFile, true);
 
                 var workPath = Path.GetDirectoryName(bookPath);
                 if (string.IsNullOrEmpty(workPath))
