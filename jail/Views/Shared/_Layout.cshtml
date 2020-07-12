@@ -66,9 +66,12 @@
                             {
                                 <li>@Html.ActionLink("Time", "Time", "Home")</li>
                             }
+                            if (user.FlibustaId > 0)
+                            {
+                                <li>@Html.ActionLink("Favorites", "Favorites", "Home", new {id = user.FlibustaId}, null)</li>
+                            }
                             if (user.UserType == UserType.Administrator)
                             {
-                                <li>@Html.ActionLink("Favorites", "Favorites", "Home")</li>
                                 <li>@Html.ActionLink("Users", "Users", "Home")</li>
                                 <li>@Html.ActionLink("Log", "Log", "Home")</li>
                             }

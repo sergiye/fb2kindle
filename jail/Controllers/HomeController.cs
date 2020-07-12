@@ -792,11 +792,14 @@ namespace jail.Controllers
         [HttpGet, UserTypeFilter(Roles = new[] { UserType.Administrator, UserType.User })]
         public async Task<ActionResult> Favorites(long id = 0, int pageNum = 0)
         {
-            if (id == 0 && CurrentUser.UserType != UserType.Administrator)
+            if (CurrentUser.UserType != UserType.Administrator)
             {
-                if (CurrentUser.FlibustaId <= 0)
-                    throw new ArgumentException("FlibustaId should be passed as parameter.");
-                id = CurrentUser.FlibustaId;
+                if (CurrentUser.FlibustaId == 0)
+                    throw new ArgumentException("You don't have FlibustaId.");
+                if (id == 0)
+                    id = CurrentUser.FlibustaId;
+                else if (id != CurrentUser.FlibustaId)
+                    throw new ArgumentException("You passed wrong FlibustaId.");
             }
             ViewBag.Id = id;
             var books = await DataRepository.GetFavorites(id, pageNum, SettingsHelper.MaxRecordsToShowAtOnce);

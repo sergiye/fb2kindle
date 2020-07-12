@@ -1,9 +1,6 @@
-﻿@using jail.Controllers
-@model IEnumerable<jail.Models.BookInfo>
+﻿@model IEnumerable<jail.Models.BookInfo>
 
-@{
-    ViewBag.Title = "Search";
-}
+@{ ViewBag.Title = "Search"; }
 <script type="text/javascript">
     $(document).ready(function () {
         $("#searchBlock").keyup(function (event) {
@@ -55,8 +52,10 @@
         <input id="searchBlock" type="text" class="form-control" aria-label="..."
                data-search-lang="all" placeholder="Search by title or author...">
         <div class="input-group-btn">
-            <button id="searchLangBtn" type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" 
-                    aria-haspopup="true" aria-expanded="false">All<span class="caret"></span></button>
+            <button id="searchLangBtn" type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown"
+                    aria-haspopup="true" aria-expanded="false">
+                All<span class="caret"></span>
+            </button>
             <ul class="dropdown-menu dropdown-menu-right change-lang" data-change-item-id="searchLangBtn">
                 <li><a href="#" data-search-lang="all">All</a></li>
                 <li><a href="#" data-search-lang="ru">Ru</a></li>
@@ -70,7 +69,7 @@
         </div>
     </div>
 </div>
-<br/>
+<br />
 <div class="clearfix"></div>
 
 <div id="gridContainer">
@@ -80,10 +79,5 @@
 <div class="clearfix"></div>
 @if (Model == null || !Model.Any())
 {
-    <div id="footer">
-        <footer>
-            &copy; @DateTime.Now.Year - JAIL (Just Another Internet Library)
-            <p>@HomeController.GetVersionString()</p>
-        </footer>
-    </div>    
+    Html.RenderPartial("Controls/Footer");
 }

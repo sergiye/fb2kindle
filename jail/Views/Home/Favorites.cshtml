@@ -3,38 +3,101 @@
 @{
     ViewBag.Title = "Favorites";
 }
-    <div id="headerBlock">
-        <div class="pull-left">
-            <b>Favorite books:</b>
+    <script type="text/javascript">
+    $(document).ready(function() {
+        $("#searchBlock").keydown(function(event) {
+            if (event.keyCode == 13) {
+                window.Helper.delay(function () { SearchFavorites(); }, 1000);
+            }
+        });
+    });
+
+    function SearchFavorites() {
+        var search = $("#searchBlock");
+        var key = $.trim(search.val());
+        //window.Helper.ShowError('Not implemented yet!');
+    };
+
+    function ClearSelected() {
+        window.Helper.ShowError('Not implemented yet!');
+    };
+
+    function UpdateUserFavorites(id) {
+        $.ajax({
+            url: '@Url.Action("UpdateFavorites")',
+            data: { id: id },
+            success: function (data) {
+                window.Helper.ShowSuccess('' + data);
+                SearchFavorites();
+            },
+            error: function (response, status, error) {
+                window.Helper.ShowError(error);
+            }
+        });
+    };
+    </script>
+
+<div class="search-wrapper">
+    <div class="btn-toolbar input-group">
+        <input id="searchBlock" type="text" class="form-control" aria-label="..." placeholder="Start type to search...">
+        <div class="input-group-btn">
+            <button type="button" class="btn btn-primary" onclick="SearchFavorites();" title="Search">
+                <i class="glyphicon glyphicon-search"></i>
+            </button>
+        </div>
+        <div class="input-group-addon">
             <span>
-                @(1 + Model.Skipped) - @(Model.Skipped + Model.Data.Count()) of @Model.TotalCount total
+                @(1 + Model.Skipped) - @(Model.Skipped + Model.Data.Count()) of @Model.TotalCount
             </span>
         </div>
-        <div class="pull-right">
+        <div class="input-group-btn">
+            <a class="btn btn-success @(Model.Page > 0 ? "" : "disabled")" role="button"
+               href='@Url.Action("Favorites", new { id = ViewBag.Id, pageNum = 0 })' title="First page">
+                First
+            </a>
+        </div>
+        <div class="input-group-btn">
+            <a class="btn btn-default @(Model.Page > 0 ? "" : "disabled")" role="button"
+               href='@Url.Action("Favorites", new { id = ViewBag.Id, pageNum = @Model.Page - 1 })' title="Prev page">
+                Prev
+            </a>
+        </div>
+        <div class="input-group-addon">
             <span>
-                <a class="btn btn-default btn-xs @(Model.Page > 0 ? "" : "disabled")" role="button"
-                   href='@Url.Action("Favorites", new { id = ViewBag.Id, pageNum = 0 })' title="First page">
-                    First
-                </a>
-                <a class="btn btn-default btn-xs @(Model.Page > 0 ? "" : "disabled")" role="button"
-                   href='@Url.Action("Favorites", new { id = ViewBag.Id, pageNum = @Model.Page - 1 })' title="Prev page">
-                    Prev
-                </a>
-                <span>
-                    Page @(Model.NumberOfPages < Model.Page ? 1 : Model.Page+1) of @Model.NumberOfPages
-                </span>
-                <a class="page-item btn btn-default btn-xs @(Model.Page < Model.NumberOfPages-1 ? "" : "disabled")" role="button"
-                   href='@Url.Action("Favorites", new { id = ViewBag.Id, pageNum = @Model.Page + 1 })' title="Next page">
-                    Next
-                </a>
-                <a class="page-link btn btn-default btn-xs @(Model.Page < Model.NumberOfPages-1 ? "" : "disabled")" role="button"
-                   href='@Url.Action("Favorites", new { id = ViewBag.Id, pageNum = @Model.NumberOfPages-1 })' title="Last page">
-                    Last
-                </a>
+                @(Model.NumberOfPages < Model.Page ? 1 : Model.Page+1) / @Model.NumberOfPages
             </span>
         </div>
+        <div class="input-group-btn">
+            <a class="btn btn-default @(Model.Page < Model.NumberOfPages-1 ? "" : "disabled")" role="button"
+               href='@Url.Action("Favorites", new { id = ViewBag.Id, pageNum = @Model.Page + 1 })' title="Next page">
+                Next
+            </a>
+        </div>
+        <div class="input-group-btn">
+            <a class="btn btn-warning @(Model.Page < Model.NumberOfPages-1 ? "" : "disabled")" role="button"
+               href='@Url.Action("Favorites", new { id = ViewBag.Id, pageNum = @Model.NumberOfPages-1 })' title="Last page">
+                Last
+            </a>
+        </div>
+        @{
+            var user = Request.IsAuthenticated ? HttpContext.Current.Session["User"] as UserProfile : null;
+            if (user != null && user.FlibustaId > 0)
+            {
+                <div class="input-group-btn">
+                    <button type="button" class="btn btn-info" onclick="UpdateUserFavorites(@user.FlibustaId);" title="Fetch favorites">
+                        <i class="glyphicon glyphicon-cloud-download"></i>
+                    </button>
+                </div>
+            }
+        }
+        @* <div class="input-group-btn"> *@
+        @*     <button type="button" class="btn btn-danger" onclick="ClearSelected();" title="Remove selected"> *@
+        @*         <i class="glyphicon glyphicon-minus"></i> *@
+        @*     </button> *@
+        @* </div> *@
     </div>
-<br />
+</div>
+<div class="clearfix"></div>
 <div id="gridDataContainer">
     <table class="table table-bordered table-hover">
         <tr>
