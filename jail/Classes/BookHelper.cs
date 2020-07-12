@@ -129,14 +129,6 @@ namespace jail.Classes
             //            return directoryInfo != null ? directoryInfo.FullName : Path.GetDirectoryName(asm.Location);
         }
 
-        internal static string ConverterPath
-        {
-            get
-            {
-                return string.Format("{0}bin\\{1}", GetApplicationPath(), SettingsHelper.ConverterName);
-            }
-        }
-
         private static void ConverterQueueOnExecuteTask(string sourceFileName)
         {
             try
@@ -147,18 +139,18 @@ namespace jail.Classes
                 var resultFile = Path.ChangeExtension(sourceFileName, ".mobi");
                 if (!File.Exists(resultFile))
                 {
-                    var res = StartProcess(ConverterPath, string.Format("{0} -preview", sourceFileName), false);
+                    var res = StartProcess(SettingsHelper.ConverterPath, $"{sourceFileName} -preview", false);
                     if (res == 2)
                     {
                         Logger.WriteWarning("Error converting to mobi");
                         throw new ArgumentException("Error converting book for kindle");
                     }
                 }
-                Logger.WriteDebug(string.Format("Book converted: {0}", sourceFileName));
+                Logger.WriteDebug($"Book converted: {sourceFileName}");
             }
             catch (Exception ex)
             {
-                Logger.WriteError(ex, string.Format("Error converting book for kindle: {0}", sourceFileName));
+                Logger.WriteError(ex, $"Error converting book for kindle: {sourceFileName}");
             }
         }
 
@@ -201,7 +193,7 @@ namespace jail.Classes
                 var coverPage = (string)coverImage.Attribute("href");
                 if (!string.IsNullOrWhiteSpace(coverPage))
                 {
-                    var node = book.XPathSelectElement(string.Format("descendant::binary[@id='{0}']", coverPage.Replace("#", "")));
+                    var node = book.XPathSelectElement($"descendant::binary[@id='{coverPage.Replace("#", "")}']");
                     if (node != null)
                     {
                         File.WriteAllBytes(outputFile, Convert.FromBase64String(node.Value));
@@ -261,7 +253,7 @@ namespace jail.Classes
             }
         }
 
-        public static byte[] ExtractZipFile(string archivePath, string fileName)
+        public static byte[] ExtractZipFileData(string archivePath, string fileName)
         {
             using (var zip = new ZipFile(archivePath))
             {
@@ -279,10 +271,9 @@ namespace jail.Classes
 
         public static string GetBookDownloadFileName(BookInfo book, string ext = ".fb2")
         {
-            var fileName = string.Format("{0}{1}", Regex.Replace(Regex.Replace(String.Format("{0}_{1}",
-                    book.Authors.First().FullName.ToLower().Transliterate(),
-                    book.Title.ToLower().Transliterate()),
-                @"[!@#$%_,. …\[\]\-']", "_"), @"(\p{P})(?<=\1\p{P}+)", "").Trim('_'), ext);
+            var fileName = Regex.Replace(Regex.Replace(
+                $"{book.Authors.First().FullName.ToLower().Transliterate()}_{book.Title.ToLower().Transliterate()}",
+                @"[!@#$%_,. …\[\]\-']", "_"), @"(\p{P})(?<=\1\p{P}+)", "").Trim('_') + ext;
             return fileName;
         }
 

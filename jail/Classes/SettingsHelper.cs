@@ -9,7 +9,7 @@ namespace jail.Classes
     /// </summary>
     public static class SettingsHelper
     {
-        public static string ConverterName { get; set; }
+        public static string ConverterPath { get; set; }
         public static string DatabasePath { get; set; }
         public static string StatisticDatabase { get; set; }
         public static string TimeTrackDatabase { get; set; }
@@ -33,7 +33,7 @@ namespace jail.Classes
         {
             TimeTrackDatabase = ConfigurationManager.ConnectionStrings["TimeTrack"].ConnectionString;
 
-            ConverterName = ConfigurationManager.AppSettings["ConverterName"];
+            ConverterPath = ConfigurationManager.AppSettings["ConverterPath"];
             DatabasePath = ConfigurationManager.AppSettings["DatabasePath"];
             StatisticDatabase = ConfigurationManager.AppSettings["StatisticsDBPath"];
             ArchivesPath = ConfigurationManager.AppSettings["ArchivesPath"];
