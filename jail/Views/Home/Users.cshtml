@@ -7,7 +7,7 @@
     const string modalPopupId = "UserModalPopup";
 }
 
-    <script type="text/javascript">
+<script type="text/javascript">
     $(document).ready(function () {
         $("#searchBlock").keyup(function () {
             window.Helper.delay(function () { SearchUsers(); }, 1000);
@@ -93,7 +93,7 @@
             }
         });
     }
-    </script>
+</script>
 @Html.Partial("Controls/_ModalPopupControl", new ModalPopupControlViewModel(modalPopupId)
 {
     OkButtonText = "Create",

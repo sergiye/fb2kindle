@@ -1,5 +1,4 @@
-﻿@using jail.Controllers
-@using jail.Models
+﻿@using jail.Models
 @model IEnumerable<SystemLog>
 
 @{
@@ -129,9 +128,4 @@
     @{Html.RenderPartial("LogPartial", Model);}
 </div>
 <div class="clearfix"></div>
-<div id="footer">
-    <footer>
-        &copy; @DateTime.Now.Year - JAIL (Just Another Internet Library)
-        <p>@HomeController.GetVersionString(); Build time: @HomeController.GetVersionBuildTime()</p>
-    </footer>
-</div>
+@{Html.RenderPartial("Controls/Footer");}
