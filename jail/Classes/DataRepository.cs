@@ -37,7 +37,7 @@ namespace jail.Classes
             }
         }
 
-        public static async Task<IEnumerable<BookInfo>> GetSearchDataAsync(string key, string searchLang)
+        public static async Task<IEnumerable<BookInfo>> GetSearchData(string key, string searchLang)
         {
             var sql = new StringBuilder(@"select b.id, b.title, b.id_archive, b.file_name, b.file_size, b.md5sum, 
 b.created, b.lang, s.*, bs.number BookOrder, 
@@ -128,7 +128,7 @@ order by CASE WHEN b.lang = 'ru' THEN '1'
             return author;
         }
 
-        public static async Task<IEnumerable<BookHistoryInfo>> GetHistoryAsync(IEnumerable<BookHistoryInfo> data)
+        public static async Task<IEnumerable<BookHistoryInfo>> GetHistory(IEnumerable<BookHistoryInfo> data)
         {
             if (data == null) return null;
             var books = data.ToArray();
@@ -170,7 +170,7 @@ where b.id in @ids";
 
             //Fetch books
             sql = @"select b.id, b.title, b.id_archive, b.file_name, b.file_size,
-       b.md5sum, b.created, b.lang, f.UserId, f.DateAdded,
+       b.md5sum, b.created, b.lang, f.id FavoriteId, f.UserId, f.DateAdded,
        s.*,
        bs.number BookOrder,
        a.id, a.full_name, a.first_name, a.middle_name, a.last_name
@@ -196,6 +196,11 @@ where f.Id in @favIds order by f.DateAdded desc";
         {
             return await Db.ExecuteAsync("INSERT INTO favorites (BookId, UserId, DateAdded) VALUES (@bookId, @userId, @dateAdded)"
                 , new {bookId, userId, dateAdded});
+        }
+
+        public static async Task<long> DeleteFavorite(long id)
+        {
+            return await Db.ExecuteAsync("delete from favorites where Id=@id", new {id});
         }
     }
 }

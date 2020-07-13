@@ -6,6 +6,7 @@ namespace jail.Models
 {
     public class BookFavoritesInfo: BookInfo
     {
+        public long FavoriteId { get; set; }
         public long UserId { get; set; }
 
         [DataType(DataType.Date), DisplayFormat(DataFormatString = "{0:yyyy-MM-dd HH:mm:ss}", ApplyFormatInEditMode = true)]

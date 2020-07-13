@@ -5,7 +5,7 @@ using System.Web.Routing;
 
 namespace jail
 {
-    public class MvcApplication : System.Web.HttpApplication
+    public class MvcApplication : HttpApplication
     {
         protected void Application_Start()
         {
@@ -17,32 +17,31 @@ namespace jail
 
         protected void Application_Error()
         {
-            HttpContext httpContext = HttpContext.Current;
-            if (httpContext != null)
-            {
-                RequestContext requestContext = ((MvcHandler)httpContext.CurrentHandler).RequestContext;
-                /* When the request is ajax the system can automatically handle a mistake with a JSON response. 
+            var httpContext = HttpContext.Current;
+            if (httpContext == null) return;
+            
+            var requestContext = ((MvcHandler)httpContext.CurrentHandler).RequestContext;
+            /* When the request is ajax the system can automatically handle a mistake with a JSON response. 
                    Then overwrites the default response */
-                if (requestContext.HttpContext.Request.IsAjaxRequest())
-                {
-                    httpContext.Response.Clear();
-                    string controllerName = requestContext.RouteData.GetRequiredString("controller");
-                    IControllerFactory factory = ControllerBuilder.Current.GetControllerFactory();
-                    IController controller = factory.CreateController(requestContext, controllerName);
-                    ControllerContext controllerContext = new ControllerContext(requestContext, (ControllerBase)controller);
+            if (requestContext.HttpContext.Request.IsAjaxRequest())
+            {
+                httpContext.Response.Clear();
+                var controllerName = requestContext.RouteData.GetRequiredString("controller");
+                var factory = ControllerBuilder.Current.GetControllerFactory();
+                var controller = factory.CreateController(requestContext, controllerName);
+                var controllerContext = new ControllerContext(requestContext, (ControllerBase)controller);
 
-                    JsonResult jsonResult = new JsonResult
-                    {
-                        Data = new { success = false, serverError = "500" },
-                        JsonRequestBehavior = JsonRequestBehavior.AllowGet
-                    };
-                    jsonResult.ExecuteResult(controllerContext);
-                    httpContext.Response.End();
-                }
-                else
+                var jsonResult = new JsonResult
                 {
-                    httpContext.Response.Redirect("~/Error");
-                }
+                    Data = new { success = false, serverError = "500" },
+                    JsonRequestBehavior = JsonRequestBehavior.AllowGet
+                };
+                jsonResult.ExecuteResult(controllerContext);
+                httpContext.Response.End();
+            }
+            else
+            {
+                httpContext.Response.Redirect("~/Error");
             }
         }
     }
