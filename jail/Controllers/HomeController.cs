@@ -32,11 +32,6 @@ namespace jail.Controllers
             base.HandleUnknownAction(actionName);
         }
 
-        protected override void OnActionExecuted(ActionExecutedContext filterContext)
-        {
-            base.OnActionExecuted(filterContext);
-        }
-
         protected override void EndExecute(IAsyncResult asyncResult)
         {
             var appPath = Request.ApplicationPath.TrimEnd('/');
@@ -48,11 +43,6 @@ namespace jail.Controllers
         }
 
         #endregion Overrides
-
-        public new RedirectToRouteResult RedirectToAction(string action, string controller)
-        {
-            return base.RedirectToAction(action, controller);
-        }
 
         #region Logging
 
@@ -290,7 +280,7 @@ namespace jail.Controllers
             ViewBag.Key = k;
             ViewBag.Lang = l;
             return View(string.IsNullOrWhiteSpace(k) ? new List<BookInfo>() :
-                await DataRepository.GetSearchDataAsync(k, l));
+                await DataRepository.GetSearchData(k, l));
         }
 
         [ValidateInput(false)]
@@ -298,7 +288,7 @@ namespace jail.Controllers
         public async Task<ActionResult> SearchResults(string k = null, string l = "ru")
         {
             return PartialView(string.IsNullOrWhiteSpace(k) ? new List<BookInfo>() :
-                await DataRepository.GetSearchDataAsync(k, l));
+                await DataRepository.GetSearchData(k, l));
         }
 
         [Route("history")]
@@ -334,7 +324,7 @@ namespace jail.Controllers
             }
 
             //leave only first N in list
-            return View(await DataRepository.GetHistoryAsync(books.Take(SettingsHelper.MaxRecordsToShowAtOnce)));
+            return View(await DataRepository.GetHistory(books.Take(SettingsHelper.MaxRecordsToShowAtOnce)));
         }
 
         private static void TryToDelete(string path, bool isFile)
@@ -854,6 +844,27 @@ namespace jail.Controllers
             catch (Exception ex)
             {
                 return ex.Message;
+            }
+        }
+
+        [Route("favdelete")]
+        [HttpDelete, UserTypeFilter(Roles = new[] { UserType.Administrator })]
+        public async Task<ActionResult> FavoriteDelete(long id)
+        {
+            try
+            {
+                var count = await DataRepository.DeleteFavorite(id);
+                if (count != 0)
+                {
+                    Logger.WriteWarning($"Favorite item '{id}' was deleted by user '{CurrentUser.Email}'", CommonHelper.GetClientAddress());
+                    return new HttpStatusCodeResult(HttpStatusCode.OK, "Done");
+                }
+                return new HttpStatusCodeResult(HttpStatusCode.NotFound, $"Favorite with id {id} not found.");
+            }
+            catch (Exception ex)
+            {
+                Logger.WriteError(ex, $"Error deleting favorite item {id}: {ex.Message}", CommonHelper.GetClientAddress());
+                return new HttpStatusCodeResult(HttpStatusCode.InternalServerError, ex.Message);
             }
         }
 

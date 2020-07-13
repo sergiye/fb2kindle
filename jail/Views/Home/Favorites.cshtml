@@ -6,7 +6,7 @@
     <script type="text/javascript">
     $(document).ready(function() {
         $("#searchBlock").keydown(function(event) {
-            if (event.keyCode == 13) {
+            if (event.keyCode === 13) {
                 window.Helper.delay(function () { SearchFavorites(); }, 1000);
             }
         });
@@ -16,19 +16,32 @@
         var search = $("#searchBlock");
         var key = $.trim(search.val());
         //window.Helper.ShowError('Not implemented yet!');
+        window.location.reload();
     };
 
-    function ClearSelected() {
-        window.Helper.ShowError('Not implemented yet!');
-    };
+    function DeleteFavorite(id, title, rowId) {
+        if (!confirm("Are you sure you want to remove your recomendation for '" + title + "'?"))
+            return;
+        $.ajax({
+            url: '@Url.Action("FavoriteDelete")',
+            type: "DELETE",
+            data: { id: id },
+            success: function (data) {
+                $('#' + rowId).remove();
+                //SearchFavorites();
+            },
+            error: function (response, status, error) {
+                window.Helper.ShowError(error);
+            }
+        });
+    }
 
     function UpdateUserFavorites(id) {
         $.ajax({
             url: '@Url.Action("UpdateFavorites")',
             data: { id: id },
             success: function (data) {
-                window.Helper.ShowSuccess('' + data);
-                SearchFavorites();
+                window.Helper.ShowSuccess('' + data, SearchFavorites);
             },
             error: function (response, status, error) {
                 window.Helper.ShowError(error);
@@ -39,12 +52,12 @@
 
 <div class="search-wrapper">
     <div class="btn-toolbar input-group">
-        <input id="searchBlock" type="text" class="form-control" aria-label="..." placeholder="Start type to search...">
-        <div class="input-group-btn">
-            <button type="button" class="btn btn-primary" onclick="SearchFavorites();" title="Search">
-                <i class="glyphicon glyphicon-search"></i>
-            </button>
-        </div>
+        @* <input id="searchBlock" type="text" class="form-control" aria-label="..." placeholder="Start type to search..."> *@
+        @* <div class="input-group-btn"> *@
+        @*     <button type="button" class="btn btn-primary" onclick="SearchFavorites();" title="Search"> *@
+        @*         <i class="glyphicon glyphicon-search"></i> *@
+        @*     </button> *@
+        @* </div> *@
         <div class="input-group-addon">
             <span>
                 @(1 + Model.Skipped) - @(Model.Skipped + Model.Data.Count()) of @Model.TotalCount
@@ -58,7 +71,7 @@
         </div>
         <div class="input-group-btn">
             <a class="btn btn-default @(Model.Page > 0 ? "" : "disabled")" role="button"
-               href='@Url.Action("Favorites", new { id = ViewBag.Id, pageNum = @Model.Page - 1 })' title="Prev page">
+               href='@Url.Action("Favorites", new { id = ViewBag.Id, pageNum = Model.Page - 1 })' title="Prev page">
                 Prev
             </a>
         </div>
@@ -69,13 +82,13 @@
         </div>
         <div class="input-group-btn">
             <a class="btn btn-default @(Model.Page < Model.NumberOfPages-1 ? "" : "disabled")" role="button"
-               href='@Url.Action("Favorites", new { id = ViewBag.Id, pageNum = @Model.Page + 1 })' title="Next page">
+               href='@Url.Action("Favorites", new { id = ViewBag.Id, pageNum = Model.Page + 1 })' title="Next page">
                 Next
             </a>
         </div>
         <div class="input-group-btn">
             <a class="btn btn-warning @(Model.Page < Model.NumberOfPages-1 ? "" : "disabled")" role="button"
-               href='@Url.Action("Favorites", new { id = ViewBag.Id, pageNum = @Model.NumberOfPages-1 })' title="Last page">
+               href='@Url.Action("Favorites", new { id = ViewBag.Id, pageNum = Model.NumberOfPages-1 })' title="Last page">
                 Last
             </a>
         </div>
@@ -90,29 +103,26 @@
                 </div>
             }
         }
-        @* <div class="input-group-btn"> *@
-        @*     <button type="button" class="btn btn-danger" onclick="ClearSelected();" title="Remove selected"> *@
-        @*         <i class="glyphicon glyphicon-minus"></i> *@
-        @*     </button> *@
-        @* </div> *@
     </div>
 </div>
 <div class="clearfix"></div>
 <div id="gridDataContainer">
     <table class="table table-bordered table-hover">
         <tr>
-            <th style="min-width: 220px;">Title</th>
+            <th data-defaultsort="asc" style="min-width: 220px;">Title</th>
             <th style="min-width: 150px; width: 25%;">Author</th>
             <th style="min-width: 150px; width: 25%;">Sequence</th>
             <th style="min-width: 140px; width: 120px;">Date</th>
             @*<th style="min-width: 80px; width: 80px;">User Id</th>*@
+            <th style="min-width: 50px; width: 50px;"></th>
         </tr>
 
         @if (Model != null && Model.Data.Any())
         {
             foreach (var item in Model.Data)
             {
-                <tr>
+                var rowId = string.Format("favRow{0}", item.FavoriteId);
+                <tr id="@rowId">
                     <td>
                         <a href='@Url.Action("details", new {id = item.Id})' title="Book details">
                             <b>@Html.DisplayFor(modelItem => item.Title)</b>
@@ -133,6 +143,11 @@
                             @{ var flibustaLink = "http://flibusta.is/user/" + item.UserId; }
                             <a href=@flibustaLink> @Html.DisplayFor(modelItem => item.UserId)</a>
                         </td>*@
+                    <td>
+                        <a href="#" onclick="DeleteFavorite(@item.FavoriteId, '@item.Title', '@rowId');" class="btn btn-danger" title="Delete">
+                            <span class="glyphicon glyphicon-trash"></span>
+                        </a>
+                    </td>
                 </tr>
             }
         }
