@@ -13,9 +13,6 @@
     });
 
     function SearchFavorites() {
-        var search = $("#searchBlock");
-        var key = $.trim(search.val());
-        //window.Helper.ShowError('Not implemented yet!');
         window.location.reload();
     };
 
@@ -36,10 +33,9 @@
         });
     }
 
-    function UpdateUserFavorites(id) {
+    function UpdateUserFavorites() {
         $.ajax({
             url: '@Url.Action("UpdateFavorites")',
-            data: { id: id },
             success: function (data) {
                 window.Helper.ShowSuccess('' + data, SearchFavorites);
             },
@@ -97,7 +93,7 @@
             if (user != null && user.FlibustaId > 0)
             {
                 <div class="input-group-btn">
-                    <button type="button" class="btn btn-info" onclick="UpdateUserFavorites(@user.FlibustaId);" title="Fetch favorites">
+                    <button type="button" class="btn btn-info" onclick="UpdateUserFavorites();" title="Fetch favorites">
                         <i class="glyphicon glyphicon-cloud-download"></i>
                     </button>
                 </div>

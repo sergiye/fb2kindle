@@ -37,12 +37,18 @@ namespace jail.Classes
             }
         }
 
-        public static async Task<IEnumerable<BookInfo>> GetSearchData(string key, string searchLang)
+        public static async Task<IEnumerable<BookInfo>> GetSearchData(string key, string searchLang, long? userId)
         {
             var sql = new StringBuilder(@"select b.id, b.title, b.id_archive, b.file_name, b.file_size, b.md5sum, 
-b.created, b.lang, s.*, bs.number BookOrder, 
-a.id, a.full_name, a.first_name, a.middle_name, a.last_name from books b
-join authors a on a.id=b.id_author
+b.created, b.lang, ");
+            if (userId.HasValue && userId.Value > 0)
+                sql.Append(" f.Id FavoriteId,");
+            else
+                sql.Append(" 0 FavoriteId,");
+            sql.AppendLine("s.*, bs.number BookOrder, a.id, a.full_name, a.first_name, a.middle_name, a.last_name from books b");
+            if (userId.HasValue && userId.Value > 0)
+                sql.AppendLine(" left join favorites f on f.bookid=b.id and f.UserId=@userId");
+            sql.AppendLine(@" join authors a on a.id=b.id_author
 join fts_book_content c on b.id=c.docid
 join fts_auth_content ac on ac.docid=a.id
 left join bookseq bs on bs.id_book=b.id
@@ -58,7 +64,8 @@ where (REPLACE(b.title, ' ', '') like @key or REPLACE(a.search_name, ' ', '') li
               WHEN b.lang = 'uk' THEN '4'
               ELSE b.lang END ASC, b.title, b.created DESC LIMIT 100");
             var info = await Db.QueryMultipleAsync<BookInfo, SequenceInfo, AuthorInfo, long>(sql.ToString(), 
-                b => b.Id, b => b.Sequences, b => b.Authors, new { key = string.Format("%{0}%", key.ToLower().Replace(" ", "")), lang = searchLang });
+                b => b.Id, b => b.Sequences, b => b.Authors, 
+                new { key = $"%{key.ToLower().Replace(" ", "")}%", lang = searchLang, userId });
             return info;
         }
 
@@ -186,15 +193,19 @@ where f.Id in @favIds order by f.DateAdded desc";
             return new BookFavoritesViewModel(data, page, Convert.ToInt32(Math.Ceiling((double)totalRows / pageSize)), totalRows, skipped);
         }
 
-        public static async Task<long> GetFavorite(long bookId, long userId, DateTime dateAdded)
+        public static async Task<long> GetFavoriteId(long bookId, long userId, DateTime? dateAdded)
         {
-            return await Db.QueryOneAsync<long>("select Id from favorites where BookId=@bookId and UserId=@userId and DateAdded=@dateAdded"
-                , new {bookId, userId, dateAdded});
+            return dateAdded.HasValue
+                ? await Db.QueryOneAsync<long>(
+                    "select Id from favorites where BookId=@bookId and UserId=@userId and DateAdded=@dateAdded"
+                    , new {bookId, userId, dateAdded})
+                : await Db.QueryOneAsync<long>("select Id from favorites where BookId=@bookId and UserId=@userId"
+                    , new {bookId, userId});
         }
 
         public static async Task<long> SaveFavorite(long bookId, long userId, DateTime dateAdded)
         {
-            return await Db.ExecuteAsync("INSERT INTO favorites (BookId, UserId, DateAdded) VALUES (@bookId, @userId, @dateAdded)"
+            return await Db.QueryOneAsync<long>("INSERT INTO favorites (BookId, UserId, DateAdded) VALUES (@bookId, @userId, @dateAdded); SELECT last_insert_rowid();"
                 , new {bookId, userId, dateAdded});
         }
 

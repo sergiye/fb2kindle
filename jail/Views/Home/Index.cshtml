@@ -1,6 +1,6 @@
 ﻿@model IEnumerable<jail.Models.BookInfo>
 
-@{ ViewBag.Title = "Search"; }
+@{ ViewBag.Title = "Search books"; }
 <script type="text/javascript">
     $(document).ready(function () {
         $("#searchBlock").keyup(function (event) {
@@ -43,6 +43,36 @@
                     location.reload();
                 else
                     window.Helper.ShowError(error);
+            }
+        });
+    }
+    function ToggleFavorite(bookId, title) {
+        var item = $('#Fav' + bookId);
+        var liked = item.hasClass("glyphicon-heart");
+        if (liked){
+            if (!confirm("Are you sure you want to remove recomendation for '" + title + "'?"))
+                return;
+        }
+        else{
+            if (!confirm("Are you sure you want to add recomendation for '" + title + "'?"))
+                return;
+        }
+        $.ajax({
+            url: '@Url.Action("FavoriteToggle")',
+            type: "GET",
+            data: { bookId: bookId },
+            success: function () {
+                if (liked){
+                    item.removeClass('glyphicon-heart').addClass('glyphicon-heart-empty');
+                    //item.parent().data("favId", bookId);
+                }
+                else{
+                    item.removeClass('glyphicon-heart-empty').addClass('glyphicon-heart');
+                    //item.parent().data("favId", null);
+                }
+            },
+            error: function (response, status, error) {
+                window.Helper.ShowError(error);
             }
         });
     }

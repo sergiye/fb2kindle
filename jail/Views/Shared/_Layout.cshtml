@@ -43,7 +43,8 @@
             </div>
             <div class="navbar-collapse collapse">
                 <ul class="nav navbar-nav">
-                    <li>@Html.ActionLink("Search", "Index", "Home")</li>
+                    <li>@Html.ActionLink("Books", "Index", "Home")</li>
+                    @* <li>@Html.ActionLink("Authors", "Authors", "Home")</li> *@
                     <li>@Html.ActionLink("History", "History", "Home")</li>
                     <li>@Html.ActionLink("Convert", "UploadFile", "Home")</li>
                     <li class="dropdown">
@@ -66,10 +67,7 @@
                             {
                                 <li>@Html.ActionLink("Time", "Time", "Home")</li>
                             }
-                            if (user.FlibustaId > 0)
-                            {
-                                <li>@Html.ActionLink("Favorites", "Favorites", "Home", new {id = user.FlibustaId}, null)</li>
-                            }
+                            <li>@Html.ActionLink("Favorites", "Favorites", "Home", new {id = user.Id}, null)</li>
                             if (user.UserType == UserType.Administrator)
                             {
                                 <li>@Html.ActionLink("Users", "Users", "Home")</li>

@@ -29,24 +29,6 @@
             }
         });
     }
-    function UserTimeTrack(id) {
-        window.location = '@Url.Action("Time")?id=' + id;
-    }
-    function UserFavorites(id) {
-        window.location = '@Url.Action("Favorites")?id=' + id;
-    }
-    function UpdateUserFavorites(id) {
-        $.ajax({
-            url: '@Url.Action("UpdateFavorites")',
-            data: { id: id },
-            success: function (data) {
-                window.Helper.ShowSuccess('' + data);
-            },
-            error: function (response, status, error) {
-                window.Helper.ShowError(error);
-            }
-        });
-    }
     function DeleteUser(id) {
         if (!confirm("Are you sure you want to remove user?"))
             return;

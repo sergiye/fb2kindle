@@ -1,6 +1,8 @@
 ﻿@using jail.Models
 @model IEnumerable<BookInfo>
-
+@{
+    var user = Request.IsAuthenticated ? HttpContext.Current.Session["User"] as UserProfile : null;
+}
 <div id="list-group">
     <table class="table table-bordered table-hover">
         <tr>
@@ -19,6 +21,10 @@
             }
             <th style="min-width: 90px; width: 90px;">Registered</th>
             <th style="min-width: 90px; width: 90px;">File</th>
+            @if (user != null)
+            {
+                <th style="min-width: 50px; width: 50px;"></th>
+            }
         </tr>
 
         @if (Model != null && Model.Any())
@@ -62,6 +68,15 @@
                 @Html.DisplayFor(modelItem => item.FileSizeStr)
             </a>
         </td>
+        @if (user != null)
+        {
+            <td>
+                <a href="#" onclick="ToggleFavorite(@item.Id, '@item.Title');" class="btn btn-default" title="Add favorite">
+                    <span id="@string.Format("Fav{0}", item.Id)" 
+                          class='glyphicon @string.Format("glyphicon-heart{0}", item.FavoriteId > 0 ? "" : "-empty")'></span>
+                </a>
+            </td>
+        }
     </tr>
             }
         }
