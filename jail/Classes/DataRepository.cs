@@ -39,31 +39,28 @@ namespace jail.Classes
 
         public static async Task<IEnumerable<BookInfo>> GetSearchData(string key, string searchLang, long? userId)
         {
-            var sql = new StringBuilder(@"select b.id, b.title, b.id_archive, b.file_name, b.file_size, b.md5sum, 
-b.created, b.lang, ");
+            var sql = @"select b.id, b.title, b.id_archive, b.file_name, b.file_size, b.md5sum, 
+b.created, b.lang, ";
             if (userId.HasValue && userId.Value > 0)
-                sql.Append(" f.Id FavoriteId,");
+                sql += " f.Id FavoriteId,";
             else
-                sql.Append(" 0 FavoriteId,");
-            sql.AppendLine("s.*, bs.number BookOrder, a.id, a.full_name, a.first_name, a.middle_name, a.last_name from books b");
+                sql += " 0 FavoriteId,";
+            sql += "s.*, bs.number BookOrder, a.id, a.full_name, a.first_name, a.middle_name, a.last_name from books b";
             if (userId.HasValue && userId.Value > 0)
-                sql.AppendLine(" left join favorites f on f.bookid=b.id and f.UserId=@userId");
-            sql.AppendLine(@" join authors a on a.id=b.id_author
+                sql += " left join favorites f on f.bookid=b.id and f.UserId=@userId";
+            sql += @" join authors a on a.id=b.id_author
 join fts_book_content c on b.id=c.docid
 join fts_auth_content ac on ac.docid=a.id
 left join bookseq bs on bs.id_book=b.id
 left join sequences s on s.id=bs.id_seq
-where (REPLACE(b.title, ' ', '') like @key or REPLACE(a.search_name, ' ', '') like @key or REPLACE(c.c0content, ' ', '') like @key or REPLACE(ac.c0content, ' ', '') like @key)");
-            if (searchLang != "all")
-            {
-                sql.Append(" and b.lang=@lang");
-            }
-            sql.Append(@" order by CASE WHEN b.lang = 'ru' THEN '1'
+where (REPLACE(b.title, ' ', '') like @key or REPLACE(a.search_name, ' ', '') like @key or REPLACE(c.c0content, ' ', '') like @key or REPLACE(ac.c0content, ' ', '') like @key)";
+            if (searchLang != "all") sql += " and b.lang=@lang";
+            sql += @" order by CASE WHEN b.lang = 'ru' THEN '1'
               WHEN b.lang = 'en' THEN '2'
               WHEN b.lang = 'ua' THEN '3'
               WHEN b.lang = 'uk' THEN '4'
-              ELSE b.lang END ASC, b.title, b.created DESC LIMIT 100");
-            var info = await Db.QueryMultipleAsync<BookInfo, SequenceInfo, AuthorInfo, long>(sql.ToString(), 
+              ELSE b.lang END ASC, b.title, b.created DESC LIMIT 100";
+            var info = await Db.QueryMultipleAsync<BookInfo, SequenceInfo, AuthorInfo, long>(sql, 
                 b => b.Id, b => b.Sequences, b => b.Authors, 
                 new { key = $"%{key.ToLower().Replace(" ", "")}%", lang = searchLang, userId });
             return info;
@@ -90,32 +87,38 @@ where b.id=@id order by s.value",
 order by s.value LIMIT 100", new { id = bookId });
         }
 
-        public static SequenceData GetSequenceData(long id)
+        public static SequenceData GetSequenceData(long id, long? userId)
         {
             var seq = Db.QueryOne<SequenceData>("select s.*, 0 BookOrder from sequences s where s.id=@id", new {id});
             if (seq == null) return null;
 
-            seq.Books = Db.QueryMultiple<BookInfo, AuthorInfo, long>(@"select b.id, b.title, b.id_archive, b.file_name, b.file_size, b.md5sum,
-  b.created, b.lang, bs.number BookOrder,
-  a.id, a.full_name, a.first_name, a.middle_name, a.last_name
-from books b
-join authors a on a.id=b.id_author
+            var sql = @"select b.id, b.title, b.id_archive, b.file_name, b.file_size, b.md5sum,
+  b.created, b.lang, bs.number BookOrder,";
+            sql += userId.HasValue && userId.Value > 0 ? " f.Id FavoriteId," : " 0 FavoriteId,";
+            sql += @" a.id, a.full_name, a.first_name, a.middle_name, a.last_name from books b";
+            if (userId.HasValue && userId.Value > 0)
+                sql += " left join favorites f on f.bookid=b.id and f.UserId=@userId";
+            sql += @" join authors a on a.id=b.id_author
 left join bookseq bs on bs.id_book=b.id
 where bs.id_seq=@id
-order by bs.number, b.title, b.created DESC",
-                b => b.Id, b => b.Authors, new { id }).ToList();
+order by bs.number, b.title, b.created DESC";
+            seq.Books = Db.QueryMultiple<BookInfo, AuthorInfo, long>(sql,
+                b => b.Id, b => b.Authors, new { id, userId }).ToList();
             return seq;
         }
 
-        public static AuthorData GetAuthorData(long id)
+        public static AuthorData GetAuthorData(long id, long? userId)
         {
             var author = Db.QueryOne<AuthorData>("SELECT id, full_name, first_name, middle_name, last_name from authors where id=@id", new {id});
             if (author == null) return null;
-            var books = Db.QueryMultiple<BookInfo, SequenceInfo, AuthorInfo, long>(@"select b.id, b.title, b.id_archive, b.file_name, b.file_size, b.md5sum,
-  b.created, b.lang, s.*, bs.number BookOrder, 
-  a.id, a.full_name, a.first_name, a.middle_name, a.last_name
-from books b
-join authors a on a.id=b.id_author
+            var sql = @"select b.id, b.title, b.id_archive, b.file_name, b.file_size, b.md5sum,
+  b.created, b.lang, ";
+            sql += userId.HasValue && userId.Value > 0 ? " f.Id FavoriteId," : " 0 FavoriteId,";
+            sql += @" s.*, bs.number BookOrder, 
+  a.id, a.full_name, a.first_name, a.middle_name, a.last_name from books b";
+            if (userId.HasValue && userId.Value > 0)
+                sql += " left join favorites f on f.bookid=b.id and f.UserId=@userId";
+            sql+= @" join authors a on a.id=b.id_author
 left join bookseq bs on bs.id_book=b.id
 left join sequences s on s.id=bs.id_seq
 where a.id=@id
@@ -123,8 +126,9 @@ order by CASE WHEN b.lang = 'ru' THEN '1'
               WHEN b.lang = 'en' THEN '2'
               WHEN b.lang = 'ua' THEN '3'
               WHEN b.lang = 'uk' THEN '4'
-              ELSE b.lang END ASC, b.title, b.created DESC",
-                b => b.Id, b => b.Sequences, b => b.Authors, new { id }).ToList();
+              ELSE b.lang END ASC, b.title, b.created DESC";
+            var books = Db.QueryMultiple<BookInfo, SequenceInfo, AuthorInfo, long>(sql,
+                b => b.Id, b => b.Sequences, b => b.Authors, new { id, userId }).ToList();
             author.Books = new Dictionary<string, List<BookInfo>>();
             //var groupedList = books.GroupBy(u => u.Lang, (key, group) =>  new KeyValuePair<string, List<BookInfo>>(key, group.ToList())).ToList();
             var groupedList = books.GroupBy(u => u.Lang).Select(grp => grp.ToList()).ToList();
