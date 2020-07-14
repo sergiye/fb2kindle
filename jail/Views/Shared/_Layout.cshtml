@@ -162,6 +162,30 @@
                 $("#" + modalPopup.ModalId).find(".modal-body").html(response);
             }
         };
+        function ToggleFavorite(bookId, title) {
+            var item = $('#Fav' + bookId);
+            var liked = item.hasClass("glyphicon-heart");
+            $.ajax({
+                url: '@Url.Action("FavoriteToggle", "Home")',
+                type: "GET",
+                data: { bookId: bookId },
+                success: function () {
+                    if (liked){
+                        item.removeClass('glyphicon-heart').addClass('glyphicon-heart-empty');
+                        item.parent().attr('title', 'Add favorite');
+                        //item.parent().data("favId", bookId);
+                    }
+                    else{
+                        item.removeClass('glyphicon-heart-empty').addClass('glyphicon-heart');
+                        item.parent().attr('title', 'Remove favorite');
+                        //item.parent().data("favId", null);
+                    }
+                },
+                error: function (response, status, error) {
+                    window.Helper.ShowError(error);
+                }
+            });
+        }
         jQuery(function ($) {
             $(document).ajaxStop(function () {
                 $("#ajax_loader").hide();
