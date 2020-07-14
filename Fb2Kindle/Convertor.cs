@@ -104,6 +104,24 @@ namespace Fb2Kindle
                             {
                                 if (!coverDone)
                                 {
+                                    var coverFilePath = Path.Combine(tempDir, imgSrc);
+                                    Image scaledImage = null;
+                                    var imgFormat = ImageFormat.Png;
+                                    using (var img = Image.FromFile(coverFilePath))
+                                    {
+                                        if (img.Size.Width < 600 || img.Size.Height < 800)
+                                        {
+                                            imgFormat = GetImageFormatFromMimeType(GetMimeType(img), ImageFormat.Png);
+                                            scaledImage = ResizeImage(img, 600, 800);
+                                        }
+                                    }
+
+                                    if (scaledImage != null)
+                                    {
+                                        scaledImage.Save(coverFilePath, imgFormat);
+                                        scaledImage.Dispose();
+                                    }
+
                                     _opfFile.Elements("metadata").First().Elements("x-metadata").First().Add(new XElement("EmbeddedCover", imgSrc));
                                     AddGuideItem("Cover", imgSrc, "other.ms-coverimage-standard");
                                     AddPackItem("cover", imgSrc, "image/jpeg", false);
@@ -859,13 +877,7 @@ namespace Fb2Kindle
 //                                    img.Save(file, pngCodec, parameters);
 //                                }
 //                                else
-                                if (img.Size.Width < 600 || img.Size.Height < 800)
-                                {
-                                    var scaledImages = ResizeImage(img, 600, 800);
-                                    scaledImages.Save(file, format);
-                                }
-                                else
-                                    img.Save(file, format);
+                                img.Save(file, format);
                             }
                         }
                         if (_currentSettings.Grayscaled)
