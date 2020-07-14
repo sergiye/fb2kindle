@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
@@ -858,7 +859,13 @@ namespace Fb2Kindle
 //                                    img.Save(file, pngCodec, parameters);
 //                                }
 //                                else
-                                img.Save(file, format);
+                                if (img.Size.Width < 600 || img.Size.Height < 800)
+                                {
+                                    var scaledImages = ResizeImage(img, 600, 800);
+                                    scaledImages.Save(file, format);
+                                }
+                                else
+                                    img.Save(file, format);
                             }
                         }
                         if (_currentSettings.Grayscaled)
@@ -886,6 +893,43 @@ namespace Fb2Kindle
             return true;
         }
 
+        public static double GetScaleFactor(Image original, int width, int height)
+        {
+            var originalWidth = original.Width;
+            var originalHeight = original.Height;
+            double factor;
+            if (originalWidth > originalHeight)
+                factor = (double) width/originalWidth;
+            else
+                factor = (double) height/originalHeight;
+            return factor;
+        }
+
+        public static Image ResizeImage(Image image, int width, int height)
+        {
+            var factor = GetScaleFactor(image, width, height);
+            width = (int)Math.Round(image.Width * factor);
+            height = (int)Math.Round(image.Height * factor);
+            var destRect = new Rectangle(0, 0, width, height);
+            var destImage = new Bitmap(width, height);
+            destImage.SetResolution(image.HorizontalResolution, image.VerticalResolution);
+            using (var graphics = Graphics.FromImage(destImage))
+            {
+                graphics.CompositingMode = CompositingMode.SourceCopy;
+                graphics.CompositingQuality = CompositingQuality.HighQuality;
+                graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                graphics.SmoothingMode = SmoothingMode.HighQuality;
+                graphics.PixelOffsetMode = PixelOffsetMode.HighQuality;
+
+                using (var wrapMode = new ImageAttributes())
+                {
+                    wrapMode.SetWrapMode(WrapMode.TileFlipXY);
+                    graphics.DrawImage(image, destRect, 0, 0, image.Width,image.Height, GraphicsUnit.Pixel, wrapMode);
+                }
+            }
+            return destImage;
+        }
+        
         private static ImageCodecInfo GetEncoderInfo(string extension)
         {
             extension = extension.ToLower();
