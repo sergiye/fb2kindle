@@ -17,7 +17,7 @@ namespace jail.Classes
 
         private static UserProfile GetRestoreAdministratorProfile(string email)
         {
-            return new UserProfile { Id = 0, Email = email, UserType = UserType.Administrator, TimeTrackId = 0, FlibustaId = 0, Active = true, RegisteredTime = DateTime.Now };
+            return new UserProfile { Email = email, UserType = UserType.Administrator, Active = true, RegisteredTime = DateTime.Now };
         }
 
         public static UserProfile GetUser(string login)

@@ -26,8 +26,7 @@
                 @Html.DisplayFor(modelItem => item.TimeTrackId)
             </td>
             <td>
-                @{ var flibustaLink = "http://flibusta.is/user/" + item.FlibustaId; }
-                <a href=@flibustaLink> @Html.DisplayFor(modelItem => item.FlibustaId)</a>
+                <a href='@string.Format("http://flibusta.is/user/{0}", item.FlibustaId)'> @Html.DisplayFor(modelItem => item.FlibustaId)</a>
             </td>
             <td class="@(item.Active ? "success" : "warning")">
                 @Html.DisplayFor(modelItem => item.ActiveText)
@@ -48,24 +47,16 @@
                         @if (item.TimeTrackId > 0)
                         {
                             <li>
-                                <a href="#" onclick="UserTimeTrack(@item.TimeTrackId);" class="btn-default">
+                                <a href='@Url.Action("Time", new { id = item.TimeTrackId })' class="btn-default">
                                     <span class="glyphicon glyphicon-time"></span> Time
                                 </a>
                             </li>
                         }
-                        @if (item.FlibustaId > 0)
-                        {
-                            <li>
-                                <a href="#" onclick="UserFavorites(@item.FlibustaId);" class="btn-default">
-                                    <span class="glyphicon glyphicon-time"></span> Favorites
-                                </a>
-                            </li>
-                            <li>
-                                <a href="#" onclick="UpdateUserFavorites(@item.FlibustaId);" class="btn-default">
-                                    <span class="glyphicon glyphicon-time"></span> Fetch favorites
-                                </a>
-                            </li>
-                        }
+                        <li>
+                            <a href='@Url.Action("Favorites", new { id = item.Id })' class="btn-default">
+                                <span class="glyphicon glyphicon-heart"></span> Favorites
+                            </a>
+                        </li>
                         <li>
                             <a href="#" onclick="ResetUserPassword(@item.Id);" class="btn-default">
                                 <span class="glyphicon glyphicon-remove-sign"></span> Reset Password
