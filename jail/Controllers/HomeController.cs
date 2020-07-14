@@ -425,7 +425,6 @@ namespace jail.Controllers
                 Response.StatusCode = (int)HttpStatusCode.NotFound;
                 return Json("File not found", JsonRequestBehavior.AllowGet);
                 //return new HttpStatusCodeResult(HttpStatusCode.NotFound);
-                //throw new FileNotFoundException("File not found", resultFile);
             }
             try
             {
@@ -440,7 +439,7 @@ namespace jail.Controllers
             {
                 Response.StatusCode = 500; // Replace .AddHeader
                 return Json(ex.Message, JsonRequestBehavior.AllowGet);
-                //                return new HttpStatusCodeResult(HttpStatusCode.BadRequest, ex.Message);
+                //return new HttpStatusCodeResult(HttpStatusCode.BadRequest, ex.Message);
             }
         }
 
