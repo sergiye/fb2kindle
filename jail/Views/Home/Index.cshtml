@@ -49,14 +49,6 @@
     function ToggleFavorite(bookId, title) {
         var item = $('#Fav' + bookId);
         var liked = item.hasClass("glyphicon-heart");
-        if (liked){
-            if (!confirm("Are you sure you want to remove recomendation for '" + title + "'?"))
-                return;
-        }
-        else{
-            if (!confirm("Are you sure you want to add recomendation for '" + title + "'?"))
-                return;
-        }
         $.ajax({
             url: '@Url.Action("FavoriteToggle")',
             type: "GET",
