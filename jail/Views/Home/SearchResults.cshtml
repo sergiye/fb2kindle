@@ -6,21 +6,21 @@
 <div id="list-group">
     <table class="table table-bordered table-hover">
         <tr>
-            <th style="min-width: 220px;">Title</th>
+            <th style="min-width: 220px; width: 50%;">Title</th>
             @if (ViewBag.AuthorMode == null || !ViewBag.AuthorMode)
             {
-                <th style="min-width: 150px; width: 150px;">Author</th>
+                <th style="min-width: 150px; width: 20%;">Author</th>
             }
             @if (ViewBag.SequenceMode == null || !ViewBag.SequenceMode)
             {
-                <th style="min-width: 150px; width: 150px;">Sequence</th>
+                <th style="min-width: 150px; width: 20%;">Sequence</th>
             }
             else
             {
-                <th style="min-width: 30px; width: 30px;">#</th>
+                <th style="min-width: 30px;">#</th>
             }
-            <th style="min-width: 90px; width: 90px;">Registered</th>
-            <th style="min-width: 90px; width: 90px;">File</th>
+            <th style="min-width: 90px;">Registered</th>
+            <th style="min-width: 130px;">File</th>
             @if (user != null)
             {
                 <th style="min-width: 50px; width: 50px;"></th>
@@ -63,17 +63,17 @@
         </td>
         <td>@Html.DisplayFor(modelItem => item.CreatedDate)</td>
         <td>
-            <a class="btn btn-default" href='@Url.Action("download", new { id = item.Id })' title="Get FB2 file">
-                <span class="glyphicon glyphicon-save"></span>
-                @Html.DisplayFor(modelItem => item.FileSizeStr)
+            <a class="btn btn-default" href='@Url.Action("download", new { id = item.Id })' title="Get .fb2 file">
+                <span class="blue glyphicon glyphicon-save"></span>
             </a>
+            @Html.DisplayFor(modelItem => item.FileSizeStr)
         </td>
         @if (user != null)
         {
             <td>
                 <a href="#" onclick="ToggleFavorite(@item.Id, '@item.Title');" class="btn btn-default" title="@string.Format("{0} favorite", item.FavoriteId > 0 ? "Remove" : "Add")">
-                    <span id="@string.Format("Fav{0}", item.Id)" 
-                          class='glyphicon @string.Format("glyphicon-heart{0}", item.FavoriteId > 0 ? "" : "-empty")'></span>
+                    <span id="@string.Format("Fav{0}", item.Id)"
+                          class='red glyphicon @string.Format("glyphicon-heart{0}", item.FavoriteId > 0 ? "" : "-empty")'></span>
                 </a>
             </td>
         }
