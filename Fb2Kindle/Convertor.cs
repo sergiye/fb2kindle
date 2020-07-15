@@ -104,23 +104,7 @@ namespace Fb2Kindle
                             {
                                 if (!coverDone)
                                 {
-                                    var coverFilePath = Path.Combine(tempDir, imgSrc);
-                                    Image scaledImage = null;
-                                    var imgFormat = ImageFormat.Png;
-                                    using (var img = Image.FromFile(coverFilePath))
-                                    {
-                                        if (img.Size.Width < 600 || img.Size.Height < 800)
-                                        {
-                                            imgFormat = GetImageFormatFromMimeType(GetMimeType(img), ImageFormat.Png);
-                                            scaledImage = ResizeImage(img, 600, 800);
-                                        }
-                                    }
-
-                                    if (scaledImage != null)
-                                    {
-                                        scaledImage.Save(coverFilePath, imgFormat);
-                                        scaledImage.Dispose();
-                                    }
+                                    AutoScaleImage(Path.Combine(tempDir, imgSrc));
 
                                     _opfFile.Elements("metadata").First().Elements("x-metadata").First().Add(new XElement("EmbeddedCover", imgSrc));
                                     AddGuideItem("Cover", imgSrc, "other.ms-coverimage-standard");
@@ -905,7 +889,24 @@ namespace Fb2Kindle
             return true;
         }
 
-        public static double GetScaleFactor(Image original, int width, int height)
+        private static void AutoScaleImage(string coverFilePath, int width = 600, int height = 800)
+        {
+            Image scaledImage = null;
+            var imgFormat = ImageFormat.Png;
+            using (var img = Image.FromFile(coverFilePath))
+            {
+                if (img.Size.Width < width && img.Size.Height < height)
+                {
+                    imgFormat = GetImageFormatFromMimeType(GetMimeType(img), ImageFormat.Png);
+                    scaledImage = ResizeImage(img, 600, 800);
+                }
+            }
+            if (scaledImage == null) return;
+            scaledImage.Save(coverFilePath, imgFormat);
+            scaledImage.Dispose();
+        }
+
+        private static double GetScaleFactor(Image original, int width, int height)
         {
             var originalWidth = original.Width;
             var originalHeight = original.Height;
@@ -917,7 +918,7 @@ namespace Fb2Kindle
             return factor;
         }
 
-        public static Image ResizeImage(Image image, int width, int height)
+        private static Image ResizeImage(Image image, int width, int height)
         {
             var factor = GetScaleFactor(image, width, height);
             width = (int)Math.Round(image.Width * factor);
@@ -964,7 +965,7 @@ namespace Fb2Kindle
 
         private static string GetMimeType(ImageFormat imageFormat)
         {
-            ImageCodecInfo[] codecs = ImageCodecInfo.GetImageEncoders();
+            var codecs = ImageCodecInfo.GetImageEncoders();
             return codecs.First(codec => codec.FormatID == imageFormat.Guid).MimeType;
         }
 
