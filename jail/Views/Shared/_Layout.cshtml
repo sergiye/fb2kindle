@@ -186,6 +186,19 @@
                 }
             });
         }
+        function UpdateUserFavorites(flibustaId, callback) {
+            $.ajax({
+                url: '@Url.Action("UpdateFavorites", "Home")',
+                type: "GET",
+                data: { flibustaId: flibustaId },
+                success: function (data) {
+                    window.Helper.ShowSuccess('' + data, callback);
+                },
+                error: function (response, status, error) {
+                    window.Helper.ShowError(error);
+                }
+            });
+        };
         jQuery(function ($) {
             $(document).ajaxStop(function () {
                 $("#ajax_loader").hide();

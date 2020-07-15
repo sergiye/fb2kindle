@@ -790,13 +790,14 @@ namespace jail.Controllers
 
         [Route("favupdate")]
         [HttpGet, UserTypeFilter(Roles = new[] { UserType.Administrator, UserType.User })]
-        public async Task<string> UpdateFavorites()
+        public async Task<string> UpdateFavorites(int flibustaId)
         {
             try
             {
-                var flibustaId = CurrentUser.FlibustaId;
                 if (flibustaId == 0)
                     throw new Exception("You don't have FlibustaId assigned.");
+                if (flibustaId != CurrentUser.FlibustaId && CurrentUser.UserType != UserType.Administrator)
+                    throw new Exception("You are not allowed to fetch other users data.");
 
                 var culture = CultureInfo.GetCultureInfo("en-US");
                 var booksFetched = 0;
