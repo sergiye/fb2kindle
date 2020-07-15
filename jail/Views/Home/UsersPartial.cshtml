@@ -54,17 +54,25 @@
                         }
                         <li>
                             <a href='@Url.Action("Favorites", new { id = item.Id })' class="btn-default">
-                                <span class="glyphicon glyphicon-heart"></span> Favorites
+                                <span class="red glyphicon glyphicon-heart"></span> Favorites
                             </a>
                         </li>
+                        @if (item.FlibustaId > 0)
+                        {
+                            <li>
+                                <a href='#' onclick="UpdateUserFavorites(@item.FlibustaId, null);" class="btn-default">
+                                    <span class="blue glyphicon glyphicon-heart-empty"></span> Fetch favorites
+                                </a>
+                            </li>
+                        }
                         <li>
                             <a href="#" onclick="ResetUserPassword(@item.Id);" class="btn-default">
-                                <span class="glyphicon glyphicon-remove-sign"></span> Reset Password
+                                <span class="red glyphicon glyphicon-minus"></span> Reset Password
                             </a>
                         </li>
                         <li>
                             <a href="#" onclick="EditPassword(@item.Id);" class="btn-block">
-                                <span class="glyphicon glyphicon-lock"></span>
+                                <span class="green glyphicon glyphicon-edit"></span>
                                 @if (item.HasPassword)
                                 {
                                     <text>Change Password</text>
