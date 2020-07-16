@@ -127,7 +127,7 @@ namespace jail.Controllers
         [Route("login")]
         public ActionResult Login(string returnUrl)
         {
-            HttpCookie authCookie = HttpContext.Request.Cookies.Get(FormsAuthentication.FormsCookieName);
+            var authCookie = HttpContext.Request.Cookies.Get(FormsAuthentication.FormsCookieName);
             if (authCookie != null && !string.IsNullOrEmpty(authCookie.Value))
             {
                 var ticket = FormsAuthentication.Decrypt(authCookie.Value);
@@ -296,7 +296,7 @@ namespace jail.Controllers
 
             try
             {
-                long total = Directory.GetFiles(path, "*", SearchOption.AllDirectories).Sum(t => new FileInfo(t).Length);
+                var total = Directory.GetFiles(path, "*", SearchOption.AllDirectories).Sum(t => new FileInfo(t).Length);
                 ViewBag.TotalSize = Simpl.Extensions.StringHelper.FileSizeStr(total);
             }
             catch (Exception ex)
@@ -808,7 +808,7 @@ namespace jail.Controllers
                     while (fetchMore)
                     {
                         var pageData = await client.DownloadStringTaskAsync($"https://flibusta.is/rec?view=recs&adata=name&bdata=id&udata=id&user={flibustaId}&page={pageNum++}");
-                        byte[] bytes = Encoding.Default.GetBytes(pageData);
+                        var bytes = Encoding.Default.GetBytes(pageData);
                         pageData = Encoding.UTF8.GetString(bytes);
                         var regex = new Regex(@"<tr>[\s\S]*?<td><a href=\""\/b\/([\d]+)\"">(.+)<\/a>[\s\S]*?user\/([\d]+)[\s\S]*?<td>(.+)<\/td>[\s\S]*?\/tr>");
                         var matches = regex.Matches(pageData);

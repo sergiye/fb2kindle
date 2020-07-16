@@ -25,6 +25,7 @@ namespace jail.Classes
         
         public static string AdminDefaultEmail { get; set; }
         public static string SiteRemotePath { get; set; }
+        public static string FlibustaLink { get; set; }
 
         /// <summary>
         /// constructor
@@ -48,9 +49,10 @@ namespace jail.Classes
             
             AdminDefaultEmail = ConfigurationManager.AppSettings["AdminDefaultEmail"];
             SiteRemotePath = ConfigurationManager.AppSettings["SiteRemotePath"];
-            
-            var section = ConfigurationManager.GetSection("system.web/httpRuntime") as HttpRuntimeSection;
-            MaxRequestLength = section != null ? (long)section.MaxRequestLength * 1024 : 4096 * 1024;
+            FlibustaLink = ConfigurationManager.AppSettings["FlibustaLink"];
+
+            MaxRequestLength = ConfigurationManager.GetSection("system.web/httpRuntime") is HttpRuntimeSection section 
+                ? (long)section.MaxRequestLength * 1024 : 4096 * 1024;
         }
     }
 }

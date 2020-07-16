@@ -1,7 +1,9 @@
-﻿@using jail.Models
+﻿@using jail.Classes
+@using jail.Models
 @model IEnumerable<BookInfo>
 @{
     var user = Request.IsAuthenticated ? HttpContext.Current.Session["User"] as UserProfile : null;
+    var flibustaLink = SettingsHelper.FlibustaLink;
 }
 <div id="list-group">
     <table class="table table-bordered table-hover">
@@ -23,7 +25,7 @@
             <th style="min-width: 130px;">File</th>
             @if (user != null)
             {
-                <th style="min-width: 50px; width: 50px;"></th>
+                <th style="min-width: 100px;">Actions</th>
             }
         </tr>
 
@@ -74,6 +76,9 @@
                 <a href="#" onclick="ToggleFavorite(@item.Id, '@item.Title');" class="btn btn-default" title="@string.Format("{0} favorite", item.FavoriteId > 0 ? "Remove" : "Add")">
                     <span id="@string.Format("Fav{0}", item.Id)"
                           class='red glyphicon @string.Format("glyphicon-heart{0}", item.FavoriteId > 0 ? "" : "-empty")'></span>
+                </a>
+                <a href="@string.Format("{0}/b/{1}", flibustaLink, item.Id)" target="_blank" class="btn btn-default" title="Flibusta version">
+                    <span class='glyphicon glyphicon-link'></span>
                 </a>
             </td>
         }
