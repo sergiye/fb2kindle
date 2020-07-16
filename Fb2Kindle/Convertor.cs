@@ -501,7 +501,6 @@ namespace Fb2Kindle
 
         private bool SendBookByMail(string bookName, string tmpBookPath)
         {
-            Util.WriteLine($"Sending to {MailTo}...", ConsoleColor.White);
             try
             {
                 if (string.IsNullOrWhiteSpace(_currentSettings.SmtpServer) || _currentSettings.SmtpPort <= 0)
@@ -509,12 +508,12 @@ namespace Fb2Kindle
                     Util.WriteLine("Mail delivery failed: smtp not configured", ConsoleColor.Red);
                     return false;
                 }
-                Util.WriteLine($"SMTP used: {_currentSettings.SmtpServer}:{_currentSettings.SmtpPort}; user: {_currentSettings.SmtpLogin}", ConsoleColor.Yellow);
+                Util.Write($"Sending to {MailTo} from {_currentSettings.SmtpLogin} using {_currentSettings.SmtpServer}:{_currentSettings.SmtpPort}...", ConsoleColor.White);
                 using (var smtp = new SmtpClient(_currentSettings.SmtpServer, _currentSettings.SmtpPort)
                 {
                     UseDefaultCredentials = false,
                     DeliveryMethod = SmtpDeliveryMethod.Network,
-                    Timeout = 120000,
+                    Timeout = _currentSettings.SmtpTimeout,
                     Credentials = new NetworkCredential(_currentSettings.SmtpLogin, _currentSettings.SmtpPassword),
                     EnableSsl = true,
                 })

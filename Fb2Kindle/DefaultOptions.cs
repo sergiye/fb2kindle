@@ -28,6 +28,7 @@ namespace Fb2Kindle
         public int SmtpPort { get; set; }
         public string SmtpLogin { get; set; }
         public string SmtpPassword { get; set; }
+        public int SmtpTimeout { get; set; }
      
         public DefaultOptions()
         {
@@ -35,6 +36,7 @@ namespace Fb2Kindle
             SmtpPort = 587;
             SmtpLogin = "user@gmail.com";
             SmtpPassword = "password";
+            SmtpTimeout = 100000;
         }
     }
 }
