@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace Fb2Kindle
 {
@@ -44,8 +42,7 @@ namespace Fb2Kindle
             //            Console.Clear();
             Util.WriteLine();
             var ver = asm.GetName().Version;
-            Util.WriteLine(string.Format("{0} Version: {1}; Build time: {2:yyyy/MM/dd HH:mm:ss}", 
-                asm.GetName().Name, ver.ToString(3), Util.GetBuildTime(ver)), ConsoleColor.White);
+            Util.WriteLine($"{asm.GetName().Name} Version: {ver.ToString(3)}; Build time: {Util.GetBuildTime(ver):yyyy/MM/dd HH:mm:ss}", ConsoleColor.White);
             var title = Util.GetAttribute<AssemblyTitleAttribute>(asm);
             if (title != null)
                 Util.WriteLine(title.Title, ConsoleColor.White);
@@ -53,7 +50,7 @@ namespace Fb2Kindle
         }
 
         [STAThread]
-        public static async Task Main(string[] args)
+        public static void Main(string[] args)
         {
             const string allBooksPattern = "*.fb2";
             var wait = false;
@@ -185,7 +182,7 @@ namespace Fb2Kindle
                 if (string.IsNullOrEmpty(bookPath))
                     bookPath = allBooksPattern;
                 var conv = new Convertor(currentSettings, cssStyles, detailedOutput) { MailTo = mailTo };
-                await ProcessFolder(conv, workPath, bookPath, recursive, join);
+                ProcessFolder(conv, workPath, bookPath, recursive, join);
             }
             catch (Exception ex)
             {
@@ -195,7 +192,7 @@ namespace Fb2Kindle
             {
                 var timeWasted = DateTime.Now - startedTime;
                 Util.WriteLine();
-                Util.WriteLine(string.Format("Time wasted: {0:G}", timeWasted), ConsoleColor.White);
+                Util.WriteLine($"Time wasted: {timeWasted:G}", ConsoleColor.White);
                 if (wait)
                 {
                     Util.WriteLine();
@@ -205,7 +202,7 @@ namespace Fb2Kindle
             }
         }
 
-        private static async Task ProcessFolder(Convertor conv, string workPath, string searchMask, bool recursive, bool join)
+        private static void ProcessFolder(Convertor conv, string workPath, string searchMask, bool recursive, bool join)
         {
             var files = new List<string>();
             files.AddRange(Directory.GetFiles(workPath, searchMask, SearchOption.TopDirectoryOnly));
@@ -213,14 +210,14 @@ namespace Fb2Kindle
             {
                 files.Sort();
                 if (join)
-                    await conv.ConvertBookSequence(files.ToArray());
+                    conv.ConvertBookSequence(files.ToArray());
                 else
                     foreach (var file in files)
-                        await conv.ConvertBook(file);
+                        conv.ConvertBook(file);
             }
             if (!recursive) return;
             foreach (var folder in Directory.GetDirectories(workPath))
-                await ProcessFolder(conv, folder, searchMask, true, join);
+                ProcessFolder(conv, folder, searchMask, true, join);
         }
     }
 }

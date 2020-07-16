@@ -432,11 +432,14 @@ namespace jail.Controllers
                 if (email.ToLower().GetHash().Equals(CommonHelper.AdminLoginHash))
                     email = SettingsHelper.AdminDefaultEmail;
 
+                Logger.WriteDebug($"Sending to {email}...");
                 await CommonHelper.SendBookByMail(book.Title, resultFile, email);
-                return Json("Please check your Kindle for new doc", JsonRequestBehavior.AllowGet);
+                Logger.WriteInfo($"Sent {book.Title} to {email}...");
+                return Json($"Done! Please check '{email}' for message with book attached.", JsonRequestBehavior.AllowGet);
             }
             catch (Exception ex)
             {
+                Logger.WriteError(ex, $"Mail delivery failed:  {ex.Message}", CommonHelper.GetClientAddress());
                 Response.StatusCode = 500; // Replace .AddHeader
                 return Json(ex.Message, JsonRequestBehavior.AllowGet);
                 //return new HttpStatusCodeResult(HttpStatusCode.BadRequest, ex.Message);
