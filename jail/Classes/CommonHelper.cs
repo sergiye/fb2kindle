@@ -42,8 +42,7 @@ namespace jail.Classes
         /// <returns></returns>
         public static string GetActionLogName(HttpRequestMessage request)
         {
-            return String.Format("{0} {1}{2}", request.Method,
-                request.RequestUri.AbsolutePath, request.RequestUri.Query);
+            return $"{request.Method} {request.RequestUri.AbsolutePath}{request.RequestUri.Query}";
         }
 
         /// <summary>
@@ -55,8 +54,8 @@ namespace jail.Classes
         {
             var queryString = HttpUtility.UrlDecode(request.QueryString.ToString());
             if (!string.IsNullOrWhiteSpace(queryString))
-                queryString = string.Format("?{0}", queryString);
-            return string.Format("{0} {1}{2}", request.HttpMethod, request.Path, queryString);
+                queryString = $"?{queryString}";
+            return $"{request.HttpMethod} {request.Path}{queryString}";
         }
 
         /// <summary>
@@ -75,19 +74,17 @@ namespace jail.Classes
             }
         }
 
-        public static string AdminLoginHash { get { return "dae7a3d670e30f7278ea90344c768af1"; } }
-        public static string AdminPasswordHash { get { return "e3bbe98ee127683efc57b077e19cfa43"; } }
+        public static string AdminLoginHash => "dae7a3d670e30f7278ea90344c768af1";
+        public static string AdminPasswordHash => "e3bbe98ee127683efc57b077e19cfa43";
 
         internal static async Task SendBookByMail(string bookName, string tmpBookPath, string mailTo)
         {
-            Logger.WriteDebug(string.Format("Sending to {0}...", mailTo));
             if (string.IsNullOrWhiteSpace(SettingsHelper.SmtpServer) || SettingsHelper.SmtpPort <= 0)
-            {
-                Logger.WriteWarning("Mail delivery failed: smtp not configured");
-                return;
-            }
+                throw new Exception("Mail delivery failed: smtp not configured");
+
             using (var smtp = new SmtpClient(SettingsHelper.SmtpServer, SettingsHelper.SmtpPort)
             {
+                UseDefaultCredentials = false,
                 Credentials = new NetworkCredential(SettingsHelper.SmtpLogin, SettingsHelper.SmtpPassword),
                 EnableSsl = true
             })
@@ -106,7 +103,6 @@ namespace jail.Classes
                     }
                 }
             }
-            Logger.WriteInfo(string.Format("Sent {0} to {1}...", bookName, mailTo));
         }
     }
 }

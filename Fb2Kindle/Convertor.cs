@@ -11,7 +11,6 @@ using System.Net.Mail;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
 
@@ -51,7 +50,7 @@ namespace Fb2Kindle
             _defaultCss = Util.GetScriptFromResource("Fb2Kindle.css");
         }
 
-        internal async Task<bool> ConvertBookSequence(string[] books)
+        internal bool ConvertBookSequence(string[] books)
         {
             string tempDir = null;
             try
@@ -149,7 +148,7 @@ namespace Fb2Kindle
                 SaveXmlToFile(_opfFile, tempDir + @"\" + commonTitle + ".opf");
                 _opfFile.RemoveAll();
 
-                var result = await CreateMobi(_workingFolder, tempDir, commonTitle, books[0], _currentSettings.Compression, _detailedOutput);
+                var result = CreateMobi(_workingFolder, tempDir, commonTitle, books[0], _currentSettings.Compression, _detailedOutput);
                 if (result && _currentSettings.DeleteOriginal)
                 {
                     foreach (var book in books)
@@ -179,9 +178,9 @@ namespace Fb2Kindle
             }
         }
 
-        internal async Task<bool> ConvertBook(string bookPath)
+        internal bool ConvertBook(string bookPath)
         {
-            return await ConvertBookSequence(new[] { bookPath });
+            return ConvertBookSequence(new[] { bookPath });
         }
 
         #endregion public
@@ -429,7 +428,7 @@ namespace Fb2Kindle
             }
         }
 
-        private async Task<bool> CreateMobi(string workFolder, string tempDir, string bookName, string bookPath, bool compress, bool showOutput)
+        private bool CreateMobi(string workFolder, string tempDir, string bookName, string bookPath, bool compress, bool showOutput)
         {
             Util.WriteLine("Creating mobi (KF8)...", ConsoleColor.White);
             var kindleGenPath = $"{workFolder}\\kindlegen.exe";
@@ -456,8 +455,7 @@ namespace Fb2Kindle
             if (!string.IsNullOrWhiteSpace(MailTo))
             {
                 // Wait for it to finish
-                saveLocal = !await SendBookByMail(bookName, tmpBookPath);
-                //Task.Run(async() => await SendBookByMail(bookName, tmpBookPath));
+                saveLocal = !SendBookByMail(bookName, tmpBookPath);
             }
 
             if (saveLocal)
@@ -501,9 +499,9 @@ namespace Fb2Kindle
             return true;
         }
 
-        private async Task<bool> SendBookByMail(string bookName, string tmpBookPath)
+        private bool SendBookByMail(string bookName, string tmpBookPath)
         {
-            Util.Write($"Sending to {MailTo}...", ConsoleColor.White);
+            Util.WriteLine($"Sending to {MailTo}...", ConsoleColor.White);
             try
             {
                 if (string.IsNullOrWhiteSpace(_currentSettings.SmtpServer) || _currentSettings.SmtpPort <= 0)
@@ -511,8 +509,12 @@ namespace Fb2Kindle
                     Util.WriteLine("Mail delivery failed: smtp not configured", ConsoleColor.Red);
                     return false;
                 }
+                Util.WriteLine($"SMTP used: {_currentSettings.SmtpServer}:{_currentSettings.SmtpPort}; user: {_currentSettings.SmtpLogin}", ConsoleColor.Yellow);
                 using (var smtp = new SmtpClient(_currentSettings.SmtpServer, _currentSettings.SmtpPort)
                 {
+                    UseDefaultCredentials = false,
+                    DeliveryMethod = SmtpDeliveryMethod.Network,
+                    Timeout = 120000,
                     Credentials = new NetworkCredential(_currentSettings.SmtpLogin, _currentSettings.SmtpPassword),
                     EnableSsl = true,
                 })
@@ -527,7 +529,8 @@ namespace Fb2Kindle
                         using (var att = new Attachment(tmpBookPath))
                         {
                             message.Attachments.Add(att);
-                            await smtp.SendMailAsync(message);
+                            smtp.Send(message);
+                            // await smtp.SendMailAsync(message);
                         }
                     }
                 }
