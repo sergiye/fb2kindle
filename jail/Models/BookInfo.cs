@@ -21,18 +21,13 @@ namespace jail.Models
         public long FavoriteId { get; set; }
 
         [DapperIgnore]
-        public string FileSizeStr { get { return StringHelper.FileSizeStr(FileSize); } }
+        public string FileSizeStr => StringHelper.FileSizeStr(FileSize);
 
         [DapperIgnore]
-        public string CreatedDate {
-            get
-            {
-                DateTime dt;
-                return DateTime.TryParseExact(Created.ToString(), "yyMMdd",
-                    CultureInfo.InvariantCulture,
-                    DateTimeStyles.None, out dt) ? dt.ToString("yyyy-MM-dd") : null;
-            } 
-        }
+        public string CreatedDate =>
+            DateTime.TryParseExact(Created.ToString(), "yyMMdd",
+                CultureInfo.InvariantCulture,
+                DateTimeStyles.None, out var dt) ? dt.ToString("yyyy-MM-dd") : null;
 
         public BookInfo()
         {

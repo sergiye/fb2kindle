@@ -75,8 +75,11 @@ window.HelperItem.prototype.ShowNotificationPopup = function (msg, type, callbac
     };
 
     $(document).keydown(function(event) {
-        if (event.keyCode == 27) {
+        if (event.keyCode === 27) {
             self.HidePopup(popup[0].id);
+            if (callback) {
+                callback();
+            }
         }
     });
     

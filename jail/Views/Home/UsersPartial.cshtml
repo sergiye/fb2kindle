@@ -1,7 +1,11 @@
-﻿@using jail.Models
+﻿@using jail.Classes
+@using jail.Models
 @model IEnumerable<UserProfile>
     
-@{var user = (UserProfile)HttpContext.Current.Session["User"];}
+@{
+    var user = (UserProfile)HttpContext.Current.Session["User"];
+    var flibustaLink = SettingsHelper.FlibustaLink;
+}
 <table  class="table table-striped table-bordered table-condensed table-hover" id="usersGrid">
     <thead>
         <tr>
@@ -23,10 +27,17 @@
                 @Html.DisplayFor(modelItem => item.Email)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.TimeTrackId)
+                @if (item.TimeTrackId > 0)
+                {
+                    @Html.DisplayFor(modelItem => item.TimeTrackId)
+                }
             </td>
             <td>
-                <a href='@string.Format("http://flibusta.is/user/{0}", item.FlibustaId)'> @Html.DisplayFor(modelItem => item.FlibustaId)</a>
+                @if (item.FlibustaId > 0)
+                {
+                    <a href='@string.Format("{0}/rec?view=recs&adata=name&bdata=id&user={1}&udata=id", flibustaLink, item.FlibustaId)' target="_blank"> @Html.DisplayFor(modelItem => item.FlibustaId)</a>
+                    @* <a href='@string.Format("http://flibusta.is/user/{0}", item.FlibustaId)'> @Html.DisplayFor(modelItem => item.FlibustaId)</a> *@
+                }
             </td>
             <td class="@(item.Active ? "success" : "warning")">
                 @Html.DisplayFor(modelItem => item.ActiveText)
@@ -60,16 +71,11 @@
                         @if (item.FlibustaId > 0)
                         {
                             <li>
-                                <a href='#' onclick="UpdateUserFavorites(@item.FlibustaId, null);" class="btn-default">
-                                    <span class="blue glyphicon glyphicon-heart-empty"></span> Fetch favorites
+                                <a href='#' onclick="UpdateUserFavorites(@item.Id, null);" class="btn-default">
+                                    <span class="blue glyphicon glyphicon-cloud-download"></span> Fetch favorites
                                 </a>
                             </li>
                         }
-                        <li>
-                            <a href="#" onclick="ResetUserPassword(@item.Id);" class="btn-default">
-                                <span class="red glyphicon glyphicon-minus"></span> Reset Password
-                            </a>
-                        </li>
                         <li>
                             <a href="#" onclick="EditPassword(@item.Id);" class="btn-block">
                                 <span class="green glyphicon glyphicon-edit"></span>
@@ -81,6 +87,11 @@
                                 {
                                     <text>Set Password</text>
                                 }
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" onclick="ResetUserPassword(@item.Id);" class="btn-default">
+                                <span class="red glyphicon glyphicon-erase"></span> Reset Password
                             </a>
                         </li>
                     </ul>

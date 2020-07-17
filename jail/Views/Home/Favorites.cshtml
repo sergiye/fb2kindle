@@ -45,19 +45,17 @@
         @* </div> *@
         <div class="input-group-addon">
             <span>
-                @(1 + Model.Skipped) - @(Model.Skipped + Model.Data.Count()) of @Model.TotalCount
+                @(1 + Model.Skipped) - @(Model.Skipped + Model.Data.Count()) / @Model.TotalCount
             </span>
         </div>
         <div class="input-group-btn">
-            <a class="btn btn-success @(Model.Page > 0 ? "" : "disabled")" role="button"
-               href='@Url.Action("Favorites", new { id = ViewBag.Id, pageNum = 0 })' title="First page">
-                First
+            <a class="btn btn-info @(Model.Page > 0 ? "" : "disabled")" role="button"
+               href='@Url.Action("Favorites", new { id = ViewBag.Id, pageNum = 0 })' title="First page">&lt;&lt;
             </a>
         </div>
         <div class="input-group-btn">
             <a class="btn btn-default @(Model.Page > 0 ? "" : "disabled")" role="button"
-               href='@Url.Action("Favorites", new { id = ViewBag.Id, pageNum = Model.Page - 1 })' title="Prev page">
-                Prev
+               href='@Url.Action("Favorites", new { id = ViewBag.Id, pageNum = Model.Page - 1 })' title="Prev page">&lt;
             </a>
         </div>
         <div class="input-group-addon">
@@ -67,14 +65,12 @@
         </div>
         <div class="input-group-btn">
             <a class="btn btn-default @(Model.Page < Model.NumberOfPages-1 ? "" : "disabled")" role="button"
-               href='@Url.Action("Favorites", new { id = ViewBag.Id, pageNum = Model.Page + 1 })' title="Next page">
-                Next
+               href='@Url.Action("Favorites", new { id = ViewBag.Id, pageNum = Model.Page + 1 })' title="Next page">&gt;
             </a>
         </div>
         <div class="input-group-btn">
-            <a class="btn btn-warning @(Model.Page < Model.NumberOfPages-1 ? "" : "disabled")" role="button"
-               href='@Url.Action("Favorites", new { id = ViewBag.Id, pageNum = Model.NumberOfPages-1 })' title="Last page">
-                Last
+            <a class="btn btn-info @(Model.Page < Model.NumberOfPages-1 ? "" : "disabled")" role="button"
+               href='@Url.Action("Favorites", new { id = ViewBag.Id, pageNum = Model.NumberOfPages-1 })' title="Last page">&gt;&gt;
             </a>
         </div>
         @{
@@ -82,7 +78,7 @@
             if (user != null && user.FlibustaId > 0)
             {
                 <div class="input-group-btn">
-                    <button type="button" class="btn btn-info" onclick="UpdateUserFavorites(@user.FlibustaId, SearchFavorites);" title="Fetch favorites">
+                    <button type="button" class="btn btn-info" onclick="UpdateUserFavorites(@user.Id, SearchFavorites);" title="Fetch favorites">
                         <i class="glyphicon glyphicon-cloud-download"></i>
                     </button>
                 </div>

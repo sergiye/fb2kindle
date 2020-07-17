@@ -677,7 +677,12 @@ namespace Fb2Kindle
         private static void SaveAsHtmlBook(XElement bodyEl, string fileName)
         {
             var doc = new XElement("html");
-            doc.Add(new XElement("head", new XElement("link", new XAttribute("type", "text/css"), new XAttribute("href", "book.css"), new XAttribute("rel", "Stylesheet"))));
+            
+            var head = new XElement("head", "");
+            head.Add(new XElement("meta", new XAttribute("charset", "utf-8")));
+            head.Add(new XElement("link", new XAttribute("type", "text/css"), new XAttribute("href", "book.css"), new XAttribute("rel", "Stylesheet")));
+            doc.Add(head);
+
             doc.Add(new XElement("body", bodyEl));
             Util.RenameTags(doc, "section", "div", "book");
             Util.RenameTags(doc, "annotation", "em");
@@ -751,9 +756,12 @@ namespace Fb2Kindle
         private static XElement GetEmptyToc()
         {
             var toc = new XElement("html", new XAttribute("type", "toc"));
-            toc.Add(new XElement("head", new XElement("title", "Содержание"), 
-                    new XElement("link", new XAttribute("type", "text/css"), 
-                        new XAttribute("href", "book.css"), new XAttribute("rel", "Stylesheet"))));
+            var head = new XElement("head", "");
+            head.Add(new XElement("meta", new XAttribute("charset", "utf-8")));
+            head.Add(new XElement("title", "Содержание"), 
+                new XElement("link", new XAttribute("type", "text/css"), 
+                    new XAttribute("href", "book.css"), new XAttribute("rel", "Stylesheet")));
+            toc.Add(head);
             toc.Add(new XElement("body", new XElement("div", new XAttribute("class", "title"), 
                 new XAttribute("id", "toc"), "Содержание"), new XElement(TocElement, "")));
             return toc;

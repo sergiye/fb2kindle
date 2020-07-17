@@ -23,7 +23,6 @@ namespace jail.Controllers
     [ActionLogger, SessionRestore]
     public class HomeController : Controller
     {
-
         #region Overrides
 
         protected override void HandleUnknownAction(string actionName)
@@ -87,7 +86,7 @@ namespace jail.Controllers
 
         private string GetLinkToFile(string fileName)
         {
-            return AppBaseUrl + fileName.Replace(Server.MapPath("~"), "").Replace('\\', '/').TrimStart('/');
+            return "/" + fileName.Replace(Server.MapPath("~"), "").Replace('\\', '/').TrimStart('/');
         }
 
         #endregion
@@ -532,7 +531,13 @@ namespace jail.Controllers
                 ViewBag.Image = GetLinkToFile(coverImagePath);
 
             var mobiFile = Path.ChangeExtension(sourceFileName, ".mobi");
-            ViewBag.MobiFileFound = System.IO.File.Exists(mobiFile);
+            if (System.IO.File.Exists(mobiFile))
+            {
+                ViewBag.MobiFileFound = true;
+                ViewBag.MobiFileSize = Simpl.Extensions.StringHelper.FileSizeStr(new FileInfo(mobiFile).Length);
+            }
+            else
+                ViewBag.MobiFileFound = false;
 
             Logger.WriteDebug($"Details for {book.Id} - '{book.Title}'", CommonHelper.GetClientAddress());
             return View(book);
@@ -793,14 +798,29 @@ namespace jail.Controllers
 
         [Route("favupdate")]
         [HttpGet, UserTypeFilter(Roles = new[] { UserType.Administrator, UserType.User })]
-        public async Task<string> UpdateFavorites(int flibustaId)
+        public async Task<string> UpdateFavorites(int userId)
         {
             try
             {
+                int flibustaId;
+                var userName = CurrentUser.Email;
+                if (userId == CurrentUser.Id)
+                    flibustaId = CurrentUser.FlibustaId;
+                else
+                {
+                    if (CurrentUser.UserType != UserType.Administrator)
+                        throw new Exception("You are not allowed to fetch other users data.");
+
+                    var user = UserRepository.GetUserById(userId);
+                    if (user == null)
+                        throw new Exception($"User not found by id: {userId}");
+
+                    flibustaId = user.FlibustaId;
+                    userName = user.Email;
+                }
+
                 if (flibustaId == 0)
-                    throw new Exception("You don't have FlibustaId assigned.");
-                if (flibustaId != CurrentUser.FlibustaId && CurrentUser.UserType != UserType.Administrator)
-                    throw new Exception("You are not allowed to fetch other users data.");
+                    throw new Exception("User don't have FlibustaId assigned.");
 
                 var culture = CultureInfo.GetCultureInfo("en-US");
                 var booksFetched = 0;
@@ -827,21 +847,22 @@ namespace jail.Controllers
                                 throw new InvalidDataException("Wrong UserId value received.");
                             var dateAdded = DateTime.Parse(m.Groups[4].Value, culture);
 
-                            var bookFound = await DataRepository.GetFavoriteId(bookId, CurrentUser.Id, dateAdded);
+                            var bookFound = await DataRepository.GetFavoriteId(bookId, userId, dateAdded);
                             if (bookFound != 0)
                             {
                                 fetchMore = false;
                                 break;
                             }
-                            await DataRepository.SaveFavorite(bookId, CurrentUser.Id, dateAdded);
+                            await DataRepository.SaveFavorite(bookId, userId, dateAdded);
                             booksFetched++;
                         }
                     }
                 }
-                return $"Successfully fetched {booksFetched} books for flibusta user '{flibustaId}' from {pageNum} processed page(s).";
+                return $"{pageNum} page(s) processed. Fetched {booksFetched} books for user '{userName}' ({userId}/{flibustaId}).";
             }
             catch (Exception ex)
             {
+                Logger.WriteError(ex, $"Error fetching favorites for user {userId}: {ex.Message}", CommonHelper.GetClientAddress());
                 return ex.Message;
             }
         }
