@@ -45,9 +45,16 @@
             {
                 <tr>
                     <td>
-                        <a href='@Url.Action("details", new {id = item.Id})' title="Book details">
+                        @if (item.Id > 0)
+                        {
+                            <a href='@Url.Action("details", new {id = item.Id})' title="Book details">
+                                <b>@Html.DisplayFor(modelItem => item.Title)</b>
+                            </a>
+                        }
+                        else
+                        {
                             <b>@Html.DisplayFor(modelItem => item.Title)</b>
-                        </a>
+                        }
                     </td>
                     <td>@{ Html.RenderPartial("AuthorsList", item.Authors); }</td>
                     <td>

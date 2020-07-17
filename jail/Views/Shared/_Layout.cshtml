@@ -162,6 +162,33 @@
                 $("#" + modalPopup.ModalId).find(".modal-body").html(response);
             }
         };
+        function GenerateBook(bookId) {
+            $.ajax({
+                type: 'POST',
+                url: '@Url.Action("Generate", "Home")',
+                data: { id: bookId },
+                success: function (data) {
+                    window.Helper.ShowSuccess('' + data);
+                    setTimeout(function () { window.location.reload(false); }, 10000);
+                },
+                error: function(data) {
+                    window.Helper.ShowError('' + data);
+                }
+            });
+        }
+        function DeliverBook(bookId) {
+            $.ajax({
+                type: 'POST',
+                url: '@Url.Action("Deliver", "Home")',
+                data: { id: bookId },
+                success: function (data) {
+                    window.Helper.ShowSuccess('' + data);
+                },
+                error: function(data) {
+                    window.Helper.ShowError('' + data);
+                }
+            });
+        }
         function ToggleFavorite(bookId, title) {
             var item = $('#Fav' + bookId);
             var liked = item.hasClass("glyphicon-heart");
@@ -186,11 +213,11 @@
                 }
             });
         }
-        function UpdateUserFavorites(flibustaId, callback) {
+        function UpdateUserFavorites(userId, callback) {
             $.ajax({
                 url: '@Url.Action("UpdateFavorites", "Home")',
                 type: "GET",
-                data: { flibustaId: flibustaId },
+                data: { userId: userId },
                 success: function (data) {
                     window.Helper.ShowSuccess('' + data, callback);
                 },
