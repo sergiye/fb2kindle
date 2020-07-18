@@ -101,10 +101,9 @@ namespace Fb2Kindle
                             var imgSrc = Util.AttributeValue(book.Elements("description").Elements("title-info").Elements("coverpage").Elements("div").Elements("img"), "src");
                             if (!string.IsNullOrEmpty(imgSrc))
                             {
+                                AutoScaleImage(Path.Combine(tempDir, imgSrc));
                                 if (!coverDone)
                                 {
-                                    AutoScaleImage(Path.Combine(tempDir, imgSrc));
-
                                     _opfFile.Elements("metadata").First().Elements("x-metadata").First().Add(new XElement("EmbeddedCover", imgSrc));
                                     AddGuideItem("Cover", imgSrc, "other.ms-coverimage-standard");
                                     AddPackItem("cover", imgSrc, "image/jpeg", false);
@@ -508,7 +507,8 @@ namespace Fb2Kindle
                     Util.WriteLine("Mail delivery failed: smtp not configured", ConsoleColor.Red);
                     return false;
                 }
-                Util.Write($"Sending to {MailTo} from {_currentSettings.SmtpLogin} using {_currentSettings.SmtpServer}:{_currentSettings.SmtpPort}...", ConsoleColor.White);
+                // Util.WriteLine($"SMTP: {_currentSettings.SmtpLogin} / {_currentSettings.SmtpServer}:{_currentSettings.SmtpPort}", ConsoleColor.White);
+                Util.Write($"Sending to {MailTo}...", ConsoleColor.White);
                 using (var smtp = new SmtpClient(_currentSettings.SmtpServer, _currentSettings.SmtpPort)
                 {
                     UseDefaultCredentials = false,
