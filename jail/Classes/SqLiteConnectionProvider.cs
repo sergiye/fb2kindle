@@ -13,7 +13,7 @@ namespace jail.Classes
 
         protected string SqLiteConnectionString
         {
-            get { return $"Data Source='{ConnectionString}';Version=3;FailIfMissing={failIfMissing};DateTimeKind=Utc;UTF8Encoding=True;synchronous = OFF;journal_mode = MEMORY;Page Size=4096;Cache Size=2000;"; }
+            get { return $"Data Source='{ConnectionString}';Version=3;FailIfMissing={failIfMissing};DateTimeKind=Utc;UTF8Encoding=True;synchronous = OFF;Journal Mode=Off;Page Size=4096;Cache Size=2000;"; }
         }
 
         internal SqLiteConnectionProvider(string databasePath, bool failIfMissing = true)
