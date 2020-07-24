@@ -20,6 +20,29 @@ namespace PrettyXml
             File.WriteAllText(xmlPath, stringBuilder.ToString());
         }
 
+        private static void PrettyJson(string jsonPath)
+        {
+            // var jss = new JavaScriptSerializer();
+            // var data = jss.Deserialize<object>(File.ReadAllText(jsonPath));
+            // var text = jss.Serialize(data);
+            // File.WriteAllText(jsonPath, text);
+
+            // var serializerSettings = new JsonSerializerSettings
+            // {
+            //     // DateFormatHandling = DateFormatHandling.IsoDateFormat,
+            //     // DateFormatString = "O",
+            //     // DateParseHandling = DateParseHandling.DateTime,
+            //     // DateTimeZoneHandling = DateTimeZoneHandling.Utc,
+            //     Formatting = Newtonsoft.Json.Formatting.Indented,
+            //     //ContractResolver = new CamelCasePropertyNamesContractResolver(),
+            //     // NullValueHandling = NullValueHandling.Ignore
+            // };
+            // var obj = JsonConvert.DeserializeObject<JObject>(File.ReadAllText(jsonPath), serializerSettings); 
+            //     
+            // var newText = JsonConvert.SerializeObject(obj, serializerSettings);
+            // File.WriteAllText(jsonPath, newText);
+        }
+
         static void Main(string[] args)
         {
             foreach (var filePath in args)
