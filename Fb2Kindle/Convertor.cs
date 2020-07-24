@@ -581,7 +581,13 @@ namespace Fb2Kindle
             root.Add(new XElement("br"));
 
             //annotation
-            root.Add(new XElement("p", Util.Value(book.Elements("description").Elements("title-info").Elements("annotation"))));
+            var annotation = book.Elements("description").Elements("title-info").Elements("annotation").FirstOrDefault();
+            if (annotation != null)
+            {
+                annotation.Name = "p";
+                root.Add(annotation);
+            }
+            //root.Add(new XElement("p", Util.Value(book.Elements("description").Elements("title-info").Elements("annotation"))));
             root.Add(new XElement("br"), new XElement("br"));
             root.Add(new XElement("p", Util.Value(book.Elements("description").Elements("publish-info").Elements("publisher"))));
             root.Add(new XElement("p", Util.Value(book.Elements("description").Elements("publish-info").Elements("city"))));
