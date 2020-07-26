@@ -147,7 +147,7 @@ namespace Fb2Kindle
                 SaveXmlToFile(_opfFile, tempDir + @"\" + commonTitle + ".opf");
                 _opfFile.RemoveAll();
 
-                var result = CreateMobi(_workingFolder, tempDir, commonTitle, books[0], _currentSettings.Compression, _detailedOutput);
+                var result = CreateMobi(_workingFolder, tempDir, commonTitle, books[0], _currentSettings.CompressionLevel, _detailedOutput);
                 if (result && _currentSettings.DeleteOriginal)
                 {
                     foreach (var book in books)
@@ -427,7 +427,7 @@ namespace Fb2Kindle
             }
         }
 
-        private bool CreateMobi(string workFolder, string tempDir, string bookName, string bookPath, bool compress, bool showOutput)
+        private bool CreateMobi(string workFolder, string tempDir, string bookName, string bookPath, byte compression, bool showOutput)
         {
             Util.WriteLine("Creating mobi (KF8)...", ConsoleColor.White);
             var kindleGenPath = $"{workFolder}\\kindlegen.exe";
@@ -441,7 +441,7 @@ namespace Fb2Kindle
                 }
             }
 
-            var args = $"\"{tempDir}\\{bookName}.opf\" {(compress ? "-c2" : "-c0")}";
+            var args = $"\"{tempDir}\\{bookName}.opf\" -c{compression}";
             var res = Util.StartProcess(kindleGenPath, args, showOutput);
             if (res == 2)
             {

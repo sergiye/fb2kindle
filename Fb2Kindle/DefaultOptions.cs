@@ -17,7 +17,7 @@ namespace Fb2Kindle
         public bool DropCaps { get; set; }
         public bool NoImages { get; set; }
         public bool NoToc { get; set; }
-        public bool Compression { get; set; }
+        public byte CompressionLevel { get; set; }
         public bool Sequence { get; set; }
         public bool Grayscaled { get; set; }
         public bool Jpeg { get; set; }
