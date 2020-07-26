@@ -858,7 +858,7 @@ namespace jail.Controllers
                         }
                     }
                 }
-                return $"{pageNum} page(s) processed. Fetched {booksFetched} books for user '{userName}' ({userId}/{flibustaId}).";
+                return $"Fetched {booksFetched} books from {pageNum} processed page(s) for user '{userName}' ({userId}/{flibustaId}).";
             }
             catch (Exception ex)
             {
