@@ -110,7 +110,11 @@ namespace Fb2Kindle
                                 currentSettings.NoToc = true;
                                 break;
                             case "-c":
-                                currentSettings.Compression = true;
+                            case "-c1":
+                                currentSettings.CompressionLevel = 1;
+                                break;
+                            case "-c2":
+                                currentSettings.CompressionLevel = 2;
                                 break;
                             case "-s":
                                 currentSettings.Sequence = true;
