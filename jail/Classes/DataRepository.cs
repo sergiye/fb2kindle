@@ -39,6 +39,7 @@ namespace jail.Classes
 
         public static async Task<IEnumerable<BookInfo>> GetSearchData(string key, string searchLang, long? userId)
         {
+            var key2 = $"%{string.Join(" ", key.Split(' ').Reverse()).ToLower().Replace(" ", "")}%";
             var sql = @"select b.id, b.title, b.id_archive, b.file_name, b.file_size, b.md5sum, 
 b.created, b.lang, ";
             if (userId.HasValue && userId.Value > 0)
@@ -53,7 +54,8 @@ join fts_book_content c on b.id=c.docid
 join fts_auth_content ac on ac.docid=a.id
 left join bookseq bs on bs.id_book=b.id
 left join sequences s on s.id=bs.id_seq
-where (REPLACE(b.title, ' ', '') like @key or REPLACE(a.search_name, ' ', '') like @key or REPLACE(c.c0content, ' ', '') like @key or REPLACE(ac.c0content, ' ', '') like @key)";
+where (REPLACE(b.title, ' ', '') like @key or REPLACE(a.search_name, ' ', '') like @key or REPLACE(c.c0content, ' ', '') like @key or REPLACE(ac.c0content, ' ', '') like @key)
+   OR (REPLACE(b.title, ' ', '') like @key2 or REPLACE(a.search_name, ' ', '') like @key2 or REPLACE(c.c0content, ' ', '') like @key2 or REPLACE(ac.c0content, ' ', '') like @key2)";
             if (searchLang != "all") sql += " and b.lang=@lang";
             sql += @" order by CASE WHEN b.lang = 'ru' THEN '1'
               WHEN b.lang = 'en' THEN '2'
@@ -62,7 +64,7 @@ where (REPLACE(b.title, ' ', '') like @key or REPLACE(a.search_name, ' ', '') li
               ELSE b.lang END ASC, b.title, b.created DESC LIMIT 100";
             var info = await Db.QueryMultipleAsync<BookInfo, SequenceInfo, AuthorInfo, long>(sql, 
                 b => b.Id, b => b.Sequences, b => b.Authors, 
-                new { key = $"%{key.ToLower().Replace(" ", "")}%", lang = searchLang, userId });
+                new { key = $"%{key.ToLower().Replace(" ", "")}%", key2, lang = searchLang, userId });
             return info;
         }
 
