@@ -677,10 +677,10 @@ namespace Fb2Kindle
             //xml.Save(file, Debugger.IsAttached ? SaveOptions.None : SaveOptions.DisableFormatting);
             var doc = XDocument.Load(xml.CreateReader());
             doc.Declaration = new XDeclaration("1.0", "utf-8", null);
-            //var writer = new XmlEncodeWriter(Encoding.UTF8);
-            //doc.Save(writer, SaveOptions.None);
-            //File.WriteAllText(file, writer.ToString());
-            File.WriteAllText(file, doc.ToString());
+            var writer = new XmlEncodeWriter(Encoding.UTF8);
+            doc.Save(writer, SaveOptions.None);
+            File.WriteAllText(file, writer.ToString());
+            //File.WriteAllText(file, doc.ToString());
         }
 
         private static void SaveAsHtmlBook(XElement bodyEl, string fileName)
