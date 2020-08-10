@@ -543,7 +543,7 @@ namespace Fb2Kindle
             return false;
         }
 
-        private static List<string> GetAuthors(IEnumerable<XElement> avtorbook)
+        private static List<string> GetAuthors(IEnumerable<XElement> avtorbook, int maxCount = int.MaxValue)
         {
             var result = new List<string>();
             foreach (var ai in avtorbook)
@@ -551,6 +551,8 @@ namespace Fb2Kindle
                 var author = $"{Util.Value(ai.Elements("last-name"))} {Util.Value(ai.Elements("first-name"))} {Util.Value(ai.Elements("middle-name"))}";
                 if (!string.IsNullOrWhiteSpace(author))
                     result.Add(author.Trim());
+                if (result.Count >= maxCount)
+                    break;
             }
             if (result.Count == 0)
                 result.Add(NoAuthorText);
@@ -672,12 +674,13 @@ namespace Fb2Kindle
 
         private static void SaveXmlToFile(XNode xml, string file)
         {
-//            xml.Save(file, Debugger.IsAttached ? SaveOptions.None : SaveOptions.DisableFormatting);
+            //xml.Save(file, Debugger.IsAttached ? SaveOptions.None : SaveOptions.DisableFormatting);
             var doc = XDocument.Load(xml.CreateReader());
             doc.Declaration = new XDeclaration("1.0", "utf-8", null);
-            var writer = new XmlEncodeWriter(Encoding.UTF8);
-            doc.Save(writer, Debugger.IsAttached ? SaveOptions.None : SaveOptions.DisableFormatting);
-            File.WriteAllText(file, writer.ToString());
+            //var writer = new XmlEncodeWriter(Encoding.UTF8);
+            //doc.Save(writer, SaveOptions.None);
+            //File.WriteAllText(file, writer.ToString());
+            File.WriteAllText(file, doc.ToString());
         }
 
         private static void SaveAsHtmlBook(XElement bodyEl, string fileName)
@@ -734,7 +737,7 @@ namespace Fb2Kindle
 
             linkEl.Add(content);
             content = new XElement(dc + "Creator");
-            var authors = GetAuthors(book.Elements("description").Elements("title-info").Elements("author"));
+            var authors = GetAuthors(book.Elements("description").Elements("title-info").Elements("author"), 5);
             content.Add(string.Join(", ", authors));
             linkEl.Add(content);
             content = new XElement(dc + "Publisher");
