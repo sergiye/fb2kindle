@@ -164,9 +164,9 @@
             this.cbxUpdateHashes.AutoSize = true;
             this.cbxUpdateHashes.Location = new System.Drawing.Point(10, 124);
             this.cbxUpdateHashes.Name = "cbxUpdateHashes";
-            this.cbxUpdateHashes.Size = new System.Drawing.Size(146, 17);
+            this.cbxUpdateHashes.Size = new System.Drawing.Size(137, 17);
             this.cbxUpdateHashes.TabIndex = 9;
-            this.cbxUpdateHashes.Text = "Update dates (size+hash)";
+            this.cbxUpdateHashes.Text = "Update dates and sizes";
             this.cbxUpdateHashes.UseVisualStyleBackColor = true;
             // 
             // cbxRemoveMissedArchives
