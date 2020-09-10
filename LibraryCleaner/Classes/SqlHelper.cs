@@ -1,7 +1,8 @@
 using System.Data;
 using System.Data.SQLite;
+using System.Threading.Tasks;
 
-namespace LibCleaner
+namespace LibraryCleaner
 {
     internal static class SqlHelper
     {
@@ -9,24 +10,24 @@ namespace LibCleaner
 
         public static SQLiteConnection GetConnection()
         {
-            var result = new SQLiteConnection(string.Format("Data Source={0};synchronous = OFF;journal_mode = MEMORY;Page Size=4096;Cache Size=2000;", DataBasePath));
+            var result = new SQLiteConnection(
+                $"Data Source={DataBasePath};synchronous = OFF;journal_mode = MEMORY;Page Size=4096;Cache Size=2000;");
             result.Open();
             return result;
         }
 
-        public static IDbCommand GetCommand(string sqlString, IDbConnection cn)
+        public static SQLiteCommand GetCommand(string sqlString, SQLiteConnection cn)
         {
-            var connection = cn as SQLiteConnection;
-            return connection == null ? null : new SQLiteCommand(sqlString, connection);
+            return cn == null ? null : new SQLiteCommand(sqlString, cn);
         }
 
         #region Common methods
 
-        public static int ExecuteNonQuery(string sqlString, IDbConnection connection = null)
+        public static int ExecuteNonQuery(string sqlString, SQLiteConnection connection = null)
         {
             if (connection == null)
             {
-                using (IDbConnection cn = GetConnection())
+                using (var cn = GetConnection())
                 {
                     using (var cmd = GetCommand(sqlString, cn))
                         return cmd.ExecuteNonQuery();
@@ -36,30 +37,30 @@ namespace LibCleaner
                 return cmd.ExecuteNonQuery();
         }
 
-        public static object GetScalarFromQuery(string sql)
+        public static async Task<object> GetScalarFromQuery(string sql)
         {
-            using (IDbConnection cn = GetConnection())
+            using (var cn = GetConnection())
             {
-                var cmd = GetCommand(sql, cn);
-                return cmd.ExecuteScalar();
+                using (var cmd = GetCommand(sql, cn))
+                    return await cmd.ExecuteScalarAsync().ConfigureAwait(false);
             }
         }
 
-        public static int GetIntFromQuery(string sql, IDbConnection connection = null)
+        public static async Task<int> GetIntFromQuery(string sql, SQLiteConnection connection = null)
         {
             if (connection != null)
             {
                 using (var cmd = GetCommand(sql, connection))
                 {
-                    var result = cmd.ExecuteScalar();
+                    var result = await cmd.ExecuteScalarAsync().ConfigureAwait(false);
                     return result == null ? 0 : int.Parse(result.ToString());
                 }
             }
-            using (IDbConnection cn = GetConnection())
+            using (var cn = GetConnection())
             {
                 using (var cmd = GetCommand(sql, cn))
                 {
-                    var result = cmd.ExecuteScalar();
+                    var result = await cmd.ExecuteScalarAsync().ConfigureAwait(false);
                     return result == null ? 0 : int.Parse(result.ToString());
                 }
             }

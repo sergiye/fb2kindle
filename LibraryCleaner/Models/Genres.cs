@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace LibCleaner
+namespace LibraryCleaner
 {
     public class GenresCategory
     {

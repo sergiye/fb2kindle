@@ -1,7 +1,7 @@
 using System;
 using System.Diagnostics;
 
-namespace LibCleaner
+namespace LibraryCleaner
 {
     [DebuggerDisplay("Id={id_book}; file_name={file_name}; archive_file_name={archive_file_name}")] 
     public class BookFileInfo: IEquatable<BookFileInfo>

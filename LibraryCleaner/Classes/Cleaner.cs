@@ -5,34 +5,16 @@ using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading.Tasks;
 using Ionic.Zip;
 using Ionic.Zlib;
 
-namespace LibCleaner
+namespace LibraryCleaner
 {
     public class Cleaner
     {
-        private enum CleanActions
-        {
-            CalculateStats,
-            CompressLibrary,
-        }
-
-        private class QueueTask
-        {
-            public CleanActions ActionType { get; }
-            public Action OnActionFinish { get; }
-
-            public QueueTask(CleanActions actionType, Action onActionFinish)
-            {
-                ActionType = actionType;
-                OnActionFinish = onActionFinish;
-            }
-        }
-
         private readonly List<int> _seqToRemove;
         private string[] _archivesFound;
-        private readonly CommonQueue<QueueTask> _internalTasks;
 
         private string ArchivesPath { get; set; }
         public string ArchivesOutputPath { private get; set; }
@@ -67,6 +49,7 @@ namespace LibCleaner
             FileWithDeletedBooksIds = null;
             RemoveForeign = true;
             RemoveDeleted = true;
+            UpdateHashInfo = true;
             RemoveMissingArchivesFromDb = true;
             GenresToRemove = GenresListContainer.GetDefaultItems().Where(f=>f.Selected).Select(f=>f.Code).ToArray();
             _seqToRemove = new List<int>
@@ -84,9 +67,6 @@ namespace LibCleaner
                 4908, //новинки  современника
                 4258, //сумерки
             };
-
-            _internalTasks = new CommonQueue<QueueTask>();
-            _internalTasks.OnExecuteTask += OnInternalTask;
         }
 
         private void UpdateState(string state, StateKind kind)
@@ -94,7 +74,7 @@ namespace LibCleaner
             OnStateChanged?.Invoke(state, kind);
         }
 
-        public bool CheckParameters()
+        public async Task<bool> CheckParameters()
         {
             //try to use local db file
             if (string.IsNullOrEmpty(SqlHelper.DataBasePath) || !File.Exists(SqlHelper.DataBasePath))
@@ -107,10 +87,12 @@ namespace LibCleaner
                 return false;
             }
 
-            //try to get archves folder from db
+            //try to get archives folder from db
             if (string.IsNullOrEmpty(ArchivesPath) || !Directory.Exists(ArchivesPath))
             {
-                if (SqlHelper.GetScalarFromQuery("select text from params where id=9") is string dbPath)
+                var res = await SqlHelper.GetScalarFromQuery("select text from params where id=9")
+                    .ConfigureAwait(false); 
+                if (res is string dbPath)
                 {
                     var dbFolder = Path.GetDirectoryName(SqlHelper.DataBasePath);
                     if (dbFolder != null)
@@ -126,43 +108,7 @@ namespace LibCleaner
             return true;
         }
 
-        private void OnInternalTask(QueueTask task)
-        {
-            try
-            {
-                switch (task.ActionType)
-                {
-                    case CleanActions.CalculateStats:
-                        CalculateStats();
-                        break;
-                    case CleanActions.CompressLibrary:
-                        CompressLibrary();
-                        break;
-                }
-            }
-            catch (Exception ex)
-            {
-                UpdateState(ex.Message, StateKind.Error);
-            }
-            finally
-            {
-                task.OnActionFinish();
-            }
-        }
-
-        public void PrepareStatistics(Action onTaskFinished)
-        {
-            _internalTasks.EnqueueTask(new QueueTask(CleanActions.CalculateStats, onTaskFinished));
-            //CalculateStats();
-        }
-
-        public void Start(Action onTaskFinished)
-        {
-            _internalTasks.EnqueueTask(new QueueTask(CleanActions.CompressLibrary, onTaskFinished));
-            //CompressLibrary();
-        }
-
-        private void OptimizeArchivesOnDisk()
+        private async Task OptimizeArchivesOnDisk()
         {
             if (!string.IsNullOrWhiteSpace(ArchivesOutputPath))
                 Directory.CreateDirectory(ArchivesOutputPath);
@@ -176,7 +122,7 @@ namespace LibCleaner
             //    WHERE EXISTS(SELECT * FROM files WHERE files.id_book = books.id)");
             SqlHelper.ExecuteNonQuery("delete from files");
 
-            FixFlibustaIdsLinks();
+            await FixFlibustaIdsLinks().ConfigureAwait(false);
 
             //get all database items data (some would be removed if not found on disk)
             using (var connection = SqlHelper.GetConnection())
@@ -184,9 +130,9 @@ namespace LibCleaner
                 var sql = @"select DISTINCT b.id id_book, b.md5sum md5sum, b.file_size fileSize, b.created created, a.file_name archive_file_name, b.file_name file_name, b.id_archive id_archive from books b
 JOIN archives a on a.id=b.id_archive and b.file_name is not NULL and b.file_name<>''";
                 using (var command = SqlHelper.GetCommand(sql, connection))
-                using (var reader = command.ExecuteReader())
+                using (var reader = await command.ExecuteReaderAsync().ConfigureAwait(false))
                 {
-                    while (reader.Read())
+                    while (await reader.ReadAsync().ConfigureAwait(false))
                     {
                         var fi = new BookFileInfo(SqlHelper.GetString(reader, "file_name").ToLower(), 
                             SqlHelper.GetInt(reader, "id_book"), 
@@ -259,14 +205,15 @@ JOIN archives a on a.id=b.id_archive and b.file_name is not NULL and b.file_name
                                 if (info.fileSize == size && info.created == created)
                                     continue;
                                 
-                                var md5Sum = CalcFileHash(zipEntry);
-                                if (info.md5sum != md5Sum)
+                                // var md5Sum = CalcFileHash(zipEntry);
+                                // if (info.md5sum != md5Sum)
                                 {
                                     //update db value
-                                    info.md5sum = md5Sum;
+                                    // info.md5sum = md5Sum;
                                     info.fileSize = size;
                                     info.created = created;
-                                    SqlHelper.ExecuteNonQuery($"update books set md5sum='{md5Sum}', file_size={size}, created={created} where id={info.id_book}");
+                                    SqlHelper.ExecuteNonQuery($"update books set file_size={size}, created={created} where id={info.id_book}");
+                                    // SqlHelper.ExecuteNonQuery($"update books set md5sum='{md5Sum}', file_size={size}, created={created} where id={info.id_book}");
                                 }
                             }
                         }
@@ -430,7 +377,7 @@ JOIN archives a on a.id=b.id_archive and b.file_name is not NULL and b.file_name
             }
         }
 
-        private void FixFlibustaIdsLinks()
+        private async Task FixFlibustaIdsLinks()
         {
             UpdateState("Updating flibusta links for imported files...", StateKind.Warning);
             var updatedBooks = 0;
@@ -438,9 +385,9 @@ JOIN archives a on a.id=b.id_archive and b.file_name is not NULL and b.file_name
             using (var connection = SqlHelper.GetConnection())
             {
                 using (var command = SqlHelper.GetCommand(@"select DISTINCT b.id, b.file_name from books b join archives a on b.id_archive=a.id and a.file_name like '%f.fb2-%' where b.id<0 ORDER BY b.id DESC", connection))
-                using (var reader = command.ExecuteReader())
+                using (var reader = await command.ExecuteReaderAsync().ConfigureAwait(false))
                 {
-                    while (reader.Read())
+                    while (await reader.ReadAsync().ConfigureAwait(false))
                     {
                         try
                         {
@@ -470,7 +417,7 @@ JOIN archives a on a.id=b.id_archive and b.file_name is not NULL and b.file_name
                             try
                             {
                                 //check book already registered with correct id
-                                var oldIdOccupied = SqlHelper.GetIntFromQuery($"select count(*) from books where id={item.Value}", connection);
+                                var oldIdOccupied = await SqlHelper.GetIntFromQuery($"select count(*) from books where id={item.Value}", connection).ConfigureAwait(false);
                                 if (oldIdOccupied == 0)
                                 {
                                     SqlHelper.ExecuteNonQuery($"update books set id={item.Value} where id={item.Key}", connection);
@@ -513,9 +460,9 @@ JOIN archives a on a.id=b.id_archive and b.file_name is not NULL and b.file_name
             {
                 var archives = new List<KeyValuePair<int, string>>();
                 using (var command = SqlHelper.GetCommand(@"select a.id, a.file_name from archives a ORDER BY a.file_name", connection))
-                using (var reader = command.ExecuteReader())
+                using (var reader = await command.ExecuteReaderAsync().ConfigureAwait(false))
                 {
-                    while (reader.Read())
+                    while (await reader.ReadAsync().ConfigureAwait(false))
                     {
                         archives.Add(new KeyValuePair<int, string>(SqlHelper.GetInt(reader, "id"), SqlHelper.GetString(reader, "file_name")));
                     }
@@ -561,7 +508,7 @@ JOIN archives a on a.id=b.id_archive and b.file_name is not NULL and b.file_name
             return result;
         }
 
-        private void OptimizeRegisteredArchives(bool unregisterNotFound)
+        private async Task OptimizeRegisteredArchives(bool unregisterNotFound)
         {
             _archivesFound = Directory.GetFiles(ArchivesPath, "*fb2*.zip", SearchOption.TopDirectoryOnly);
 //            var archivesList = new DirectoryInfo(ArchivesPath).GetFiles("*.zip", SearchOption.TopDirectoryOnly).Select(fileInfo => fileInfo.Name).ToList();
@@ -572,9 +519,9 @@ JOIN archives a on a.id=b.id_archive and b.file_name is not NULL and b.file_name
             {
                 using (var command = SqlHelper.GetCommand("select id, file_name from archives a", connection))
                 {
-                    using (var reader = command.ExecuteReader())
+                    using (var reader = await command.ExecuteReaderAsync().ConfigureAwait(false))
                     {
-                        while (reader.Read())
+                        while (await reader.ReadAsync().ConfigureAwait(false))
                         {
                             var archName = SqlHelper.GetString(reader, "file_name");
                             if (_archivesFound.Any(s => s.EndsWith(archName, StringComparison.OrdinalIgnoreCase)))
@@ -607,15 +554,15 @@ JOIN archives a on a.id=b.id_archive and b.file_name is not NULL and b.file_name
             }
         }
    
-        private void CalculateStats()
+        public async Task CalculateStats()
         {
             UpdateState($"Loading DB: '{SqlHelper.DataBasePath}' archives: '{ArchivesPath}' ...", StateKind.Log);
             UpdateState("Calculating DB stats...", StateKind.Log);
 
-            var archivesRegistered = SqlHelper.GetIntFromQuery("select count(1) from archives");
+            var archivesRegistered = await SqlHelper.GetIntFromQuery("select count(1) from archives").ConfigureAwait(false);
             UpdateState($"Found archives to process: {archivesRegistered}", StateKind.Message);
 
-            var totalToRemove = SqlHelper.GetIntFromQuery("select count(1) from books b where b.id_archive not in (select id from archives)");
+            var totalToRemove = await SqlHelper.GetIntFromQuery("select count(1) from books b where b.id_archive not in (select id from archives)").ConfigureAwait(false);
             
             //by wrong type, lang or removed
             var sql = new StringBuilder(@"select count(1) from books b where b.file_type<>'fb2' ");
@@ -623,7 +570,7 @@ JOIN archives a on a.id=b.id_archive and b.file_name is not NULL and b.file_name
                 sql.Append(" or b.deleted=1 ");
             if (RemoveForeign)
                 sql.Append(" or (b.lang not like 'ru%' and b.lang not like 'ua%' and b.lang not like 'uk%' and b.lang not like 'en%' and b.lang<>'') ");
-            totalToRemove += SqlHelper.GetIntFromQuery(sql.ToString());
+            totalToRemove += await SqlHelper.GetIntFromQuery(sql.ToString()).ConfigureAwait(false);
             
             //by genres
             if (GenresToRemove.Length > 0)
@@ -634,7 +581,7 @@ JOIN archives a on a.id=b.id_archive and b.file_name is not NULL and b.file_name
                 {
                     sql.Append($" or g.id_genre='{g}' ");
                 }
-                totalToRemove += SqlHelper.GetIntFromQuery(sql.ToString());
+                totalToRemove += await SqlHelper.GetIntFromQuery(sql.ToString()).ConfigureAwait(false);
             }
 
 //            using (var connection = SqlHelper.GetConnection())
@@ -669,12 +616,12 @@ JOIN archives a on a.id=b.id_archive and b.file_name is not NULL and b.file_name
             UpdateState($"Found files to remove: {totalToRemove}", StateKind.Message);
         }
 
-        private void CompressLibrary()
+        public async Task CompressLibrary()
         {
             if (!string.IsNullOrWhiteSpace(ArchivesOutputPath))
                 Directory.CreateDirectory(ArchivesOutputPath);
 
-            OptimizeRegisteredArchives(RemoveMissingArchivesFromDb);
+            await OptimizeRegisteredArchives(RemoveMissingArchivesFromDb).ConfigureAwait(false);
 
             //general optimization
             UpdateState("Optimizing db tables...", StateKind.Log);
@@ -705,7 +652,7 @@ JOIN archives a on a.id=b.id_archive and b.file_name is not NULL and b.file_name
 
             UpdateState($"Total unregistered books: {totalRemoved}", StateKind.Message);
 
-            OptimizeArchivesOnDisk();
+            await OptimizeArchivesOnDisk().ConfigureAwait(false);
         }
 
         private bool CheckGenres(string genres, string[] genresToRemove)
