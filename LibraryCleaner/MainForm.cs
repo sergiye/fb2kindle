@@ -3,8 +3,8 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 using System.Windows.Forms;
-using LibCleaner;
 
 namespace LibraryCleaner
 {
@@ -130,7 +130,7 @@ namespace LibraryCleaner
             Text = $"{_mainTitleText}; Now: {build}.{revision}";
         }
 
-        private void ProcessCleanupTasks(bool analyzeOnly)
+        private async Task ProcessCleanupTasks(bool analyzeOnly)
         {
             var startedTime = DateTime.Now;
             SetStartedState();
@@ -148,27 +148,24 @@ namespace LibraryCleaner
                 _cleaner.MinFilesToUpdateZip = (int) edtMinFilesToSave.Value;
                 _cleaner.FileWithDeletedBooksIds = txtDeletedFile.Text;
 
-                if (!_cleaner.CheckParameters())
+                if (!await _cleaner.CheckParameters().ConfigureAwait(false))
                 {
                     AddToLog("Please check input parameters and start again!", Cleaner.StateKind.Warning);
                     SetFinishedState(startedTime);
                     return;
                 }
 
-                _cleaner.PrepareStatistics(() =>
+                await _cleaner.CalculateStats().ConfigureAwait(false);
+                
+                if (!analyzeOnly && MessageBox.Show("Start database cleaning?", "Confirmation", MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Question) == DialogResult.Yes)
                 {
-                    if (!analyzeOnly && MessageBox.Show("Start database cleaning?", "Confirmation", MessageBoxButtons.YesNo,
-                            MessageBoxIcon.Question) == DialogResult.Yes)
-                    {
-                        _cleaner.Start(() =>
-                        {
-                            AddToLog("Finished!", Cleaner.StateKind.Log);
-                            SetFinishedState(startedTime);
-                        });
-                    }
-                    else
-                        SetFinishedState(startedTime);
-                });
+                    await _cleaner.CompressLibrary().ConfigureAwait(false);
+                    AddToLog("Finished!", Cleaner.StateKind.Log);
+                    SetFinishedState(startedTime);
+                }
+                else
+                    SetFinishedState(startedTime);
             }
             catch (Exception ex)
             {
@@ -179,12 +176,12 @@ namespace LibraryCleaner
 
         private void btnAnalyze_Click(object sender, EventArgs e)
         {
-            ProcessCleanupTasks(true);
+            Task.Run(() => ProcessCleanupTasks(true));
         }
 
         private void btnStart_Click(object sender, EventArgs e)
         {
-            ProcessCleanupTasks(false);
+            Task.Run(() => ProcessCleanupTasks(false));
         }
 
         private void SetStartedState()

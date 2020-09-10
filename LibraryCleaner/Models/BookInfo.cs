@@ -1,4 +1,4 @@
-namespace LibCleaner
+namespace LibraryCleaner
 {
     public class BookInfo
     {

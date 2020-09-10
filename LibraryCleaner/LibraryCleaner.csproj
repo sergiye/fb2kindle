@@ -38,8 +38,14 @@
     <ApplicationIcon>Book.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Ionic.Zip, Version=1.9.1.8, Culture=neutral, PublicKeyToken=edbe51ad942a3f5c">
+      <HintPath>Ionic.Zip.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Data.SQLite, Version=1.0.84.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139">
+      <HintPath>System.Data.SQLite.dll</HintPath>
+    </Reference>
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -50,12 +56,17 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Classes\Cleaner.cs" />
+    <Compile Include="Classes\SqlHelper.cs" />
     <Compile Include="MainForm.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="MainForm.Designer.cs">
       <DependentUpon>MainForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Models\BookFileInfo.cs" />
+    <Compile Include="Models\BookInfo.cs" />
+    <Compile Include="Models\Genres.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SimplTextBox.cs">
@@ -69,13 +80,6 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Book.ico" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\LibCleaner\LibCleaner.csproj">
-      <Project>{8d57fd38-fd64-4f51-ae87-43a59112b56b}</Project>
-      <Name>LibCleaner</Name>
-      <Private>True</Private>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

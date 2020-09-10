@@ -196,3 +196,4 @@ Uploads/
 /.idea/
 
 /jail/jail_main.db
+*.DotSettings
