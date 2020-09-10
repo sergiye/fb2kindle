@@ -247,18 +247,21 @@ JOIN archives a on a.id=b.id_archive and b.file_name is not NULL and b.file_name
                         {
                             foreach(var zipEntry in zip.Entries)
                             {
-                                string md5Sum = CalcFileHash(zipEntry);
-                                var size = zipEntry.UncompressedSize;
-                                var created = CalcCreatedDate(zipEntry.LastModified);
-                                 var info = dbArchiveFiles.Find(f=>f.file_name == zipEntry.FileName);
+                                var info = dbArchiveFiles.Find(f=>f.file_name == zipEntry.FileName);
                                 if (info == null) continue;
-                                if (info.md5sum != md5Sum || info.fileSize != size || (info.created > 130000 && info.created != created))
+
+                                var created = CalcCreatedDate(zipEntry.LastModified);
+                                if (created < 0)
+                                    created = info.created;
+                                var size = zipEntry.UncompressedSize;
+                                var md5Sum = CalcFileHash(zipEntry);
+                                
+                                if (info.md5sum != md5Sum || info.fileSize != size || info.created != created)
                                 {
                                     //update db value
                                     info.md5sum = md5Sum;
                                     info.fileSize = size;
-                                    if (info.created > 130000)
-                                        info.created = created;
+                                    info.created = created;
                                     SqlHelper.ExecuteNonQuery($"update books set md5sum='{md5Sum}', file_size={size}, created={created} where id={info.id_book}");
                                 }
                             }
@@ -316,10 +319,7 @@ JOIN archives a on a.id=b.id_archive and b.file_name is not NULL and b.file_name
                                 zipFilesToRemove.Add(zipFile);
                             }
                         }
-                        else
-                        {
-                            VerifyHashesInDatabase(archiveName, filesFound, zipFilesToRemove, zipFiles, zip);
-                        }
+
                         if (zipFilesToRemove.Count == 0) continue;
                         if (zipFilesToRemove.Count < MinFilesToUpdateZip) 
                         {
@@ -358,7 +358,6 @@ JOIN archives a on a.id=b.id_archive and b.file_name is not NULL and b.file_name
 
         private void VerifyHashesInDatabase(string archiveName, ICollection<BookFileInfo> filesFound, ICollection<string> zipFilesToRemove, ICollection<string> zipFiles, ZipFile zip)
         {
-            return;
             //collect all hashes in one place
             var allHashes = new Dictionary<string, BookFileInfo>();
             foreach (var info in filesFound)
@@ -411,8 +410,8 @@ JOIN archives a on a.id=b.id_archive and b.file_name is not NULL and b.file_name
 
         private int CalcCreatedDate(DateTime realDate)
         {
-            //.ToString("yyMMdd")
-            return realDate.Day + realDate.Month * 100 + (realDate.Year-2000) * 10000;
+            return realDate.Month * 100 + (realDate.Year-2000) * 10000; //округлить до месяца, порядок добавления виден по Id
+            //return realDate.Day + realDate.Month * 100 + (realDate.Year-2000) * 10000;
         }
         
         private string CalcFileHash(ZipEntry zipEntry)
