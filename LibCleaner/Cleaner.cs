@@ -410,7 +410,7 @@ JOIN archives a on a.id=b.id_archive and b.file_name is not NULL and b.file_name
 
         private int CalcCreatedDate(DateTime realDate)
         {
-            return realDate.Month * 100 + (realDate.Year-2000) * 10000; //округлить до месяца, порядок добавления виден по Id
+            return 1 + realDate.Month * 100 + (realDate.Year-2000) * 10000; //округлить до месяца, порядок добавления виден по Id
             //return realDate.Day + realDate.Month * 100 + (realDate.Year-2000) * 10000;
         }
         
