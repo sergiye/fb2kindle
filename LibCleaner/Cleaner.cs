@@ -254,9 +254,13 @@ JOIN archives a on a.id=b.id_archive and b.file_name is not NULL and b.file_name
                                 if (created < 0)
                                     created = info.created;
                                 var size = zipEntry.UncompressedSize;
-                                var md5Sum = CalcFileHash(zipEntry);
                                 
-                                if (info.md5sum != md5Sum || info.fileSize != size || info.created != created)
+                                //skip md5 calc if other values match
+                                if (info.fileSize == size && info.created == created)
+                                    continue;
+                                
+                                var md5Sum = CalcFileHash(zipEntry);
+                                if (info.md5sum != md5Sum)
                                 {
                                     //update db value
                                     info.md5sum = md5Sum;
