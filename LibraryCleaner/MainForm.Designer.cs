@@ -53,7 +53,7 @@
             this.txtLog = new LibraryCleaner.SimplTextBox();
             this.panSettings.SuspendLayout();
             this.panel2.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.edtMinFilesToSave)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize) (this.edtMinFilesToSave)).BeginInit();
             this.panLog.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -72,10 +72,7 @@
             this.clsGenres.CheckOnClick = true;
             this.clsGenres.Dock = System.Windows.Forms.DockStyle.Fill;
             this.clsGenres.FormattingEnabled = true;
-            this.clsGenres.Items.AddRange(new object[] {
-            "firest",
-            "second",
-            "last"});
+            this.clsGenres.Items.AddRange(new object[] {"firest", "second", "last"});
             this.clsGenres.Location = new System.Drawing.Point(0, 214);
             this.clsGenres.Name = "clsGenres";
             this.clsGenres.Size = new System.Drawing.Size(239, 251);
@@ -146,19 +143,11 @@
             // edtMinFilesToSave
             // 
             this.edtMinFilesToSave.Location = new System.Drawing.Point(180, 192);
-            this.edtMinFilesToSave.Minimum = new decimal(new int[] {
-            1,
-            0,
-            0,
-            0});
+            this.edtMinFilesToSave.Minimum = new decimal(new int[] {1, 0, 0, 0});
             this.edtMinFilesToSave.Name = "edtMinFilesToSave";
             this.edtMinFilesToSave.Size = new System.Drawing.Size(56, 20);
             this.edtMinFilesToSave.TabIndex = 17;
-            this.edtMinFilesToSave.Value = new decimal(new int[] {
-            1,
-            0,
-            0,
-            0});
+            this.edtMinFilesToSave.Value = new decimal(new int[] {1, 0, 0, 0});
             // 
             // btnAnalyze
             // 
@@ -175,9 +164,9 @@
             this.cbxUpdateHashes.AutoSize = true;
             this.cbxUpdateHashes.Location = new System.Drawing.Point(10, 124);
             this.cbxUpdateHashes.Name = "cbxUpdateHashes";
-            this.cbxUpdateHashes.Size = new System.Drawing.Size(103, 17);
+            this.cbxUpdateHashes.Size = new System.Drawing.Size(146, 17);
             this.cbxUpdateHashes.TabIndex = 9;
-            this.cbxUpdateHashes.Text = "Update md5sum";
+            this.cbxUpdateHashes.Text = "Update dates (size+hash)";
             this.cbxUpdateHashes.UseVisualStyleBackColor = true;
             // 
             // cbxRemoveMissedArchives
@@ -321,10 +310,9 @@
             this.panSettings.ResumeLayout(false);
             this.panel2.ResumeLayout(false);
             this.panel2.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.edtMinFilesToSave)).EndInit();
+            ((System.ComponentModel.ISupportInitialize) (this.edtMinFilesToSave)).EndInit();
             this.panLog.ResumeLayout(false);
             this.ResumeLayout(false);
-
         }
 
         #endregion
