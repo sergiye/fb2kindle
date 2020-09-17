@@ -5,6 +5,7 @@ using System.Net.Http;
 using System.Net.Mail;
 using System.Threading.Tasks;
 using System.Web;
+using jail.Models;
 
 namespace jail.Classes
 {
@@ -74,6 +75,14 @@ namespace jail.Classes
             }
         }
 
+        public static UserType? CurrentUserType {
+            get =>
+                (HttpContext.Current != null && HttpContext.Current.User.Identity.IsAuthenticated)
+                    ? (HttpContext.Current.Session["User"] as UserProfile)?.UserType
+                    : null;
+            set => HttpContext.Current.Session["User"] = value;
+        }
+        
         public static string AdminLoginHash => "dae7a3d670e30f7278ea90344c768af1";
         public static string AdminPasswordHash => "e3bbe98ee127683efc57b077e19cfa43";
 
