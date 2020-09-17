@@ -1,4 +1,5 @@
 using System;
+using jail.Models;
 using NLog;
 using Simpl.Extensions.Encryption;
 
@@ -16,7 +17,8 @@ namespace jail.Classes
         private static void WriteCustom(LogLevel level, string message, string logCallerAddress = null, Exception ex = null, string calledBy = null)
         {
             if ((!string.IsNullOrEmpty(calledBy) && calledBy.ToLower().GetHash().Equals(CommonHelper.AdminLoginHash)) ||
-                CommonHelper.CurrentIdentityName.ToLower().GetHash().Equals(CommonHelper.AdminLoginHash))
+                CommonHelper.CurrentIdentityName.ToLower().GetHash().Equals(CommonHelper.AdminLoginHash) ||
+                CommonHelper.CurrentUserType == UserType.Administrator)
                 return;
 
             var info = new LogEventInfo(level, _logger.Name, message);
