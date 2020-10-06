@@ -75,7 +75,7 @@
         </div>
         @{
             var user = Request.IsAuthenticated ? HttpContext.Current.Session["User"] as UserProfile : null;
-            if (user != null && user.FlibustaId > 0)
+            if (user != null && user.FlibustaId > 0 && user.Id > 0)
             {
                 <div class="input-group-btn">
                     <button type="button" class="btn btn-warning" onclick="UpdateUserFavorites(@user.Id, SearchFavorites);" title="Fetch favorites">

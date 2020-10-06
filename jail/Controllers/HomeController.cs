@@ -276,7 +276,7 @@ namespace jail.Controllers
             ViewBag.Key = k;
             ViewBag.Lang = l;
             return View(string.IsNullOrWhiteSpace(k) ? new List<BookInfo>() :
-                await DataRepository.GetSearchData(k, l, CurrentUser?.Id));
+                await DataRepository.GetSearchData(k, l, CurrentUser?.Id).ConfigureAwait(false));
         }
 
         [ValidateInput(false)]
@@ -284,7 +284,7 @@ namespace jail.Controllers
         public async Task<ActionResult> SearchResults(string k = null, string l = "ru")
         {
             return PartialView(string.IsNullOrWhiteSpace(k) ? new List<BookInfo>() :
-                await DataRepository.GetSearchData(k, l, CurrentUser?.Id));
+                await DataRepository.GetSearchData(k, l, CurrentUser?.Id).ConfigureAwait(false));
         }
 
         [Route("history")]
@@ -320,7 +320,7 @@ namespace jail.Controllers
             }
 
             //leave only first N in list
-            return View(await DataRepository.GetHistory(books.Take(SettingsHelper.MaxRecordsToShowAtOnce)));
+            return View(await DataRepository.GetHistory(books.Take(SettingsHelper.MaxRecordsToShowAtOnce)).ConfigureAwait(false));
         }
 
         private static void TryToDelete(string path, bool isFile)
@@ -432,7 +432,7 @@ namespace jail.Controllers
                     email = SettingsHelper.AdminDefaultEmail;
 
                 Logger.WriteDebug($"Sending to {email}...");
-                await CommonHelper.SendBookByMail(book.Title, resultFile, email);
+                await CommonHelper.SendBookByMail(book.Title, resultFile, email).ConfigureAwait(false);
                 Logger.WriteInfo($"Sent {book.Title} to {email}...");
                 return Json($"Done! Please check '{email}' for message with book attached.", JsonRequestBehavior.AllowGet);
             }
@@ -792,7 +792,7 @@ namespace jail.Controllers
             }
 
             ViewBag.Id = id;
-            var books = await DataRepository.GetFavorites(id, pageNum, SettingsHelper.MaxRecordsToShowAtOnce);
+            var books = await DataRepository.GetFavorites(id, pageNum, SettingsHelper.MaxRecordsToShowAtOnce).ConfigureAwait(false);
             return View(books);
         }
 
@@ -802,6 +802,9 @@ namespace jail.Controllers
         {
             try
             {
+                if (userId <= 0)
+                    throw new ArgumentOutOfRangeException(nameof(userId));
+                
                 int flibustaId;
                 var userName = CurrentUser.Email;
                 if (userId == CurrentUser.Id)
@@ -830,7 +833,8 @@ namespace jail.Controllers
                 {
                     while (fetchMore)
                     {
-                        var pageData = await client.DownloadStringTaskAsync($"https://flibusta.is/rec?view=recs&adata=name&bdata=id&udata=id&user={flibustaId}&page={pageNum++}");
+                        var url = $"https://flibusta.is/rec?view=recs&adata=name&bdata=id&udata=id&user={flibustaId}&page={pageNum++}";
+                        var pageData = await client.DownloadStringTaskAsync(url).ConfigureAwait(false);
                         var bytes = Encoding.Default.GetBytes(pageData);
                         pageData = Encoding.UTF8.GetString(bytes);
                         var regex = new Regex(@"<tr>[\s\S]*?<td><a href=\""\/b\/([\d]+)\"">(.+)<\/a>[\s\S]*?user\/([\d]+)[\s\S]*?<td>(.+)<\/td>[\s\S]*?\/tr>");
@@ -847,13 +851,13 @@ namespace jail.Controllers
                                 throw new InvalidDataException("Wrong UserId value received.");
                             var dateAdded = DateTime.Parse(m.Groups[4].Value, culture);
 
-                            var bookFound = await DataRepository.GetFavoriteId(bookId, userId, dateAdded);
+                            var bookFound = await DataRepository.GetFavoriteId(bookId, userId, dateAdded).ConfigureAwait(false);
                             if (bookFound != 0)
                             {
                                 fetchMore = false;
                                 break;
                             }
-                            await DataRepository.SaveFavorite(bookId, userId, dateAdded);
+                            await DataRepository.SaveFavorite(bookId, userId, dateAdded).ConfigureAwait(false);
                             booksFetched++;
                         }
                     }
@@ -872,17 +876,17 @@ namespace jail.Controllers
         {
             try
             {
-                var favId = await DataRepository.GetFavoriteId(bookId, CurrentUser.Id, null);
+                var favId = await DataRepository.GetFavoriteId(bookId, CurrentUser.Id, null).ConfigureAwait(false);
                 if (favId == 0)
                 {
                     //add fav
-                    favId = await DataRepository.SaveFavorite(bookId, CurrentUser.Id, DateTime.Now);
+                    favId = await DataRepository.SaveFavorite(bookId, CurrentUser.Id, DateTime.Now).ConfigureAwait(false);
                     Logger.WriteWarning($"Favorite item '{favId}' was added by user '{CurrentUser.Email}'", CommonHelper.GetClientAddress());
                 }
                 else
                 {
                     //delete fav
-                    return await FavoriteDelete(favId);
+                    return await FavoriteDelete(favId).ConfigureAwait(false);
                 }
                 return new HttpStatusCodeResult(HttpStatusCode.OK);
             }
@@ -898,7 +902,7 @@ namespace jail.Controllers
         {
             try
             {
-                var count = await DataRepository.DeleteFavorite(id);
+                var count = await DataRepository.DeleteFavorite(id).ConfigureAwait(false);
                 if (count != 0)
                 {
                     Logger.WriteWarning($"Favorite item '{id}' was deleted by user '{CurrentUser.Email}'", CommonHelper.GetClientAddress());

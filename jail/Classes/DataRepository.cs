@@ -63,7 +63,7 @@ where (REPLACE(b.title, ' ', '') like @key or REPLACE(a.search_name, ' ', '') li
               ELSE b.lang END ASC, b.title, b.created DESC LIMIT 100";
             var info = await Db.QueryMultipleAsync<BookInfo, SequenceInfo, AuthorInfo, long>(sql, 
                 b => b.Id, b => b.Sequences, b => b.Authors, 
-                new { key = $"%{key.ToLower().Replace(" ", "")}%", key2, lang = searchLang, userId });
+                new { key = $"%{key.ToLower().Replace(" ", "")}%", key2, lang = searchLang, userId }).ConfigureAwait(false);
             return info;
         }
 
@@ -155,7 +155,7 @@ left join bookseq bs on bs.id_book=b.id
 left join sequences s on s.id=bs.id_seq
 where b.id in @ids";
             var info = (await Db.QueryMultipleAsync<BookHistoryInfo, SequenceInfo, AuthorInfo, long>(sql, 
-                b => b.Id, b => b.Sequences, b => b.Authors, new { ids })).ToList();
+                b => b.Id, b => b.Sequences, b => b.Authors, new { ids }).ConfigureAwait(false)).ToList();
             foreach (var bookInfo in info)
             {
                 bookInfo.GeneratedTime = books.First(i => i.Id == bookInfo.Id).GeneratedTime;
@@ -170,7 +170,7 @@ where b.id in @ids";
             var sql = "select count(*) from favorites f ";
             if (userId > 0)
                 sql += " where f.UserId=@userId ";
-            var totalRows = await Db.QueryOneAsync<int>(sql, new {userId});
+            var totalRows = await Db.QueryOneAsync<int>(sql, new {userId}).ConfigureAwait(false);
 
             //fetch Ids
             var skipped = page * pageSize;
@@ -178,7 +178,7 @@ where b.id in @ids";
             if (userId > 0)
                 sql += " where f.UserId=@userId ";
             sql += " order by f.DateAdded desc limit @skip, @take";
-            var favIds = (await Db.QueryAsync<long>(sql, new {userId, skip = skipped, take = pageSize})).ToArray();
+            var favIds = (await Db.QueryAsync<long>(sql, new {userId, skip = skipped, take = pageSize}).ConfigureAwait(false)).ToArray();
 
             //Fetch books
             sql = @"select b.id, b.title, b.id_archive, b.file_name, b.file_size,
@@ -193,7 +193,7 @@ from books b
     left join sequences s on s.id = bs.id_seq
 where f.Id in @favIds order by f.DateAdded desc";
             var data = (await Db.QueryMultipleAsync<BookFavoritesInfo, SequenceInfo, AuthorInfo, long>(sql, 
-                b => b.Id, b => b.Sequences, b => b.Authors, new { favIds })).ToList();
+                b => b.Id, b => b.Sequences, b => b.Authors, new { favIds }).ConfigureAwait(false)).ToList();
 
             return new BookFavoritesViewModel(data, page, Convert.ToInt32(Math.Ceiling((double)totalRows / pageSize)), totalRows, skipped);
         }
@@ -203,20 +203,20 @@ where f.Id in @favIds order by f.DateAdded desc";
             return dateAdded.HasValue
                 ? await Db.QueryOneAsync<long>(
                     "select Id from favorites where BookId=@bookId and UserId=@userId and DateAdded=@dateAdded"
-                    , new {bookId, userId, dateAdded})
+                    , new {bookId, userId, dateAdded}).ConfigureAwait(false)
                 : await Db.QueryOneAsync<long>("select Id from favorites where BookId=@bookId and UserId=@userId"
-                    , new {bookId, userId});
+                    , new {bookId, userId}).ConfigureAwait(false);
         }
 
         public static async Task<long> SaveFavorite(long bookId, long userId, DateTime dateAdded)
         {
             return await Db.QueryOneAsync<long>("INSERT INTO favorites (BookId, UserId, DateAdded) VALUES (@bookId, @userId, @dateAdded); SELECT last_insert_rowid();"
-                , new {bookId, userId, dateAdded});
+                , new {bookId, userId, dateAdded}).ConfigureAwait(false);
         }
 
         public static async Task<long> DeleteFavorite(long id)
         {
-            return await Db.ExecuteAsync("delete from favorites where Id=@id", new {id});
+            return await Db.ExecuteAsync("delete from favorites where Id=@id", new {id}).ConfigureAwait(false);
         }
     }
 }
