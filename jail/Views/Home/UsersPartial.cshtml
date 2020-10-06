@@ -68,7 +68,7 @@
                                 <span class="red glyphicon glyphicon-heart"></span> Favorites
                             </a>
                         </li>
-                        @if (item.FlibustaId > 0)
+                        @if (item.FlibustaId > 0 && item.Id > 0)
                         {
                             <li>
                                 <a href='#' onclick="UpdateUserFavorites(@item.Id, null);" class="btn-default">
