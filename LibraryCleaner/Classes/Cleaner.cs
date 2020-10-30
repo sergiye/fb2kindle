@@ -13,7 +13,7 @@ namespace LibraryCleaner
 {
     public class Cleaner
     {
-        private readonly List<int> _seqToRemove;
+        // private readonly List<int> _seqToRemove;
         private string[] _archivesFound;
 
         private string ArchivesPath { get; set; }
@@ -52,21 +52,21 @@ namespace LibraryCleaner
             UpdateHashInfo = true;
             RemoveMissingArchivesFromDb = true;
             GenresToRemove = GenresListContainer.GetDefaultItems().Where(f=>f.Selected).Select(f=>f.Code).ToArray();
-            _seqToRemove = new List<int>
-            {
-                14437,15976,22715,7028,7083,8303,19890,28738,29139,
-                8361,8364,8431,8432,8434,11767,14485,14486,14487,14498,14499,14500,144501,144502,144503,144504,16384,16385,16429,18684,20833,24135,31331,
-                3586,10046,12755,31331,3944,4218,14644,31491,30658,25226,6771,27704,7542,8718,28888,15285,18684,15151,31459,
-                7061, 7115, 9209, 12277, 16885, 31903,//STALKER
-                1066, 12479, 19944, //конан
-                204, 5155, //star wars
-                329, 15523, 16523, 28755, 30230, 34703, 37029, //Warhammer
-                26275, //Гуров — продолжения других авторов
-                8166, //Проза еврейской жизни
-                19044, 20976, //Вселенная «Метро 2033»
-                4908, //новинки  современника
-                4258, //сумерки
-            };
+            // _seqToRemove = new List<int>
+            // {
+            //     14437,15976,22715,7028,7083,8303,19890,28738,29139,
+            //     8361,8364,8431,8432,8434,11767,14485,14486,14487,14498,14499,14500,144501,144502,144503,144504,16384,16385,16429,18684,20833,24135,31331,
+            //     3586,10046,12755,31331,3944,4218,14644,31491,30658,25226,6771,27704,7542,8718,28888,15285,18684,15151,31459,
+            //     7061, 7115, 9209, 12277, 16885, 31903,//STALKER
+            //     1066, 12479, 19944, //конан
+            //     204, 5155, //star wars
+            //     329, 15523, 16523, 28755, 30230, 34703, 37029, //Warhammer
+            //     26275, //Гуров — продолжения других авторов
+            //     8166, //Проза еврейской жизни
+            //     19044, 20976, //Вселенная «Метро 2033»
+            //     4908, //новинки  современника
+            //     4258, //сумерки
+            // };
         }
 
         private void UpdateState(string state, StateKind kind)
@@ -158,8 +158,9 @@ JOIN archives a on a.id=b.id_archive and b.file_name is not NULL and b.file_name
             }
             UpdateState($"Found archives in database: {dbFiles.Count}", StateKind.Message);
             //process all archives on disk
-            var archivesFound = Directory.GetFiles(ArchivesPath, "*fb2*.zip", SearchOption.TopDirectoryOnly);
-            UpdateState($"Found {archivesFound.Length} archives to optimize", StateKind.Message);
+            var archivesFound = Directory.GetFiles(ArchivesPath, "*fb2*.zip", SearchOption.TopDirectoryOnly).ToList();
+            archivesFound.Sort((s, s1) => string.CompareOrdinal(s1, s)); // sort in reverse order to process latest archives first
+            UpdateState($"Found {archivesFound.Count} archives to optimize", StateKind.Message);
 
             //get ids of deleted books from external file (if exists)
             var externallyRemoved = GetExternalIdsFromFile(FileWithDeletedBooksIds);
