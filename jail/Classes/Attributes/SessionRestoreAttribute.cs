@@ -30,7 +30,7 @@ namespace jail.Classes.Attributes
             httpContext.Session.Timeout = 24 * 60;
             FormsAuthentication.SetAuthCookie(ticket.Name, true);
             Logger.WriteInfo(string.Format("{0} session restored", user.UserType),
-                CommonHelper.GetClientAddress(), user.Email);
+                CommonHelper.GetClientAddress(httpContext.Request), user.Email);
             return user;
         }
 

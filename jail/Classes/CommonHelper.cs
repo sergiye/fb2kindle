@@ -18,9 +18,9 @@ namespace jail.Classes
         /// Get client IP from HTTP request
         /// </summary>
         /// <returns></returns>
-        public static string GetClientAddress()
+        public static string GetClientAddress(HttpRequestBase request)
         {
-            var request = HttpContext.Current.Request;
+            // var request = HttpContext.Current.Request;
             var clientAddress = String.Empty;
             if (request.ServerVariables["HTTP_X_FORWARDED_FOR"] != null)
             {

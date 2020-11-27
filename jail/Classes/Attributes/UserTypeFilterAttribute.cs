@@ -26,7 +26,7 @@ namespace jail.Classes.Attributes
             }
             
             Logger.WriteWarning(string.Format("Access was blocked: {0}", CommonHelper.GetActionLogName(filterContext.HttpContext.Request)), 
-                CommonHelper.GetClientAddress(), CommonHelper.CurrentIdentityName);
+                CommonHelper.GetClientAddress(filterContext.RequestContext.HttpContext.Request), CommonHelper.CurrentIdentityName);
             //filterContext.Result = new HttpCodeActionResult(HttpStatusCode.MethodNotAllowed, "This user type is not allowed");
             //filterContext.Result = new RedirectResult(Url.Action("Login"));
             //filterContext.Result = new RedirectToRouteResult("Login", null);

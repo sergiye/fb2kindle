@@ -29,7 +29,7 @@ namespace jail.Classes.Attributes
 
             var actionName = CommonHelper.GetActionLogName(request);
             if (!actionName.Equals("GET /", StringComparison.OrdinalIgnoreCase))
-                Logger.WriteTrace(actionName, CommonHelper.GetClientAddress(), CommonHelper.CurrentIdentityName);
+                Logger.WriteTrace(actionName, CommonHelper.GetClientAddress(request), CommonHelper.CurrentIdentityName);
         }
     }
 }
