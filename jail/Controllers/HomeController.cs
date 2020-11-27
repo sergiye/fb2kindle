@@ -27,7 +27,7 @@ namespace jail.Controllers
 
         protected override void HandleUnknownAction(string actionName)
         {
-            Logger.WriteWarning($"HandleUnknownAction - {actionName}", CommonHelper.GetClientAddress());
+            Logger.WriteWarning($"HandleUnknownAction - {actionName}", CommonHelper.GetClientAddress(Request));
             base.HandleUnknownAction(actionName);
         }
 
@@ -55,7 +55,7 @@ namespace jail.Controllers
             //}
             var name = CommonHelper.GetActionLogName(filterContext.HttpContext.Request);
             Logger.WriteError(filterContext.Exception,
-                $"{name} - {filterContext.Exception?.Message}", CommonHelper.GetClientAddress());
+                $"{name} - {filterContext.Exception?.Message}", CommonHelper.GetClientAddress(Request));
             base.OnException(filterContext);
         }
 
@@ -139,7 +139,7 @@ namespace jail.Controllers
                         CurrentUser = user;
                         ControllerContext.HttpContext.Session.Timeout = 24 * 60;
                         FormsAuthentication.SetAuthCookie(ticket.Name, true);
-                        Logger.WriteInfo($"{user.UserType} session restored", CommonHelper.GetClientAddress(), user.Email);
+                        Logger.WriteInfo($"{user.UserType} session restored", CommonHelper.GetClientAddress(Request), user.Email);
                         return !string.IsNullOrWhiteSpace(returnUrl)
                             ? (ActionResult)Redirect(returnUrl)
                             : RedirectToAction(user.UserType == UserType.Administrator ? "Log" : "Index", "Home");
@@ -166,7 +166,7 @@ namespace jail.Controllers
                 //}
                 else
                 {
-                    Logger.WriteInfo($"{user.UserType} logged in", CommonHelper.GetClientAddress(), model.UserName);
+                    Logger.WriteInfo($"{user.UserType} logged in", CommonHelper.GetClientAddress(Request), model.UserName);
                     CurrentUser = user;
                     ControllerContext.HttpContext.Session.Timeout = 24 * 60;
                     //if (model.RememberMe)
@@ -200,7 +200,7 @@ namespace jail.Controllers
         public ActionResult Logout()
         {
             if (CurrentUser != null && CurrentUser.UserType != UserType.Administrator)
-                Logger.WriteInfo("Logout", CommonHelper.GetClientAddress(), User.Identity.Name);
+                Logger.WriteInfo("Logout", CommonHelper.GetClientAddress(Request), User.Identity.Name);
             HttpContext.Session["User"] = null;
             Request.Cookies.Remove(FormsAuthentication.FormsCookieName);
             FormsAuthentication.SignOut();
@@ -323,7 +323,7 @@ namespace jail.Controllers
             return View(await DataRepository.GetHistory(books.Take(SettingsHelper.MaxRecordsToShowAtOnce)).ConfigureAwait(false));
         }
 
-        private static void TryToDelete(string path, bool isFile)
+        private void TryToDelete(string path, bool isFile)
         {
             try
             {
@@ -340,7 +340,7 @@ namespace jail.Controllers
             }
             catch (Exception ex)
             {
-                Logger.WriteError(ex, $"Error deleting history item '{path}': {ex.Message}", CommonHelper.GetClientAddress());
+                Logger.WriteError(ex, $"Error deleting history item '{path}': {ex.Message}", CommonHelper.GetClientAddress(Request));
             }
         }
 
@@ -360,12 +360,12 @@ namespace jail.Controllers
                 TryToDelete(Path.Combine(workingPath, $"{fileName}.fb2"), true);
                 TryToDelete(Path.Combine(workingPath, $"{fileName}.mobi"), true);
                 TryToDelete(Path.Combine(workingPath, $"{fileName}"), false);
-                Logger.WriteWarning($"History item '{fileName}' was deleted by user '{CurrentUser.Email}'", CommonHelper.GetClientAddress());
+                Logger.WriteWarning($"History item '{fileName}' was deleted by user '{CurrentUser.Email}'", CommonHelper.GetClientAddress(Request));
                 return new HttpStatusCodeResult(HttpStatusCode.OK, "Done");
             }
             catch (Exception ex)
             {
-                Logger.WriteError(ex, $"Error deleting history item {id}/{fileName}: {ex.Message}", CommonHelper.GetClientAddress());
+                Logger.WriteError(ex, $"Error deleting history item {id}/{fileName}: {ex.Message}", CommonHelper.GetClientAddress(Request));
                 throw;
             }
         }
@@ -389,7 +389,7 @@ namespace jail.Controllers
                     throw new FileNotFoundException("Book archive not found");
                 BookHelper.ExtractZipFile(archPath, book.FileName, sourceFileName);
             }
-            Logger.WriteDebug($"Downloading fb2 for {book.Id} - '{book.Title}'", CommonHelper.GetClientAddress());
+            Logger.WriteDebug($"Downloading fb2 for {book.Id} - '{book.Title}'", CommonHelper.GetClientAddress(Request));
             var fileData = System.IO.File.ReadAllBytes(sourceFileName);
             return File(fileData, System.Net.Mime.MediaTypeNames.Application.Octet,
                 BookHelper.GetBookDownloadFileName(book));
@@ -406,7 +406,7 @@ namespace jail.Controllers
             if (!System.IO.File.Exists(resultFile))
                 throw new FileNotFoundException("File not found", resultFile);
             var fileBytes = System.IO.File.ReadAllBytes(resultFile);
-            Logger.WriteDebug($"Downloading mobi for {book.Id} - '{book.Title}'", CommonHelper.GetClientAddress());
+            Logger.WriteDebug($"Downloading mobi for {book.Id} - '{book.Title}'", CommonHelper.GetClientAddress(Request));
             return File(fileBytes, System.Net.Mime.MediaTypeNames.Application.Octet,
                 BookHelper.GetBookDownloadFileName(book, ".mobi"));
         }
@@ -438,7 +438,7 @@ namespace jail.Controllers
             }
             catch (Exception ex)
             {
-                Logger.WriteError(ex, $"Mail delivery failed:  {ex.Message}", CommonHelper.GetClientAddress());
+                Logger.WriteError(ex, $"Mail delivery failed:  {ex.Message}", CommonHelper.GetClientAddress(Request));
                 Response.StatusCode = 500; // Replace .AddHeader
                 return Json(ex.Message, JsonRequestBehavior.AllowGet);
                 //return new HttpStatusCodeResult(HttpStatusCode.BadRequest, ex.Message);
@@ -495,7 +495,7 @@ namespace jail.Controllers
                 //    throw new ArgumentException("Error converting book for kindle");
             }
             ViewBag.Title = book.Title;
-            Logger.WriteDebug($"Reading book {book.Id} - '{book.Title}'", CommonHelper.GetClientAddress());
+            Logger.WriteDebug($"Reading book {book.Id} - '{book.Title}'", CommonHelper.GetClientAddress(Request));
             return new RedirectResult(Path.Combine(@"../" + readingPath.Replace(Server.MapPath("~"), "").Replace('\\', '/')));
             //return new FilePathResult(GetLinkToFile(readingPath), "text/html");
             //ViewBag.BookContent = GetLinkToFile(readingPath);//Path.Combine(@"../" + readingPath.Replace(Server.MapPath("~"), "").Replace('\\', '/'));
@@ -539,7 +539,7 @@ namespace jail.Controllers
             else
                 ViewBag.MobiFileFound = false;
 
-            Logger.WriteDebug($"Details for {book.Id} - '{book.Title}'", CommonHelper.GetClientAddress());
+            Logger.WriteDebug($"Details for {book.Id} - '{book.Title}'", CommonHelper.GetClientAddress(Request));
             return View(book);
         }
 
@@ -637,7 +637,7 @@ namespace jail.Controllers
                 {
                     //_notificationManager.NotifyPasswordChanged(model.Id, 0);
                     var res = $"Password of user '{model.Username}' was modified by '{CurrentUser.Email}'";
-                    Logger.WriteInfo(res, CommonHelper.GetClientAddress());
+                    Logger.WriteInfo(res, CommonHelper.GetClientAddress(Request));
                     ModelState.Clear();
                     return Json(new { message = res, id = model.Id });
                 }
@@ -674,12 +674,12 @@ namespace jail.Controllers
                 if (user == null)
                     return new HttpStatusCodeResult(HttpStatusCode.NotFound, "User was not found");
                 UserRepository.DeleteUser(user.Id);
-                Logger.WriteWarning($"User '{user.Email}' was deleted by user '{CurrentUser.Email}'", CommonHelper.GetClientAddress());
+                Logger.WriteWarning($"User '{user.Email}' was deleted by user '{CurrentUser.Email}'", CommonHelper.GetClientAddress(Request));
                 return new HttpStatusCodeResult(HttpStatusCode.OK, "Done");
             }
             catch (Exception ex)
             {
-                Logger.WriteError(ex, $"Error deleting user {id}: {ex.Message}", CommonHelper.GetClientAddress());
+                Logger.WriteError(ex, $"Error deleting user {id}: {ex.Message}", CommonHelper.GetClientAddress(Request));
                 throw;
             }
         }
@@ -708,7 +708,7 @@ namespace jail.Controllers
                 //if (UserRepository.IsUserContactsUnique(model.Contacts, model.Id))
                 {
                     Logger.WriteInfo(string.Format("User '{0}' was {2} by '{1}'", model.Email,
-                        CurrentUser.Email, model.Id > 0 ? "modified" : "created"), CommonHelper.GetClientAddress());
+                        CurrentUser.Email, model.Id > 0 ? "modified" : "created"), CommonHelper.GetClientAddress(Request));
                     UserRepository.SaveUser(model);
 
                     if (model.Id == CurrentUser.Id)
@@ -765,7 +765,7 @@ namespace jail.Controllers
         public ActionResult CheckIn(long id = 0)
         {
             TimeTrackRepository.CheckIn(id > 0 ? id : CurrentUser.TimeTrackId);
-            Logger.WriteInfo("User checked IN", CommonHelper.GetClientAddress());
+            Logger.WriteInfo("User checked IN", CommonHelper.GetClientAddress(Request));
             return new HttpStatusCodeResult(HttpStatusCode.OK, "Done");
         }
 
@@ -774,7 +774,7 @@ namespace jail.Controllers
         public ActionResult CheckOut(long id = 0)
         {
             TimeTrackRepository.CheckOut(id > 0 ? id : CurrentUser.TimeTrackId);
-            Logger.WriteInfo("User checked OUT", CommonHelper.GetClientAddress());
+            Logger.WriteInfo("User checked OUT", CommonHelper.GetClientAddress(Request));
             return new HttpStatusCodeResult(HttpStatusCode.OK, "Done");
         }
 
@@ -866,7 +866,7 @@ namespace jail.Controllers
             }
             catch (Exception ex)
             {
-                Logger.WriteError(ex, $"Error fetching favorites for user {userId}: {ex.Message}", CommonHelper.GetClientAddress());
+                Logger.WriteError(ex, $"Error fetching favorites for user {userId}: {ex.Message}", CommonHelper.GetClientAddress(Request));
                 return ex.Message;
             }
         }
@@ -881,7 +881,7 @@ namespace jail.Controllers
                 {
                     //add fav
                     favId = await DataRepository.SaveFavorite(bookId, CurrentUser.Id, DateTime.Now).ConfigureAwait(false);
-                    Logger.WriteWarning($"Favorite item '{favId}' was added by user '{CurrentUser.Email}'", CommonHelper.GetClientAddress());
+                    Logger.WriteWarning($"Favorite item '{favId}' was added by user '{CurrentUser.Email}'", CommonHelper.GetClientAddress(Request));
                 }
                 else
                 {
@@ -892,7 +892,7 @@ namespace jail.Controllers
             }
             catch (Exception ex)
             {
-                Logger.WriteError(ex, $"Error adding favorite item: {ex.Message}", CommonHelper.GetClientAddress());
+                Logger.WriteError(ex, $"Error adding favorite item: {ex.Message}", CommonHelper.GetClientAddress(Request));
                 return new HttpStatusCodeResult(HttpStatusCode.InternalServerError, ex.Message);
             }
         }
@@ -905,14 +905,14 @@ namespace jail.Controllers
                 var count = await DataRepository.DeleteFavorite(id).ConfigureAwait(false);
                 if (count != 0)
                 {
-                    Logger.WriteWarning($"Favorite item '{id}' was deleted by user '{CurrentUser.Email}'", CommonHelper.GetClientAddress());
+                    Logger.WriteWarning($"Favorite item '{id}' was deleted by user '{CurrentUser.Email}'", CommonHelper.GetClientAddress(Request));
                     return new HttpStatusCodeResult(HttpStatusCode.OK, "Done");
                 }
                 return new HttpStatusCodeResult(HttpStatusCode.NotFound, $"Favorite with id {id} not found.");
             }
             catch (Exception ex)
             {
-                Logger.WriteError(ex, $"Error deleting favorite item {id}: {ex.Message}", CommonHelper.GetClientAddress());
+                Logger.WriteError(ex, $"Error deleting favorite item {id}: {ex.Message}", CommonHelper.GetClientAddress(Request));
                 return new HttpStatusCodeResult(HttpStatusCode.InternalServerError, ex.Message);
             }
         }
