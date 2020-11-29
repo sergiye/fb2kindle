@@ -792,6 +792,7 @@ namespace jail.Controllers
             }
 
             ViewBag.Id = id;
+            ViewBag.Key = k;
             var books = await DataRepository.GetFavorites(id, pageNum, SettingsHelper.MaxRecordsToShowAtOnce, k).ConfigureAwait(false);
             return View(books);
         }

@@ -169,15 +169,16 @@ where b.id in @ids";
             var mainSql = @"from books b
     join favorites f on b.id = f.BookId
     join authors a on a.id = b.id_author
-    join fts_book_content c on b.id=c.docid
-    join fts_auth_content ac on ac.docid=a.id
     left join bookseq bs on bs.id_book = b.id
-    left join sequences s on s.id = bs.id_seq
-where 1=1";
+    left join sequences s on s.id = bs.id_seq";
+            
+            key = key ?? "";
+            if (!string.IsNullOrWhiteSpace(key))
+                mainSql += @" join fts_book_content c on b.id=c.docid join fts_auth_content ac on ac.docid=a.id";
+            mainSql += " where 1=1";
             
             if (userId > 0)
                 mainSql += " AND f.UserId=@userId ";
-            key = key ?? "";
             if (!string.IsNullOrWhiteSpace(key))
                 mainSql += @" AND ( (REPLACE(b.title, ' ', '') LIKE @key OR REPLACE(a.search_name, ' ', '') LIKE @key OR REPLACE(c.c0content, ' ', '') LIKE @key OR REPLACE(ac.c0content, ' ', '') LIKE @key)
  OR (REPLACE(b.title, ' ', '') LIKE @key2 OR REPLACE(a.search_name, ' ', '') LIKE @key2 OR REPLACE(c.c0content, ' ', '') LIKE @key2 OR REPLACE(ac.c0content, ' ', '') LIKE @key2) ) ";
