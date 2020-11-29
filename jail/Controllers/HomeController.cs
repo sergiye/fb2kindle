@@ -784,7 +784,7 @@ namespace jail.Controllers
 
         [Route("fav")]
         [HttpGet, UserTypeFilter(Roles = new[] { UserType.Administrator, UserType.User })]
-        public async Task<ActionResult> Favorites(long id = 0, int pageNum = 0)
+        public async Task<ActionResult> Favorites(long id = 0, int pageNum = 0, string k = null)
         {
             if ((id == 0 || id != CurrentUser.Id) && CurrentUser.UserType != UserType.Administrator)
             {
@@ -792,7 +792,7 @@ namespace jail.Controllers
             }
 
             ViewBag.Id = id;
-            var books = await DataRepository.GetFavorites(id, pageNum, SettingsHelper.MaxRecordsToShowAtOnce).ConfigureAwait(false);
+            var books = await DataRepository.GetFavorites(id, pageNum, SettingsHelper.MaxRecordsToShowAtOnce, k).ConfigureAwait(false);
             return View(books);
         }
 
