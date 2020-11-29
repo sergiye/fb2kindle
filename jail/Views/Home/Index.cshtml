@@ -22,12 +22,10 @@
         $("#searchBlock").val('@ViewBag.Key');
     });
     function RefreshData(reloadOnError) {
-        var search = $("#searchBlock");
-        var key = $.trim(search.val());
-        var lang = search.attr("data-search-lang");
-        var link = '@Url.Action("Index", new { k = "keyValue", l = "langValue" })';
-        link = link.replace("langValue", lang);
-        link = link.replace("keyValue", key);
+        let search = $("#searchBlock");
+        let key = $.trim(search.val());
+        let lang = search.attr("data-search-lang");
+        let link = '@Url.Action("Index")' + "?k=" + key + "&l=" + lang;
         window.history.pushState({ state: link }, 'Search results', link);
 //        window.location.href = link;
         $.ajax({

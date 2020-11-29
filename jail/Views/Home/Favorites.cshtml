@@ -11,6 +11,8 @@
                 window.Helper.delay(function () { SearchFavorites(); }, 1000);
             }
         });
+        
+        $("#searchBlock").val('@ViewBag.Key');
     });
 
     function SearchFavorites() {
