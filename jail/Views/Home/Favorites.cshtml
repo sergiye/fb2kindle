@@ -14,7 +14,14 @@
     });
 
     function SearchFavorites() {
-        window.location.reload();
+        
+        let search = $("#searchBlock");
+        let key = $.trim(search.val());
+        let link = '@Url.Action("Favorites", new { id = ViewBag.Id })';
+        link += "pageNum=0&k=" + key;
+        // window.history.pushState({ state: link }, 'Search results', link);
+        window.location.href = link;
+        // window.location.reload();
     };
 
     function DeleteFavorite(id, title, rowId) {
@@ -38,12 +45,12 @@
 
 <div class="search-wrapper">
     <div class="btn-toolbar input-group">
-        @* <input id="searchBlock" type="text" class="form-control" aria-label="..." placeholder="Start type to search..."> *@
-        @* <div class="input-group-btn"> *@
-        @*     <button type="button" class="btn btn-primary" onclick="SearchFavorites();" title="Search"> *@
-        @*         <i class="glyphicon glyphicon-search"></i> *@
-        @*     </button> *@
-        @* </div> *@
+        <input id="searchBlock" type="text" class="form-control" aria-label="..." placeholder="Start type to search...">
+        <div class="input-group-btn">
+            <button type="button" class="btn btn-primary" onclick="SearchFavorites();" title="Search">
+                <i class="glyphicon glyphicon-search"></i>
+            </button>
+        </div>
         <div class="input-group-addon">
             <span>
                 @(1 + Model.Skipped) - @(Model.Skipped + Model.Data.Count()) / @Model.TotalCount
@@ -94,7 +101,7 @@
             <th data-defaultsort="asc" style="min-width: 220px;">Title</th>
             <th style="min-width: 150px; width: 25%;">Author</th>
             <th style="min-width: 150px; width: 25%;">Sequence</th>
-            <th style="min-width: 140px; width: 120px;">Date</th>
+            <th style="min-width: 140px; width: 120px;">Date added</th>
             @*<th style="min-width: 80px; width: 80px;">User Id</th>*@
             <th style="min-width: 110px; width: 110px;"></th>
         </tr>

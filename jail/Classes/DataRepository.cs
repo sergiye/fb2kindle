@@ -164,36 +164,46 @@ where b.id in @ids";
             return info.OrderByDescending(i=>i.GeneratedTime);
         }
 
-        public static async Task<BookFavoritesViewModel> GetFavorites(long userId, int page, int pageSize)
+        public static async Task<BookFavoritesViewModel> GetFavorites(long userId, int page, int pageSize, string key)
         {
-            //fetch total count
-            var sql = "select count(*) from favorites f ";
+            var mainSql = @"from books b
+    join favorites f on b.id = f.BookId
+    join authors a on a.id = b.id_author
+    join fts_book_content c on b.id=c.docid
+    join fts_auth_content ac on ac.docid=a.id
+    left join bookseq bs on bs.id_book = b.id
+    left join sequences s on s.id = bs.id_seq
+where 1=1";
+            
             if (userId > 0)
-                sql += " where f.UserId=@userId ";
-            var totalRows = await Db.QueryOneAsync<int>(sql, new {userId}).ConfigureAwait(false);
-
-            //fetch Ids
+                mainSql += " AND f.UserId=@userId ";
+            key = key ?? "";
+            if (!string.IsNullOrWhiteSpace(key))
+                mainSql += @" AND ( (REPLACE(b.title, ' ', '') LIKE @key OR REPLACE(a.search_name, ' ', '') LIKE @key OR REPLACE(c.c0content, ' ', '') LIKE @key OR REPLACE(ac.c0content, ' ', '') LIKE @key)
+ OR (REPLACE(b.title, ' ', '') LIKE @key2 OR REPLACE(a.search_name, ' ', '') LIKE @key2 OR REPLACE(c.c0content, ' ', '') LIKE @key2 OR REPLACE(ac.c0content, ' ', '') LIKE @key2) ) ";
             var skipped = page * pageSize;
-            sql = "select f.id from favorites f";
-            if (userId > 0)
-                sql += " where f.UserId=@userId ";
-            sql += " order by f.DateAdded desc limit @skip, @take";
-            var favIds = (await Db.QueryAsync<long>(sql, new {userId, skip = skipped, take = pageSize}).ConfigureAwait(false)).ToArray();
+            var filterObject = new
+            {
+                userId, skip = skipped, take = pageSize,
+                key = $"%{key.ToLower().Replace(" ", "")}%",
+                key2 = $"%{string.Join(" ", key.Split(' ').Reverse()).ToLower().Replace(" ", "")}%"
+            };
+
+            //fetch total count
+            var sql = "select count(*) " + mainSql;
+            var totalRows = await Db.QueryOneAsync<int>(sql, filterObject).ConfigureAwait(false);
 
             //Fetch books
             sql = @"select b.id, b.title, b.id_archive, b.file_name, b.file_size,
-       b.md5sum, b.created, b.lang, f.id FavoriteId, f.UserId, f.DateAdded,
-       s.*,
-       bs.number BookOrder,
-       a.id, a.full_name, a.first_name, a.middle_name, a.last_name
-from books b
-    join favorites f on b.id = f.BookId
-    join authors a on a.id = b.id_author
-    left join bookseq bs on bs.id_book = b.id
-    left join sequences s on s.id = bs.id_seq
-where f.Id in @favIds order by f.DateAdded desc";
+            b.md5sum, b.created, b.lang, f.id FavoriteId, f.UserId, f.DateAdded,
+            s.*,
+            bs.number BookOrder,
+                a.id, a.full_name, a.first_name, a.middle_name, a.last_name ";
+            sql += mainSql;
+            sql += " order by f.DateAdded desc limit @skip, @take";
+            
             var data = (await Db.QueryMultipleAsync<BookFavoritesInfo, SequenceInfo, AuthorInfo, long>(sql, 
-                b => b.Id, b => b.Sequences, b => b.Authors, new { favIds }).ConfigureAwait(false)).ToList();
+                b => b.Id, b => b.Sequences, b => b.Authors, filterObject).ConfigureAwait(false)).ToList();
 
             return new BookFavoritesViewModel(data, page, Convert.ToInt32(Math.Ceiling((double)totalRows / pageSize)), totalRows, skipped);
         }
