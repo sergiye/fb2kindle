@@ -859,7 +859,7 @@ namespace Fb2Kindle
                 try
                 {
                     var file = GetImageNameWithExt($"{workFolder}\\{imagesPrefix}{binEl.Attribute("id").Value}");
-                    var format = GetImageFormatFromMimeType(binEl.Attribute("content-type").Value, _currentSettings.Jpeg ? ImageFormat.Jpeg : ImageFormat.Png);
+                    var format = GetImageFormatFromMimeType(binEl.Attribute("content-type")?.Value, _currentSettings.Jpeg ? ImageFormat.Jpeg : ImageFormat.Png);
                     //todo: we can get format from img.RawFormat
                     var fileBytes = Convert.FromBase64String(binEl.Value);
                     try
@@ -989,15 +989,15 @@ namespace Fb2Kindle
 
         private static ImageFormat GetImageFormatFromMimeType(string contentType, ImageFormat defaultResult)
         {
-            if (contentType.Equals(GetMimeType(ImageFormat.Jpeg), StringComparison.OrdinalIgnoreCase))
+            if (GetMimeType(ImageFormat.Jpeg).Equals(contentType, StringComparison.OrdinalIgnoreCase))
             {
                 return ImageFormat.Jpeg;
             }
-            if (contentType.Equals(GetMimeType(ImageFormat.Bmp), StringComparison.OrdinalIgnoreCase))
+            if (GetMimeType(ImageFormat.Bmp).Equals(contentType, StringComparison.OrdinalIgnoreCase))
             {
                 return ImageFormat.Bmp;
             }
-            if (contentType.Equals(GetMimeType(ImageFormat.Png), StringComparison.OrdinalIgnoreCase))
+            if (GetMimeType(ImageFormat.Png).Equals(contentType, StringComparison.OrdinalIgnoreCase))
             {
                 return ImageFormat.Png;
             }
