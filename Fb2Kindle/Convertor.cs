@@ -597,7 +597,7 @@ namespace Fb2Kindle
             //footer
             root.Add(new XElement("br"), new XElement("br"), new XElement("br"));
             root.Add(new XElement("p", $"Converted by © Fb2Kindle {Assembly.GetExecutingAssembly().GetName().Version.ToString(3)}"));
-            root.Add(new XElement("p", "(egoshin.sergey@gmail.com)"));
+            root.Add(new XElement("p", "(fbtokindle@gmail.com)"));
             return root;
         }
 
