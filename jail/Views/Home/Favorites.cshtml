@@ -47,7 +47,7 @@
 
 <div class="search-wrapper">
     <div class="btn-toolbar input-group">
-        <input id="searchBlock" type="text" class="form-control" aria-label="..." placeholder="Start type to search...">
+        <input id="searchBlock" type="text" class="form-control" aria-label="..." placeholder="Search by book or author...">
         <div class="input-group-btn">
             <button type="button" class="btn btn-primary" onclick="SearchFavorites();" title="Search">
                 <i class="glyphicon glyphicon-search"></i>
@@ -130,10 +130,6 @@
                             <br />}
                     </td>
                     <td>@Html.DisplayFor(modelItem => item.DateAdded)</td>
-                    @*<td>
-                            @{ var flibustaLink = "http://flibusta.is/user/" + item.UserId; }
-                            <a href=@flibustaLink> @Html.DisplayFor(modelItem => item.UserId)</a>
-                        </td>*@
                     <td>
                         <a href="@string.Format("{0}/b/{1}", SettingsHelper.FlibustaLink, item.Id)" target="_blank" class="btn btn-success" title="Flibusta version">
                             <span class='glyphicon glyphicon-link'></span>
