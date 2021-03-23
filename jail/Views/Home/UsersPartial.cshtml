@@ -35,8 +35,7 @@
             <td>
                 @if (item.FlibustaId > 0)
                 {
-                    <a href='@string.Format("{0}/rec?view=recs&adata=name&bdata=id&user={1}&udata=id", flibustaLink, item.FlibustaId)' target="_blank"> @Html.DisplayFor(modelItem => item.FlibustaId)</a>
-                    @* <a href='@string.Format("http://flibusta.is/user/{0}", item.FlibustaId)'> @Html.DisplayFor(modelItem => item.FlibustaId)</a> *@
+                    <a href='@string.Format("{0}/rec?view=recs&user={1}&udata=id", flibustaLink, item.FlibustaId)' target="_blank"> @Html.DisplayFor(modelItem => item.FlibustaId)</a>
                 }
             </td>
             <td class="@(item.Active ? "success" : "warning")">

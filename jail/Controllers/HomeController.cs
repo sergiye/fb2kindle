@@ -834,7 +834,7 @@ namespace jail.Controllers
                 {
                     while (fetchMore)
                     {
-                        var url = $"https://flibusta.is/rec?view=recs&adata=name&bdata=id&udata=id&user={flibustaId}&page={pageNum++}";
+                        var url = $"{SettingsHelper.FlibustaLink}/rec?page={pageNum++}&view=recs&user={flibustaId}&udata=id";
                         var pageData = await client.DownloadStringTaskAsync(url).ConfigureAwait(false);
                         var bytes = Encoding.Default.GetBytes(pageData);
                         pageData = Encoding.UTF8.GetString(bytes);
