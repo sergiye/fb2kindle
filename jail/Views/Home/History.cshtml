@@ -29,6 +29,7 @@
 <div id="gridDataContainer">
     <table class="table table-bordered table-hover">
         <tr>
+            <th style="min-width: 100px; width: 100px;"></th>
             <th style="min-width: 220px; width: 50%">Title</th>
             <th style="min-width: 150px; width: 20%;">Author</th>
             <th style="min-width: 150px; width: 20%;">Sequence</th>
@@ -45,31 +46,31 @@
             {
                 <tr>
                     <td>
-                        @if (item.Id > 0)
-                        {
+                        <img src="@string.Format("\\b\\{0}\\cover.jpg", item.Id)" style="width: 100%; height: auto;" alt=""/>
+                    </td>
+                    <td>
+                        @if (item.Id > 0) {
                             <a href='@Url.Action("details", new {id = item.Id})' title="Book details">
                                 <b>@Html.DisplayFor(modelItem => item.Title)</b>
                             </a>
                         }
-                        else
-                        {
+                        else {
                             <b>@Html.DisplayFor(modelItem => item.Title)</b>
                         }
                     </td>
-                    <td>@{ Html.RenderPartial("AuthorsList", item.Authors); }</td>
                     <td>
-                        @if (item.Sequences.Count > 0)
-                        {
+                        @{ Html.RenderPartial("AuthorsList", item.Authors); }
+                    </td>
+                    <td>
+                        @if (item.Sequences.Count > 0) {
                             Html.RenderPartial("SequencesList", item.Sequences);
                         }
-                        else
-                        {
-                            <br />
+                        else {
+                            <br/>
                         }
                     </td>
                     <td>@Html.DisplayFor(modelItem => item.GeneratedTime)</td>
-                    @if (user != null && user.UserType == UserType.Administrator)
-                    {
+                    @if (user != null && user.UserType == UserType.Administrator) {
                         <td>
                             <a href="#" onclick="DeleteHistoryItem(@item.Id, encodeURI('@item.FileName'));" class="btn btn-danger" title="Delete">
                                 <span class="glyphicon glyphicon-trash"></span>
