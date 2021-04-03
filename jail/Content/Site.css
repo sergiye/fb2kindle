@@ -70,11 +70,11 @@ body {
     vertical-align: middle;
     float: none;
 }
-#dropZone {
+.dropzone {
     border-radius: 5px;
     border: 2px solid #ccc;
     background-color: #eee;
-    width: 70%;
+    width: 80%;
     padding: 50px 0;
     text-align: center;
     font-size: 18px;
@@ -85,7 +85,7 @@ body {
     border-radius: 5px;
     border: 2px solid #ccc;
     background-color: #eee;
-    width: 70%;
+    width: 80%;
     padding: 30px 0;
     text-align: center;
     font-size: 18px;
@@ -95,15 +95,6 @@ body {
 h1, h2, h3 {
     margin-bottom: 20px;
 }
-#dropZone.hover {
-    border-color: #aaa;
-    background-color: #ddd;
-}
-#dropZone.error {
-    border-color: #f00;
-    background-color: #faa;
-}
-
 /* login */
 .form-signin {
     padding: 15px;
