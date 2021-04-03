@@ -105,13 +105,13 @@ namespace Fb2Kindle
                                 {
                                     _opfFile.Elements("metadata").First().Elements("x-metadata").First().Add(new XElement("EmbeddedCover", imgSrc));
                                     AddGuideItem("Cover", imgSrc, "other.ms-coverimage-standard");
-                                    AddPackItem("cover", imgSrc, "image/jpeg", false);
+                                    AddPackItem("cover", imgSrc, System.Net.Mime.MediaTypeNames.Image.Jpeg, false);
                                     coverDone = true;
                                 }
                                 else
                                 {
                                     AddGuideItem($"Cover{bookPostfix}", imgSrc);
-                                    AddPackItem($"Cover{bookPostfix}", imgSrc, "image/jpeg");
+                                    AddPackItem($"Cover{bookPostfix}", imgSrc, System.Net.Mime.MediaTypeNames.Image.Jpeg);
                                 }
                             }
                         }
@@ -832,6 +832,7 @@ namespace Fb2Kindle
 
                     var src = element.Attribute("href").Value;
                     element.RemoveAll();
+                    element.SetAttributeValue("class", "image");
                     if (string.IsNullOrEmpty(src)) continue;
                     src = src.Replace("#", "");
                     var imgEl = new XElement("img");
