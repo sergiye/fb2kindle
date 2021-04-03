@@ -21,18 +21,15 @@ namespace jail.Controllers
 {
     [OutputCache(NoStore = true, Duration = 0, VaryByParam = "None")]
     [ActionLogger, SessionRestore]
-    public class HomeController : Controller
-    {
+    public class HomeController : Controller {
         #region Overrides
 
-        protected override void HandleUnknownAction(string actionName)
-        {
+        protected override void HandleUnknownAction(string actionName) {
             Logger.WriteWarning($"HandleUnknownAction - {actionName}", CommonHelper.GetClientAddress(Request));
             base.HandleUnknownAction(actionName);
         }
 
-        protected override void EndExecute(IAsyncResult asyncResult)
-        {
+        protected override void EndExecute(IAsyncResult asyncResult) {
             var appPath = Request.ApplicationPath.TrimEnd('/');
             var localPath = Request.Url.PathAndQuery;
             if (!string.IsNullOrWhiteSpace(appPath))
@@ -43,10 +40,9 @@ namespace jail.Controllers
 
         #endregion Overrides
 
-        #region Logging
+        #region Common methods
 
-        protected override void OnException(ExceptionContext filterContext)
-        {
+        protected override void OnException(ExceptionContext filterContext) {
             //if (filterContext.Exception != null)
             //{
             //    if (filterContext.Exception is TaskCanceledException ||
@@ -84,38 +80,47 @@ namespace jail.Controllers
             }
         }
 
-        private string GetLinkToFile(string fileName)
-        {
-            return "/" + fileName.Replace(Server.MapPath("~"), "").Replace('\\', '/').TrimStart('/');
+        private string GetLinkToFile(string fileName) {
+            return Url.Action("GetFile", "Home", new {fileName = fileName.Replace('\\', '/').TrimStart('/')});
+        }
+
+        private string GetBookFilePath(string bookFileName) {
+            // var sourceFileName = Server.MapPath($"~/b/{bookFileName}");
+            var sourceFileName = $"{SettingsHelper.TempDataFolder}\\{bookFileName}";
+            return sourceFileName;
+        }
+
+        private string GetFileContentType(string fileExtension) {
+            switch (fileExtension) {
+                case ".jpg":
+                case ".jpeg":
+                    return System.Net.Mime.MediaTypeNames.Image.Jpeg; //"image/jpeg";
+                default:
+                    return System.Net.Mime.MediaTypeNames.Application.Octet;
+            }
+        }
+        
+        [Route("file")]
+        public ActionResult GetFile(string fileName) {
+            var fileExt = Path.GetExtension(fileName.ToLower());
+            return File(Path.Combine(SettingsHelper.TempDataFolder, fileName), GetFileContentType(fileExt), BookHelper.GetCorrectedFileName(fileName));
         }
 
         #endregion
 
         #region basic methods
 
-        public static string GetVersionBuildTime()
-        {
-            var ver = Assembly.GetExecutingAssembly().GetName().Version;
-            var buildTime = new DateTime(2000, 1, 1).AddDays(ver.Build).AddSeconds(ver.Revision * 2);
-            //            if (TimeZone.IsDaylightSavingTime(DateTime.Now, TimeZone.CurrentTimeZone.GetDaylightChanges(DateTime.Now.Year)))
-            //                buildTime = buildTime.AddHours(1);
-            return $"{buildTime:yyyy-MM-dd HH:mm}";
-        }
-
-        public static string GetVersionString()
-        {
+        public static string GetVersionString() {
             return $"Version: {Assembly.GetExecutingAssembly().GetName().Version}";
         }
 
         [Route("about")]
-        public ActionResult About()
-        {
+        public ActionResult About() {
             return View();
         }
 
         [Route("contact")]
-        public ActionResult Contact()
-        {
+        public ActionResult Contact() {
             return View();
         }
 
@@ -124,18 +129,14 @@ namespace jail.Controllers
         #region Login-logout
 
         [Route("login")]
-        public ActionResult Login(string returnUrl)
-        {
+        public ActionResult Login(string returnUrl) {
             var authCookie = HttpContext.Request.Cookies.Get(FormsAuthentication.FormsCookieName);
-            if (authCookie != null && !string.IsNullOrEmpty(authCookie.Value))
-            {
+            if (authCookie != null && !string.IsNullOrEmpty(authCookie.Value)) {
                 var ticket = FormsAuthentication.Decrypt(authCookie.Value);
-                if (ticket != null && !ticket.Expired && !string.IsNullOrWhiteSpace(ticket.Name))
-                {
+                if (ticket != null && !ticket.Expired && !string.IsNullOrWhiteSpace(ticket.Name)) {
                     //restore from cookie
                     var user = UserRepository.GetUser(ticket.Name);
-                    if (user != null)
-                    {
+                    if (user != null) {
                         CurrentUser = user;
                         ControllerContext.HttpContext.Session.Timeout = 24 * 60;
                         FormsAuthentication.SetAuthCookie(ticket.Name, true);
@@ -151,21 +152,17 @@ namespace jail.Controllers
 
         [Route("login")]
         [HttpPost]
-        public ActionResult Login(LogOnModel model)
-        {
-            if (ModelState.IsValid)
-            {
+        public ActionResult Login(LogOnModel model) {
+            if (ModelState.IsValid) {
                 var user = UserRepository.GetUser(model.UserName, model.Password);
-                if (user == null)
-                {
+                if (user == null) {
                     ModelState.AddModelError("", "The user name or password provided is incorrect.");
                 }
                 //else if (user.UserType != UserType.Administrator && user.Id != 0)
                 //{
                 //    ModelState.AddModelError("", string.Format("'{0}' user type is not allowed to login", user.UserType));
                 //}
-                else
-                {
+                else {
                     Logger.WriteInfo($"{user.UserType} logged in", CommonHelper.GetClientAddress(Request), model.UserName);
                     CurrentUser = user;
                     ControllerContext.HttpContext.Session.Timeout = 24 * 60;
@@ -176,8 +173,7 @@ namespace jail.Controllers
                         $"{user.Id},{user.UserType}",
                         FormsAuthentication.FormsCookiePath);
                     var strEncryptedTicket = FormsAuthentication.Encrypt(ticket);
-                    var cookie = new HttpCookie(FormsAuthentication.FormsCookieName, strEncryptedTicket)
-                    {
+                    var cookie = new HttpCookie(FormsAuthentication.FormsCookieName, strEncryptedTicket) {
                         Expires = DateTime.Now.AddDays(60)
                     };
                     HttpContext.Response.Cookies.Add(cookie);
@@ -197,8 +193,7 @@ namespace jail.Controllers
         }
 
         [Route("logout")]
-        public ActionResult Logout()
-        {
+        public ActionResult Logout() {
             if (CurrentUser != null && CurrentUser.UserType != UserType.Administrator)
                 Logger.WriteInfo("Logout", CommonHelper.GetClientAddress(Request), User.Identity.Name);
             HttpContext.Session["User"] = null;
@@ -213,8 +208,7 @@ namespace jail.Controllers
 
         [Route("log"), SkipLogging]
         [UserTypeFilter(Roles = new[] { UserType.Administrator })]
-        public ActionResult Log(string k = null, SystemLog.LogItemType t = SystemLog.LogItemType.All)
-        {
+        public ActionResult Log(string k = null, SystemLog.LogItemType t = SystemLog.LogItemType.All) {
             ViewBag.DebugMode = Debugger.IsAttached;
             ViewBag.Key = k;
             ViewBag.SearchType = t;
@@ -223,8 +217,7 @@ namespace jail.Controllers
 
         [Route("logp"), SkipLogging]
         [HttpGet, UserTypeFilter(Roles = new[] { UserType.Administrator })]
-        public ActionResult LogPartial(string key, SystemLog.LogItemType searchType)
-        {
+        public ActionResult LogPartial(string key, SystemLog.LogItemType searchType) {
             ViewBag.DebugMode = Debugger.IsAttached;
             ViewBag.Key = key;
             ViewBag.SearchType = searchType;
@@ -233,36 +226,30 @@ namespace jail.Controllers
 
         [Route("clrlog"), SkipLogging]
         [HttpPost, UserTypeFilter(Roles = new[] { UserType.Administrator })]
-        public string ClearSelectedLog(string selection)
-        {
-            try
-            {
+        public string ClearSelectedLog(string selection) {
+            try {
                 selection = selection.Trim();
                 if (string.IsNullOrWhiteSpace(selection))
                     return "Empty selection!";
                 var removed = SystemRepository.ClearByMessagePart(selection);
                 return $"Removed: {removed} records by text: '{selection}'";
             }
-            catch (Exception ex)
-            {
+            catch (Exception ex) {
                 return ex.Message;
             }
         }
 
         [Route("calclog"), SkipLogging]
         [HttpPost, UserTypeFilter(Roles = new[] { UserType.Administrator })]
-        public string CalcSelectedLog(string selection)
-        {
-            try
-            {
+        public string CalcSelectedLog(string selection) {
+            try {
                 selection = selection.Trim();
                 if (string.IsNullOrWhiteSpace(selection))
                     return "Empty selection!";
                 var found = SystemRepository.CalcByMessagePart(selection);
                 return $"Found {found} records by text: '{selection}'";
             }
-            catch (Exception ex)
-            {
+            catch (Exception ex) {
                 return ex.Message;
             }
         }
@@ -271,8 +258,7 @@ namespace jail.Controllers
 
         #region Search
 
-        public async Task<ActionResult> Index(string k = null, string l = "ru")
-        {
+        public async Task<ActionResult> Index(string k = null, string l = "ru") {
             ViewBag.Key = k;
             ViewBag.Lang = l;
             return View(string.IsNullOrWhiteSpace(k) ? new List<BookInfo>() :
@@ -281,25 +267,21 @@ namespace jail.Controllers
 
         [ValidateInput(false)]
         [Route("search")]
-        public async Task<ActionResult> SearchResults(string k = null, string l = "ru")
-        {
+        public async Task<ActionResult> SearchResults(string k = null, string l = "ru") {
             return PartialView(string.IsNullOrWhiteSpace(k) ? new List<BookInfo>() :
                 await DataRepository.GetSearchData(k, l, CurrentUser?.Id).ConfigureAwait(false));
         }
 
         [Route("history")]
-        public async Task<ActionResult> History()
-        {
-            var path = Server.MapPath("~/b");
+        public async Task<ActionResult> History() {
+            var path = SettingsHelper.TempDataFolder;
             var info = new DirectoryInfo(path);
 
-            try
-            {
+            try {
                 var total = Directory.GetFiles(path, "*", SearchOption.AllDirectories).Sum(t => new FileInfo(t).Length);
                 ViewBag.TotalSize = Simpl.Extensions.StringHelper.FileSizeStr(total);
             }
-            catch (Exception ex)
-            {
+            catch (Exception ex) {
                 Logger.WriteError(ex, "Error calculating allocated files total size");
             }
             var files = info.GetFiles().Where(f => f.Extension.Equals(".fb2", StringComparison.OrdinalIgnoreCase)).OrderBy(p => p.CreationTime).ToList();
@@ -313,8 +295,7 @@ namespace jail.Controllers
 
             //fill files data to books info
             var books = new List<BookHistoryInfo>();
-            foreach (var fi in files)
-            {
+            foreach (var fi in files) {
                 int.TryParse(Path.GetFileNameWithoutExtension(fi.Name), out var bookId);
                 books.Add(new BookHistoryInfo { Id = bookId, GeneratedTime = fi.CreationTime, FileName = fi.Name, Title = fi.Name });
             }
@@ -323,48 +304,39 @@ namespace jail.Controllers
             return View(await DataRepository.GetHistory(books.Take(SettingsHelper.MaxRecordsToShowAtOnce)).ConfigureAwait(false));
         }
 
-        private void TryToDelete(string path, bool isFile)
-        {
-            try
-            {
-                if (isFile)
-                {
+        private void TryToDelete(string path, bool isFile) {
+            try {
+                if (isFile) {
                     if (System.IO.File.Exists(path))
                         System.IO.File.Delete(path);
                 }
-                else
-                {
+                else {
                     if (Directory.Exists(path))
                         Directory.Delete(path, true);
                 }
             }
-            catch (Exception ex)
-            {
+            catch (Exception ex) {
                 Logger.WriteError(ex, $"Error deleting history item '{path}': {ex.Message}", CommonHelper.GetClientAddress(Request));
             }
         }
 
         [Route("history")]
         [HttpDelete, UserTypeFilter(Roles = new[] { UserType.Administrator })]
-        public ActionResult HistoryDelete(long id, string fileName)
-        {
-            try
-            {
+        public ActionResult HistoryDelete(long id, string fileName) {
+            try {
                 fileName = Server.UrlDecode(fileName);
                 fileName = Path.GetFileNameWithoutExtension(fileName);
-                if (id > 0)
-                {
+                if (id > 0) {
                     fileName = id.ToString();
                 }
-                var workingPath = Server.MapPath("~/b");
+                var workingPath = SettingsHelper.TempDataFolder;
                 TryToDelete(Path.Combine(workingPath, $"{fileName}.fb2"), true);
                 TryToDelete(Path.Combine(workingPath, $"{fileName}.mobi"), true);
                 TryToDelete(Path.Combine(workingPath, $"{fileName}"), false);
                 Logger.WriteWarning($"History item '{fileName}' was deleted by user '{CurrentUser.Email}'", CommonHelper.GetClientAddress(Request));
                 return new HttpStatusCodeResult(HttpStatusCode.OK, "Done");
             }
-            catch (Exception ex)
-            {
+            catch (Exception ex) {
                 Logger.WriteError(ex, $"Error deleting history item {id}/{fileName}: {ex.Message}", CommonHelper.GetClientAddress(Request));
                 throw;
             }
@@ -375,15 +347,13 @@ namespace jail.Controllers
         #region book
 
         [Route("f/{id:long}")]
-        public FileResult Download(long id)
-        {
+        public FileResult Download(long id) {
             var book = DataRepository.GetBook(id);
             if (book == null)
                 throw new FileNotFoundException("Book not found in db");
 
-            var sourceFileName = Server.MapPath($"~/b/{book.FileName}");
-            if (!System.IO.File.Exists(sourceFileName))
-            {
+            var sourceFileName = GetBookFilePath(book.FileName);
+            if (!System.IO.File.Exists(sourceFileName)) {
                 var archPath = Path.Combine(SettingsHelper.ArchivesPath, book.ArchiveFileName);
                 if (!System.IO.File.Exists(archPath))
                     throw new FileNotFoundException("Book archive not found");
@@ -396,12 +366,11 @@ namespace jail.Controllers
         }
 
         [Route("m/{id:long}")]
-        public FileResult Mobi(long id)
-        {
+        public FileResult Mobi(long id) {
             var book = DataRepository.GetBook(id);
             if (book == null)
                 throw new FileNotFoundException("Book not found in db");
-            var sourceFileName = Server.MapPath($"~/b/{book.FileName}");
+            var sourceFileName = GetBookFilePath(book.FileName);
             var resultFile = Path.ChangeExtension(sourceFileName, ".mobi");
             if (!System.IO.File.Exists(resultFile))
                 throw new FileNotFoundException("File not found", resultFile);
@@ -412,21 +381,18 @@ namespace jail.Controllers
         }
 
         [Route("deliver/{id:long}")]
-        public async Task<ActionResult> Deliver(long id)
-        {
+        public async Task<ActionResult> Deliver(long id) {
             var book = DataRepository.GetBook(id);
             if (book == null)
                 throw new FileNotFoundException("Book not found in db");
-            var sourceFileName = Server.MapPath($"~/b/{book.FileName}");
+            var sourceFileName = GetBookFilePath(book.FileName);
             var resultFile = Path.ChangeExtension(sourceFileName, ".mobi");
-            if (!System.IO.File.Exists(resultFile))
-            {
+            if (!System.IO.File.Exists(resultFile)) {
                 Response.StatusCode = (int)HttpStatusCode.NotFound;
                 return Json("File not found", JsonRequestBehavior.AllowGet);
                 //return new HttpStatusCodeResult(HttpStatusCode.NotFound);
             }
-            try
-            {
+            try {
                 var email = CurrentUser.Email;
                 if (email.ToLower().GetHash().Equals(CommonHelper.AdminLoginHash))
                     email = SettingsHelper.AdminDefaultEmail;
@@ -436,8 +402,7 @@ namespace jail.Controllers
                 Logger.WriteInfo($"Sent {book.Title} to {email}...");
                 return Json($"Done! Please check '{email}' for message with book attached.", JsonRequestBehavior.AllowGet);
             }
-            catch (Exception ex)
-            {
+            catch (Exception ex) {
                 Logger.WriteError(ex, $"Mail delivery failed:  {ex.Message}", CommonHelper.GetClientAddress(Request));
                 Response.StatusCode = 500; // Replace .AddHeader
                 return Json(ex.Message, JsonRequestBehavior.AllowGet);
@@ -446,12 +411,11 @@ namespace jail.Controllers
         }
 
         [Route("generate/{id:long}")]
-        public ActionResult Generate(long id)
-        {
+        public ActionResult Generate(long id) {
             var book = DataRepository.GetBook(id);
             if (book == null)
                 throw new FileNotFoundException("Book not found in db");
-            var sourceFileName = Server.MapPath($"~/b/{book.FileName}");
+            var sourceFileName = GetBookFilePath(book.FileName);
             var resultFile = Path.ChangeExtension(sourceFileName, ".mobi");
             if (System.IO.File.Exists(resultFile))
                 return Json("Done", JsonRequestBehavior.AllowGet);
@@ -467,15 +431,13 @@ namespace jail.Controllers
         }
 
         [Route("r/{id:long}")]
-        public ActionResult Read(long id)
-        {
+        public ActionResult Read(long id) {
             var book = DataRepository.GetBook(id);
             if (book == null)
                 throw new FileNotFoundException("Book not found in db");
 
-            var sourceFileName = Server.MapPath($"~/b/{book.FileName}");
-            if (!System.IO.File.Exists(sourceFileName))
-            {
+            var sourceFileName = GetBookFilePath(book.FileName);
+            if (!System.IO.File.Exists(sourceFileName)) {
                 var archPath = Path.Combine(SettingsHelper.ArchivesPath, book.ArchiveFileName);
                 if (!System.IO.File.Exists(archPath))
                     throw new FileNotFoundException("Book archive not found");
@@ -487,8 +449,7 @@ namespace jail.Controllers
                 throw new DirectoryNotFoundException("Details folder is empty");
             Directory.CreateDirectory(detailsFolder);
             var readingPath = Path.Combine(detailsFolder, "toc.html");
-            if (!System.IO.File.Exists(readingPath))
-            {
+            if (!System.IO.File.Exists(readingPath)) {
                 throw new FileNotFoundException("Book not found, please prepare it first");
                 //BookHelper.Transform(tempFile, readingPath, Server.MapPath("~/xhtml.xsl"));
                 //if (!BookHelper.ConvertBook(sourceFileName))
@@ -503,8 +464,7 @@ namespace jail.Controllers
         }
 
         [Route("d/{id:long}")]
-        public ActionResult Details(long id)
-        {
+        public ActionResult Details(long id) {
             var book = DataRepository.GetBook(id);
             if (book == null)
                 throw new FileNotFoundException("Book not found in db");
@@ -513,26 +473,32 @@ namespace jail.Controllers
             if (!System.IO.File.Exists(archPath))
                 throw new FileNotFoundException("Book archive not found");
 
-            var sourceFileName = Server.MapPath($"~/b/{book.FileName}");
+            var sourceFileName = GetBookFilePath(book.FileName);
+            var sourceFileNameOnly = Path.GetFileNameWithoutExtension(sourceFileName);
             if (!System.IO.File.Exists(sourceFileName))
                 BookHelper.ExtractZipFile(archPath, book.FileName, sourceFileName);
-            var detailsFolder = Path.Combine(Path.GetDirectoryName(sourceFileName), Path.GetFileNameWithoutExtension(sourceFileName));
+            
+            var detailsFolder = $"{Path.GetDirectoryName(sourceFileName)}/{sourceFileNameOnly}";
             if (string.IsNullOrWhiteSpace(detailsFolder))
                 throw new DirectoryNotFoundException("Details folder is empty");
             Directory.CreateDirectory(detailsFolder);
-            var coverImagePath = Path.Combine(detailsFolder, "cover.jpg");
+            
             var annotationsPath = Path.Combine(detailsFolder, "annotation.txt");
-            if (!System.IO.File.Exists(coverImagePath))
-                BookHelper.SaveCover(sourceFileName, coverImagePath);
             if (string.IsNullOrWhiteSpace(book.Description))
                 book.Description = BookHelper.GetAnnotation(sourceFileName, annotationsPath);
             ViewBag.Title = book.Title;
-            if (System.IO.File.Exists(coverImagePath))
-                ViewBag.Image = GetLinkToFile(coverImagePath);
+
+            var coverImagePath = Path.Combine(detailsFolder, "cover.jpg");
+            if (!System.IO.File.Exists(coverImagePath))
+                BookHelper.SaveCover(sourceFileName, coverImagePath);
+            if (System.IO.File.Exists(coverImagePath)) {
+                // var coverImageRelativePath = $"{sourceFileNameOnly}/cover.jpg";
+                var coverImageRelativePath = $"{book.Id}/cover.jpg";
+                ViewBag.Image = GetLinkToFile(coverImageRelativePath);
+            }
 
             var mobiFile = Path.ChangeExtension(sourceFileName, ".mobi");
-            if (System.IO.File.Exists(mobiFile))
-            {
+            if (System.IO.File.Exists(mobiFile)) {
                 ViewBag.MobiFileFound = true;
                 ViewBag.MobiFileSize = Simpl.Extensions.StringHelper.FileSizeStr(new FileInfo(mobiFile).Length);
             }
@@ -548,8 +514,7 @@ namespace jail.Controllers
         #region sequence
 
         [Route("s/{id:long}")]
-        public ActionResult Sequence(long id)
-        {
+        public ActionResult Sequence(long id) {
             var data = DataRepository.GetSequenceData(id, CurrentUser?.Id);
             ViewBag.Title = data.Value;
             ViewBag.SequenceMode = true;
@@ -561,8 +526,7 @@ namespace jail.Controllers
         #region author
 
         [Route("a/{id:long}")]
-        public ActionResult Author(long id)
-        {
+        public ActionResult Author(long id) {
             var data = DataRepository.GetAuthorData(id, CurrentUser?.Id);
             ViewBag.Title = data.FullName;
             ViewBag.AuthorMode = true;
@@ -574,26 +538,23 @@ namespace jail.Controllers
         #region upload/convert
 
         [Route("c")]
-        public ActionResult UploadFile()
-        {
+        public ActionResult UploadFile() {
             ViewBag.maxRequestLength = SettingsHelper.MaxRequestLength;
             return View();
         }
 
         [HttpPost]
-        public ActionResult HandleFileUpload()
-        {
+        public ActionResult HandleFileUpload() {
             var originFileName = Server.UrlDecode(Request.Headers["X-File-Name"]);
             if (string.IsNullOrEmpty(originFileName))
                 return Json(new { success = false });
-            var originRealPath = Server.MapPath($"~/b/{BookHelper.GetCorrectedFileName(originFileName)}");
+            var originRealPath = $"{SettingsHelper.TempDataFolder}\\{BookHelper.GetCorrectedFileName(originFileName)}";
             if (string.IsNullOrEmpty(originRealPath))
                 return Json(new { success = false });
             var mobiDisplayName = Path.ChangeExtension(originFileName, ".mobi");
-            var mobiRealPath = Path.ChangeExtension(originRealPath, ".mobi");
-            var mobiRelativePath = GetLinkToFile(mobiRealPath);
-            if (System.IO.File.Exists(originRealPath))
-            {
+            var mobiRelativePath = GetLinkToFile(mobiDisplayName);
+            if (System.IO.File.Exists(originRealPath)) {
+                var mobiRealPath = Path.ChangeExtension(originRealPath, ".mobi");
                 if (System.IO.File.Exists(mobiRealPath))
                     return Json(new { success = true, link = mobiRelativePath, fileName = mobiDisplayName });
                 System.IO.File.Delete(originRealPath); //delete old uploaded file to re-convert new one
@@ -607,11 +568,9 @@ namespace jail.Controllers
             return Json(new { success = true, link = mobiRelativePath, fileName = mobiDisplayName });
         }
 
-        public FileResult GetConverter()
-        {
+        public FileResult GetConverter() {
             var name = Path.GetFileName(SettingsHelper.ConverterPath);
-            return File(SettingsHelper.ConverterPath,
-                System.Net.Mime.MediaTypeNames.Application.Octet, name);
+            return File(SettingsHelper.ConverterPath, System.Net.Mime.MediaTypeNames.Application.Octet, name);
         }
 
         #endregion
@@ -620,8 +579,7 @@ namespace jail.Controllers
 
         [Route("passwd")]
         [HttpGet, UserTypeFilter(Roles = new[] { UserType.Administrator, UserType.User })]
-        public ActionResult PasswordChange(long id)
-        {
+        public ActionResult PasswordChange(long id) {
             var user = UserRepository.GetUserById(id) ?? CurrentUser;
             var item = new ChangePasswordModel { Id = user.Id, Username = user.Email, HasPassword = user.HasPassword };
             return PartialView("_PasswordChange", item);
@@ -629,12 +587,9 @@ namespace jail.Controllers
 
         [Route("passwd")]
         [HttpPost, UserTypeFilter(Roles = new[] { UserType.Administrator, UserType.User })]
-        public ActionResult PasswordChange(ChangePasswordModel model)
-        {
-            if (ModelState.IsValid)
-            {
-                if (UserRepository.SetUserPassword(model.Id, model.OldPassword, model.NewPassword))
-                {
+        public ActionResult PasswordChange(ChangePasswordModel model) {
+            if (ModelState.IsValid) {
+                if (UserRepository.SetUserPassword(model.Id, model.OldPassword, model.NewPassword)) {
                     //_notificationManager.NotifyPasswordChanged(model.Id, 0);
                     var res = $"Password of user '{model.Username}' was modified by '{CurrentUser.Email}'";
                     Logger.WriteInfo(res, CommonHelper.GetClientAddress(Request));
@@ -652,24 +607,20 @@ namespace jail.Controllers
 
         [Route("users")]
         [HttpGet, UserTypeFilter(Roles = new[] { UserType.Administrator })]
-        public ActionResult Users()
-        {
+        public ActionResult Users() {
             return View(UserRepository.GetUsers(string.Empty));
         }
 
         [Route("usersp")]
         [HttpGet, UserTypeFilter(Roles = new[] { UserType.Administrator })]
-        public ActionResult UsersSearch(string key)
-        {
+        public ActionResult UsersSearch(string key) {
             return PartialView("UsersPartial", UserRepository.GetUsers(key));
         }
 
         [Route("userdel")]
         [HttpGet, UserTypeFilter(Roles = new[] { UserType.Administrator })]
-        public ActionResult UserDelete(long id)
-        {
-            try
-            {
+        public ActionResult UserDelete(long id) {
+            try {
                 var user = UserRepository.GetUserById(id);
                 if (user == null)
                     return new HttpStatusCodeResult(HttpStatusCode.NotFound, "User was not found");
@@ -677,8 +628,7 @@ namespace jail.Controllers
                 Logger.WriteWarning($"User '{user.Email}' was deleted by user '{CurrentUser.Email}'", CommonHelper.GetClientAddress(Request));
                 return new HttpStatusCodeResult(HttpStatusCode.OK, "Done");
             }
-            catch (Exception ex)
-            {
+            catch (Exception ex) {
                 Logger.WriteError(ex, $"Error deleting user {id}: {ex.Message}", CommonHelper.GetClientAddress(Request));
                 throw;
             }
@@ -686,24 +636,20 @@ namespace jail.Controllers
 
         [Route("useradd")]
         [HttpGet, UserTypeFilter(Roles = new[] { UserType.Administrator })]
-        public ActionResult UserEdit(long id = 0)
-        {
+        public ActionResult UserEdit(long id = 0) {
             var user = UserRepository.GetUserById(id);
             ViewBag.TimeTrackUsers = TimeTrackRepository.GetAllUsers();
             return user != null
                 ? PartialView(user)
-                : PartialView(new UserProfile
-                {
+                : PartialView(new UserProfile {
                     UserType = UserType.User,
                 });
         }
 
         [Route("useradd")]
         [HttpPost, UserTypeFilter(Roles = new[] { UserType.Administrator })]
-        public ActionResult UserEdit(UserProfile model)
-        {
-            if (ModelState.IsValid)
-            {
+        public ActionResult UserEdit(UserProfile model) {
+            if (ModelState.IsValid) {
                 //var old = UserRepository.GetUserById(model.Id);
                 //if (UserRepository.IsUserContactsUnique(model.Contacts, model.Id))
                 {
@@ -711,8 +657,7 @@ namespace jail.Controllers
                         CurrentUser.Email, model.Id > 0 ? "modified" : "created"), CommonHelper.GetClientAddress(Request));
                     UserRepository.SaveUser(model);
 
-                    if (model.Id == CurrentUser.Id)
-                    {
+                    if (model.Id == CurrentUser.Id) {
                         CurrentUser.MergeWith(model);
                     }
                     ModelState.Clear();
@@ -726,16 +671,13 @@ namespace jail.Controllers
 
         [Route("passwdreset")]
         [HttpGet, UserTypeFilter(Roles = new[] { UserType.Administrator })]
-        public string ResetUserPassword(long id)
-        {
-            try
-            {
+        public string ResetUserPassword(long id) {
+            try {
                 if (UserRepository.SetUserPassword(id, null))
                     return "Password was cleaned for user";
                 return "User not found by Id";
             }
-            catch (Exception ex)
-            {
+            catch (Exception ex) {
                 return ex.Message;
             }
         }
@@ -746,24 +688,21 @@ namespace jail.Controllers
 
         [Route("t")]
         [HttpGet, UserTypeFilter(Roles = new[] { UserType.Administrator, UserType.User })]
-        public ActionResult Time(long id = 0)
-        {
+        public ActionResult Time(long id = 0) {
             ViewBag.Id = id;
             return View(CheckItem.FromUserCheckData(TimeTrackRepository.GetLastCheckInOut(id > 0 ? id : CurrentUser.TimeTrackId)));
         }
 
         [Route("tp")]
         [HttpGet, UserTypeFilter(Roles = new[] { UserType.Administrator, UserType.User })]
-        public ActionResult TimePartial(long id = 0)
-        {
+        public ActionResult TimePartial(long id = 0) {
             ViewBag.Id = id;
             return PartialView("TimePartial", CheckItem.FromUserCheckData(TimeTrackRepository.GetLastCheckInOut(id > 0 ? id : CurrentUser.TimeTrackId)));
         }
 
         [Route("in")]
         [HttpGet, UserTypeFilter(Roles = new[] { UserType.Administrator, UserType.User })]
-        public ActionResult CheckIn(long id = 0)
-        {
+        public ActionResult CheckIn(long id = 0) {
             TimeTrackRepository.CheckIn(id > 0 ? id : CurrentUser.TimeTrackId);
             Logger.WriteInfo("User checked IN", CommonHelper.GetClientAddress(Request));
             return new HttpStatusCodeResult(HttpStatusCode.OK, "Done");
@@ -771,8 +710,7 @@ namespace jail.Controllers
 
         [Route("out")]
         [HttpGet, UserTypeFilter(Roles = new[] { UserType.Administrator, UserType.User })]
-        public ActionResult CheckOut(long id = 0)
-        {
+        public ActionResult CheckOut(long id = 0) {
             TimeTrackRepository.CheckOut(id > 0 ? id : CurrentUser.TimeTrackId);
             Logger.WriteInfo("User checked OUT", CommonHelper.GetClientAddress(Request));
             return new HttpStatusCodeResult(HttpStatusCode.OK, "Done");
@@ -784,10 +722,8 @@ namespace jail.Controllers
 
         [Route("fav")]
         [HttpGet, UserTypeFilter(Roles = new[] { UserType.Administrator, UserType.User })]
-        public async Task<ActionResult> Favorites(long id = 0, int pageNum = 0, string k = null)
-        {
-            if ((id == 0 || id != CurrentUser.Id) && CurrentUser.UserType != UserType.Administrator)
-            {
+        public async Task<ActionResult> Favorites(long id = 0, int pageNum = 0, string k = null) {
+            if ((id == 0 || id != CurrentUser.Id) && CurrentUser.UserType != UserType.Administrator) {
                 throw new ArgumentException("You passed wrong UserId.");
             }
 
@@ -799,10 +735,8 @@ namespace jail.Controllers
 
         [Route("favupdate")]
         [HttpGet, UserTypeFilter(Roles = new[] { UserType.Administrator, UserType.User })]
-        public async Task<string> UpdateFavorites(int userId)
-        {
-            try
-            {
+        public async Task<string> UpdateFavorites(int userId) {
+            try {
                 if (userId <= 0)
                     throw new ArgumentOutOfRangeException(nameof(userId));
                 
@@ -810,8 +744,7 @@ namespace jail.Controllers
                 var userName = CurrentUser.Email;
                 if (userId == CurrentUser.Id)
                     flibustaId = CurrentUser.FlibustaId;
-                else
-                {
+                else {
                     if (CurrentUser.UserType != UserType.Administrator)
                         throw new Exception("You are not allowed to fetch other users data.");
 
@@ -830,18 +763,15 @@ namespace jail.Controllers
                 var booksFetched = 0;
                 var pageNum = 0;
                 var fetchMore = true;
-                using (var client = new WebClient())
-                {
-                    while (fetchMore)
-                    {
+                using (var client = new WebClient()) {
+                    while (fetchMore) {
                         var url = $"{SettingsHelper.FlibustaLink}/rec?page={pageNum++}&view=recs&user={flibustaId}&udata=id";
                         var pageData = await client.DownloadStringTaskAsync(url).ConfigureAwait(false);
                         var bytes = Encoding.Default.GetBytes(pageData);
                         pageData = Encoding.UTF8.GetString(bytes);
                         var regex = new Regex(@"<tr>[\s\S]*?<td><a href=\""\/b\/([\d]+)\"">(.+)<\/a>[\s\S]*?user\/([\d]+)[\s\S]*?<td>(.+)<\/td>[\s\S]*?\/tr>");
                         var matches = regex.Matches(pageData);
-                        foreach (Match m in matches)
-                        {
+                        foreach (Match m in matches) {
                             if (!m.Success || m.Groups.Count != 5)
                                 throw new InvalidDataException("Error parsing page data");
 
@@ -853,8 +783,7 @@ namespace jail.Controllers
                             var dateAdded = DateTime.Parse(m.Groups[4].Value, culture);
 
                             var bookFound = await DataRepository.GetFavoriteId(bookId, userId, dateAdded).ConfigureAwait(false);
-                            if (bookFound != 0)
-                            {
+                            if (bookFound != 0) {
                                 fetchMore = false;
                                 break;
                             }
@@ -865,54 +794,44 @@ namespace jail.Controllers
                 }
                 return $"Fetched {booksFetched} books from {pageNum} processed page(s) for user '{userName}' ({userId}/{flibustaId}).";
             }
-            catch (Exception ex)
-            {
+            catch (Exception ex) {
                 Logger.WriteError(ex, $"Error fetching favorites for user {userId}: {ex.Message}", CommonHelper.GetClientAddress(Request));
                 return ex.Message;
             }
         }
 
         [HttpGet, Route("favtoggle"), UserTypeFilter(Roles = new[] { UserType.Administrator, UserType.User })]
-        public async Task<ActionResult> FavoriteToggle(long bookId)
-        {
-            try
-            {
+        public async Task<ActionResult> FavoriteToggle(long bookId) {
+            try {
                 var favId = await DataRepository.GetFavoriteId(bookId, CurrentUser.Id, null).ConfigureAwait(false);
-                if (favId == 0)
-                {
+                if (favId == 0) {
                     //add fav
                     favId = await DataRepository.SaveFavorite(bookId, CurrentUser.Id, DateTime.Now).ConfigureAwait(false);
                     Logger.WriteWarning($"Favorite item '{favId}' was added by user '{CurrentUser.Email}'", CommonHelper.GetClientAddress(Request));
                 }
-                else
-                {
+                else {
                     //delete fav
                     return await FavoriteDelete(favId).ConfigureAwait(false);
                 }
                 return new HttpStatusCodeResult(HttpStatusCode.OK);
             }
-            catch (Exception ex)
-            {
+            catch (Exception ex) {
                 Logger.WriteError(ex, $"Error adding favorite item: {ex.Message}", CommonHelper.GetClientAddress(Request));
                 return new HttpStatusCodeResult(HttpStatusCode.InternalServerError, ex.Message);
             }
         }
 
         [HttpDelete, Route("favdelete"), UserTypeFilter(Roles = new[] { UserType.Administrator })]
-        public async Task<ActionResult> FavoriteDelete(long id)
-        {
-            try
-            {
+        public async Task<ActionResult> FavoriteDelete(long id) {
+            try {
                 var count = await DataRepository.DeleteFavorite(id).ConfigureAwait(false);
-                if (count != 0)
-                {
+                if (count != 0) {
                     Logger.WriteWarning($"Favorite item '{id}' was deleted by user '{CurrentUser.Email}'", CommonHelper.GetClientAddress(Request));
                     return new HttpStatusCodeResult(HttpStatusCode.OK, "Done");
                 }
                 return new HttpStatusCodeResult(HttpStatusCode.NotFound, $"Favorite with id {id} not found.");
             }
-            catch (Exception ex)
-            {
+            catch (Exception ex) {
                 Logger.WriteError(ex, $"Error deleting favorite item {id}: {ex.Message}", CommonHelper.GetClientAddress(Request));
                 return new HttpStatusCodeResult(HttpStatusCode.InternalServerError, ex.Message);
             }

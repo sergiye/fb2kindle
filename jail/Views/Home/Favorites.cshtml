@@ -116,7 +116,7 @@
                 var rowId = string.Format("favRow{0}", item.FavoriteId);
                 <tr id="@rowId">
                     <td>
-                        <img src="@string.Format("\\b\\{0}\\cover.jpg", item.Id)" style="width: 100%; height: auto;" alt=""/>
+                        <img src="@Url.Action("GetFile", new { fileName = string.Format("{0}\\cover.jpg", item.Id)})" style="width: 100%; height: auto;" alt=""/>
                     </td>
                     <td>
                         <a href='@Url.Action("details", new {id = item.Id})' title="Book details">
