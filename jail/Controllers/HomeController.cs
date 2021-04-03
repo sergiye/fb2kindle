@@ -22,6 +22,7 @@ namespace jail.Controllers
     [OutputCache(NoStore = true, Duration = 0, VaryByParam = "None")]
     [ActionLogger, SessionRestore]
     public class HomeController : Controller {
+
         #region Overrides
 
         protected override void HandleUnknownAction(string actionName) {
@@ -444,7 +445,8 @@ namespace jail.Controllers
                 BookHelper.ExtractZipFile(archPath, book.FileName, sourceFileName);
             }
 
-            var detailsFolder = Path.Combine(Path.GetDirectoryName(sourceFileName), Path.GetFileNameWithoutExtension(sourceFileName));
+            var bookFolder = Path.GetFileNameWithoutExtension(book.FileName);
+            var detailsFolder = SettingsHelper.TempDataFolder + "\\" + bookFolder;
             if (string.IsNullOrWhiteSpace(detailsFolder))
                 throw new DirectoryNotFoundException("Details folder is empty");
             Directory.CreateDirectory(detailsFolder);
@@ -457,10 +459,9 @@ namespace jail.Controllers
             }
             ViewBag.Title = book.Title;
             Logger.WriteDebug($"Reading book {book.Id} - '{book.Title}'", CommonHelper.GetClientAddress(Request));
+            return RedirectToAction("GetFile", new {fileName = $"{bookFolder}\\toc.html"});
+            //GetLinkToFile(coverImageRelativePath);
             return new RedirectResult(Path.Combine(@"../" + readingPath.Replace(Server.MapPath("~"), "").Replace('\\', '/')));
-            //return new FilePathResult(GetLinkToFile(readingPath), "text/html");
-            //ViewBag.BookContent = GetLinkToFile(readingPath);//Path.Combine(@"../" + readingPath.Replace(Server.MapPath("~"), "").Replace('\\', '/'));
-            //return View(book);
         }
 
         [Route("d/{id:long}")]
@@ -543,29 +544,71 @@ namespace jail.Controllers
             return View();
         }
 
+        // [HttpPost]
+        // public ActionResult HandleFileUpload() {
+        //     var originFileName = Server.UrlDecode(Request.Headers["X-File-Name"]);
+        //     if (string.IsNullOrEmpty(originFileName))
+        //         return Json(new { success = false });
+        //     var originRealPath = $"{SettingsHelper.TempDataFolder}\\{BookHelper.GetCorrectedFileName(originFileName)}";
+        //     if (string.IsNullOrEmpty(originRealPath))
+        //         return Json(new { success = false });
+        //     var mobiDisplayName = Path.ChangeExtension(originFileName, ".mobi");
+        //     var mobiRelativePath = GetLinkToFile(mobiDisplayName);
+        //     if (System.IO.File.Exists(originRealPath)) {
+        //         var mobiRealPath = Path.ChangeExtension(originRealPath, ".mobi");
+        //         if (System.IO.File.Exists(mobiRealPath))
+        //             return Json(new { success = true, link = mobiRelativePath, fileName = mobiDisplayName });
+        //         System.IO.File.Delete(originRealPath); //delete old uploaded file to re-convert new one
+        //     }
+        //     using (var fileStream = new FileStream(originRealPath, FileMode.OpenOrCreate))
+        //         Request.InputStream.CopyTo(fileStream);
+        //
+        //     if (!BookHelper.ConvertBook(originRealPath))
+        //         throw new ArgumentException("Error converting book for kindle");
+        //
+        //     return Json(new { success = true, link = mobiRelativePath, fileName = mobiDisplayName });
+        // }
+
         [HttpPost]
-        public ActionResult HandleFileUpload() {
-            var originFileName = Server.UrlDecode(Request.Headers["X-File-Name"]);
-            if (string.IsNullOrEmpty(originFileName))
-                return Json(new { success = false });
-            var originRealPath = $"{SettingsHelper.TempDataFolder}\\{BookHelper.GetCorrectedFileName(originFileName)}";
-            if (string.IsNullOrEmpty(originRealPath))
-                return Json(new { success = false });
-            var mobiDisplayName = Path.ChangeExtension(originFileName, ".mobi");
-            var mobiRelativePath = GetLinkToFile(mobiDisplayName);
-            if (System.IO.File.Exists(originRealPath)) {
-                var mobiRealPath = Path.ChangeExtension(originRealPath, ".mobi");
-                if (System.IO.File.Exists(mobiRealPath))
-                    return Json(new { success = true, link = mobiRelativePath, fileName = mobiDisplayName });
-                System.IO.File.Delete(originRealPath); //delete old uploaded file to re-convert new one
+        public ActionResult HandleMultipleFileUpload() {
+
+            var names = new List<string>();
+            var links = new List<string>();
+            try {
+                foreach (string fileName in Request.Files) {
+                    var file = Request.Files[fileName];
+                    if (file == null || file.ContentLength <= 0 || string.IsNullOrEmpty(file.FileName))
+                        continue;
+                    var originRealPath = $"{SettingsHelper.TempDataFolder}\\{BookHelper.GetCorrectedFileName(file.FileName)}";
+                    var mobiDisplayName = Path.ChangeExtension(BookHelper.GetCorrectedFileName(file.FileName), ".mobi");
+                    var mobiRelativePath = GetLinkToFile(mobiDisplayName);
+                    if (System.IO.File.Exists(originRealPath)) {
+                        var mobiRealPath = Path.ChangeExtension(originRealPath, ".mobi");
+                        if (System.IO.File.Exists(mobiRealPath)) {
+                            System.IO.File.Delete(mobiRealPath); //delete old converted file
+                            // names.Add(mobiDisplayName);
+                            // links.Add(mobiRelativePath);
+                            // continue;
+                        }
+                        System.IO.File.Delete(originRealPath); //delete old uploaded file to re-convert new one
+                    }
+                    file.SaveAs(originRealPath);
+                    
+                    if (!BookHelper.ConvertBook(originRealPath))
+                        throw new ArgumentException("Error converting book for kindle");
+                    
+                    names.Add(mobiDisplayName);
+                    links.Add(mobiRelativePath);
+                }
+
+                if (names.Count == 0 || links.Count == 0) {
+                    return Json(new {Message = "No files processed."});
+                }
+                return Json(new {Message = "OK", names, links});
             }
-            using (var fileStream = new FileStream(originRealPath, FileMode.OpenOrCreate))
-                Request.InputStream.CopyTo(fileStream);
-
-            if (!BookHelper.ConvertBook(originRealPath))
-                throw new ArgumentException("Error converting book for kindle");
-
-            return Json(new { success = true, link = mobiRelativePath, fileName = mobiDisplayName });
+            catch (Exception ex) {
+                return Json(new {Message = "Error saving file."});
+            }
         }
 
         public FileResult GetConverter() {
