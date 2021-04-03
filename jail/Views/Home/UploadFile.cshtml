@@ -2,24 +2,45 @@
     ViewBag.Title = "File Upload";
 }
 
+<script src="~/Scripts/dropzone.js"></script>
+<link rel="stylesheet" href="~/Content/dropzone.css">
+
 <script type="text/javascript">
-    $(document).ready(function () {
-        InitDropZoneHandlers(@ViewBag.maxRequestLength);
-    });
+    Dropzone.options.myAwesomeDropzone = {
+      paramName: "file", // The name that will be used to transfer the file
+      maxFilesize: @ViewBag.maxRequestLength / 1024 / 1024, // MB
+      accept: function(file, done) {
+        if (!file.name.toLowerCase().endsWith('fb2')) {
+          done('Try ".fb2" file please!');
+        }
+        else { done(); }
+      },
+      success: function (data){
+        var res = JSON.parse(data.xhr.responseText);
+        if (res){
+            if (res.Message === 'OK' && res.names && res.links) {
+                for (var i = 0; i < res.names.length; i++){
+                    var fileLink = '<p><a href="' + res.links[i] + '" title="Download">' + res.names[i] + '</a></p>';
+                    $('#downloadZone')[0].innerHTML += fileLink;
+                }
+            }
+            else{
+                $('#downloadZone')[0].innerHTML += res.Message;
+            }
+        }
+      }
+    };
 </script>
 
 <div style="text-align: center;">
-    <h3>Drop '.fb2' file to convert to kindle format (.mobi)</h3>
-    <p>or download offline converter utility @Html.ActionLink("here", "GetConverter", "Home")</p>
+    <h3>Convert '.fb2' file(s) to kindle (.mobi) format</h3>
+    <h4>or download offline converter utility @Html.ActionLink("here", "GetConverter", "Home")</h4>
 
-    <form id="form1" runat="server">
-        <div id="dropZone">
-            Drop File Here to Upload.
-        </div>
-    </form>
-    <div>
+    <form action="@Url.Action("HandleMultipleFileUpload")" class="dropzone" id="myAwesomeDropzone"></form>
+    
+    <h4>
         and get the result...
-    </div>
+    </h4>
     <div id="downloadZone">
         
     </div>
