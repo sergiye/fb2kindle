@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Configuration;
+using System.IO;
 using System.Web.Configuration;
 
 namespace jail.Classes
@@ -14,7 +15,7 @@ namespace jail.Classes
         public static string StatisticDatabase { get; set; }
         public static string TimeTrackDatabase { get; set; }
         public static string ArchivesPath { get; set; }
-        public static string TempDataFolder { get; set; }
+        public static string TempDataFolder { get; }
         public static long MaxRequestLength { get; set; }
         public static int MaxRecordsToShowAtOnce { get; set; }
         public static bool TimeTrack { get; set; }
@@ -40,6 +41,7 @@ namespace jail.Classes
             StatisticDatabase = ConfigurationManager.AppSettings["StatisticsDBPath"];
             ArchivesPath = ConfigurationManager.AppSettings["ArchivesPath"];
             TempDataFolder = ConfigurationManager.AppSettings["TempDataFolder"];
+            Directory.CreateDirectory(TempDataFolder); //to ensure folder exists
 
             MaxRecordsToShowAtOnce = Convert.ToInt32(ConfigurationManager.AppSettings["MaxRecordsToShowAtOnce"]);
             TimeTrack = Convert.ToBoolean(ConfigurationManager.AppSettings["TimeTrack"]);
