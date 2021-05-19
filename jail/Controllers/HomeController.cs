@@ -109,7 +109,13 @@ namespace jail.Controllers
         
         [Route("cover/{bookId}"), OutputCache(Duration = Int32.MaxValue)]
         public ActionResult GetCover(int bookId) {
-            return File(Path.Combine(SettingsHelper.TempDataFolder, $"{bookId}\\cover.jpg"), System.Net.Mime.MediaTypeNames.Image.Jpeg);
+            var filePath = Path.Combine(SettingsHelper.TempDataFolder, $"{bookId}\\cover.jpg");
+            if (System.IO.File.Exists(filePath))
+                return File(filePath, System.Net.Mime.MediaTypeNames.Image.Jpeg);
+            else {
+                //todo: default image?
+                return new HttpNotFoundResult("No cover");
+            }
         }
 
         #endregion
