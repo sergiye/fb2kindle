@@ -156,3 +156,8 @@ h1, h2, h3 {
 .table > tfoot > tr > td {
     vertical-align: middle;
 }
+
+.img-list-preview {
+    width: 100%;
+    height: auto;
+}

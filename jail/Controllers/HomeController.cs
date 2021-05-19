@@ -106,6 +106,11 @@ namespace jail.Controllers
             var fileExt = Path.GetExtension(fileName.ToLower());
             return File(Path.Combine(SettingsHelper.TempDataFolder, fileName), GetFileContentType(fileExt), BookHelper.GetCorrectedFileName(fileName));
         }
+        
+        [Route("cover/{bookId}"), OutputCache(Duration = Int32.MaxValue)]
+        public ActionResult GetCover(int bookId) {
+            return File(Path.Combine(SettingsHelper.TempDataFolder, $"{bookId}\\cover.jpg"), System.Net.Mime.MediaTypeNames.Image.Jpeg);
+        }
 
         #endregion
 
@@ -492,12 +497,7 @@ namespace jail.Controllers
             var coverImagePath = Path.Combine(detailsFolder, "cover.jpg");
             if (!System.IO.File.Exists(coverImagePath))
                 BookHelper.SaveCover(sourceFileName, coverImagePath);
-            if (System.IO.File.Exists(coverImagePath)) {
-                // var coverImageRelativePath = $"{sourceFileNameOnly}/cover.jpg";
-                var coverImageRelativePath = $"{book.Id}/cover.jpg";
-                ViewBag.Image = GetLinkToFile(coverImageRelativePath);
-            }
-
+            
             var mobiFile = Path.ChangeExtension(sourceFileName, ".mobi");
             if (System.IO.File.Exists(mobiFile)) {
                 ViewBag.MobiFileFound = true;
