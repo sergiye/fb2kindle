@@ -11,8 +11,6 @@ namespace jail.Classes.Attributes
     {
         protected UserProfile TryToRestoreSession(HttpContextBase httpContext)
         {
-            if (httpContext.Session == null) return null;
-
             if (httpContext.Session["User"] != null)
                 return httpContext.Session["User"] as UserProfile;
 
@@ -27,6 +25,7 @@ namespace jail.Classes.Attributes
             var user = UserRepository.GetUser(ticket.Name);
             if (user == null)
                 return null;
+
             httpContext.Session["User"] = user;
             httpContext.Session.Timeout = 24 * 60;
             FormsAuthentication.SetAuthCookie(ticket.Name, true);
@@ -37,9 +36,8 @@ namespace jail.Classes.Attributes
 
         protected override bool AuthorizeCore(HttpContextBase httpContext)
         {
-            if (TryToRestoreSession(httpContext) == null) 
-              return false;
-            return true; //no access restriction here!
-    }
+            TryToRestoreSession(httpContext); //no access restriction here!
+            return true;
+        }
     }
 }
