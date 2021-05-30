@@ -106,17 +106,6 @@ namespace jail.Controllers
             var fileExt = Path.GetExtension(fileName.ToLower());
             return File(Path.Combine(SettingsHelper.TempDataFolder, fileName), GetFileContentType(fileExt), BookHelper.GetCorrectedFileName(fileName));
         }
-        
-        [Route("cover/{bookId}"), OutputCache(Duration = Int32.MaxValue)]
-        public ActionResult GetCover(int bookId) {
-            var filePath = Path.Combine(SettingsHelper.TempDataFolder, $"{bookId}\\cover.jpg");
-            if (System.IO.File.Exists(filePath))
-                return File(filePath, System.Net.Mime.MediaTypeNames.Image.Jpeg);
-            else {
-                //todo: default image?
-                return new HttpNotFoundResult("No cover");
-            }
-        }
 
         #endregion
 
@@ -442,37 +431,33 @@ namespace jail.Controllers
             return Json("Please wait a bit and refresh the page", JsonRequestBehavior.AllowGet);
         }
 
-        [Route("r/{id:long}")]
-        public ActionResult Read(long id) {
-            var book = DataRepository.GetBook(id);
-            if (book == null)
-                throw new FileNotFoundException("Book not found in db");
+        [Route("{bookId:long}")]
+        public ActionResult Read(long bookId) {
+          return RedirectPermanent($"{bookId}/toc.html");
+        }
 
-            var sourceFileName = GetBookFilePath(book.FileName);
-            if (!System.IO.File.Exists(sourceFileName)) {
-                var archPath = Path.Combine(SettingsHelper.ArchivesPath, book.ArchiveFileName);
-                if (!System.IO.File.Exists(archPath))
-                    throw new FileNotFoundException("Book archive not found");
-                BookHelper.ExtractZipFile(archPath, book.FileName, sourceFileName);
-            }
+        [Route("{bookId:long}/Images/{imageName}")]
+        public ActionResult BookImage(long bookId, string imageName) {
+          return Book(bookId, $"Images/{imageName}");
+        }
 
-            var bookFolder = Path.GetFileNameWithoutExtension(book.FileName);
-            var detailsFolder = SettingsHelper.TempDataFolder + "\\" + bookFolder;
-            if (string.IsNullOrWhiteSpace(detailsFolder))
-                throw new DirectoryNotFoundException("Details folder is empty");
-            Directory.CreateDirectory(detailsFolder);
-            var readingPath = Path.Combine(detailsFolder, "toc.html");
-            if (!System.IO.File.Exists(readingPath)) {
-                throw new FileNotFoundException("Book not found, please prepare it first");
-                //BookHelper.Transform(tempFile, readingPath, Server.MapPath("~/xhtml.xsl"));
-                //if (!BookHelper.ConvertBook(sourceFileName))
-                //    throw new ArgumentException("Error converting book for kindle");
-            }
-            ViewBag.Title = book.Title;
-            Logger.WriteDebug($"Reading book {book.Id} - '{book.Title}'", CommonHelper.GetClientAddress(Request));
-            return RedirectToAction("GetFile", new {fileName = $"{bookFolder}\\toc.html"});
-            //GetLinkToFile(coverImageRelativePath);
-            return new RedirectResult(Path.Combine(@"../" + readingPath.Replace(Server.MapPath("~"), "").Replace('\\', '/')));
+        [Route("{bookId:long}/{fileName}")]
+        public ActionResult Book(long bookId, string fileName) {
+
+          var filePath = Path.Combine(SettingsHelper.TempDataFolder, $"{bookId}\\{fileName}");
+          if (!System.IO.File.Exists(filePath)) {
+            //todo: default image?
+            return new HttpNotFoundResult("File not found.");
+          }
+          var fileExt = Path.GetExtension(fileName.ToLower());
+          switch (fileExt) {
+            case ".jpg":
+            case ".jpeg":
+            case ".png":
+              return File(filePath, System.Net.Mime.MediaTypeNames.Image.Jpeg);
+            default:
+              return File(filePath, System.Net.Mime.MediaTypeNames.Text.Html);
+          }
         }
 
         [Route("d/{id:long}")]
