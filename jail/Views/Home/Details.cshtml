@@ -53,9 +53,9 @@
                         </div>
                     }
                     <div>
-                        @* <a href='@Url.Action("read", new { id = Model.Id })' target="_blank" title="Book preview"> *@
-                        @*     <span class='glyphicon glyphicon-book'></span> Book preview *@
-                        @* </a> *@
+                        <a href='@Url.Action("Read", new { bookId = Model.Id })' target="_blank" title="Book preview">
+                            <span class='glyphicon glyphicon-book'></span> Book preview
+                        </a>
                     </div>
                 }
                 else
@@ -71,7 +71,7 @@
 <hr />
 <div class="panel-body">
     <div class="col-md-2">
-        <img src="@Url.Action("GetCover", new { bookId = Model.Id})" class="img-list-preview" />
+        <img src="@Url.Action("Book", new { bookId = Model.Id, fileName = "cover.jpg"})" class="img-list-preview" />
     </div>
     <div class="col-md-10">
         <p>

@@ -17,9 +17,9 @@
 
     function SearchFavorites() {
         
-        let search = $("#searchBlock");
-        let key = $.trim(search.val());
-        let link = '@Url.Action("Favorites", new { id = ViewBag.Id })';
+        var search = $("#searchBlock");
+        var key = $.trim(search.val());
+        var link = '@Url.Action("Favorites", new { id = ViewBag.Id })';
         link += "pageNum=0&k=" + key;
         // window.history.pushState({ state: link }, 'Search results', link);
         window.location.href = link;
@@ -116,7 +116,7 @@
                 var rowId = string.Format("favRow{0}", item.FavoriteId);
                 <tr id="@rowId">
                     <td>
-                        <img src="@Url.Action("GetCover", new { bookId = item.Id})" class="img-list-preview" alt=""/>
+                        <img src="@Url.Action("Book", new { bookId = item.Id, fileName = "cover.jpg"})" class="img-list-preview" alt=""/>
                     </td>
                     <td>
                         <a href='@Url.Action("details", new {id = item.Id})' title="Book details">

@@ -45,7 +45,7 @@
             foreach (var item in Model) {
                 <tr>
                     <td>
-                        <img src="@Url.Action("GetCover", new { bookId = item.Id})" class="img-list-preview" alt=""/>
+                        <img src="@Url.Action("Book", new { bookId = item.Id, fileName = "cover.jpg"})" class="img-list-preview" alt=""/>
                     </td>
                     <td>
                         @if (item.Id > 0) {
