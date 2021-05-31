@@ -168,14 +168,46 @@
                 url: '@Url.Action("Generate", "Home")',
                 data: { id: bookId },
                 success: function (data) {
-                    window.Helper.ShowSuccess('' + data);
-                    setTimeout(function () { window.location.reload(false); }, 10000);
+                    if (data.message === 'Done'){
+                        window.location.reload(false);
+                    }
+                    else{
+                        // window.Helper.ShowSuccess('' + data.message);
+                        setTimeout(function () { CheckConverterStatus(data.taskId); }, 1000);
+                    }
                 },
                 error: function(data) {
                     window.Helper.ShowError('' + data);
                 }
             });
         }
+        function CheckConverterStatus(taskId) {
+            $.ajax({
+                type: 'GET',
+                url: '@Url.Action("GetConvertStatus", "Home")',
+                data: { taskId: taskId },
+                success: function (response) {
+                    if (response && response.result) {
+                        if (response.result.startsWith('Error')){
+                            window.Helper.ShowError(response.result);
+                        }
+                        else{
+                            window.Helper.ShowSuccess(response.output, function (){ window.location.reload(false); });
+                        }
+                    }
+                    else{
+                        if (response && response.output){
+                            window.Helper.ShowSuccess(response.output);
+                        }
+                        setTimeout(function () { CheckConverterStatus(taskId); }, 1000);
+                    }
+                },
+                error: function(data) {
+                    window.Helper.ShowError('' + data);
+                }
+            });
+        }
+        
         function DeliverBook(bookId) {
             $.ajax({
                 type: 'POST',
@@ -186,6 +218,22 @@
                 },
                 error: function(data) {
                     window.Helper.ShowError('' + data);
+                }
+            });
+        }
+        function DeleteHistoryItem(id, fileName) {
+            if (!confirm("Are you sure you want to remove '" + fileName + "' from history?"))
+                return;
+            $.ajax({
+                url: '@Url.Action("HistoryDelete", "Home")',
+                type: 'DELETE',
+                data: { id: id, fileName: fileName },
+                success: function () { window.location.reload(false); },
+                error: function (response, status, error) {
+                    if (error && error.length > 0)
+                        window.Helper.ShowError(error);
+                    else
+                        window.Helper.ShowError("Failed! Something has gone wrong. Please contact a system administrator");
                 }
             });
         }

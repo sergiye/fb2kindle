@@ -419,7 +419,7 @@ namespace jail.Controllers
             var sourceFileName = GetBookFilePath(book.FileName);
             var resultFile = Path.ChangeExtension(sourceFileName, ".mobi");
             if (System.IO.File.Exists(resultFile))
-                return Json("Done", JsonRequestBehavior.AllowGet);
+                return Json(new {message = "Done"}, JsonRequestBehavior.AllowGet);
 
             var archPath = Path.Combine(SettingsHelper.ArchivesPath, book.ArchiveFileName);
             if (!System.IO.File.Exists(archPath))
@@ -427,10 +427,19 @@ namespace jail.Controllers
 
             if (!System.IO.File.Exists(sourceFileName))
                 BookHelper.ExtractZipFile(archPath, book.FileName, sourceFileName);
-            BookHelper.ConvertBookNoWait(sourceFileName);
-            return Json("Please wait a bit and refresh the page", JsonRequestBehavior.AllowGet);
+            var taskId = ConvertQueue.ConvertBookNoWait(sourceFileName);
+            return Json(new {
+                message = "Please wait a bit and refresh the page",
+                taskId 
+            }, JsonRequestBehavior.AllowGet);
         }
 
+        [Route("generate/status")]
+        public ActionResult GetConvertStatus(Guid taskId) {
+            var task = ConvertQueue.GetTaskStatus(taskId);
+            return Json(new { result = task?.Result, output = string.Join("<br>", task?.Output)}, JsonRequestBehavior.AllowGet);
+        }
+        
         [Route("{bookId:long}")]
         public ActionResult Read(long bookId) {
           return RedirectPermanent($"{bookId}/toc.html");
@@ -585,7 +594,7 @@ namespace jail.Controllers
                     }
                     file.SaveAs(originRealPath);
                     
-                    if (!BookHelper.ConvertBook(originRealPath))
+                    if (!ConvertQueue.ConvertBook(originRealPath))
                         throw new ArgumentException("Error converting book for kindle");
                     
                     names.Add(mobiDisplayName);
