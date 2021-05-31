@@ -6024,6 +6024,8 @@ button.close {
 .modal-body {
   position: relative;
   padding: 15px;
+  overflow: auto;
+  max-height: 300px;
 }
 .modal-footer {
   padding: 15px;
@@ -6831,4 +6833,3 @@ button.close {
     display: none !important;
   }
 }
-/*# sourceMappingURL=bootstrap.css.map */

@@ -37,7 +37,9 @@ window.HelperItem.prototype.ShowNotificationPopup = function (msg, type, callbac
     var popupContent = popup.find(".modal-content");
     var btn = popup.find("#NotificationPopupOkButton");
     this.ClearNotificationPopup(popupContent, btn);
-
+    popup.find(".modal-header .am-close-spin").click(function () { if (callback) callback(); });
+    btn.click(function () { self.HidePopup(popup[0].id); if (callback) callback(); });
+    
     switch (type) {
         case window.HelperItem.NotificationType.Success:
             title = "Success";
@@ -67,12 +69,6 @@ window.HelperItem.prototype.ShowNotificationPopup = function (msg, type, callbac
 
     popup.find(".modal-title").html(title);
     popup.find(".modal-body").html(msg);
-    btn[0].onclick = function () {
-        self.HidePopup(popup[0].id);
-        if (callback) {
-            callback();
-        }
-    };
 
     $(document).keydown(function(event) {
         if (event.keyCode === 27) {
