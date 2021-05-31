@@ -4,24 +4,6 @@
     ViewBag.Title = "History";
     var user = (UserProfile)HttpContext.Current.Session["User"];
 }
-<script type="text/javascript">
-    function DeleteHistoryItem(id, fileName) {
-        if (!confirm("Are you sure you want to remove '" + fileName + "' from history?"))
-            return;
-        $.ajax({
-            url: '@Url.Action("HistoryDelete")',
-            type: 'DELETE',
-            data: { id: id, fileName: fileName },
-            success: function () { window.location.reload(false); },
-            error: function (response, status, error) {
-                if (error && error.length > 0)
-                    window.Helper.ShowError(error);
-                else
-                    window.Helper.ShowError("Failed! Something has gone wrong. Please contact a system administrator");
-            }
-        });
-    }
-</script>
 
 <h2>
     Last viewed books <small>(@ViewBag.TotalSize used)</small>

@@ -51,6 +51,13 @@
                                 <span class="glyphicon glyphicon-envelope"></span> Deliver .mobi file
                             </a>
                         </div>
+                        if (user.UserType == UserType.Administrator) {
+                            <div>
+                                <a href="#" onclick="DeleteHistoryItem(@Model.Id, encodeURI('@Model.FileName'));" title="Delete mobi">
+                                    <span class='glyphicon glyphicon-trash red'></span> Delete mobi
+                                </a>
+                            </div>
+                        }
                     }
                     <div>
                         <a href='@Url.Action("Read", new { bookId = Model.Id })' target="_blank" title="Book preview">

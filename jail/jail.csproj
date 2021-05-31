@@ -140,6 +140,7 @@
     <Compile Include="Classes\Attributes\CustomAuthorization.cs" />
     <Compile Include="Classes\Attributes\UserTypeFilterAttribute.cs" />
     <Compile Include="Classes\BaseRepository.cs" />
+    <Compile Include="Classes\ConverterQueue.cs" />
     <Compile Include="Classes\HttpCodeActionResult.cs" />
     <Compile Include="Classes\Attributes\SessionRestoreAttribute.cs" />
     <Compile Include="Classes\CommonHelper.cs" />
@@ -175,9 +176,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Content\bootstrap-theme.css" />
-    <Content Include="Content\bootstrap-theme.min.css" />
     <Content Include="Content\bootstrap.css" />
-    <Content Include="Content\bootstrap.min.css" />
     <Content Include="Content\dropzone.css" />
     <Content Include="favicon.ico" />
     <Content Include="fonts\glyphicons-halflings-regular.svg" />
@@ -187,10 +186,6 @@
     <Content Include="fonts\glyphicons-halflings-regular.woff" />
     <Content Include="fonts\glyphicons-halflings-regular.ttf" />
     <Content Include="fonts\glyphicons-halflings-regular.eot" />
-    <Content Include="Content\bootstrap.min.css.map" />
-    <Content Include="Content\bootstrap.css.map" />
-    <Content Include="Content\bootstrap-theme.min.css.map" />
-    <Content Include="Content\bootstrap-theme.css.map" />
     <None Include="Properties\PublishProfiles\UploadFtp.pubxml" />
     <Content Include="Scripts\bootstrap.js" />
     <Content Include="Scripts\bootstrap.min.js" />
