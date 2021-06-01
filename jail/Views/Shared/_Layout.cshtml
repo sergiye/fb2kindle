@@ -172,7 +172,6 @@
                         window.location.reload(false);
                     }
                     else{
-                        // window.Helper.ShowSuccess('' + data.message);
                         setTimeout(function () { CheckConverterStatus(data.taskId); }, 1000);
                     }
                 },
@@ -197,7 +196,7 @@
                     }
                     else{
                         if (response && response.output){
-                            window.Helper.ShowSuccess(response.output);
+                            window.Helper.ShowCustomNotification(response.output, 'Converting, please wait...');
                         }
                         setTimeout(function () { CheckConverterStatus(taskId); }, 1000);
                     }

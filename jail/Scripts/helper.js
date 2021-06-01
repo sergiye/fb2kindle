@@ -68,8 +68,12 @@ window.HelperItem.prototype.ShowNotificationPopup = function (msg, type, callbac
     }
 
     popup.find(".modal-title").html(title);
-    popup.find(".modal-body").html(msg);
-
+    const body = popup.find(".modal-body");
+    body.html(msg);
+    body.animate({
+        scrollTop: body[0].scrollHeight
+    }, 500);
+    
     $(document).keydown(function(event) {
         if (event.keyCode === 27) {
             self.HidePopup(popup[0].id);
