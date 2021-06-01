@@ -72,7 +72,7 @@ namespace Fb2Kindle
 
                 var commonTitle = string.Empty;
                 var coverDone = false;
-                var tocEl = GetEmptyToc();
+                XElement tocEl = null;
                 for (var idx = 0; idx < books.Length; idx++)
                 {
                     var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(books[idx]);
@@ -124,12 +124,15 @@ namespace Fb2Kindle
                         if (idx == 0)
                             AddGuideItem("Title", bookFileName, "start");
                         AddPackItem("it" + bookPostfix, bookFileName);
+                        var bookTitle = GetTitle(book);
                         //add to TOC
-                        var bookLi = GetListItem(GetTitle(book), bookFileName);
+                        var bookLi = GetListItem(bookTitle, bookFileName);
+                        if (tocEl == null)
+                          tocEl = GetEmptyToc(bookTitle);
                         tocEl.Elements("body").Elements(TocElement).First().Add(bookLi);
                         ProcessAllData(book, bookRoot, bookPostfix, bookLi, bookFileName);
                         ConvertTagsToHtml(bookRoot, true);
-                        SaveAsHtmlBook(bookRoot, tempDir + "\\" + bookFileName);
+                        SaveAsHtmlBook(bookRoot, tempDir + "\\" + bookFileName, bookTitle);
                     }
                 }
 
@@ -682,13 +685,14 @@ namespace Fb2Kindle
             //File.WriteAllText(file, doc.ToString());
         }
 
-        private static void SaveAsHtmlBook(XElement bodyEl, string fileName)
+        private static void SaveAsHtmlBook(XElement bodyEl, string fileName, string title)
         {
             var doc = new XElement("html");
             
             var head = new XElement("head", "");
             head.Add(new XElement("meta", new XAttribute("charset", "utf-8")));
-            head.Add(new XElement("link", new XAttribute("type", "text/css"), new XAttribute("href", "book.css"), new XAttribute("rel", "Stylesheet")));
+            head.Add(new XElement("title", $"{title}"), 
+              new XElement("link", new XAttribute("type", "text/css"), new XAttribute("href", "book.css"), new XAttribute("rel", "Stylesheet")));
             doc.Add(head);
 
             doc.Add(new XElement("body", bodyEl));
@@ -761,14 +765,13 @@ namespace Fb2Kindle
             return opfFile;
         }
 
-        private static XElement GetEmptyToc()
+        private static XElement GetEmptyToc(string title)
         {
             var toc = new XElement("html", new XAttribute("type", "toc"));
             var head = new XElement("head", "");
             head.Add(new XElement("meta", new XAttribute("charset", "utf-8")));
-            head.Add(new XElement("title", "Содержание"), 
-                new XElement("link", new XAttribute("type", "text/css"), 
-                    new XAttribute("href", "book.css"), new XAttribute("rel", "Stylesheet")));
+            head.Add(new XElement("title", $"{title} - Содержание"), 
+                new XElement("link", new XAttribute("type", "text/css"), new XAttribute("href", "book.css"), new XAttribute("rel", "Stylesheet")));
             toc.Add(head);
             toc.Add(new XElement("body", new XElement("div", new XAttribute("class", "title"), 
                 new XAttribute("id", "toc"), "Содержание"), new XElement(TocElement, "")));
