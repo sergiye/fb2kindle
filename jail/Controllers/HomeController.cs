@@ -274,35 +274,43 @@ namespace jail.Controllers
         }
 
         [Route("history")]
-        public async Task<ActionResult> History() {
-            var path = SettingsHelper.TempDataFolder;
-            var info = new DirectoryInfo(path);
+        public async Task<ActionResult> History(string sortBy = null, bool sortAsc = false) {
 
-            try {
-                var total = Directory.GetFiles(path, "*", SearchOption.AllDirectories).Sum(t => new FileInfo(t).Length);
-                ViewBag.TotalSize = Simpl.Extensions.StringHelper.FileSizeStr(total);
-            }
-            catch (Exception ex) {
-                Logger.WriteError(ex, "Error calculating allocated files total size");
-            }
-            var files = info.GetFiles().Where(f => f.Extension.Equals(".fb2", StringComparison.OrdinalIgnoreCase)).OrderBy(p => p.CreationTime).ToList();
-            //remove too old files from drive
-            //            var oldItems = files.Where(f => f.CreationTime < DateTime.Now.AddYears(-1));
-            //            foreach (var oldItem in oldItems)
-            //            {
-            //                System.IO.File.Delete(oldItem.FullName);
-            //remove work folder & all generated content
-            //            }
+          ViewBag.SortAsc = sortAsc;
+          ViewBag.SortBy = sortBy;
 
-            //fill files data to books info
-            var books = new List<BookHistoryInfo>();
-            foreach (var fi in files) {
-                int.TryParse(Path.GetFileNameWithoutExtension(fi.Name), out var bookId);
-                books.Add(new BookHistoryInfo { Id = bookId, GeneratedTime = fi.CreationTime, FileName = fi.Name, Title = fi.Name });
-            }
+          var path = SettingsHelper.TempDataFolder;
+          var info = new DirectoryInfo(path);
 
-            //leave only first N in list
-            return View(await DataRepository.GetHistory(books.Take(SettingsHelper.MaxRecordsToShowAtOnce)).ConfigureAwait(false));
+          try {
+            var total = Directory.GetFiles(path, "*", SearchOption.AllDirectories).Sum(t => new FileInfo(t).Length);
+            ViewBag.TotalSize = Simpl.Extensions.StringHelper.FileSizeStr(total);
+          }
+          catch (Exception ex) {
+            Logger.WriteError(ex, "Error calculating allocated files total size");
+          }
+
+          var files = info.GetFiles().Where(f => f.Extension.Equals(".fb2", StringComparison.OrdinalIgnoreCase))
+            .OrderBy(p => p.CreationTime).ToList();
+          //remove too old files from drive
+          //            var oldItems = files.Where(f => f.CreationTime < DateTime.Now.AddYears(-1));
+          //            foreach (var oldItem in oldItems)
+          //            {
+          //                System.IO.File.Delete(oldItem.FullName);
+          //remove work folder & all generated content
+          //            }
+
+          //fill files data to books info
+          var books = new List<BookHistoryInfo>();
+          foreach (var fi in files) {
+            int.TryParse(Path.GetFileNameWithoutExtension(fi.Name), out var bookId);
+            books.Add(new BookHistoryInfo
+              {Id = bookId, GeneratedTime = fi.CreationTime, FileName = fi.Name, Title = fi.Name});
+          }
+
+          //leave only first N in list
+          return View(await DataRepository.GetHistory(books, sortBy, sortAsc, SettingsHelper.MaxRecordsToShowAtOnce)
+            .ConfigureAwait(false));
         }
 
         private void TryToDelete(string path, bool isFile) {

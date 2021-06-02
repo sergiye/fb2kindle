@@ -158,6 +158,6 @@ h1, h2, h3 {
 }
 
 .img-list-preview {
-    width: 100%;
-    height: auto;
+    width: auto;
+    height: 60px;
 }
