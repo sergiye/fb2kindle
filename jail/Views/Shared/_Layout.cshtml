@@ -43,35 +43,27 @@
             </div>
             <div class="navbar-collapse collapse">
                 <ul class="nav navbar-nav">
-                    <li>@Html.ActionLink("Books", "Index", "Home")</li>
+                    <li>@Html.ActionLink("Search", "Index", "Home")</li>
                     @* <li>@Html.ActionLink("Authors", "Authors", "Home")</li> *@
                     <li>@Html.ActionLink("History", "History", "Home")</li>
                     <li>@Html.ActionLink("Convert", "UploadFile", "Home")</li>
-                    <li class="dropdown">
-                        <a class="dropdown-toggle" data-toggle="dropdown" href="#">
-                            Help
-                            <span class="caret"></span>
-                        </a>
-                        <ul class="dropdown-menu">
-                    <li>@Html.ActionLink("Contact", "Contact", "Home")</li>
-                    <li>@Html.ActionLink("About", "About", "Home")</li>
-                </ul>
-                    </li>
                 </ul>
                 <ul class="nav navbar-nav navbar-right">
                     @{
                         var user = Request.IsAuthenticated ? HttpContext.Current.Session["User"] as UserProfile : null;
                         if (user != null)
                         {
-                            if (user.TimeTrackId > 0)
-                            {
-                                <li>@Html.ActionLink("Time", "Time", "Home")</li>
-                            }
-                            <li>@Html.ActionLink("Favorites", "Favorites", "Home", new {id = user.Id}, null)</li>
                             if (user.UserType == UserType.Administrator)
                             {
-                                <li>@Html.ActionLink("Users", "Users", "Home")</li>
-                                <li>@Html.ActionLink("Log", "Log", "Home")</li>
+                                <li class="dropdown">
+                                    <a class="dropdown-toggle" data-toggle="dropdown" href="#">
+                                        Admin<span class="caret"></span>
+                                    </a>
+                                    <ul class="dropdown-menu">
+                                        <li>@Html.ActionLink("Users", "Users", "Home")</li>
+                                        <li>@Html.ActionLink("Log", "Log", "Home")</li>
+                                    </ul>
+                                </li>
                             }
                             <li class="dropdown">
                                 <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
@@ -80,9 +72,18 @@
                                     <span class="caret"></span>
                                 </a>
                                 <ul class="dropdown-menu">
+                                    @if (user.TimeTrackId > 0) {
+                                        <li>@Html.ActionLink("Time", "Time", "Home")</li>
+                                    }
+                                <li>
+                                    <a href="@Url.Action("Favorites", "Home", new { id = user.Id })">
+                                        <span class="glyphicon glyphicon-heart"></span> Favorites
+                                    </a>
+                                    @* @Html.ActionLink("Favorites", "Favorites", "Home", new { id = user.Id }, null) *@
+                                </li>
                                     <li>
                                         <a href="#" onclick="EditPassword(@user.Id);">
-                                            <span class="glyphicon glyphicon-lock"></span>Change password
+                                            <span class="glyphicon glyphicon-lock"></span> Change password
                                         </a>
                                     </li>
                                     <li>
@@ -105,6 +106,16 @@
                             </li>
                         }
                     }
+                    <li class="dropdown">
+                        <a class="dropdown-toggle" data-toggle="dropdown" href="#">
+                            Help
+                            <span class="caret"></span>
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li>@Html.ActionLink("Contact", "Contact", "Home")</li>
+                            <li>@Html.ActionLink("About", "About", "Home")</li>
+                        </ul>
+                    </li>
                 </ul>         
             </div>
         </div>
