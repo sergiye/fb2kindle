@@ -35,6 +35,7 @@ ModalPopupControl.prototype.Close = function () {
 };
 
 ModalPopupControl.prototype.Show = function (title, okButtonText) {
+
     window.Helper.ShowPopup(this.ModalId, title, okButtonText);
 };
 
@@ -72,7 +73,7 @@ ModalPopupControl.prototype.InitModalForm = function () {
 };
 /* enter keypress */
 $(document).keypress(function (e) {
-    if (e.which == 13 || e.which == 27) {
+    if (e.which === 13 || e.which === 27) {
         for (var modalName in window.Pages.Controls) {
             var modal = window.Pages.Controls[modalName];
             var isModalOpened = modal != null ? $("#" + modal.ModalId).is(":visible") : false;

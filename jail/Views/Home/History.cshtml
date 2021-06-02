@@ -3,6 +3,7 @@
 @{
     ViewBag.Title = "History";
     var user = (UserProfile)HttpContext.Current.Session["User"];
+    var className = ViewBag.SortAsc ? "glyphicon glyphicon-triangle-top" : "glyphicon glyphicon-triangle-bottom";
 }
 
 <h2>
@@ -12,12 +13,17 @@
     <table class="table table-bordered table-hover">
         <tr>
             <th style="min-width: 60px; width: 60px;"></th>
-            <th style="min-width: 220px; width: 50%">Title</th>
+            <th style="min-width: 220px; width: 50%">
+                @Html.ActionLink("Title", "History", new { sortBy = "title", sortAsc = !ViewBag.SortAsc })
+                @if (ViewBag.SortBy == "title") { <i class="@className"></i> }
+            </th>
             <th style="min-width: 150px; width: 20%;">Author</th>
             <th style="min-width: 150px; width: 20%;">Sequence</th>
-            <th style="min-width: 140px; width: 140px;">Generated</th>
-            @if (user != null && user.UserType == UserType.Administrator)
-            {
+            <th style="min-width: 140px; width: 140px;">
+                @Html.ActionLink("Generated", "History", new { sortBy = "", sortAsc = !ViewBag.SortAsc })
+                @if (string.IsNullOrEmpty(ViewBag.SortBy)) { <i class="@className"></i> }
+            </th>
+            @if (user != null && user.UserType == UserType.Administrator) {
                 <th style="min-width: 50px; width: 50px;"></th>
             }
         </tr>

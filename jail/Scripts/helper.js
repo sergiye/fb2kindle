@@ -1,16 +1,19 @@
 ﻿function HelperItem() {};
 
 window.HelperItem.prototype.ShowPopup = function (popupId, title, okButtonText) {
-    $("#" + popupId).modal('show');
+
+    var popup = $("#" + popupId);
+    popup.modal('show');
 
     if (title != null && !(title === "")) {
-        $("#" + popupId).find(".modal-title").text(title);
+        popup.find(".modal-title").text(title);
     }
 
     if (okButtonText != null && !(okButtonText === "")) {
-        $("#" + popupId).find(".modal-footer .btn-success").text(okButtonText);
+        popup.find(".modal-footer .btn-success").text(okButtonText);
     }
 
+    setTimeout(function(){popup.find('input[type=text],textarea,select').filter(':visible:first').focus();}, 500);
     this.OverlayAllOtherPopups(popupId);
 };
 
