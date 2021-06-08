@@ -49,22 +49,20 @@
                     <li>@Html.ActionLink("Convert", "UploadFile", "Home")</li>
                 </ul>
                 <ul class="nav navbar-nav navbar-right">
+                    <li class="dropdown">
+                        <a class="dropdown-toggle" data-toggle="dropdown" href="#">
+                            Help
+                            <span class="caret"></span>
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li>@Html.ActionLink("Contact", "Contact", "Home")</li>
+                            <li>@Html.ActionLink("About", "About", "Home")</li>
+                        </ul>
+                    </li>
                     @{
                         var user = Request.IsAuthenticated ? HttpContext.Current.Session["User"] as UserProfile : null;
                         if (user != null)
                         {
-                            if (user.UserType == UserType.Administrator)
-                            {
-                                <li class="dropdown">
-                                    <a class="dropdown-toggle" data-toggle="dropdown" href="#">
-                                        Admin<span class="caret"></span>
-                                    </a>
-                                    <ul class="dropdown-menu">
-                                        <li>@Html.ActionLink("Users", "Users", "Home")</li>
-                                        <li>@Html.ActionLink("Log", "Log", "Home")</li>
-                                    </ul>
-                                </li>
-                            }
                             <li class="dropdown">
                                 <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
                                     <span class="glyphicon glyphicon-user"></span>
@@ -73,19 +71,34 @@
                                 </a>
                                 <ul class="dropdown-menu">
                                     @if (user.TimeTrackId > 0) {
-                                        <li>@Html.ActionLink("Time", "Time", "Home")</li>
+                                    <li>@Html.ActionLink("Time", "Time", "Home")</li>
                                     }
-                                <li>
-                                    <a href="@Url.Action("Favorites", "Home", new { id = user.Id })">
-                                        <span class="glyphicon glyphicon-heart"></span> Favorites
-                                    </a>
-                                    @* @Html.ActionLink("Favorites", "Favorites", "Home", new { id = user.Id }, null) *@
-                                </li>
+                                    @if (user.UserType == UserType.Administrator)
+                                    {
+                                    <li>                                        
+                                        <a href="@Url.Action("Users", "Home")">
+                                            <span class="glyphicon glyphicon-user"></span> Users
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="@Url.Action("Log", "Home")">
+                                            <span class="glyphicon glyphicon-alert"></span> Log
+                                        </a>
+                                    </li>
+                                    <li class="divider"></li>
+                                    }
+                                    <li>
+                                        <a href="@Url.Action("Favorites", "Home", new { id = user.Id })">
+                                            <span class="glyphicon glyphicon-heart"></span> Favorites
+                                        </a>
+                                        @* @Html.ActionLink("Favorites", "Favorites", "Home", new { id = user.Id }, null) *@
+                                    </li>
                                     <li>
                                         <a href="#" onclick="EditPassword(@user.Id);">
                                             <span class="glyphicon glyphicon-lock"></span> Change password
                                         </a>
                                     </li>
+                                    <li class="divider"></li>
                                     <li>
                                         <a href="@Url.Action("Logout", "Home")">
                                             <span class="glyphicon glyphicon-log-out"></span> Log Off
@@ -106,16 +119,6 @@
                             </li>
                         }
                     }
-                    <li class="dropdown">
-                        <a class="dropdown-toggle" data-toggle="dropdown" href="#">
-                            Help
-                            <span class="caret"></span>
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li>@Html.ActionLink("Contact", "Contact", "Home")</li>
-                            <li>@Html.ActionLink("About", "About", "Home")</li>
-                        </ul>
-                    </li>
                 </ul>         
             </div>
         </div>
