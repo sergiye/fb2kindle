@@ -161,3 +161,7 @@ h1, h2, h3 {
     width: auto;
     height: 60px;
 }
+.img-details-preview {
+    width: auto;
+    height: 350px;
+}
