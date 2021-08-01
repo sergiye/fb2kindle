@@ -255,7 +255,7 @@ namespace Fb2Kindle
             //store new link targets in dictionary
             foreach (var idEl in book.DescendantsAndSelf().Where(el => el.Name != "div" && el.Attribute("id") != null))
             {
-                links.Add($"#{(string) idEl.Attribute("id")}", filename);
+                links[$"#{(string) idEl.Attribute("id")}"] = filename;
             }
             //update found links hrefs
             foreach (var a in book.Descendants("a"))
