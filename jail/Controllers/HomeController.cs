@@ -263,14 +263,14 @@ namespace jail.Controllers
             ViewBag.Key = k;
             ViewBag.Lang = l;
             return View(string.IsNullOrWhiteSpace(k) ? new List<BookInfo>() :
-                await DataRepository.GetSearchData(k, l, CurrentUser?.Id).ConfigureAwait(false));
+                await DataRepository.GetSearchData(k, l, CurrentUser?.Id));
         }
 
         [ValidateInput(false)]
         [Route("search")]
         public async Task<ActionResult> SearchResults(string k = null, string l = "ru") {
             return PartialView(string.IsNullOrWhiteSpace(k) ? new List<BookInfo>() :
-                await DataRepository.GetSearchData(k, l, CurrentUser?.Id).ConfigureAwait(false));
+                await DataRepository.GetSearchData(k, l, CurrentUser?.Id));
         }
 
         [Route("history")]
@@ -309,8 +309,7 @@ namespace jail.Controllers
           }
 
           //leave only first N in list
-          return View(await DataRepository.GetHistory(books, sortBy, sortAsc, SettingsHelper.MaxRecordsToShowAtOnce)
-            .ConfigureAwait(false));
+          return View(await DataRepository.GetHistory(books, sortBy, sortAsc, SettingsHelper.MaxRecordsToShowAtOnce));
         }
 
         private void TryToDelete(string path, bool isFile) {
@@ -407,7 +406,7 @@ namespace jail.Controllers
                     email = SettingsHelper.AdminDefaultEmail;
 
                 Logger.WriteDebug($"Sending to {email}...");
-                await CommonHelper.SendBookByMail(book.Title, resultFile, email).ConfigureAwait(false);
+                await CommonHelper.SendBookByMail(book.Title, resultFile, email);
                 Logger.WriteInfo($"Sent {book.Title} to {email}...");
                 return Json($"Done! Please check '{email}' for message with book attached.", JsonRequestBehavior.AllowGet);
             }
@@ -780,7 +779,7 @@ namespace jail.Controllers
 
             ViewBag.Id = id;
             ViewBag.Key = k;
-            var books = await DataRepository.GetFavorites(id, pageNum, SettingsHelper.MaxRecordsToShowAtOnce, k).ConfigureAwait(false);
+            var books = await DataRepository.GetFavorites(id, pageNum, SettingsHelper.MaxRecordsToShowAtOnce, k);
             return View(books);
         }
 
@@ -817,7 +816,7 @@ namespace jail.Controllers
                 using (var client = new WebClient()) {
                     while (fetchMore) {
                         var url = $"{SettingsHelper.FlibustaLink}/rec?page={pageNum++}&view=recs&user={flibustaId}&udata=id";
-                        var pageData = await client.DownloadStringTaskAsync(url).ConfigureAwait(false);
+                        var pageData = await client.DownloadStringTaskAsync(url);
                         var bytes = Encoding.Default.GetBytes(pageData);
                         pageData = Encoding.UTF8.GetString(bytes);
                         var regex = new Regex(@"<tr>[\s\S]*?<td><a href=\""\/b\/([\d]+)\"">(.+)<\/a>[\s\S]*?user\/([\d]+)[\s\S]*?<td>(.+)<\/td>[\s\S]*?\/tr>");
@@ -833,12 +832,12 @@ namespace jail.Controllers
                                 throw new InvalidDataException("Wrong UserId value received.");
                             var dateAdded = DateTime.Parse(m.Groups[4].Value, culture);
 
-                            var bookFound = await DataRepository.GetFavoriteId(bookId, userId, dateAdded).ConfigureAwait(false);
+                            var bookFound = await DataRepository.GetFavoriteId(bookId, userId, dateAdded);
                             if (bookFound != 0) {
                                 fetchMore = false;
                                 break;
                             }
-                            await DataRepository.SaveFavorite(bookId, userId, dateAdded).ConfigureAwait(false);
+                            await DataRepository.SaveFavorite(bookId, userId, dateAdded);
                             booksFetched++;
                         }
                     }
@@ -854,15 +853,15 @@ namespace jail.Controllers
         [HttpGet, Route("favtoggle"), UserTypeFilter(Roles = new[] { UserType.Administrator, UserType.User })]
         public async Task<ActionResult> FavoriteToggle(long bookId) {
             try {
-                var favId = await DataRepository.GetFavoriteId(bookId, CurrentUser.Id, null).ConfigureAwait(false);
+                var favId = await DataRepository.GetFavoriteId(bookId, CurrentUser.Id, null);
                 if (favId == 0) {
                     //add fav
-                    favId = await DataRepository.SaveFavorite(bookId, CurrentUser.Id, DateTime.Now).ConfigureAwait(false);
+                    favId = await DataRepository.SaveFavorite(bookId, CurrentUser.Id, DateTime.Now);
                     Logger.WriteWarning($"Favorite item '{favId}' was added by user '{CurrentUser.Email}'", CommonHelper.GetClientAddress(Request));
                 }
                 else {
                     //delete fav
-                    return await FavoriteDelete(favId).ConfigureAwait(false);
+                    return await FavoriteDelete(favId);
                 }
                 return new HttpStatusCodeResult(HttpStatusCode.OK);
             }
@@ -875,7 +874,7 @@ namespace jail.Controllers
         [HttpDelete, Route("favdelete"), UserTypeFilter(Roles = new[] { UserType.Administrator })]
         public async Task<ActionResult> FavoriteDelete(long id) {
             try {
-                var count = await DataRepository.DeleteFavorite(id).ConfigureAwait(false);
+                var count = await DataRepository.DeleteFavorite(id);
                 if (count != 0) {
                     Logger.WriteWarning($"Favorite item '{id}' was deleted by user '{CurrentUser.Email}'", CommonHelper.GetClientAddress(Request));
                     return new HttpStatusCodeResult(HttpStatusCode.OK, "Done");
