@@ -9,7 +9,6 @@ using System.Windows.Forms;
 namespace LibraryCleaner {
     public partial class MainForm : Form {
         private readonly Cleaner _cleaner;
-        private readonly string _mainTitleText;
 
         public MainForm() {
             InitializeComponent();
@@ -19,11 +18,14 @@ namespace LibraryCleaner {
                 Icon = Icon.ExtractAssociatedIcon(module.FileName);
 
             var asm = Assembly.GetExecutingAssembly().GetName();
-            var ver = asm.Version;
-            _mainTitleText = $"{asm.Name} Version: {ver.ToString(3)}; Build: {GetBuildTime(ver):yyyy/MM/dd HH:mm:ss}";
-
+            var mainTitleText = $"{asm.Name} Version: {asm.Version.ToString(3)}";
             var timer = new Timer {Interval = 1000, Enabled = true};
-            timer.Tick += UpdateWindowText;
+            timer.Tick += (sender, args) => {
+                var dt = DateTime.Now;
+                var build = dt.Subtract(new DateTime(2000, 1, 1)).Days;
+                var revision = (dt.Second + dt.Minute * 60 + dt.Hour * 60 * 60) / 2;
+                Text = $"{mainTitleText}; Now: {build}.{revision}";
+            };
 
             _cleaner = new Cleaner(null);
             _cleaner.OnStateChanged += AddToLog;
@@ -42,14 +44,6 @@ namespace LibraryCleaner {
         }
 
         #region GUI helper methods
-
-        internal static DateTime GetBuildTime(Version ver) {
-            var buildTime = new DateTime(2000, 1, 1).AddDays(ver.Build).AddSeconds(ver.Revision * 2);
-            if (TimeZone.IsDaylightSavingTime(DateTime.Now,
-                TimeZone.CurrentTimeZone.GetDaylightChanges(DateTime.Now.Year)))
-                buildTime = buildTime.AddHours(1);
-            return buildTime;
-        }
 
         private void AddToLog(string message, Cleaner.StateKind state) {
             if (InvokeRequired) {
@@ -110,67 +104,54 @@ namespace LibraryCleaner {
 
         #endregion GUI helper methods
 
-        private void UpdateWindowText(object sender, EventArgs eventArgs) {
-            var dt = DateTime.Now;
-            var build = dt.Subtract(new DateTime(2000, 1, 1)).Days;
-            var revision = (dt.Second + dt.Minute * 60 + dt.Hour * 60 * 60) / 2;
-            // Text = string.Format("TT - {0}.{1}", build, revision);        
-            Text = $"{_mainTitleText}; Now: {build}.{revision}";
-        }
-
-        private async Task ProcessCleanupTasks(bool analyzeOnly) {
+        private void ProcessCleanupTasks(bool analyzeOnly) {
             var startedTime = DateTime.Now;
             SetStartedState();
-            try {
-                //get selected genres list
-                var genresToRemove = clsGenres.CheckedItems.Cast<Genres>().Select(s => s.Code).ToArray();
-                _cleaner.GenresToRemove = genresToRemove;
-                _cleaner.DatabasePath = txtDatabase.Text;
-                _cleaner.ArchivesOutputPath = txtOutput.Text;
-                _cleaner.UpdateHashInfo = cbxUpdateHashes.Checked;
-                _cleaner.RemoveDeleted = cbxRemoveDeleted.Checked;
-                _cleaner.RemoveNotRegisteredFilesFromZip = cbxRemoveDeleted.Checked;
-                _cleaner.RemoveMissingArchivesFromDb = cbxRemoveMissedArchives.Checked; // && !analyzeOnly;
-                _cleaner.MinFilesToUpdateZip = (int) edtMinFilesToSave.Value;
-                _cleaner.FileWithDeletedBooksIds = txtDeletedFile.Text;
+            Task.Factory.StartNew(async () => {
+                try {
+                    //get selected genres list
+                    var genresToRemove = clsGenres.CheckedItems.Cast<Genres>().Select(s => s.Code).ToArray();
+                    _cleaner.GenresToRemove = genresToRemove;
+                    _cleaner.DatabasePath = txtDatabase.Text;
+                    _cleaner.ArchivesOutputPath = txtOutput.Text;
+                    _cleaner.UpdateHashInfo = cbxUpdateHashes.Checked;
+                    _cleaner.RemoveDeleted = cbxRemoveDeleted.Checked;
+                    _cleaner.RemoveNotRegisteredFilesFromZip = cbxRemoveDeleted.Checked;
+                    _cleaner.RemoveMissingArchivesFromDb = cbxRemoveMissedArchives.Checked; // && !analyzeOnly;
+                    _cleaner.MinFilesToUpdateZip = (int) edtMinFilesToSave.Value;
+                    _cleaner.FileWithDeletedBooksIds = txtDeletedFile.Text;
 
-                if (!await _cleaner.CheckParameters().ConfigureAwait(false)) {
-                    AddToLog("Please check input parameters and start again!", Cleaner.StateKind.Warning);
+                    if (!await _cleaner.CheckParameters().ConfigureAwait(false)) {
+                        AddToLog("Please check input parameters and start again!", Cleaner.StateKind.Warning);
+                        SetFinishedState(startedTime);
+                        return;
+                    }
+
+                    await _cleaner.CalculateStats().ConfigureAwait(false);
+
+                    if (!analyzeOnly) {
+                        await _cleaner.CompressLibrary().ConfigureAwait(false);
+                        AddToLog("Finished!", Cleaner.StateKind.Log);
+                    }
+                    
                     SetFinishedState(startedTime);
-                    return;
                 }
-
-                await _cleaner.CalculateStats().ConfigureAwait(false);
-
-                if (!analyzeOnly && MessageBox.Show("Start database cleaning?", "Confirmation", MessageBoxButtons.YesNo,
-                    MessageBoxIcon.Question) == DialogResult.Yes) {
-                    await _cleaner.CompressLibrary().ConfigureAwait(false);
-                    AddToLog("Finished!", Cleaner.StateKind.Log);
+                catch (Exception ex) {
+                    AddToLog(ex.Message, Cleaner.StateKind.Error);
                     SetFinishedState(startedTime);
                 }
-                else
-                    SetFinishedState(startedTime);
-            }
-            catch (Exception ex) {
-                AddToLog(ex.Message, Cleaner.StateKind.Error);
-                SetFinishedState(startedTime);
-            }
+            });
         }
 
         private void btnAnalyze_Click(object sender, EventArgs e) {
-            Task.Run(() => ProcessCleanupTasks(true));
+            ProcessCleanupTasks(true);
         }
 
         private void btnStart_Click(object sender, EventArgs e) {
-            Task.Run(() => ProcessCleanupTasks(false));
+            ProcessCleanupTasks(false);
         }
 
         private void SetStartedState() {
-            if (InvokeRequired) {
-                Invoke(new Action(SetStartedState));
-                return;
-            }
-
             panSettings.Visible = false;
             btnAnalyze.Enabled = false;
             btnStart.Enabled = false;
