@@ -157,9 +157,10 @@ JOIN archives a on a.id=b.id_archive and b.file_name is not NULL and b.file_name
 
       //get all files not found on disk (to remove from db)
       var totalRemoved = 0;
-      foreach (var archPath in archivesFound) {
+      for (var i = 0; i < archivesFound.Count; i++) {
+        var archPath = archivesFound[i];
         try {
-          UpdateState($"Processing: {archPath}", StateKind.Log);
+          UpdateState($"Processing {i:000}/{archivesFound.Count}: {archPath}", StateKind.Log);
           var archiveName = Path.GetFileName(archPath);
           if (string.IsNullOrWhiteSpace(archiveName)) {
             UpdateState($"Skipped as invalid file name: {archPath}", StateKind.Warning);
