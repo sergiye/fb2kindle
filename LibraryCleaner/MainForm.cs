@@ -6,15 +6,12 @@ using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace LibraryCleaner
-{
-    public partial class MainForm : Form
-    {
+namespace LibraryCleaner {
+    public partial class MainForm : Form {
         private readonly Cleaner _cleaner;
         private readonly string _mainTitleText;
 
-        public MainForm()
-        {
+        public MainForm() {
             InitializeComponent();
 
             var module = Process.GetCurrentProcess().MainModule;
@@ -33,8 +30,7 @@ namespace LibraryCleaner
 
             clsGenres.Items.Clear();
             var genres = GenresListContainer.GetDefaultItems();
-            foreach (var genre in genres)
-            {
+            foreach (var genre in genres) {
                 clsGenres.Items.Add(genre, genre.Selected);
             }
 
@@ -47,24 +43,22 @@ namespace LibraryCleaner
 
         #region GUI helper methods
 
-        internal static DateTime GetBuildTime(Version ver)
-        {
+        internal static DateTime GetBuildTime(Version ver) {
             var buildTime = new DateTime(2000, 1, 1).AddDays(ver.Build).AddSeconds(ver.Revision * 2);
-            if (TimeZone.IsDaylightSavingTime(DateTime.Now, TimeZone.CurrentTimeZone.GetDaylightChanges(DateTime.Now.Year)))
+            if (TimeZone.IsDaylightSavingTime(DateTime.Now,
+                TimeZone.CurrentTimeZone.GetDaylightChanges(DateTime.Now.Year)))
                 buildTime = buildTime.AddHours(1);
             return buildTime;
         }
-        
-        private void AddToLog(string message, Cleaner.StateKind state)
-        {
-            if (InvokeRequired)
-            {
+
+        private void AddToLog(string message, Cleaner.StateKind state) {
+            if (InvokeRequired) {
                 Invoke(new Action<string, Cleaner.StateKind>(AddToLog), message, state);
                 return;
             }
+
             txtLog.AppendLine($"{DateTime.Now:T} - ", Color.LightGray, false);
-            switch (state)
-            {
+            switch (state) {
                 case Cleaner.StateKind.Error:
                     txtLog.AppendLine(message, Color.Red);
                     break;
@@ -78,51 +72,45 @@ namespace LibraryCleaner
                     txtLog.AppendLine(message, txtLog.ForeColor);
                     break;
             }
+
             txtLog.ScrollToCaret();
             Application.DoEvents();
         }
 
-        private void btnBrowse_Click(object sender, EventArgs e)
-        {
+        private void btnBrowse_Click(object sender, EventArgs e) {
             var dlg = new OpenFileDialog {CheckFileExists = true, Filter = "Database file (*.db)|*.db"};
             if (dlg.ShowDialog() != DialogResult.OK) return;
             txtDatabase.Text = dlg.FileName;
         }
 
-        private void btnBrowseOutput_Click(object sender, EventArgs e)
-        {
+        private void btnBrowseOutput_Click(object sender, EventArgs e) {
             var dlg = new FolderBrowserDialog();
             if (dlg.ShowDialog() != DialogResult.OK) return;
             txtOutput.Text = dlg.SelectedPath;
         }
-     
-        private void btnDeletedFile_Click(object sender, EventArgs e)
-        {
-            var dlg = new OpenFileDialog 
-            {
-                CheckFileExists = true, 
-                Filter = "Csv file (*.csv)|*.csv|Text file (*.txt)|*.txt|All files (*.*)|*.*" 
+
+        private void btnDeletedFile_Click(object sender, EventArgs e) {
+            var dlg = new OpenFileDialog {
+                CheckFileExists = true,
+                Filter = "Csv file (*.csv)|*.csv|Text file (*.txt)|*.txt|All files (*.*)|*.*"
             };
             if (dlg.ShowDialog() != DialogResult.OK) return;
             txtDeletedFile.Text = dlg.FileName;
         }
-        
-        private void btnAllGenres_Click(object sender, EventArgs e)
-        {
+
+        private void btnAllGenres_Click(object sender, EventArgs e) {
             for (var i = 0; i < clsGenres.Items.Count; i++)
                 clsGenres.SetItemChecked(i, true);
         }
 
-        private void btnNoneGenres_Click(object sender, EventArgs e)
-        {
+        private void btnNoneGenres_Click(object sender, EventArgs e) {
             for (var i = 0; i < clsGenres.Items.Count; i++)
                 clsGenres.SetItemChecked(i, false);
         }
 
         #endregion GUI helper methods
 
-        private void UpdateWindowText(object sender, EventArgs eventArgs)
-        {
+        private void UpdateWindowText(object sender, EventArgs eventArgs) {
             var dt = DateTime.Now;
             var build = dt.Subtract(new DateTime(2000, 1, 1)).Days;
             var revision = (dt.Second + dt.Minute * 60 + dt.Hour * 60 * 60) / 2;
@@ -130,12 +118,10 @@ namespace LibraryCleaner
             Text = $"{_mainTitleText}; Now: {build}.{revision}";
         }
 
-        private async Task ProcessCleanupTasks(bool analyzeOnly)
-        {
+        private async Task ProcessCleanupTasks(bool analyzeOnly) {
             var startedTime = DateTime.Now;
             SetStartedState();
-            try
-            {
+            try {
                 //get selected genres list
                 var genresToRemove = clsGenres.CheckedItems.Cast<Genres>().Select(s => s.Code).ToArray();
                 _cleaner.GenresToRemove = genresToRemove;
@@ -144,22 +130,20 @@ namespace LibraryCleaner
                 _cleaner.UpdateHashInfo = cbxUpdateHashes.Checked;
                 _cleaner.RemoveDeleted = cbxRemoveDeleted.Checked;
                 _cleaner.RemoveNotRegisteredFilesFromZip = cbxRemoveDeleted.Checked;
-                _cleaner.RemoveMissingArchivesFromDb = cbxRemoveMissedArchives.Checked;// && !analyzeOnly;
+                _cleaner.RemoveMissingArchivesFromDb = cbxRemoveMissedArchives.Checked; // && !analyzeOnly;
                 _cleaner.MinFilesToUpdateZip = (int) edtMinFilesToSave.Value;
                 _cleaner.FileWithDeletedBooksIds = txtDeletedFile.Text;
 
-                if (!await _cleaner.CheckParameters().ConfigureAwait(false))
-                {
+                if (!await _cleaner.CheckParameters().ConfigureAwait(false)) {
                     AddToLog("Please check input parameters and start again!", Cleaner.StateKind.Warning);
                     SetFinishedState(startedTime);
                     return;
                 }
 
                 await _cleaner.CalculateStats().ConfigureAwait(false);
-                
+
                 if (!analyzeOnly && MessageBox.Show("Start database cleaning?", "Confirmation", MessageBoxButtons.YesNo,
-                    MessageBoxIcon.Question) == DialogResult.Yes)
-                {
+                    MessageBoxIcon.Question) == DialogResult.Yes) {
                     await _cleaner.CompressLibrary().ConfigureAwait(false);
                     AddToLog("Finished!", Cleaner.StateKind.Log);
                     SetFinishedState(startedTime);
@@ -167,43 +151,38 @@ namespace LibraryCleaner
                 else
                     SetFinishedState(startedTime);
             }
-            catch (Exception ex)
-            {
+            catch (Exception ex) {
                 AddToLog(ex.Message, Cleaner.StateKind.Error);
                 SetFinishedState(startedTime);
             }
         }
 
-        private void btnAnalyze_Click(object sender, EventArgs e)
-        {
+        private void btnAnalyze_Click(object sender, EventArgs e) {
             Task.Run(() => ProcessCleanupTasks(true));
         }
 
-        private void btnStart_Click(object sender, EventArgs e)
-        {
+        private void btnStart_Click(object sender, EventArgs e) {
             Task.Run(() => ProcessCleanupTasks(false));
         }
 
-        private void SetStartedState()
-        {
-            if (InvokeRequired)
-            {
+        private void SetStartedState() {
+            if (InvokeRequired) {
                 Invoke(new Action(SetStartedState));
                 return;
             }
+
             panSettings.Visible = false;
             btnAnalyze.Enabled = false;
             btnStart.Enabled = false;
             Cursor = Cursors.WaitCursor;
         }
 
-        private void SetFinishedState(DateTime startedTime)
-        {
-            if (InvokeRequired)
-            {
+        private void SetFinishedState(DateTime startedTime) {
+            if (InvokeRequired) {
                 Invoke(new Action<DateTime>(SetFinishedState), startedTime);
                 return;
             }
+
             var timeWasted = DateTime.Now - startedTime;
             AddToLog($"Time wasted: {timeWasted:G}", Cleaner.StateKind.Log);
             panSettings.Visible = true;
