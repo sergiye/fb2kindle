@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -9,6 +10,7 @@ using System.Windows.Forms;
 namespace LibraryCleaner {
     public partial class MainForm : Form {
         private readonly Cleaner _cleaner;
+        private readonly string _logFileName;
 
         public MainForm() {
             InitializeComponent();
@@ -17,7 +19,9 @@ namespace LibraryCleaner {
             if (module != null)
                 Icon = Icon.ExtractAssociatedIcon(module.FileName);
 
-            var asm = Assembly.GetExecutingAssembly().GetName();
+            var assembly = Assembly.GetExecutingAssembly();
+            _logFileName = Path.ChangeExtension(assembly.Location, ".log");
+            var asm = assembly.GetName();
             var mainTitleText = $"{asm.Name} Version: {asm.Version.ToString(3)}";
             var timer = new Timer {Interval = 1000, Enabled = true};
             timer.Tick += (sender, args) => {
@@ -41,7 +45,7 @@ namespace LibraryCleaner {
             cbxRemoveMissedArchives.Checked = _cleaner.RemoveMissingArchivesFromDb;
 
             txtDatabase.Text = @"d:\media\library\myrulib_flibusta\myrulib.db";
-            txtLog.Font = new Font("Verdana", 10, FontStyle.Regular);
+            // txtLog.Font = new Font("Verdana", 10, FontStyle.Regular);
         }
 
         #region GUI helper methods
@@ -68,6 +72,7 @@ namespace LibraryCleaner {
                     break;
             }
 
+            File.AppendAllText(_logFileName, $"{DateTime.Now:T} - {message}\n");
             txtLog.ScrollToCaret();
             Application.DoEvents();
         }
