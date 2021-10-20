@@ -41,6 +41,7 @@ namespace LibraryCleaner {
             cbxRemoveMissedArchives.Checked = _cleaner.RemoveMissingArchivesFromDb;
 
             txtDatabase.Text = @"d:\media\library\myrulib_flibusta\myrulib.db";
+            txtLog.Font = new Font("Verdana", 10, FontStyle.Regular);
         }
 
         #region GUI helper methods
