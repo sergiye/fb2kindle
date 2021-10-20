@@ -46,7 +46,7 @@ namespace LibraryCleaner {
       FileWithDeletedBooksIds = null;
       RemoveForeign = true;
       RemoveDeleted = true;
-      UpdateHashInfo = true;
+      UpdateHashInfo = false;
       RemoveMissingArchivesFromDb = true;
       GenresToRemove = GenresListContainer.GetDefaultItems().Where(f => f.Selected).Select(f => f.Code).ToArray();
       // _seqToRemove = new List<int>
@@ -281,12 +281,13 @@ JOIN archives a on a.id=b.id_archive and b.file_name is not NULL and b.file_name
 
       UpdateState($"Total removed {totalRemoved} files", StateKind.Message);
 
-      SqlHelper.ExecuteNonQuery("delete from books where id_archive not in (select id from archives)");
-      SqlHelper.ExecuteNonQuery("delete from bookseq where id_book not in (select DISTINCT id FROM books)");
-      SqlHelper.ExecuteNonQuery("delete from sequences where id not in (select DISTINCT id_seq FROM bookseq)");
-      SqlHelper.ExecuteNonQuery("delete from genres where id_book not in (select DISTINCT id FROM books)");
-      SqlHelper.ExecuteNonQuery("delete from authors where id not in (select DISTINCT id_author FROM books) and id<0");
-      SqlHelper.ExecuteNonQuery("delete from fts_book where docid not in (select DISTINCT id FROM books)");
+      SqlHelper.ExecuteNonQuery(@"update books set description=null where description is not null;
+delete from bookseq where id_book not in (select DISTINCT id FROM books);
+delete from bookseq where id_seq not in (select DISTINCT id FROM sequences);
+delete from sequences where id not in (select DISTINCT id_seq FROM bookseq);
+delete from genres where id_book not in (select DISTINCT id FROM books);
+delete from fts_book where docid not in (select DISTINCT id FROM books);");
+      SqlHelper.ExecuteNonQuery("delete from authors where id not in (select DISTINCT id_author FROM books);");// and id<0;");
       SqlHelper.ExecuteNonQuery("VACUUM");
     }
 
@@ -621,6 +622,15 @@ JOIN archives a on a.id=b.id_archive and b.file_name is not NULL and b.file_name
         UpdateState($"Unregistered books: {removedCount}", StateKind.Message);
         totalRemoved += removedCount;
       }
+
+      //cleanup database records
+      removedCount = SqlHelper.ExecuteNonQuery("delete from books where id_author not in (select DISTINCT id FROM authors);");
+      UpdateState($"Unregistered books (by deleted author): {removedCount}", StateKind.Message);
+      totalRemoved += removedCount;
+
+      removedCount = SqlHelper.ExecuteNonQuery("delete from books where id_archive not in (select DISTINCT id FROM archives);");
+      UpdateState($"Unregistered books (by deleted archive): {removedCount}", StateKind.Message);
+      totalRemoved += removedCount;
 
       UpdateState($"Total unregistered books: {totalRemoved}", StateKind.Message);
 
