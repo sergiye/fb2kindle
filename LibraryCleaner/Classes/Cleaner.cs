@@ -160,7 +160,7 @@ JOIN archives a on a.id=b.id_archive and b.file_name is not NULL and b.file_name
       for (var i = 0; i < archivesFound.Count; i++) {
         var archPath = archivesFound[i];
         try {
-          UpdateState($"Processing {i:000}/{archivesFound.Count}: {archPath}", StateKind.Log);
+          UpdateState($"Processing {i+1:000}/{archivesFound.Count}: {archPath}", StateKind.Log);
           var archiveName = Path.GetFileName(archPath);
           if (string.IsNullOrWhiteSpace(archiveName)) {
             UpdateState($"Skipped as invalid file name: {archPath}", StateKind.Warning);
