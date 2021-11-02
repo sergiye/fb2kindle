@@ -100,6 +100,43 @@ namespace LibraryCleaner {
       return true;
     }
 
+    private void RemoveDeletedFromDatabase() {
+      
+      //get ids of deleted books from external file (if exists)
+      var externallyRemoved = GetExternalIdsFromFile(FileWithDeletedBooksIds);
+      if (externallyRemoved == null || externallyRemoved.Count <= 0)
+        return;
+
+      UpdateState($"Found {externallyRemoved.Count} removed books in external list", StateKind.Warning);
+      const int batchSize = 100;
+      var pendingIds = 0;
+      var deleted = 0;
+      var sql = new StringBuilder();
+
+      void executeBatch() {
+        sql.Append(")");
+        deleted += SqlHelper.ExecuteNonQuery(sql.ToString());
+        pendingIds = 0;
+      };
+
+      for (var i = 0; i < externallyRemoved.Count; i++) {
+        if (pendingIds == 0) {
+          sql.Clear();
+          sql.Append($"delete from books where id in (");
+        }
+        pendingIds++;
+        if (pendingIds != 1)
+          sql.Append(",");
+        sql.Append($"{externallyRemoved[i]}");
+        if (pendingIds == batchSize)
+          executeBatch();
+      }
+      if (pendingIds > 0)
+        executeBatch();
+
+      UpdateState($"Deleted {deleted} removed books from database", StateKind.Warning);
+    }
+
     private async Task OptimizeArchivesOnDisk() {
 
       if (!string.IsNullOrWhiteSpace(ArchivesOutputPath))
@@ -113,6 +150,8 @@ namespace LibraryCleaner {
       //     , id_archive = (SELECT files.id_archive FROM files WHERE files.id_book = books.id)
       //    WHERE EXISTS(SELECT * FROM files WHERE files.id_book = books.id)");
       SqlHelper.ExecuteNonQuery("delete from files");
+
+      RemoveDeletedFromDatabase();
 
       //get all database items data (some would be removed if not found on disk)
       using (var connection = SqlHelper.GetConnection()) {
@@ -146,14 +185,8 @@ JOIN archives a on a.id=b.id_archive and b.file_name is not NULL and b.file_name
       UpdateState($"Found archives in database: {dbFiles.Count}", StateKind.Message);
       //process all archives on disk
       var archivesFound = Directory.GetFiles(ArchivesPath, "*fb2*.zip", SearchOption.TopDirectoryOnly).ToList();
-      archivesFound.Sort((s, s1) =>
-        string.CompareOrdinal(s1, s)); // sort in reverse order to process latest archives first
+      archivesFound.Sort((s, s1) => string.CompareOrdinal(s1, s)); // sort in reverse order to process latest archives first
       UpdateState($"Found {archivesFound.Count} archives to optimize", StateKind.Message);
-
-      //get ids of deleted books from external file (if exists)
-      var externallyRemoved = GetExternalIdsFromFile(FileWithDeletedBooksIds);
-      if (externallyRemoved != null && externallyRemoved.Count > 0)
-        UpdateState($"Books removed in external list: {externallyRemoved.Count}", StateKind.Warning);
 
       //get all files not found on disk (to remove from db)
       var totalRemoved = 0;
@@ -207,18 +240,6 @@ JOIN archives a on a.id=b.id_archive and b.file_name is not NULL and b.file_name
 
             var zipFilesToRemove = new List<string>();
             var zipFiles = zip.EntryFileNames;
-            //remove files from external file with deleted books list 
-            foreach (var ext in externallyRemoved) {
-              var info = dbArchiveFiles.Find(f => f.id_book == ext);
-              if (info == null)
-                continue;
-              SqlHelper.ExecuteNonQuery($"delete from books where id={info.id_book}");
-              var zipFile = zipFiles.FirstOrDefault(f => f == info.file_name);
-              if (!string.IsNullOrWhiteSpace(zipFile)) {
-                zipFilesToRemove.Add(zipFile);
-                UpdateState($"Book removed by external list: {info.file_name}", StateKind.Warning);
-              }
-            }
 
             var filesNotFound = dbArchiveFiles.Where(fi => !zipFiles.Contains(fi.file_name)).ToArray();
             if (filesNotFound.Length > 0) {
@@ -466,16 +487,36 @@ delete from fts_book where docid not in (select DISTINCT id FROM books);");
       }
     }
 
-    private static List<long> GetExternalIdsFromFile(string fileName) {
+    private static List<long> GetExternalIdsFromFile(string fileName, bool flibustaCsv = true) {
 
       var result = new List<long>();
       if (!File.Exists(fileName)) return result;
-      var fData = File.ReadAllLines(fileName);
-      foreach (var line in fData) {
-        if (string.IsNullOrWhiteSpace(line)) continue;
-        var txtId = line.Trim();
-        if (long.TryParse(txtId, out var id))
-          result.Add(id);
+      if (flibustaCsv) {
+        var lines = File.ReadLines(fileName); //This method is implemented using an iterator block and does not consume memory for all lines.
+        var lineNum = 0;
+        foreach (var line in lines) {
+          lineNum++;
+          if (lineNum == 1) continue; //skip header
+          if (string.IsNullOrWhiteSpace(line)) continue;
+          var values = line.Trim().Split('\t');
+          if (values.Length < 4) continue;
+          if (values[1] != "fb2") continue;
+          if (int.TryParse(values[3], out var deleted)) {
+            if (deleted == 1) {
+              if (long.TryParse(values[0], out var id))
+                result.Add(id);
+            }
+          }
+        }
+      }
+      else {
+        var fData = File.ReadAllLines(fileName);
+        foreach (var line in fData) {
+          if (string.IsNullOrWhiteSpace(line)) continue;
+          var txtId = line.Trim();
+          if (long.TryParse(txtId, out var id))
+            result.Add(id);
+        }
       }
       return result;
     }
