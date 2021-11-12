@@ -44,6 +44,22 @@
             }
         });
     }
+    function GetRandomBooks(count) {
+        let link = '@Url.Action("Index")' + "?r=" + count;
+        window.history.pushState({ state: link }, 'Random books', link);
+        $.ajax({
+            type: "GET",
+            url: '@Url.Action("SearchResults")',
+            data: { r: count },
+            success: function (response) {
+                $("#gridContainer").html(response);
+                $("#footer").hide();
+            },
+            error: function (response, status, error) {
+                window.Helper.ShowError(error);
+            }
+        });
+    }
     </script>
 <div class="search-wrapper">
     <div class="input-group pull-left">
@@ -63,6 +79,9 @@
         <div class="input-group-btn">
             <button id="searchTypeBtn" type="button" class="btn btn-primary" onclick="RefreshData();" title="Search">
                 <i class="glyphicon glyphicon-search"></i>
+            </button>
+            <button id="randomTypeBtn" type="button" class="btn btn-warning" onclick="GetRandomBooks(5);" title="Random books">
+                <i class="glyphicon glyphicon-random"></i>
             </button>
         </div>
     </div>
