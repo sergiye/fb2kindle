@@ -8,6 +8,7 @@
 <div id="list-group">
     <table class="table table-bordered table-hover">
         <tr>
+            <th style="min-width: 60px; width: 60px;"></th>
             <th style="min-width: 220px; width: 50%;">Title</th>
             @if (ViewBag.AuthorMode == null || !ViewBag.AuthorMode)
             {
@@ -34,6 +35,9 @@
             foreach (var item in Model)
             {
     <tr>
+        <td>
+            <img src="@Url.Action("Book", new { bookId = item.Id, fileName = "cover.jpg"})" class="img-list-preview" alt=""/>
+        </td>
         <td>
             @Html.HiddenFor(modelItem => item.Id)
             @Html.HiddenFor(modelItem => item.IdArchive)
