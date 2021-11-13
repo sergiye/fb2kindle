@@ -8,6 +8,11 @@
 
 <h2>
     Last viewed books <small>(@ViewBag.TotalSize used)</small>
+    @if (user != null && user.UserType == UserType.Administrator) {
+    <a href="#" onclick="DeleteAllHistoryData();" class="btn btn-danger" title="Delete all cached data">
+        <span class="glyphicon glyphicon-trash"></span>
+    </a>
+    }
 </h2>
 <div id="gridDataContainer">
     <table class="table table-bordered table-hover">
@@ -30,7 +35,7 @@
 
         @if (Model != null && Model.Any()) {
             foreach (var item in Model) {
-                <tr>
+                <tr id="@string.Format("book_row_{0}", item.Id)">
                     <td>
                         <img src="@Url.Action("Book", new { bookId = item.Id, fileName = "cover.jpg"})" class="img-list-preview" alt=""/>
                     </td>
