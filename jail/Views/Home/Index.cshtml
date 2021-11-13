@@ -45,12 +45,15 @@
         });
     }
     function GetRandomBooks(count) {
-        let link = '@Url.Action("Index")' + "?r=" + count;
+       let search = $("#searchBlock");
+       // let key = $.trim(search.val());
+       let lang = search.attr("data-search-lang"); 
+       let link = '@Url.Action("Index")' + "?r=" + count + "&l=" + lang;
         window.history.pushState({ state: link }, 'Random books', link);
         $.ajax({
             type: "GET",
             url: '@Url.Action("SearchResults")',
-            data: { r: count },
+            data: { r: count, l: lang },
             success: function (response) {
                 $("#gridContainer").html(response);
                 $("#footer").hide();

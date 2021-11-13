@@ -265,7 +265,7 @@ namespace jail.Controllers {
       ViewBag.Key = k;
       ViewBag.Lang = l;
       if (r > 0)
-        return View(await DataRepository.GetRandomData(r, CurrentUser?.Id));
+        return View(await DataRepository.GetRandomData(r, CurrentUser?.Id, l));
       return View(string.IsNullOrWhiteSpace(k) ? new List<BookInfo>() : 
         await DataRepository.GetSearchData(k, l, CurrentUser?.Id));
     }
@@ -274,7 +274,7 @@ namespace jail.Controllers {
     [Route("search")]
     public async Task<ActionResult> SearchResults(string k = null, string l = "ru", int r = 0) {
       if (r > 0)
-        return PartialView(await DataRepository.GetRandomData(r, CurrentUser?.Id));
+        return PartialView(await DataRepository.GetRandomData(r, CurrentUser?.Id, l));
 
       return PartialView(string.IsNullOrWhiteSpace(k) ? new List<BookInfo>() : 
         await DataRepository.GetSearchData(k, l, CurrentUser?.Id));
@@ -554,6 +554,21 @@ namespace jail.Controllers {
       return View(book);
     }
 
+    [Route("books"), HttpDelete, UserTypeFilter(Roles = new[] {UserType.Administrator})]
+    public async Task<ActionResult> Delete(long id) {
+      try {
+        var deletedRows = await DataRepository.DeleteBookById(id);
+        if (deletedRows == 0)
+          throw new Exception($"Book with Id {id} not found.");
+        Logger.WriteWarning($"Book with Id '{id}' was deleted by user '{CurrentUser.Email}'", CommonHelper.GetClientAddress(Request));
+        return new HttpStatusCodeResult(HttpStatusCode.OK, "Done");
+      }
+      catch (Exception ex) {
+        Logger.WriteError(ex, $"Error deleting book with Id {id}: {ex.Message}", CommonHelper.GetClientAddress(Request));
+        throw;
+      }
+    }
+    
     #endregion
 
     #region sequence

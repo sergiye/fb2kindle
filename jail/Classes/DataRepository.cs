@@ -31,7 +31,7 @@ namespace jail.Classes {
             }
         }
 
-        public static async Task<IEnumerable<BookInfo>> GetRandomData(int count, long? userId) {
+        public static async Task<IEnumerable<BookInfo>> GetRandomData(int count, long? userId, string searchLang) {
             var sql = @"select b.id, b.title, b.id_archive, b.file_name, b.file_size, b.md5sum, 
 b.created, b.lang, ";
             if (userId.HasValue && userId.Value > 0)
@@ -43,11 +43,12 @@ b.created, b.lang, ";
                 sql += " left join favorites f on f.bookid=b.id and f.UserId=@userId";
             sql += @" join authors a on a.id=b.id_author
 left join bookseq bs on bs.id_book=b.id
-left join sequences s on s.id=bs.id_seq 
-order by RANDOM() LIMIT @count";
+left join sequences s on s.id=bs.id_seq ";
+            if (searchLang != "all") sql += " WHERE b.lang=@lang ";               
+            sql += " order by RANDOM() LIMIT @count";
             var info = await Db.QueryMultipleAsync<BookInfo, SequenceInfo, AuthorInfo, long>(sql,
                 b => b.Id, b => b.Sequences, b => b.Authors,
-                new {count, userId}).ConfigureAwait(false);
+                new {count, userId, lang = searchLang}).ConfigureAwait(false);
             return info;
         }
 
@@ -262,6 +263,10 @@ where b.id in @ids";
 
         public static async Task<long> DeleteFavorite(long id) {
             return await Db.ExecuteAsync("delete from favorites where Id=@id", new {id}).ConfigureAwait(false);
+        }
+
+        public static async Task<long> DeleteBookById(long id) {
+            return await Db.ExecuteAsync("delete from books where Id=@id", new {id}).ConfigureAwait(false);
         }
     }
 }

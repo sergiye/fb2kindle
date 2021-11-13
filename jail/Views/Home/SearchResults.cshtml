@@ -26,7 +26,7 @@
             <th style="min-width: 130px;">File</th>
             @if (user != null)
             {
-                <th style="min-width: 100px;">Actions</th>
+                <th style="min-width: 150px;">Actions</th>
             }
         </tr>
 
@@ -34,7 +34,7 @@
         {
             foreach (var item in Model)
             {
-    <tr>
+    <tr id="@string.Format("book_row_{0}", item.Id)">
         <td>
             <img src="@Url.Action("Book", new { bookId = item.Id, fileName = "cover.jpg"})" class="img-list-preview" alt=""/>
         </td>
@@ -84,6 +84,11 @@
                 <a href="@string.Format("{0}/b/{1}", flibustaLink, item.Id)" target="_blank" class="btn btn-default" title="Flibusta version">
                     <span class='glyphicon glyphicon-link'></span>
                 </a>
+            @if (user.UserType == UserType.Administrator) {
+                <a href="#" onclick="DeleteBookById(@item.Id, '@item.Title');" class="btn btn-danger" title="Delete">
+                    <span class="glyphicon glyphicon-trash"></span>
+                </a>
+            }
             </td>
         }
     </tr>
