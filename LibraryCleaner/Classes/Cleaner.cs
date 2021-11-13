@@ -205,7 +205,11 @@ JOIN archives a on a.id=b.id_archive and b.file_name is not NULL and b.file_name
             continue;
           }
 
-          using (var zip = new ZipFile(archPath)) {
+          using (var zip = ZipFile.Read(archPath)) {
+            
+            // extract all XML files that are modified after 15 Jan 2009) AND  larger than 1mb
+            // zip.ExtractSelectedEntries("name = *.xml and mtime > 2009-01-15 and size > 1mb");
+            
             var dbArchiveFiles = dbFiles[archiveName.ToLower()];
             if (Debugger.IsAttached)
               dbArchiveFiles.Sort((b1, b2) =>
@@ -283,10 +287,9 @@ JOIN archives a on a.id=b.id_archive and b.file_name is not NULL and b.file_name
             }
 
             //update zip
-            foreach (var zipFile in zipFilesToRemove)
-              zip.RemoveSelectedEntries(zipFile);
+            zip.RemoveEntries(zipFilesToRemove);
             UpdateState($"Saving archive {archPath}", StateKind.Log);
-            zip.CompressionLevel = CompressionLevel.BestSpeed;
+            // zip.CompressionLevel = CompressionLevel.BestSpeed;
             if (!string.IsNullOrWhiteSpace(ArchivesOutputPath))
               zip.Save(Path.Combine(ArchivesOutputPath, archiveName));
             else

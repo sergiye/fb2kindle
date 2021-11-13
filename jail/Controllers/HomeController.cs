@@ -461,19 +461,23 @@ namespace jail.Controllers {
     }
 
     [Route("{bookId:long}/Images/{imageName}")]
-    public ActionResult BookImage(long bookId, string imageName) {
-      return Book(bookId, $"Images/{imageName}");
+    public async Task<ActionResult> BookImage(long bookId, string imageName) {
+      return await Book(bookId, $"Images/{imageName}");
     }
 
     [Route("{bookId:long}/{fileName}")]
-    public ActionResult Book(long bookId, string fileName) {
+    public async Task<ActionResult> Book(long bookId, string fileName) {
       var filePath = Path.Combine(SettingsHelper.TempDataFolder, $"{bookId}\\{fileName}");
       if (!System.IO.File.Exists(filePath)) {
-        if ("cover.jpg".Equals(fileName, StringComparison.OrdinalIgnoreCase)) {
+        if ("cover.jpg".Equals(fileName, StringComparison.OrdinalIgnoreCase) && SettingsHelper.GenerateBookDetails) {
           var book = DataRepository.GetBook(bookId);
-          PrepareBookDetails(book);
-          if (System.IO.File.Exists(filePath))
-            return File(filePath, System.Net.Mime.MediaTypeNames.Image.Jpeg);
+          BackgroundTasks.EnqueueAction(() => PrepareBookDetails(book)); //todo: add finished check to stop waiting if no result
+          var timeoutTime = DateTime.Now.AddSeconds(SettingsHelper.GenerateBookTimeout);
+          while (timeoutTime > DateTime.Now) {
+            if (System.IO.File.Exists(filePath))
+              return File(filePath, System.Net.Mime.MediaTypeNames.Image.Jpeg);
+            await Task.Delay(100);
+          }
         }
         //todo: default image?
         return new HttpNotFoundResult("File not found.");
@@ -508,14 +512,14 @@ namespace jail.Controllers {
         throw new DirectoryNotFoundException("Details folder is empty");
       Directory.CreateDirectory(detailsFolder);
 
+      var coverImagePath = Path.Combine(detailsFolder, "cover.jpg");
+      if (!System.IO.File.Exists(coverImagePath))
+        BookHelper.SaveCover(sourceFileName, coverImagePath);
+
       var annotationsPath = Path.Combine(detailsFolder, "annotation.txt");
       if (string.IsNullOrWhiteSpace(book.Description))
         book.Description = BookHelper.GetAnnotation(sourceFileName, annotationsPath);
       ViewBag.Title = book.Title;
-
-      var coverImagePath = Path.Combine(detailsFolder, "cover.jpg");
-      if (!System.IO.File.Exists(coverImagePath))
-        BookHelper.SaveCover(sourceFileName, coverImagePath);
 
       return sourceFileName;
     }
