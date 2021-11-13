@@ -19,6 +19,8 @@ namespace jail.Classes
         public static long MaxRequestLength { get; set; }
         public static int MaxRecordsToShowAtOnce { get; set; }
         public static bool TimeTrack { get; set; }
+        public static bool GenerateBookDetails { get; set; }
+        public static int GenerateBookTimeout { get; set; }
        
         public static string SmtpServer { get; set; }
         public static int SmtpPort { get; set; }
@@ -45,6 +47,8 @@ namespace jail.Classes
 
             MaxRecordsToShowAtOnce = Convert.ToInt32(ConfigurationManager.AppSettings["MaxRecordsToShowAtOnce"]);
             TimeTrack = Convert.ToBoolean(ConfigurationManager.AppSettings["TimeTrack"]);
+            GenerateBookDetails = Convert.ToBoolean(ConfigurationManager.AppSettings["GenerateBookDetails"]);
+            GenerateBookTimeout = Convert.ToInt32(ConfigurationManager.AppSettings["GenerateBookTimeout"]);
 
             SmtpServer = ConfigurationManager.AppSettings["SmtpServer"];
             SmtpPort =  Convert.ToInt32(ConfigurationManager.AppSettings["SmtpPort"]);
