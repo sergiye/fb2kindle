@@ -250,6 +250,25 @@
                 }
             });
         }
+        function DeleteBookById(id, title) {
+            if (!confirm("Are you sure you want to remove book '" + title + "'?"))
+                return;
+            $.ajax({
+                url: '@Url.Action("Delete", "Home")',
+                type: 'DELETE',
+                data: { id: id },
+                success: function () {
+                    document.getElementById('book_row_' + id).remove();
+                    // window.location.reload(false); 
+                },
+                error: function (response, status, error) {
+                    if (error && error.length > 0)
+                        window.Helper.ShowError(error);
+                    else
+                        window.Helper.ShowError("Failed! Something has gone wrong. Please contact a system administrator");
+                }
+            });
+        }
         function ToggleFavorite(bookId, title) {
             var item = $('#Fav' + bookId);
             var liked = item.hasClass("glyphicon-heart");
