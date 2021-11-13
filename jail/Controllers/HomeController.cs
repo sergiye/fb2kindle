@@ -262,6 +262,9 @@ namespace jail.Controllers {
     #region Search
 
     public async Task<ActionResult> Index(string k = null, string l = "ru", int r = 0) {
+
+      var langs = await DataRepository.GetAvailableLanguages().ConfigureAwait(false);
+      ViewBag.AllLangs = langs.ToArray();
       ViewBag.Key = k;
       ViewBag.Lang = l;
       if (r > 0)
