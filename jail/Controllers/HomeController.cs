@@ -334,6 +334,26 @@ namespace jail.Controllers {
       }
     }
 
+    [Route("h")]
+    [HttpDelete, UserTypeFilter(Roles = new[] { UserType.Administrator })]
+    public ActionResult HistoryCleanup() {
+      try {
+        var di = new DirectoryInfo(SettingsHelper.TempDataFolder);
+        foreach (FileInfo file in di.GetFiles())
+          TryToDelete(file.FullName, true); //file.Delete();
+        foreach (DirectoryInfo dir in di.GetDirectories())
+          TryToDelete(dir.FullName, false); //dir.Delete(true);
+        Logger.WriteWarning($"History was cleaned by user '{CurrentUser.Email}'",
+          CommonHelper.GetClientAddress(Request));
+        return new HttpStatusCodeResult(HttpStatusCode.OK, "Done");
+      }
+      catch (Exception ex) {
+        Logger.WriteError(ex, $"Error cleaning history: {ex.Message}",
+          CommonHelper.GetClientAddress(Request));
+        throw;
+      }
+    }
+
     [Route("history")]
     [HttpDelete, UserTypeFilter(Roles = new[] {UserType.Administrator})]
     public ActionResult HistoryDelete(long id, string fileName) {

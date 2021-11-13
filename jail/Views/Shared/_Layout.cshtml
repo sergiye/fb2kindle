@@ -234,6 +234,23 @@
                 }
             });
         }
+        function DeleteAllHistoryData() {
+            if (!confirm("Remove everything from history?"))
+                return;
+            $.ajax({
+                url: '@Url.Action("HistoryCleanup", "Home")',
+                type: 'DELETE',
+                success: function() {
+                    window.location.reload(false);
+                },
+                error: function (response, status, error) {
+                    if (error && error.length > 0)
+                        window.Helper.ShowError(error);
+                    else
+                        window.Helper.ShowError("Failed! Something has gone wrong. Please contact a system administrator");
+                }
+            });
+        }
         function DeleteHistoryItem(id, fileName) {
             if (!confirm("Remove '" + fileName + "' from history?"))
                 return;
@@ -241,7 +258,10 @@
                 url: '@Url.Action("HistoryDelete", "Home")',
                 type: 'DELETE',
                 data: { id: id, fileName: fileName },
-                success: function () { window.location.reload(false); },
+                success: function() {
+                    document.getElementById('book_row_' + id).remove();
+                    //window.location.reload(false);
+                },
                 error: function (response, status, error) {
                     if (error && error.length > 0)
                         window.Helper.ShowError(error);
