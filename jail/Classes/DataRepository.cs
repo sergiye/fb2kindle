@@ -195,7 +195,8 @@ where b.id in @ids";
                 bookInfo.GeneratedTime = books.First(i => i.Id == bookInfo.Id).GeneratedTime;
             }
 
-            info.AddRange(books.Where(b => b.Id == 0));
+            var booksNotInDatabase = books.Where(b => b.Id == 0 || info.All(i => i.Id != b.Id)).ToArray();
+            info.AddRange(booksNotInDatabase);
 
             if (string.IsNullOrWhiteSpace(sortBy))
                 return (asc ? info.OrderBy(i => i.GeneratedTime) : info.OrderByDescending(i => i.GeneratedTime));
