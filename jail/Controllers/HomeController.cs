@@ -471,23 +471,11 @@ namespace jail.Controllers {
       if (!System.IO.File.Exists(filePath)) {
         if ("cover.jpg".Equals(fileName, StringComparison.OrdinalIgnoreCase) && SettingsHelper.GenerateBookDetails) {
           var book = DataRepository.GetBook(bookId);
-          string sourceFileName = null; 
-          try {
-            var task = new Task(() => sourceFileName = PrepareBookDetails(book));
-            BackgroundTasks.EnqueueAction(task);
-            task.Wait(SettingsHelper.GenerateBookTimeout * 1000);
-            if (System.IO.File.Exists(filePath)) {
-              return File(filePath, System.Net.Mime.MediaTypeNames.Image.Jpeg);
-            }
-          }
-          finally {
-            if (!string.IsNullOrEmpty(sourceFileName) && System.IO.File.Exists(sourceFileName))
-              try {
-                System.IO.File.Delete(sourceFileName);
-              }
-              catch {
-                // ignored
-              }
+          var task = new Task(() => PrepareBookDetails(book, true));
+          BackgroundTasks.EnqueueAction(task);
+          task.Wait(SettingsHelper.GenerateBookTimeout * 1000);
+          if (System.IO.File.Exists(filePath)) {
+            return File(filePath, System.Net.Mime.MediaTypeNames.Image.Jpeg);
           }
         }
         return new RedirectResult("~/Images/NoImage.jpg", true);
@@ -505,7 +493,7 @@ namespace jail.Controllers {
       }
     }
 
-    private string PrepareBookDetails(BookDetailedInfo book) {
+    private string PrepareBookDetails(BookDetailedInfo book, bool previewMode) {
       if (book == null)
         throw new FileNotFoundException("Book not found in db");
 
@@ -513,31 +501,46 @@ namespace jail.Controllers {
       var detailsFolder = $"{Path.GetDirectoryName(sourceFileName)}/{Path.GetFileNameWithoutExtension(sourceFileName)}";
       if (string.IsNullOrWhiteSpace(detailsFolder))
         throw new DirectoryNotFoundException("Invalid Details folder name");
+      var folderExists = Directory.Exists(detailsFolder);
+      if (previewMode && folderExists)
+        return sourceFileName;
       Directory.CreateDirectory(detailsFolder);
 
-      if (!System.IO.File.Exists(sourceFileName)) {
-        var archPath = Path.Combine(SettingsHelper.ArchivesPath, book.ArchiveFileName);
-        if (!System.IO.File.Exists(archPath))
-          throw new FileNotFoundException("Book archive not found");
-        BookHelper.ExtractZipFile(archPath, book.FileName, sourceFileName);
+      try {
+        if (!System.IO.File.Exists(sourceFileName)) {
+          var archPath = Path.Combine(SettingsHelper.ArchivesPath, book.ArchiveFileName);
+          if (!System.IO.File.Exists(archPath))
+            throw new FileNotFoundException("Book archive not found");
+          BookHelper.ExtractZipFile(archPath, book.FileName, sourceFileName);
+        }
+
+        var coverImagePath = Path.Combine(detailsFolder, "cover.jpg");
+        if (!System.IO.File.Exists(coverImagePath))
+          BookHelper.SaveCover(sourceFileName, coverImagePath);
+
+        var annotationsPath = Path.Combine(detailsFolder, "annotation.txt");
+        if (string.IsNullOrWhiteSpace(book.Description))
+          book.Description = BookHelper.GetAnnotation(sourceFileName, annotationsPath);
+        ViewBag.Title = book.Title;
+
+        return sourceFileName;
       }
-
-      var coverImagePath = Path.Combine(detailsFolder, "cover.jpg");
-      if (!System.IO.File.Exists(coverImagePath))
-        BookHelper.SaveCover(sourceFileName, coverImagePath);
-
-      var annotationsPath = Path.Combine(detailsFolder, "annotation.txt");
-      if (string.IsNullOrWhiteSpace(book.Description))
-        book.Description = BookHelper.GetAnnotation(sourceFileName, annotationsPath);
-      ViewBag.Title = book.Title;
-
-      return sourceFileName;
+      finally {
+        if (previewMode && !string.IsNullOrEmpty(sourceFileName) && System.IO.File.Exists(sourceFileName)) {
+          try {
+            System.IO.File.Delete(sourceFileName);
+          }
+          catch {
+            // ignored
+          }
+        }
+      }
     }
 
     [Route("d/{id:long}")]
     public ActionResult Details(long id) {
       var book = DataRepository.GetBook(id);
-      var sourceFileName = PrepareBookDetails(book);
+      var sourceFileName = PrepareBookDetails(book, false);
       var mobiFile = Path.ChangeExtension(sourceFileName, ".mobi");
       if (System.IO.File.Exists(mobiFile)) {
         ViewBag.MobiFileFound = true;
