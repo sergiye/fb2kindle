@@ -461,26 +461,24 @@ namespace jail.Controllers {
     }
 
     [Route("{bookId:long}/Images/{imageName}")]
-    public async Task<ActionResult> BookImage(long bookId, string imageName) {
-      return await Book(bookId, $"Images/{imageName}");
+    public ActionResult BookImage(long bookId, string imageName) {
+      return Book(bookId, $"Images/{imageName}");
     }
 
     [Route("{bookId:long}/{fileName}")]
-    public async Task<ActionResult> Book(long bookId, string fileName) {
+    public ActionResult Book(long bookId, string fileName) {
       var filePath = Path.Combine(SettingsHelper.TempDataFolder, $"{bookId}\\{fileName}");
       if (!System.IO.File.Exists(filePath)) {
         if ("cover.jpg".Equals(fileName, StringComparison.OrdinalIgnoreCase) && SettingsHelper.GenerateBookDetails) {
           var book = DataRepository.GetBook(bookId);
-          BackgroundTasks.EnqueueAction(() => PrepareBookDetails(book)); //todo: add finished check to stop waiting if no result
-          var timeoutTime = DateTime.Now.AddSeconds(SettingsHelper.GenerateBookTimeout);
-          while (timeoutTime > DateTime.Now) {
-            if (System.IO.File.Exists(filePath))
-              return File(filePath, System.Net.Mime.MediaTypeNames.Image.Jpeg);
-            await Task.Delay(100);
-          }
+          var task = new Task(() => PrepareBookDetails(book));
+          BackgroundTasks.EnqueueAction(task);
+          task.Wait(SettingsHelper.GenerateBookTimeout * 1000);
+          if (System.IO.File.Exists(filePath))
+            return File(filePath, System.Net.Mime.MediaTypeNames.Image.Jpeg);
         }
-        //todo: default image?
-        return new HttpNotFoundResult("File not found.");
+        return new RedirectResult("~/Images/NoImage.jpg", true);
+        // return new HttpNotFoundResult("File not found.");
       }
 
       var fileExt = Path.GetExtension(fileName.ToLower());
@@ -498,19 +496,18 @@ namespace jail.Controllers {
       if (book == null)
         throw new FileNotFoundException("Book not found in db");
 
-      var archPath = Path.Combine(SettingsHelper.ArchivesPath, book.ArchiveFileName);
-      if (!System.IO.File.Exists(archPath))
-        throw new FileNotFoundException("Book archive not found");
-
       var sourceFileName = GetBookFilePath(book.FileName);
-      var sourceFileNameOnly = Path.GetFileNameWithoutExtension(sourceFileName);
-      if (!System.IO.File.Exists(sourceFileName))
-        BookHelper.ExtractZipFile(archPath, book.FileName, sourceFileName);
-
-      var detailsFolder = $"{Path.GetDirectoryName(sourceFileName)}/{sourceFileNameOnly}";
+      var detailsFolder = $"{Path.GetDirectoryName(sourceFileName)}/{Path.GetFileNameWithoutExtension(sourceFileName)}";
       if (string.IsNullOrWhiteSpace(detailsFolder))
-        throw new DirectoryNotFoundException("Details folder is empty");
+        throw new DirectoryNotFoundException("Invalid Details folder name");
       Directory.CreateDirectory(detailsFolder);
+
+      if (!System.IO.File.Exists(sourceFileName)) {
+        var archPath = Path.Combine(SettingsHelper.ArchivesPath, book.ArchiveFileName);
+        if (!System.IO.File.Exists(archPath))
+          throw new FileNotFoundException("Book archive not found");
+        BookHelper.ExtractZipFile(archPath, book.FileName, sourceFileName);
+      }
 
       var coverImagePath = Path.Combine(detailsFolder, "cover.jpg");
       if (!System.IO.File.Exists(coverImagePath))
