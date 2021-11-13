@@ -471,11 +471,24 @@ namespace jail.Controllers {
       if (!System.IO.File.Exists(filePath)) {
         if ("cover.jpg".Equals(fileName, StringComparison.OrdinalIgnoreCase) && SettingsHelper.GenerateBookDetails) {
           var book = DataRepository.GetBook(bookId);
-          var task = new Task(() => PrepareBookDetails(book));
-          BackgroundTasks.EnqueueAction(task);
-          task.Wait(SettingsHelper.GenerateBookTimeout * 1000);
-          if (System.IO.File.Exists(filePath))
-            return File(filePath, System.Net.Mime.MediaTypeNames.Image.Jpeg);
+          string sourceFileName = null; 
+          try {
+            var task = new Task(() => sourceFileName = PrepareBookDetails(book));
+            BackgroundTasks.EnqueueAction(task);
+            task.Wait(SettingsHelper.GenerateBookTimeout * 1000);
+            if (System.IO.File.Exists(filePath)) {
+              return File(filePath, System.Net.Mime.MediaTypeNames.Image.Jpeg);
+            }
+          }
+          finally {
+            if (!string.IsNullOrEmpty(sourceFileName) && System.IO.File.Exists(sourceFileName))
+              try {
+                System.IO.File.Delete(sourceFileName);
+              }
+              catch {
+                // ignored
+              }
+          }
         }
         return new RedirectResult("~/Images/NoImage.jpg", true);
         // return new HttpNotFoundResult("File not found.");
