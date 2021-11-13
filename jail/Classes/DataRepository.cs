@@ -269,5 +269,9 @@ where b.id in @ids";
         public static async Task<long> DeleteBookById(long id) {
             return await Db.ExecuteAsync("delete from books where Id=@id", new {id}).ConfigureAwait(false);
         }
+
+        public static async Task<IEnumerable<string>> GetAvailableLanguages() {
+            return await Db.QueryAsync<string>("select distinct lang from books WHERE lang <> '' AND lang is not null ORDER BY lang").ConfigureAwait(false);
+        }
     }
 }

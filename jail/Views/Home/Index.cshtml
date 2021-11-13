@@ -1,7 +1,7 @@
 ﻿@model IEnumerable<jail.Models.BookInfo>
 
 @{ ViewBag.Title = "Search books"; }
-    <script type="text/javascript">
+<script type="text/javascript">
     $(document).ready(function () {
         $("#searchBlock").keyup(function (event) {
             if (event.keyCode === 13) {
@@ -20,6 +20,7 @@
         });
 
         $("#searchBlock").val('@ViewBag.Key');
+        $("#searchLangBtn").html('@ViewBag.Lang' + " <span class='caret'></span>");
     });
     function RefreshData(reloadOnError) {
         let search = $("#searchBlock");
@@ -47,7 +48,7 @@
     function GetRandomBooks(count) {
        let search = $("#searchBlock");
        // let key = $.trim(search.val());
-       let lang = search.attr("data-search-lang"); 
+       let lang = search.attr("data-search-lang");
        let link = '@Url.Action("Index")' + "?r=" + count + "&l=" + lang;
         window.history.pushState({ state: link }, 'Random books', link);
         $.ajax({
@@ -63,7 +64,7 @@
             }
         });
     }
-    </script>
+</script>
 <div class="search-wrapper">
     <div class="input-group pull-left">
         <input id="searchBlock" type="text" class="form-control" aria-label="..."
@@ -75,8 +76,16 @@
             </button>
             <ul class="dropdown-menu dropdown-menu-right change-lang" data-change-item-id="searchLangBtn">
                 <li><a href="#" data-search-lang="all">All</a></li>
-                <li><a href="#" data-search-lang="ru">Ru</a></li>
-                <li><a href="#" data-search-lang="en">En</a></li>
+                @if (ViewBag.AllLangs != null) {
+                    foreach (string lang in ViewBag.AllLangs) {
+                        <li><a href="#" data-search-lang="@lang">@lang</a></li>
+                    }
+                }
+                else {
+                    <li><a href="#" data-search-lang="ru">Ru</a></li>
+                    <li><a href="#" data-search-lang="en">En</a></li>
+                    <li><a href="#" data-search-lang="ua">Ua</a></li>
+                }
             </ul>
         </div>
         <div class="input-group-btn">
