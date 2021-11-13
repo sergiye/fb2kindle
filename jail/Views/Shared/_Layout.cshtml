@@ -235,7 +235,7 @@
             });
         }
         function DeleteHistoryItem(id, fileName) {
-            if (!confirm("Are you sure you want to remove '" + fileName + "' from history?"))
+            if (!confirm("Remove '" + fileName + "' from history?"))
                 return;
             $.ajax({
                 url: '@Url.Action("HistoryDelete", "Home")',
@@ -250,8 +250,8 @@
                 }
             });
         }
-        function DeleteBookById(id, title) {
-            if (!confirm("Are you sure you want to remove book '" + title + "'?"))
+        function DeleteBookById(id) {
+            if (!confirm("Delete book with Id '" + id + "'?"))
                 return;
             $.ajax({
                 url: '@Url.Action("Delete", "Home")',

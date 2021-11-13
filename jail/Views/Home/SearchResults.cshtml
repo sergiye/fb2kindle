@@ -85,7 +85,7 @@
                     <span class='glyphicon glyphicon-link'></span>
                 </a>
             @if (user.UserType == UserType.Administrator) {
-                <a href="#" onclick="DeleteBookById(@item.Id, '@item.Title');" class="btn btn-danger" title="Delete">
+                <a href="#" onclick="DeleteBookById(@item.Id);" class="btn btn-danger" title="Delete">
                     <span class="glyphicon glyphicon-trash"></span>
                 </a>
             }
