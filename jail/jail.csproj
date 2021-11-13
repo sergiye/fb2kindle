@@ -66,12 +66,6 @@
     <Reference Include="NLog, Version=4.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
       <HintPath>..\..\nuget\NLog.4.7.12\lib\net45\NLog.dll</HintPath>
     </Reference>
-    <Reference Include="Simpl.Extensions">
-      <HintPath>..\..\nuget\Simpl.Extensions.1.0.7097.38850\lib\net451\Simpl.Extensions.dll</HintPath>
-    </Reference>
-    <Reference Include="Simpl.Extensions.Database, Version=1.0.7097.38850, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\nuget\Simpl.Extensions.Database.1.0.7097.38850\lib\net451\Simpl.Extensions.Database.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -243,6 +237,16 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\simpl.extensions\Simpl.Extensions.Database\Simpl.Extensions.Database.csproj">
+      <Project>{f6391bc9-f06a-4145-96d6-9230a918c79e}</Project>
+      <Name>Simpl.Extensions.Database</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\simpl.extensions\Simpl.Extensions\simpl.extensions.csproj">
+      <Project>{e7cb0c95-293e-44c9-afe0-367be2b74e02}</Project>
+      <Name>simpl.extensions</Name>
+    </ProjectReference>
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
