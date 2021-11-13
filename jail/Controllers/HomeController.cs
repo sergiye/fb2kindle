@@ -21,6 +21,7 @@ namespace jail.Controllers {
   [OutputCache(NoStore = true, Duration = 0, VaryByParam = "None")]
   [ActionLogger, SessionRestore]
   public class HomeController : Controller {
+    
     #region Overrides
 
     protected override void HandleUnknownAction(string actionName) {
