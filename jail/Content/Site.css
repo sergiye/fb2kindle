@@ -159,11 +159,13 @@ h1, h2, h3 {
 
 .img-list-preview {
     width: auto;
-    max-width: 60px;
     height: auto;
+    max-width: 60px;
     max-height: 80px;
 }
 .img-details-preview {
     width: auto;
-    height: 350px;
+    height: auto;
+    max-width: 260px;
+    max-height: 350px;
 }

@@ -1,17 +1,19 @@
 ﻿using System;
+using System.Threading.Tasks;
 using Simpl.Extensions;
 
 namespace jail.Classes {
   
   internal static class BackgroundTasks {
     
-    private static readonly CommonQueue<Action> actionsQueue;
+    private static readonly CommonQueue<Task> actionsQueue;
 
     static BackgroundTasks() {
-      actionsQueue = new CommonQueue<Action>("BackgroundActionsQueue");
-      actionsQueue.OnExecuteTask += action => {
+      actionsQueue = new CommonQueue<Task>("BackgroundActionsQueue");
+      actionsQueue.OnExecuteTask += task => {
         try {
-          action.Invoke();
+          task.Start();
+          task.Wait();
         }
         catch (Exception e) {
           Console.WriteLine(e);
@@ -20,8 +22,8 @@ namespace jail.Classes {
       actionsQueue.Start();
     }
     
-    public static void EnqueueAction(Action executeMethod) {
-      actionsQueue?.EnqueueTask(executeMethod);
+    public static void EnqueueAction(Task task) {
+      actionsQueue?.EnqueueTask(task);
     }
   }
 }
