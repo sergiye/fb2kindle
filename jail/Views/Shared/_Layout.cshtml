@@ -289,6 +289,23 @@
                 }
             });
         }
+        function SetBookLang(id, lang) {
+            $.ajax({
+                url: '@Url.Action("SetBookLanguage", "Home")',
+                type: 'POST',
+                data: { bookId: id, lang: lang },
+                success: function () {
+                    document.getElementById('book_lang_' + id).innerHTML = lang;
+                    document.getElementById('book_set_lang_' + id).remove();
+                },
+                error: function (response, status, error) {
+                    if (error && error.length > 0)
+                        window.Helper.ShowError(error);
+                    else
+                        window.Helper.ShowError("Failed! Something has gone wrong. Please contact a system administrator");
+                }
+            });
+        }
         function ToggleFavorite(bookId, title) {
             var item = $('#Fav' + bookId);
             var liked = item.hasClass("glyphicon-heart");

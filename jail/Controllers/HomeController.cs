@@ -592,6 +592,21 @@ namespace jail.Controllers {
       }
     }
     
+    [Route("books/lang"), HttpPost, UserTypeFilter(Roles = new[] {UserType.Administrator})]
+    public async Task<ActionResult> SetBookLanguage(long bookId, string lang = "ru") {
+      try {
+        var rows = await DataRepository.SetBookLanguages(bookId, lang);
+        if (rows == 0)
+          throw new Exception($"Book with Id {bookId} not found.");
+        Logger.WriteWarning($"Book with Id '{bookId}' lang was changed to {lang} by user '{CurrentUser.Email}'", CommonHelper.GetClientAddress(Request));
+        return new HttpStatusCodeResult(HttpStatusCode.OK, "Done");
+      }
+      catch (Exception ex) {
+        Logger.WriteError(ex, $"Error changing lang of book with Id {bookId}: {ex.Message}", CommonHelper.GetClientAddress(Request));
+        throw;
+      }
+    }
+    
     #endregion
 
     #region sequence
