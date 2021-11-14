@@ -45,7 +45,12 @@
             <a href='@Url.Action("details", new {id = item.Id})' title="Book details">
                 <b>@Html.DisplayFor(modelItem => item.Title)</b>
             </a>
-            <small style="float: right;">@Html.DisplayFor(modelItem => item.Lang)</small>
+            @if (user != null && user.UserType == UserType.Administrator) {
+                <a id="@string.Format("book_set_lang_{0}", item.Id)" href="#" onclick="SetBookLang(@item.Id, 'ru');" style="float: right;" class="btn btn-warning" title="Set language">
+                    <span class="glyphicon glyphicon-erase"></span>
+                </a>
+            }
+            <small id="@string.Format("book_lang_{0}", item.Id)" style="float: right;">@item.Lang</small>
         </td>
         @if (ViewBag.AuthorMode == null || !ViewBag.AuthorMode)
         {

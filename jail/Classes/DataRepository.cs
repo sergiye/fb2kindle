@@ -273,5 +273,9 @@ where b.id in @ids";
         public static async Task<IEnumerable<string>> GetAvailableLanguages() {
             return await Db.QueryAsync<string>("select distinct lang from books WHERE lang <> '' AND lang is not null ORDER BY lang").ConfigureAwait(false);
         }
+
+        public static async Task<long> SetBookLanguages(long id, string lang) {
+            return await Db.ExecuteAsync("UPDATE books SET lang = @lang WHERE Id = @id", new {id, lang}).ConfigureAwait(false);
+        }
     }
 }
