@@ -20,7 +20,7 @@ namespace LibraryCleaner {
                 Icon = Icon.ExtractAssociatedIcon(module.FileName);
 
             var assembly = Assembly.GetExecutingAssembly();
-            _logFileName = Path.ChangeExtension(assembly.Location, ".log");
+            // _logFileName = Path.ChangeExtension(assembly.Location, ".log");
             var asm = assembly.GetName();
             var mainTitleText = $"{asm.Name} Version: {asm.Version.ToString(3)}";
             var timer = new Timer {Interval = 1000, Enabled = true};
@@ -72,7 +72,8 @@ namespace LibraryCleaner {
                     break;
             }
 
-            File.AppendAllText(_logFileName, $"{DateTime.Now:T} - {message}\n");
+            if (!string.IsNullOrEmpty(_logFileName))
+                File.AppendAllText(_logFileName, $"{DateTime.Now:T} - {message}\n");
             txtLog.ScrollToCaret();
             Application.DoEvents();
         }
