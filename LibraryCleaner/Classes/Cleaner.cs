@@ -15,6 +15,7 @@ namespace LibraryCleaner {
 
     // private readonly List<int> _seqToRemove;
     private string[] _archivesFound;
+    private bool deleteFileWithDeletedBooksIds;
 
     private string ArchivesPath { get; set; }
     public string ArchivesOutputPath { private get; set; }
@@ -103,7 +104,7 @@ namespace LibraryCleaner {
     private void RemoveDeletedFromDatabase() {
       
       //get ids of deleted books from external file (if exists)
-      var externallyRemoved = GetExternalIdsFromFile(FileWithDeletedBooksIds);
+      var externallyRemoved = GetExternalIdsFromFile();
       if (externallyRemoved == null || externallyRemoved.Count <= 0)
         return;
 
@@ -490,11 +491,11 @@ delete from fts_book where docid not in (select DISTINCT id FROM books);");
       }
     }
 
-    private static List<long> GetExternalIdsFromFile(string fileName, bool flibustaCsv = true) {
+    private List<long> GetExternalIdsFromFile(bool flibustaCsv = true) {
 
       var result = new List<long>();
-      if (!File.Exists(fileName)) {
-        if (!string.IsNullOrEmpty(fileName)) {
+      if (!File.Exists(FileWithDeletedBooksIds)) {
+        if (!string.IsNullOrEmpty(FileWithDeletedBooksIds)) {
           //try to download from http://flibusta.is/sql/lib.md5.txt.gz
           var appPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
           var downloadedFilePath = appPath + "\\lib.md5.txt.gz";
@@ -512,16 +513,17 @@ delete from fts_book where docid not in (select DISTINCT id FROM books);");
               //   var extractPath = Path.GetDirectoryName(fileName);
               //   zip.ExtractSelectedEntries("name = lib.md5.txt", "", extractPath, ExtractExistingFileAction.Throw);
               // }
+              deleteFileWithDeletedBooksIds = true;
             }
             finally {
               File.Delete(downloadedFilePath);
             }
         }
-        if (!File.Exists(fileName))
+        if (!File.Exists(FileWithDeletedBooksIds))
           return result;
       }
       if (flibustaCsv) {
-        var lines = File.ReadLines(fileName); //This method is implemented using an iterator block and does not consume memory for all lines.
+        var lines = File.ReadLines(FileWithDeletedBooksIds); //This method is implemented using an iterator block and does not consume memory for all lines.
         var lineNum = 0;
         foreach (var line in lines) {
           lineNum++;
@@ -539,7 +541,7 @@ delete from fts_book where docid not in (select DISTINCT id FROM books);");
         }
       }
       else {
-        var fData = File.ReadAllLines(fileName);
+        var fData = File.ReadAllLines(FileWithDeletedBooksIds);
         foreach (var line in fData) {
           if (string.IsNullOrWhiteSpace(line)) continue;
           var txtId = line.Trim();
@@ -705,6 +707,13 @@ delete from fts_book where docid not in (select DISTINCT id FROM books);");
       UpdateState($"Total unregistered books: {totalRemoved}", StateKind.Message);
 
       await OptimizeArchivesOnDisk().ConfigureAwait(false);
+
+      if (deleteFileWithDeletedBooksIds) {
+        try {
+          File.Delete(FileWithDeletedBooksIds);
+        }
+        catch (Exception) { }
+      }
     }
 
     private bool CheckGenres(string genres, string[] genresToRemove) {
