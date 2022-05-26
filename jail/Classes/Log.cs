@@ -18,6 +18,7 @@ namespace jail.Classes
         {
             if ((!string.IsNullOrEmpty(calledBy) && calledBy.ToLower().GetHash().Equals(CommonHelper.AdminLoginHash)) ||
                 CommonHelper.CurrentIdentityName.ToLower().GetHash().Equals(CommonHelper.AdminLoginHash) ||
+                "::1".Equals(logCallerAddress) ||
                 CommonHelper.CurrentUserType == UserType.Administrator)
                 return;
 
