@@ -1,0 +1,15 @@
+authtoken: 1sfXmoeQIgwLNeMzf4pv3UBxcww_jpPP14UCcLGteJ1Deyrs
+region: eu
+console_ui: true
+web_addr: localhost:4040
+tunnels:
+  jail:
+    proto: http
+    addr: 80
+    inspect: true
+    bind-tls: true
+  admin:
+    proto: http
+    addr: 127.0.0.1:4040
+    inspect: false
+    auth: "simpl:ghbdtn"
