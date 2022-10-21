@@ -10,7 +10,7 @@ namespace jail.Classes
 
         static BaseRepository()
         {
-            var statsDbPath = SettingsHelper.StatisticDatabase;
+            var statsDbPath = SettingsHelper.DatabasePath;
             var local = Path.Combine(HttpRuntime.AppDomainAppPath, statsDbPath);
             if (statsDbPath == Path.GetFileName(statsDbPath))
                 statsDbPath = local;
