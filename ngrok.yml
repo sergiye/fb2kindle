@@ -1,4 +1,5 @@
-authtoken: 1sfXmoeQIgwLNeMzf4pv3UBxcww_jpPP14UCcLGteJ1Deyrs
+# authtoken: 1sfXmoeQIgwLNeMzf4pv3UBxcww_jpPP14UCcLGteJ1Deyrs
+authtoken: 76B4hmW73dxUEMphiJB1Y_2t2KUQWAYYBMEDP9idqiN
 region: eu
 console_ui: true
 web_addr: localhost:4040
