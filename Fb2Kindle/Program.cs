@@ -60,8 +60,10 @@ namespace Fb2Kindle {
         ShowMainInfo(asm);
 
         var appPath = Util.GetAppPath();
-        var settingsFile = Path.ChangeExtension(Assembly.GetExecutingAssembly().Location, ".xml");
-        var currentSettings = XmlSerializerHelper.DeserializeFile<DefaultOptions>(settingsFile) ?? new DefaultOptions();
+        var settingsFile = Path.ChangeExtension(Assembly.GetExecutingAssembly().Location, ".json");
+        var currentSettings = SerializerHelper.ReadJsonFile<DefaultOptions>(settingsFile) ?? new DefaultOptions();
+        //var settingsFile = Path.ChangeExtension(Assembly.GetExecutingAssembly().Location, ".xml");
+        //var currentSettings = XmlSerializerHelper.DeserializeFile<DefaultOptions>(settingsFile) ?? new DefaultOptions();
         var bookPath = string.Empty;
         string cssStyles = null;
         string mailTo = null;
@@ -178,7 +180,8 @@ namespace Fb2Kindle {
           Util.WriteLine("No input file", ConsoleColor.Red);
           return;
         }
-        if (save) currentSettings.ToXmlFile(settingsFile, true);
+        if (save) currentSettings.ToJsonFile(settingsFile);
+        //if (save) currentSettings.ToXmlFile(settingsFile, true);
 
         var workPath = Path.GetDirectoryName(bookPath);
         if (string.IsNullOrEmpty(workPath))
