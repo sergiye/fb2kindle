@@ -9,7 +9,7 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <AssemblyName>Fb2Kindle</AssemblyName>
     <OutputType>Exe</OutputType>
-    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <TargetFrameworkProfile>
     </TargetFrameworkProfile>
     <PublishUrl>publish\</PublishUrl>
@@ -66,10 +66,11 @@
     <Compile Include="AssemblyInfo.cs" />
     <Compile Include="Convertor.cs" />
     <Compile Include="DefaultOptions.cs" />
+    <Compile Include="SerializerHelper.cs" />
     <Compile Include="Util.cs" />
     <Compile Include="XmlEncodeWriter.cs" />
-    <Compile Include="XmlSerializerHelper.cs" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.Web.Extensions" />
     <Reference Include="System.Xml" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System" />
