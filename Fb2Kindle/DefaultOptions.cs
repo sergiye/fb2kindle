@@ -28,6 +28,8 @@ namespace Fb2Kindle {
     public string SmtpPassword { get; set; }
     public int SmtpTimeout { get; set; }
 
+    public bool Epub { get; set; }
+
     public DefaultOptions() {
       SmtpServer = "smtp.gmail.com";
       SmtpPort = 587;

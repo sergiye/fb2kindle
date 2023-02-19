@@ -25,6 +25,7 @@ namespace Fb2Kindle {
       Util.WriteLine("-nch: no chapters");
 
       Util.WriteLine("-mailto: - send document to email (kindle delivery)");
+      Util.WriteLine("-epub: send file as .epub (experimental)");
 
       Util.WriteLine("-a: all fb2 books in app folder");
       Util.WriteLine("-r: process files in subfolders (work with -a key)");
@@ -130,6 +131,9 @@ namespace Fb2Kindle {
                 break;
               case "-d":
                 currentSettings.DeleteOriginal = true;
+                break;
+              case "-epub":
+                currentSettings.Epub = true;
                 break;
               case "-save":
                 save = true;

@@ -705,7 +705,7 @@ namespace jail.Controllers {
 
         return Json(new {Message = "OK", names, links});
       }
-      catch (Exception ex) {
+      catch (Exception) {
         return Json(new {Message = "Error saving file."});
       }
     }

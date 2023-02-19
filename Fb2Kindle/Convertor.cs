@@ -149,7 +149,7 @@ namespace Fb2Kindle
                 SaveXmlToFile(_opfFile, tempDir + @"\" + commonTitle + ".opf");
                 _opfFile.RemoveAll();
 
-                var result = CreateMobi(_workingFolder, tempDir, commonTitle, books[0], _currentSettings.CompressionLevel, _detailedOutput);
+                var result = CreateMobi(_workingFolder, tempDir, commonTitle, books[0], _detailedOutput);
                 if (result && _currentSettings.DeleteOriginal)
                 {
                     foreach (var book in books)
@@ -429,7 +429,7 @@ namespace Fb2Kindle
             }
         }
 
-        private bool CreateMobi(string workFolder, string tempDir, string bookName, string bookPath, byte compression, bool showOutput)
+        private bool CreateMobi(string workFolder, string tempDir, string bookName, string bookPath, bool showOutput)
         {
             Util.WriteLine("Creating mobi (KF8)...", ConsoleColor.White);
             var kindleGenPath = $"{workFolder}\\kindlegen.exe";
@@ -443,7 +443,7 @@ namespace Fb2Kindle
                 }
             }
 
-            var args = $"\"{tempDir}\\{bookName}.opf\" -c{compression}";
+            var args = $"\"{tempDir}\\{bookName}.opf\" -c{_currentSettings.CompressionLevel}";
             var res = Util.StartProcess(kindleGenPath, args, showOutput);
             if (res == 2)
             {
@@ -500,49 +500,47 @@ namespace Fb2Kindle
             return true;
         }
 
-        private bool SendBookByMail(string bookName, string tmpBookPath)
-        {
-            try
-            {
-                if (string.IsNullOrWhiteSpace(_currentSettings.SmtpServer) || _currentSettings.SmtpPort <= 0)
-                {
-                    Util.WriteLine("Mail delivery failed: smtp not configured", ConsoleColor.Red);
-                    return false;
-                }
-                // Util.WriteLine($"SMTP: {_currentSettings.SmtpLogin} / {_currentSettings.SmtpServer}:{_currentSettings.SmtpPort}", ConsoleColor.White);
-                Util.Write($"Sending to {MailTo}...", ConsoleColor.White);
-                using (var smtp = new SmtpClient(_currentSettings.SmtpServer, _currentSettings.SmtpPort)
-                {
-                    UseDefaultCredentials = false,
-                    DeliveryMethod = SmtpDeliveryMethod.Network,
-                    Timeout = _currentSettings.SmtpTimeout,
-                    Credentials = new NetworkCredential(_currentSettings.SmtpLogin, _currentSettings.SmtpPassword),
-                    EnableSsl = true,
-                })
-                {
-                    using (var message = new MailMessage(new MailAddress(_currentSettings.SmtpLogin, "Simpl's converter"),
-                            new MailAddress(MailTo))
-                                      {
-                                          Subject = bookName,
-                                          Body = "Hello! Please, check book(s) attached"
-                                      })
-                    {
-                        using (var att = new Attachment(tmpBookPath))
-                        {
-                            message.Attachments.Add(att);
-                            smtp.Send(message);
-                            // await smtp.SendMailAsync(message);
-                        }
-                    }
-                }
-                Util.WriteLine("OK", ConsoleColor.Green);
-                return true;
+        private bool SendBookByMail(string bookName, string tmpBookPath) {
+          try {
+            if (string.IsNullOrWhiteSpace(_currentSettings.SmtpServer) || _currentSettings.SmtpPort <= 0) {
+              Util.WriteLine("Mail delivery failed: smtp not configured", ConsoleColor.Red);
+              return false;
             }
-            catch (Exception ex)
-            {
-                Util.WriteLine($"Error: {ex.Message}", ConsoleColor.Red);
+            // Util.WriteLine($"SMTP: {_currentSettings.SmtpLogin} / {_currentSettings.SmtpServer}:{_currentSettings.SmtpPort}", ConsoleColor.White);
+            Util.Write($"Sending to {MailTo}...", ConsoleColor.White);
+            using (var smtp = new SmtpClient(_currentSettings.SmtpServer, _currentSettings.SmtpPort) {
+              UseDefaultCredentials = false,
+              DeliveryMethod = SmtpDeliveryMethod.Network,
+              Timeout = _currentSettings.SmtpTimeout,
+              Credentials = new NetworkCredential(_currentSettings.SmtpLogin, _currentSettings.SmtpPassword),
+              EnableSsl = true,
+            }) {
+              using (var message = new MailMessage(new MailAddress(_currentSettings.SmtpLogin, "Simpl's converter"),
+                      new MailAddress(MailTo)) {
+                Subject = bookName,
+                Body = "Hello! Please, check book(s) attached"
+              }) {
+                string attachmentName = _currentSettings.Epub ? Path.ChangeExtension(tmpBookPath, ".epub") : tmpBookPath;
+                if (attachmentName != tmpBookPath)
+                  File.Copy(tmpBookPath, attachmentName);
+
+                using (var att = new Attachment(attachmentName)) {
+                  message.Attachments.Add(att);
+                  smtp.Send(message);
+                  //await smtp.SendMailAsync(message);
+                }
+                
+                if (attachmentName != tmpBookPath)
+                  File.Delete(attachmentName);
+              }
             }
-            return false;
+            Util.WriteLine("OK", ConsoleColor.Green);
+            return true;
+          }
+          catch (Exception ex) {
+            Util.WriteLine($"Error: {ex.Message}", ConsoleColor.Red);
+          }
+          return false;
         }
 
         private static List<string> GetAuthors(IEnumerable<XElement> avtorbook, int maxCount = int.MaxValue)
