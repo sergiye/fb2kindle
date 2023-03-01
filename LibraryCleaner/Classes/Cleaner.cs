@@ -36,7 +36,8 @@ namespace LibraryCleaner {
       Log,
       Warning,
       Error,
-      Message
+      Message,
+      Info,
     }
 
     public event Action<string, StateKind> OnStateChanged;
@@ -183,11 +184,11 @@ JOIN archives a on a.id=b.id_archive and b.file_name is not NULL and b.file_name
         }
       }
 
-      UpdateState($"Found archives in database: {dbFiles.Count}", StateKind.Message);
+      UpdateState($"Found archives in database: {dbFiles.Count}", StateKind.Info);
       //process all archives on disk
       var archivesFound = Directory.GetFiles(ArchivesPath, "*fb2*.zip", SearchOption.TopDirectoryOnly).ToList();
       archivesFound.Sort((s, s1) => string.CompareOrdinal(s1, s)); // sort in reverse order to process latest archives first
-      UpdateState($"Found {archivesFound.Count} archives to optimize", StateKind.Message);
+      UpdateState($"Found {archivesFound.Count} archives to optimize", StateKind.Info);
 
       //get all files not found on disk (to remove from db)
       var totalRemoved = 0;
@@ -249,7 +250,7 @@ JOIN archives a on a.id=b.id_archive and b.file_name is not NULL and b.file_name
             var filesNotFound = dbArchiveFiles.Where(fi => !zipFiles.Contains(fi.file_name)).ToArray();
             if (filesNotFound.Length > 0) {
               //remove not found files from DB
-              UpdateState($"{filesNotFound.Length} db records marked to remove", StateKind.Message);
+              UpdateState($"{filesNotFound.Length} db records marked to remove", StateKind.Info);
               var dbRemoved = 0;
               foreach (var info in filesNotFound) {
                 try {
@@ -283,13 +284,13 @@ JOIN archives a on a.id=b.id_archive and b.file_name is not NULL and b.file_name
             if (zipFilesToRemove.Count == 0) continue;
             if (zipFilesToRemove.Count < MinFilesToUpdateZip) {
               //don't waste time for re-saving zip if there are not many files to remove
-              UpdateState($"Not registered books to remove: {zipFilesToRemove.Count}", StateKind.Message);
+              UpdateState($"Not registered books to remove: {zipFilesToRemove.Count}", StateKind.Info);
               continue;
             }
 
             //update zip
             zip.RemoveEntries(zipFilesToRemove);
-            UpdateState($"Saving archive {archPath}", StateKind.Log);
+            UpdateState($"Saving archive {archPath}", StateKind.Message);
             // zip.CompressionLevel = CompressionLevel.BestSpeed;
             if (!string.IsNullOrWhiteSpace(ArchivesOutputPath))
               zip.Save(Path.Combine(ArchivesOutputPath, archiveName));
@@ -385,7 +386,7 @@ delete from fts_book where docid not in (select DISTINCT id FROM books);");
 
     private async Task FixImportedLinks() {
 
-      UpdateState("Updating imported files links ...", StateKind.Message);
+      UpdateState("Updating imported files links ...", StateKind.Info);
       var updatedBooks = 0;
       var booksToUpdate = new Dictionary<int, int>();
       using (var connection = SqlHelper.GetConnection()) {
@@ -459,7 +460,7 @@ delete from fts_book where docid not in (select DISTINCT id FROM books);");
         }
       }
 
-      UpdateState("Updating archives ids...", StateKind.Message);
+      UpdateState("Updating archives ids...", StateKind.Info);
       using (var connection = SqlHelper.GetConnection()) {
         var archives = new List<KeyValuePair<int, string>>();
         using (var command = SqlHelper.GetCommand(@"select a.id, a.file_name from archives a ORDER BY a.file_name",
