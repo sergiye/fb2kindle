@@ -62,10 +62,13 @@ namespace LibraryCleaner {
           txtLog.AppendLine(message, Color.Red);
           break;
         case Cleaner.StateKind.Warning:
-          txtLog.AppendLine(message, Color.Orange);
+          txtLog.AppendLine(message, Color.Gold);
           break;
         case Cleaner.StateKind.Message:
           txtLog.AppendLine(message, Color.LimeGreen);
+          break;
+        case Cleaner.StateKind.Info:
+          txtLog.AppendLine(message, Color.CornflowerBlue);
           break;
         default:
           txtLog.AppendLine(message, txtLog.ForeColor);
