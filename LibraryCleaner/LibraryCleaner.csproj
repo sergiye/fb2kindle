@@ -67,6 +67,7 @@
   <ItemGroup>
     <Compile Include="Classes\Cleaner.cs" />
     <Compile Include="Classes\SqlHelper.cs" />
+    <Compile Include="AssemblyManager.cs" />
     <Compile Include="MainForm.cs">
       <SubType>Form</SubType>
     </Compile>
