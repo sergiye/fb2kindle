@@ -7,7 +7,8 @@
            DisableCompression='false' 
            DisableCleanup='false'>
     <ExcludeAssemblies>
-      System.Data.SQLite
+      System.Data.SQLite.Bak
     </ExcludeAssemblies>
+    <Unmanaged32Assemblies>System.Data.SQLite</Unmanaged32Assemblies>
   </Costura>
 </Weavers>
