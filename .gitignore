@@ -196,3 +196,5 @@ Uploads/
 /.idea/
 
 *.DotSettings
+
+/LibraryCleaner/FodyWeavers.xsd
