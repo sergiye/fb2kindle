@@ -102,39 +102,52 @@ namespace LibraryCleaner {
       return true;
     }
 
-    private void RemoveDeletedFromDatabase() {
-      
+    private async Task<List<long>> GetFavorites() {
+
+      var result = new List<long>();
+      using (var connection = SqlHelper.GetConnection()) {
+        using (var command = SqlHelper.GetCommand("select f.BookId from favorites f", connection))
+          using (var reader = await command.ExecuteReaderAsync().ConfigureAwait(false)) {
+            while (await reader.ReadAsync().ConfigureAwait(false)) {
+              result.Add(SqlHelper.GetInt(reader, "BookId"));
+            }
+          }
+      }
+      return result;
+    }
+
+    private async Task RemoveDeletedFromDatabase() {
+
       //get ids of deleted books from external file (if exists)
       var externallyRemoved = GetExternalIdsFromFile();
       if (externallyRemoved == null || externallyRemoved.Count <= 0)
         return;
 
+      //keep deleted books marked as favorites
+      var favorites = await GetFavorites().ConfigureAwait(false);
+      externallyRemoved = externallyRemoved.Except(favorites).ToList();
+
       UpdateState($"Found {externallyRemoved.Count} removed books in external list", StateKind.Warning);
-      const int batchSize = 100;
+
+      const int batchSize = 50;
       var pendingIds = 0;
       var deleted = 0;
       var sql = new StringBuilder();
 
-      void executeBatch() {
-        sql.Append(")");
-        deleted += SqlHelper.ExecuteNonQuery(sql.ToString());
-        pendingIds = 0;
-      };
-
-      for (var i = 0; i < externallyRemoved.Count; i++) {
-        if (pendingIds == 0) {
-          sql.Clear();
+      for (var i = externallyRemoved.Count - 1; i >= 0 ; i--) {
+        if (pendingIds == 0)
           sql.Append($"delete from books where id in (");
-        }
         pendingIds++;
         if (pendingIds != 1)
           sql.Append(",");
         sql.Append($"{externallyRemoved[i]}");
-        if (pendingIds == batchSize)
-          executeBatch();
+        if (pendingIds == batchSize || i == 0) {
+          sql.Append(")");
+          deleted += SqlHelper.ExecuteNonQuery(sql.ToString());
+          pendingIds = 0;
+          sql.Clear();
+        }
       }
-      if (pendingIds > 0)
-        executeBatch();
 
       UpdateState($"Deleted {deleted} removed books from database", StateKind.Warning);
     }
@@ -153,7 +166,7 @@ namespace LibraryCleaner {
       //    WHERE EXISTS(SELECT * FROM files WHERE files.id_book = books.id)");
       SqlHelper.ExecuteNonQuery("delete from files");
 
-      RemoveDeletedFromDatabase();
+      await RemoveDeletedFromDatabase().ConfigureAwait(false);
 
       //get all database items data (some would be removed if not found on disk)
       using (var connection = SqlHelper.GetConnection()) {
