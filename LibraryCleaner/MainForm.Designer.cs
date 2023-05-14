@@ -112,7 +112,7 @@
       // 
       this.txtDeletedFile.Location = new System.Drawing.Point(10, 98);
       this.txtDeletedFile.Name = "txtDeletedFile";
-      this.txtDeletedFile.ReadOnly = true;
+      this.txtDeletedFile.ReadOnly = false;
       this.txtDeletedFile.Size = new System.Drawing.Size(200, 20);
       this.txtDeletedFile.TabIndex = 4;
       this.txtDeletedFile.Text = "lib.md5.txt";
