@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Drawing;
-using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -10,7 +9,7 @@ using System.Windows.Forms;
 namespace LibraryCleaner {
   public partial class MainForm : Form {
     private readonly Cleaner _cleaner;
-    private readonly string _logFileName;
+    // private readonly string _logFileName;
 
     public MainForm() {
       InitializeComponent();
@@ -75,8 +74,8 @@ namespace LibraryCleaner {
           break;
       }
 
-      if (!string.IsNullOrEmpty(_logFileName))
-        File.AppendAllText(_logFileName, $"{DateTime.Now:T} - {message}\n");
+      // if (!string.IsNullOrEmpty(_logFileName))
+      //   File.AppendAllText(_logFileName, $"{DateTime.Now:T} - {message}\n");
       txtLog.ScrollToCaret();
       Application.DoEvents();
     }
