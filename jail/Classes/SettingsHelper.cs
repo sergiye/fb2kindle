@@ -9,12 +9,10 @@ namespace jail.Classes {
     
     public static string ConverterPath { get; set; }
     public static string DatabasePath { get; set; }
-    public static string TimeTrackDatabase { get; set; }
     public static string ArchivesPath { get; set; }
     public static string TempDataFolder { get; }
     public static long MaxRequestLength { get; set; }
     public static int MaxRecordsToShowAtOnce { get; set; }
-    public static bool TimeTrack { get; set; }
     public static bool GenerateBookDetails { get; set; }
     public static int GenerateBookTimeout { get; set; }
 
@@ -29,8 +27,6 @@ namespace jail.Classes {
 
     static SettingsHelper() {
       
-      TimeTrackDatabase = ConfigurationManager.ConnectionStrings["TimeTrack"].ConnectionString;
-
       ConverterPath = ConfigurationManager.AppSettings["ConverterPath"];
       DatabasePath = ConfigurationManager.AppSettings["DatabasePath"];
       ArchivesPath = ConfigurationManager.AppSettings["ArchivesPath"];
@@ -38,7 +34,6 @@ namespace jail.Classes {
       Directory.CreateDirectory(TempDataFolder); //to ensure folder exists
 
       MaxRecordsToShowAtOnce = Convert.ToInt32(ConfigurationManager.AppSettings["MaxRecordsToShowAtOnce"]);
-      TimeTrack = Convert.ToBoolean(ConfigurationManager.AppSettings["TimeTrack"]);
       GenerateBookDetails = Convert.ToBoolean(ConfigurationManager.AppSettings["GenerateBookDetails"]);
       GenerateBookTimeout = Convert.ToInt32(ConfigurationManager.AppSettings["GenerateBookTimeout"]);
 

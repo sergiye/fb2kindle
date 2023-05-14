@@ -782,7 +782,6 @@ namespace jail.Controllers {
     [HttpGet, UserTypeFilter(Roles = new[] {UserType.Administrator})]
     public ActionResult UserEdit(long id = 0) {
       var user = UserRepository.GetUserById(id);
-      ViewBag.TimeTrackUsers = TimeTrackRepository.GetAllUsers();
       return user != null
         ? PartialView(user)
         : PartialView(new UserProfile {
@@ -811,7 +810,6 @@ namespace jail.Controllers {
         //ModelState.AddModelError("", "User email or phone already registered. Please enter another one.");
       }
 
-      ViewBag.TimeTrackUsers = TimeTrackRepository.GetAllUsers();
       return PartialView(model);
     }
 
@@ -829,40 +827,6 @@ namespace jail.Controllers {
     }
 
     #endregion Users
-
-    #region TimeTrack
-
-    [Route("t")]
-    [HttpGet, UserTypeFilter(Roles = new[] {UserType.Administrator, UserType.User})]
-    public ActionResult Time(long id = 0) {
-      ViewBag.Id = id;
-      return View(CheckItem.FromUserCheckData(TimeTrackRepository.GetLastCheckInOut(id > 0 ? id : CurrentUser.TimeTrackId)));
-    }
-
-    [Route("tp")]
-    [HttpGet, UserTypeFilter(Roles = new[] {UserType.Administrator, UserType.User})]
-    public ActionResult TimePartial(long id = 0) {
-      ViewBag.Id = id;
-      return PartialView("TimePartial", CheckItem.FromUserCheckData(TimeTrackRepository.GetLastCheckInOut(id > 0 ? id : CurrentUser.TimeTrackId)));
-    }
-
-    [Route("in")]
-    [HttpGet, UserTypeFilter(Roles = new[] {UserType.Administrator, UserType.User})]
-    public ActionResult CheckIn(long id = 0) {
-      TimeTrackRepository.CheckIn(id > 0 ? id : CurrentUser.TimeTrackId);
-      Logger.WriteInfo("User checked IN", CommonHelper.GetClientAddress(Request));
-      return new HttpStatusCodeResult(HttpStatusCode.OK, "Done");
-    }
-
-    [Route("out")]
-    [HttpGet, UserTypeFilter(Roles = new[] {UserType.Administrator, UserType.User})]
-    public ActionResult CheckOut(long id = 0) {
-      TimeTrackRepository.CheckOut(id > 0 ? id : CurrentUser.TimeTrackId);
-      Logger.WriteInfo("User checked OUT", CommonHelper.GetClientAddress(Request));
-      return new HttpStatusCodeResult(HttpStatusCode.OK, "Done");
-    }
-
-    #endregion TimeTrack
 
     #region flibusta recomendations
 

@@ -73,11 +73,11 @@ namespace jail.Classes
         {
             if (user.IdIsEmpty())
             {
-                user.Id = Db.QueryOne<long>("INSERT INTO Users (Email, Password, UserType, Active, TimeTrackId, FlibustaId) VALUES (@Email, @Password, @UserType, @Active, @TimeTrackId, @FlibustaId); SELECT last_insert_rowid();", user);
+                user.Id = Db.QueryOne<long>("INSERT INTO Users (Email, Password, UserType, Active, FlibustaId) VALUES (@Email, @Password, @UserType, @Active, @FlibustaId); SELECT last_insert_rowid();", user);
             }
             else
             {
-                var rowsAffected = Db.Execute("UPDATE Users SET Email = @Email, UserType = @UserType, Active = @Active, TimeTrackId = @TimeTrackId, FlibustaId = @FlibustaId WHERE Id = @Id;", user);
+                var rowsAffected = Db.Execute("UPDATE Users SET Email = @Email, UserType = @UserType, Active = @Active, FlibustaId = @FlibustaId WHERE Id = @Id;", user);
                 if (rowsAffected == 0)
                     throw new InvalidOperationException($"User not found by Id={user.Id}");
             }

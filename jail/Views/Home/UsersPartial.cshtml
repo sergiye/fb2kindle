@@ -10,7 +10,6 @@
     <thead>
         <tr>
             <th data-defaultsort="asc">@Html.DisplayNameFor(model => model.Email)</th>
-            <th style="min-width: 60px; width: 60px;">@Html.DisplayNameFor(model => model.TimeTrackId)</th>
             <th style="min-width: 60px; width: 60px;">@Html.DisplayNameFor(model => model.FlibustaId)</th>
             <th style="min-width: 60px; width: 60px;">@Html.DisplayNameFor(model => model.Active)</th>
             <th style="min-width: 125px; width: 125px;">@Html.DisplayNameFor(model => model.RegisteredTime)</th>
@@ -25,12 +24,6 @@
                 @Html.HiddenFor(modelItem => item.Id)
                 @Html.HiddenFor(modelItem => item.UserType)
                 @Html.DisplayFor(modelItem => item.Email)
-            </td>
-            <td>
-                @if (item.TimeTrackId > 0)
-                {
-                    @Html.DisplayFor(modelItem => item.TimeTrackId)
-                }
             </td>
             <td>
                 @if (item.FlibustaId > 0)
@@ -54,14 +47,6 @@
                         Manage<span class="caret"></span>
                     </button>
                     <ul class="dropdown-menu" aria-labelledby="userDropdownMenu">
-                        @if (item.TimeTrackId > 0)
-                        {
-                            <li>
-                                <a href='@Url.Action("Time", new { id = item.TimeTrackId })' class="btn-default">
-                                    <span class="glyphicon glyphicon-time"></span> Time
-                                </a>
-                            </li>
-                        }
                         <li>
                             <a href='@Url.Action("Favorites", new { id = item.Id })' class="btn-default">
                                 <span class="red glyphicon glyphicon-heart"></span> Favorites

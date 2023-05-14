@@ -31,9 +31,6 @@ namespace jail.Models
         public UserType UserType { get; set; }
 
         [DataMember]
-        public int TimeTrackId { get; set; }
-
-        [DataMember]
         public int FlibustaId { get; set; }
 
         [DapperReadOnly, DisplayName("Registered Time")]
