@@ -4,7 +4,7 @@ region: eu
 console_ui: true
 web_addr: localhost:4040
 tunnels:
-    jail:
+    site:
         proto: http
         addr: 80
         inspect: true
@@ -12,8 +12,8 @@ tunnels:
             - https
     admin:
         proto: http
-        addr: 127.0.0.1:4040
+        addr: localhost:4040
         inspect: false
         basic_auth:
-            - "simpl:ghbdtn"
+            - "admin:password"
 version: "2"

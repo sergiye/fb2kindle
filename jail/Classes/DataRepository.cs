@@ -4,30 +4,22 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using jail.Models;
-using Simpl.Extensions.Database;
 
 namespace jail.Classes {
-    internal class DataRepository {
-        protected static BaseConnectionProvider<long> Db { get; set; }
+    internal class DataRepository : BaseRepository {
 
-        static DataRepository() {
-            Db = new SqLiteConnectionProvider<long>(SettingsHelper.DatabasePath);
-        }
-
-        private static string _archivesPath;
-
+        private static string archivesPath;
         public static string ArchivesPath {
             get {
-                if (string.IsNullOrWhiteSpace(_archivesPath)) {
-                    _archivesPath = Db.QueryOne<string>("select text from params where id=9");
-                    if (!string.IsNullOrWhiteSpace(_archivesPath)) {
+                if (string.IsNullOrWhiteSpace(archivesPath)) {
+                    archivesPath = Db.QueryOne<string>("select text from params where id=9");
+                    if (!string.IsNullOrWhiteSpace(archivesPath)) {
                         var dbFolder = Path.GetDirectoryName(SettingsHelper.DatabasePath);
                         if (dbFolder != null)
-                            _archivesPath = Path.Combine(dbFolder, _archivesPath);
+                            archivesPath = Path.Combine(dbFolder, archivesPath);
                     }
                 }
-
-                return _archivesPath;
+                return archivesPath;
             }
         }
 
