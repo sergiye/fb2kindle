@@ -8,6 +8,12 @@ body {
     padding-top: 50px;
     padding-bottom: 20px;
 }
+.modal-body {
+    position: relative;
+    padding: 15px;
+    overflow: auto;
+    max-height: 300px;
+}
 .dl-horizontal dt {
     white-space: normal;
 }
