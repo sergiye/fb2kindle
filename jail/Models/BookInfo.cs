@@ -1,13 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
-using Simpl.Extensions;
-using Simpl.Extensions.Database;
 
-namespace jail.Models
-{
-    public class BookInfo: LongIdContainer
-    {
+namespace jail.Models {
+    public class BookInfo : LongIdContainer {
         public string Title { get; set; }
         public List<AuthorInfo> Authors { get; set; }
         public List<SequenceInfo> Sequences { get; set; }
@@ -20,17 +16,16 @@ namespace jail.Models
         public int BookOrder { get; set; }
         public long FavoriteId { get; set; }
 
-        [DapperIgnore]
-        public string FileSizeStr => StringHelper.FileSizeStr(FileSize);
+        public string FileSizeStr => FileSize.ToFileSizeStr();
 
-        [DapperIgnore]
         public string CreatedDate =>
             DateTime.TryParseExact(Created.ToString(), "yyMMdd",
                 CultureInfo.InvariantCulture,
-                DateTimeStyles.None, out var dt) ? dt.ToString("yyyy-MM-dd") : null;
+                DateTimeStyles.None, out var dt)
+                ? dt.ToString("yyyy-MM-dd")
+                : null;
 
-        public BookInfo()
-        {
+        public BookInfo() {
             Authors = new List<AuthorInfo>();
             Sequences = new List<SequenceInfo>();
         }

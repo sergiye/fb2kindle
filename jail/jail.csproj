@@ -127,25 +127,25 @@
     <Compile Include="App_Start\FilterConfig.cs" />
     <Compile Include="App_Start\RouteConfig.cs" />
     <Compile Include="Classes\Attributes\ActionLoggerAttribute.cs" />
-    <Compile Include="Classes\Attributes\CustomAuthorization.cs" />
     <Compile Include="Classes\Attributes\UserTypeFilterAttribute.cs" />
     <Compile Include="Classes\BackgroundTasks.cs" />
-    <Compile Include="Classes\BaseRepository.cs" />
+    <Compile Include="Classes\CommonQueue.cs" />
     <Compile Include="Classes\ConverterQueue.cs" />
+    <Compile Include="Classes\Extensions.cs" />
     <Compile Include="Classes\HttpCodeActionResult.cs" />
     <Compile Include="Classes\Attributes\SessionRestoreAttribute.cs" />
     <Compile Include="Classes\CommonHelper.cs" />
-    <Compile Include="Classes\DataRepository.cs" />
+    <Compile Include="Classes\IBaseQueue.cs" />
     <Compile Include="Classes\Log.cs" />
     <Compile Include="Classes\BookHelper.cs" />
+    <Compile Include="Classes\QueueProcessor.cs" />
+    <Compile Include="Classes\SafeQueue.cs" />
     <Compile Include="Classes\SettingsHelper.cs" />
-    <Compile Include="Classes\SqLiteConnectionProvider.cs" />
-    <Compile Include="Classes\SystemRepository.cs" />
     <Compile Include="Classes\UtcTimeHandler.cs" />
     <Compile Include="Models\BookFavoritesInfo.cs" />
     <Compile Include="Models\BookHistoryInfo.cs" />
+    <Compile Include="Models\LongIdContainer.cs" />
     <Compile Include="Models\TimeUserInfo.cs" />
-    <Compile Include="Classes\UserRepository.cs" />
     <Compile Include="Controllers\ErrorController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Global.asax.cs">
@@ -163,6 +163,10 @@
     <Compile Include="Models\SystemLog.cs" />
     <Compile Include="Models\UserProfile.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Repositories\BaseRepository.cs" />
+    <Compile Include="Repositories\DataRepository.cs" />
+    <Compile Include="Repositories\SystemRepository.cs" />
+    <Compile Include="Repositories\UserRepository.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Content\bootstrap-theme.min.css" />
@@ -226,16 +230,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\simpl.extensions\Simpl.Extensions.Database\Simpl.Extensions.Database.csproj">
-      <Project>{f6391bc9-f06a-4145-96d6-9230a918c79e}</Project>
-      <Name>Simpl.Extensions.Database</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\simpl.extensions\Simpl.Extensions\simpl.extensions.csproj">
-      <Project>{e7cb0c95-293e-44c9-afe0-367be2b74e02}</Project>
-      <Name>simpl.extensions</Name>
-    </ProjectReference>
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
