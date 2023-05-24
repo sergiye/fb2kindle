@@ -1,7 +1,6 @@
 using jail.Classes;
 using jail.Classes.Attributes;
 using jail.Models;
-using Simpl.Extensions.Encryption;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -293,7 +292,7 @@ namespace jail.Controllers {
 
       try {
         var total = Directory.GetFiles(path, "*", SearchOption.AllDirectories).Sum(t => new FileInfo(t).Length);
-        ViewBag.TotalSize = Simpl.Extensions.StringHelper.FileSizeStr(total);
+        ViewBag.TotalSize = total.ToFileSizeStr();
       }
       catch (Exception ex) {
         Logger.WriteError(ex, "Error calculating allocated files total size");
@@ -568,7 +567,7 @@ namespace jail.Controllers {
       var mobiFile = Path.ChangeExtension(sourceFileName, ".mobi");
       if (System.IO.File.Exists(mobiFile)) {
         ViewBag.MobiFileFound = true;
-        ViewBag.MobiFileSize = Simpl.Extensions.StringHelper.FileSizeStr(new FileInfo(mobiFile).Length);
+        ViewBag.MobiFileSize = new FileInfo(mobiFile).Length.ToFileSizeStr();
       }
       else
         ViewBag.MobiFileFound = false;
