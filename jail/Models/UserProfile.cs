@@ -3,44 +3,45 @@ using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 using System.Runtime.Serialization;
-using Simpl.Extensions.Database;
 
-namespace jail.Models
-{
-    public enum UserType
-    {
+namespace jail.Models {
+    public enum UserType {
         User = 0,
         Administrator = 1
     }
 
     [Serializable]
     [DebuggerDisplay("Id={Id}; {Email}")]
-    [DapperTable("Users")]
-    public class UserProfile : LongIdContainer
-    {
+    public class UserProfile {
+        public long Id { get; set; }
+
         [DataMember, DisplayName("Email"), DataType(DataType.EmailAddress), StringLength(255), Required]
         public string Email { get; set; }
 
-        [DapperReadOnly, DataType(DataType.Password)]
-        public string Password { get; set; }
+        [DataType(DataType.Password)] public string Password { get; set; }
 
-        [DapperIgnore]
-        public bool HasPassword { get { return !string.IsNullOrEmpty(Password); } }
+        public bool HasPassword => !string.IsNullOrEmpty(Password);
 
-        [DataMember, DisplayName("User Type")]
-        public UserType UserType { get; set; }
+        [DataMember, DisplayName("User Type")] public UserType UserType { get; set; }
 
-        [DataMember]
-        public int FlibustaId { get; set; }
+        [DataMember] public int FlibustaId { get; set; }
 
-        [DapperReadOnly, DisplayName("Registered Time")]
-        [DataType(DataType.Date), DisplayFormat(DataFormatString = "{0:yyyy-MM-dd HH:mm:ss}", ApplyFormatInEditMode = true)]
+        [DisplayName("Registered Time")]
+        [DataType(DataType.Date),
+         DisplayFormat(DataFormatString = "{0:yyyy-MM-dd HH:mm:ss}", ApplyFormatInEditMode = true)]
         public DateTime RegisteredTime { get; set; }
 
-        [DataMember, DisplayName("Active")]
-        public bool Active { get; set; }
+        [DataMember, DisplayName("Active")] public bool Active { get; set; }
 
-        [DapperIgnore, DisplayName("Active")]
-        public string ActiveText { get { return Active ? "Yes" : "No"; } }
+        [DisplayName("Active")]
+        public string ActiveText => Active ? "Yes" : "No";
+
+        public void MergeWith(UserProfile source) {
+            Email = source.Email;
+            Password = source.Password;
+            UserType = source.UserType;
+            FlibustaId = source.FlibustaId;
+            Active = source.Active;
+        }
     }
 }

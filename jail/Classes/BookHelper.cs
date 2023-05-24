@@ -8,7 +8,6 @@ using System.Xml.XPath;
 using System.Xml.Xsl;
 using Ionic.Zip;
 using jail.Models;
-using Simpl.Extensions;
 
 namespace jail.Classes {
   public static class BookHelper {
