@@ -29,11 +29,11 @@ namespace jail.Controllers {
     }
 
     protected override void EndExecute(IAsyncResult asyncResult) {
-      var appPath = Request.ApplicationPath.TrimEnd('/');
-      var localPath = Request.Url.PathAndQuery;
+      var appPath = Request?.ApplicationPath?.TrimEnd('/');
+      var localPath = Request?.Url?.PathAndQuery;
       if (!string.IsNullOrWhiteSpace(appPath))
-        localPath = localPath.Substring(appPath.Length);
-      ViewBag.Url = AppBaseUrl + localPath.TrimStart('/');
+        localPath = localPath?.Substring(appPath.Length);
+      ViewBag.Url = AppBaseUrl + localPath?.TrimStart('/');
       base.EndExecute(asyncResult);
     }
 
@@ -70,7 +70,7 @@ namespace jail.Controllers {
 
     private string AppBaseUrl {
       get {
-        if (Request.UserHostAddress.Equals("::1"))
+        if (Request.UserHostAddress != null && Request.UserHostAddress.Equals("::1"))
           return Url.Content("~/");
         return SettingsHelper.SiteRemotePath + '/';
         //if (Request == null || Request.Url == null || Request.ApplicationPath == null)
@@ -187,7 +187,8 @@ namespace jail.Controllers {
           //    //FormsAuthentication.SetAuthCookie(model.UserName, false);
           //    FormsAuthentication.RedirectFromLoginPage(model.UserName, false);
           //}
-          return RedirectToAction(user.UserType == UserType.Administrator ? "Log" : "Index", "Home");
+          return RedirectToAction("Favorites", new {id = user.Id});
+          // return RedirectToAction(user.UserType == UserType.Administrator ? "Log" : "Index", "Home");
         }
       }
 
