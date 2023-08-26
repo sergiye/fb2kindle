@@ -16,6 +16,8 @@ namespace jail.Models {
         public int BookOrder { get; set; }
         public long FavoriteId { get; set; }
 
+        public string CoverImage { get; set; }
+
         public string FileSizeStr => FileSize.ToFileSizeStr();
 
         public string CreatedDate =>

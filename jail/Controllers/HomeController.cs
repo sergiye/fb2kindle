@@ -15,9 +15,10 @@ using System.Threading.Tasks;
 using System.Web;
 using System.Web.Mvc;
 using System.Web.Security;
+using System.Web.UI;
 
 namespace jail.Controllers {
-  [OutputCache(NoStore = true, Duration = 0, VaryByParam = "None")]
+  //[OutputCache(NoStore = true, Duration = 0, VaryByParam = "None")]
   [ActionLogger, SessionRestore]
   public class HomeController : Controller {
     
@@ -484,11 +485,13 @@ namespace jail.Controllers {
       return RedirectPermanent($"{bookId}/toc.html");
     }
 
+    [OutputCache(NoStore = true, Duration = 3600, Location = OutputCacheLocation.Client, VaryByParam = "bookId,imageName")]
     [Route("{bookId:long}/Images/{imageName}")]
     public ActionResult BookImage(long bookId, string imageName) {
       return Book(bookId, $"Images/{imageName}");
     }
 
+    [OutputCache(NoStore = true, Duration = 3600, Location = OutputCacheLocation.Client, VaryByParam = "bookId,fileName")]
     [Route("{bookId:long}/{fileName}")]
     public ActionResult Book(long bookId, string fileName) {
       var filePath = Path.Combine(SettingsHelper.TempDataFolder, $"{bookId}\\{fileName}");
@@ -840,6 +843,17 @@ namespace jail.Controllers {
       ViewBag.Id = id;
       ViewBag.Key = k;
       var books = await DataRepository.GetFavorites(id, pageNum, SettingsHelper.MaxRecordsToShowAtOnce, k);
+      foreach(var book in books.Data) {
+        var filePath = Path.Combine(SettingsHelper.TempDataFolder, $"{book.Id}\\cover.jpg");
+        if (!System.IO.File.Exists(filePath) && !SettingsHelper.GenerateBookDetails) {
+          book.CoverImage = "Images/NoImage.jpg";
+        }
+        else {
+          //todo: generate?
+          book.CoverImage = Url.Action("Book", new { bookId = book.Id, fileName = "cover.jpg" });
+          //book.CoverImage = $"{book.Id}/cover.jpg";
+        }
+      }
       return View(books);
     }
 
