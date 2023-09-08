@@ -100,6 +100,22 @@ namespace jail.Controllers {
       }
     }
 
+    private void AssignCovers(IEnumerable<BookInfo> books) {
+      if (books == null) return;
+      
+      foreach(var book in books) {
+        var filePath = Path.Combine(SettingsHelper.TempDataFolder, $"{book.Id}\\cover.jpg");
+        if (!System.IO.File.Exists(filePath) && !SettingsHelper.GenerateBookDetails) {
+          book.CoverImage = "/Images/NoImage.jpg";
+        }
+        else {
+          //todo: generate?
+          book.CoverImage = Url.Action("Book", new { bookId = book.Id, fileName = "cover.jpg" });
+          //book.CoverImage = $"{book.Id}/cover.jpg";
+        }
+      }
+    }
+      
     [Route("file")]
     public ActionResult GetFile(string fileName) {
       var fileExt = Path.GetExtension(fileName.ToLower());
@@ -319,7 +335,9 @@ namespace jail.Controllers {
       }
 
       //leave only first N in list
-      return View(await DataRepository.GetHistory(books, sortBy, sortAsc, SettingsHelper.MaxRecordsToShowAtOnce));
+      // AssignCovers(books);
+      var data = await DataRepository.GetHistory(books, sortBy, sortAsc, SettingsHelper.MaxRecordsToShowAtOnce);
+      return View(data);
     }
 
     private void TryToDelete(string path, bool isFile) {
@@ -619,6 +637,7 @@ namespace jail.Controllers {
       var data = DataRepository.GetSequenceData(id, CurrentUser?.Id);
       ViewBag.Title = data.Value;
       ViewBag.SequenceMode = true;
+      AssignCovers(data.Books);
       return View(data);
     }
 
@@ -843,17 +862,7 @@ namespace jail.Controllers {
       ViewBag.Id = id;
       ViewBag.Key = k;
       var books = await DataRepository.GetFavorites(id, pageNum, SettingsHelper.MaxRecordsToShowAtOnce, k);
-      foreach(var book in books.Data) {
-        var filePath = Path.Combine(SettingsHelper.TempDataFolder, $"{book.Id}\\cover.jpg");
-        if (!System.IO.File.Exists(filePath) && !SettingsHelper.GenerateBookDetails) {
-          book.CoverImage = "Images/NoImage.jpg";
-        }
-        else {
-          //todo: generate?
-          book.CoverImage = Url.Action("Book", new { bookId = book.Id, fileName = "cover.jpg" });
-          //book.CoverImage = $"{book.Id}/cover.jpg";
-        }
-      }
+      AssignCovers(books.Data);
       return View(books);
     }
 
