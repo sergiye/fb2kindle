@@ -37,6 +37,7 @@
             foreach (var item in Model) {
                 <tr id="@string.Format("book_row_{0}", item.Id)">
                     <td>
+                        @* <img src="@item.CoverImage" class="img-list-preview" alt=""/> *@
                         <img src="@Url.Action("Book", new { bookId = item.Id, fileName = "cover.jpg"})" class="img-list-preview" alt=""/>
                     </td>
                     <td>

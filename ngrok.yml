@@ -10,6 +10,7 @@ tunnels:
         inspect: true
         schemes:
             - https
+        domain: physically-polite-loon.ngrok-free.app
     admin:
         proto: http
         addr: localhost:4040
