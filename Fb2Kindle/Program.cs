@@ -33,6 +33,8 @@ namespace Fb2Kindle {
 
       Util.WriteLine("-save: save parameters to be used at the next start");
       Util.WriteLine("-w: wait for key press on finish");
+      Util.WriteLine("-preview: keep generated source files");
+      Util.WriteLine("-debug: keep all generated source files");
       Util.WriteLine();
     }
 
@@ -99,6 +101,10 @@ namespace Fb2Kindle {
             switch (args[j].ToLower().Trim()) {
               case "-preview":
                 currentSettings.CleanupMode = ConverterCleanupMode.Partial;
+                currentSettings.UseSourceAsTempFolder = true;
+                break;
+              case "-debug":
+                currentSettings.CleanupMode = ConverterCleanupMode.No;
                 currentSettings.UseSourceAsTempFolder = true;
                 break;
               case "-nch":
