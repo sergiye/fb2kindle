@@ -12,6 +12,7 @@ namespace Fb2Kindle {
       Util.WriteLine(asm.GetName().Name + " <path> [-css <styles.css>] [-d] [-ni] [-mailto:recipient@mail.org]");
       Util.WriteLine();
       Util.WriteLine("<path>: input fb2 file or files mask (ex: *.fb2) or path to *fb2 files");
+      Util.WriteLine("-epub: create file in epub format");
       Util.WriteLine("-css <styles.css>: styles used in destination book");
       Util.WriteLine("-d: delete source file after successful convertion");
       Util.WriteLine("-c: use compression (slow)");

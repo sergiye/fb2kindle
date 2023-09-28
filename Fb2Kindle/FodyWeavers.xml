@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Weavers xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="FodyWeavers.xsd">
+  <Costura CreateTemporaryAssemblies="true" 
+           IncludeDebugSymbols="false" 
+           IncludeRuntimeReferences="false"
+           UseRuntimeReferencePaths='false'
+           DisableCompression='false' 
+           DisableCleanup='false'>
+    <ExcludeAssemblies>
+    </ExcludeAssemblies>
+    <Unmanaged32Assemblies>
+    </Unmanaged32Assemblies>
+  </Costura>
+</Weavers>

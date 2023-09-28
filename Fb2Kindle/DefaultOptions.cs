@@ -22,20 +22,12 @@ namespace Fb2Kindle {
     public ConverterCleanupMode CleanupMode { get; set; }
     public bool UseSourceAsTempFolder { get; set; }
 
-    public string SmtpServer { get; set; }
-    public int SmtpPort { get; set; }
-    public string SmtpLogin { get; set; }
-    public string SmtpPassword { get; set; }
-    public int SmtpTimeout { get; set; }
+    public string SmtpServer { get; set; } = "smtp.gmail.com";
+    public int SmtpPort { get; set; } = 587;
+    public string SmtpLogin { get; set; } = "user@gmail.com";
+    public string SmtpPassword { get; set; } = "password";
+    public int SmtpTimeout { get; set; } = 100000;
 
     public bool Epub { get; set; }
-
-    public DefaultOptions() {
-      SmtpServer = "smtp.gmail.com";
-      SmtpPort = 587;
-      SmtpLogin = "user@gmail.com";
-      SmtpPassword = "password";
-      SmtpTimeout = 100000;
-    }
   }
 }
