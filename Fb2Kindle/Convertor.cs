@@ -12,6 +12,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml;
 using System.Xml.Linq;
+using Ionic.Zip;
 
 namespace Fb2Kindle {
 
@@ -130,13 +131,20 @@ namespace Fb2Kindle {
           SaveXmlToFile(tocEl, tempDir + @"\toc.html");
           AddPackItem("content", "toc.html");
           AddGuideItem("toc", "toc.html", "toc");
-          tocEl.RemoveAll();
+          tocEl?.RemoveAll();
         }
 
-        SaveXmlToFile(_opfFile, tempDir + @"\" + commonTitle + ".opf");
+        bool result;
+        if (_currentSettings.Epub) {
+          SaveXmlToFile(_opfFile, tempDir + @"\content.opf");
+          result = CreateEpub(_workingFolder, tempDir, commonTitle, books[0], _detailedOutput);
+        }
+        else {
+          SaveXmlToFile(_opfFile, tempDir + @"\" + commonTitle + ".opf");
+          result = CreateMobi(_workingFolder, tempDir, commonTitle, books[0], _detailedOutput);
+        }
         _opfFile.RemoveAll();
 
-        var result = CreateMobi(_workingFolder, tempDir, commonTitle, books[0], _detailedOutput);
         if (result && _currentSettings.DeleteOriginal) {
           foreach (var book in books)
             File.Delete(book);
@@ -382,7 +390,77 @@ namespace Fb2Kindle {
       }
     }
 
+    private bool CreateEpub(string workFolder, string tempDir, string bookName, string bookPath,
+      bool showOutput) {
+      
+      Util.WriteLine("Creating epub...", ConsoleColor.White);
+
+      var srcDir = new DirectoryInfo(tempDir);
+      var dstDir = Directory.CreateDirectory($"{tempDir}/OPS");
+      var imagesDir = new DirectoryInfo(tempDir + "\\images"); 
+      if (imagesDir.Exists)
+        imagesDir.MoveTo($"{tempDir}/OPS/images");
+      
+      var srcDirLength = srcDir.FullName.Length;
+      foreach (var file in srcDir.GetFiles("*.*", SearchOption.TopDirectoryOnly)) {
+        var destPath = dstDir.FullName + file.FullName.Substring(srcDirLength);
+        if (new FileInfo(destPath).Exists) continue; //skip duplicates?
+        file.MoveTo(destPath);
+      }
+
+      Directory.CreateDirectory($"{tempDir}/META-INF");
+      File.WriteAllText($"{tempDir}/META-INF/container.xml", @"<?xml version=""1.0"" encoding=""UTF-8""?><container xmlns=""urn:oasis:names:tc:opendocument:xmlns:container"" version=""1.0""><rootfiles><rootfile full-path=""OPS/content.opf"" media-type=""application/oebps-package+xml""/></rootfiles></container>");
+      File.WriteAllText($"{tempDir}/mimetype", "application/epub+zip");
+      
+      var tmpBookPath = $"{tempDir}\\{bookName}.epub";
+      using (var zip = new ZipFile(tmpBookPath)) {
+        zip.AddDirectory(tempDir);
+        zip.Save();
+      }
+      
+      bool saveLocal = true;
+      if (!string.IsNullOrWhiteSpace(MailTo)) {
+        // Wait for it to finish
+        saveLocal = !SendBookByMail(bookName, tmpBookPath);
+      }
+
+      if (saveLocal) {
+        //save to output folder
+        var versionNumber = 1;
+        var resultPath = Path.GetDirectoryName(bookPath);
+        var resultName = bookName;
+        while (File.Exists($"{resultPath}\\{resultName}.epub")) {
+          resultName = bookName + "(v" + versionNumber + ")";
+          versionNumber++;
+        }
+
+        File.Move(tmpBookPath, $"{resultPath}\\{resultName}.epub");
+
+        if (_currentSettings.CleanupMode == ConverterCleanupMode.Partial) {
+          if (!string.IsNullOrWhiteSpace(tempDir)) {
+            foreach (var f in Directory.EnumerateFiles(tempDir, "*.opf"))
+              File.Delete(f);
+            //File.Delete(Path.Combine(tempDir, Path.GetFileNameWithoutExtension(inputFile) + ".opf"));
+            File.Delete(Path.Combine(tempDir, "toc.ncx"));
+
+            var destFolder = $"{resultPath}\\{resultName}";
+            if (!tempDir.Equals(destFolder, StringComparison.OrdinalIgnoreCase))
+              Directory.Move(tempDir, destFolder);
+          }
+        }
+      }
+      else {
+        File.Move(tmpBookPath, "NUL");
+      }
+
+      if (!showOutput)
+        Util.WriteLine("(OK)", ConsoleColor.Green);
+
+      return true;
+    }
+
     private bool CreateMobi(string workFolder, string tempDir, string bookName, string bookPath, bool showOutput) {
+
       Util.WriteLine("Creating mobi (KF8)...", ConsoleColor.White);
       var kindleGenPath = $"{workFolder}\\kindlegen.exe";
       if (!File.Exists(kindleGenPath)) {
@@ -642,6 +720,7 @@ namespace Fb2Kindle {
       var headEl = new XElement("metadata", linkEl);
       linkEl = new XElement("meta", new XAttribute("name", "zero-margin"), new XAttribute("content", "true"));
       headEl.Add(linkEl);
+      headEl.Add(new XElement("meta", new XAttribute("name", "cover"), new XAttribute("content", "cover")));
       linkEl = new XElement("dc-metadata");
       XNamespace dc = "http://purl.org/metadata/dublin_core";
       linkEl.Add(new XAttribute(XNamespace.Xmlns + "dc", dc));
@@ -706,7 +785,7 @@ namespace Fb2Kindle {
     private void AddPackItem(string id, string href, string mediaType = "text/x-oeb1-document", bool addSpine = true) {
       var packEl = new XElement("item");
       packEl.Add(new XAttribute("id", id));
-      packEl.Add(new XAttribute("href", href));
+      packEl.Add(new XAttribute("href", href.Replace("\\", "/")));
       packEl.Add(new XAttribute("media-type", mediaType));
       _opfFile.Elements("manifest").First().Add(packEl);
       if (addSpine)
@@ -719,7 +798,7 @@ namespace Fb2Kindle {
       var itemEl = new XElement("reference");
       itemEl.Add(new XAttribute("type", guideType)); //"text"
       itemEl.Add(new XAttribute("title", id));
-      itemEl.Add(new XAttribute("href", href));
+      itemEl.Add(new XAttribute("href", href.Replace("\\", "/")));
       var guide = _opfFile.Elements("guide").FirstOrDefault();
       if (guide == null) {
         guide = new XElement("guide", "");
