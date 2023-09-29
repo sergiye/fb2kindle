@@ -3,8 +3,8 @@
 namespace Fb2Kindle {
   public enum ConverterCleanupMode {
     Full = 0,
-    Partial, //keep html files, styles & images
-    No //for debug
+    Partial = 1, //keep html files, styles & images
+    No = 2 //for debug
   }
 
   [Serializable]
