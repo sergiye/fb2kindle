@@ -1,4 +1,4 @@
-# Fb2Kindle converter
+# Fb2Kindle
 
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/sergiye/fb2kindle?style=plastic)
 ![GitHub all releases](https://img.shields.io/github/downloads/sergiye/fb2kindle/total?style=plastic)
@@ -10,7 +10,7 @@
 
 ## Download Latest Version
 
-Fb2Kindle provides an alternative solution to convert, combine and send various books to the Amazon Kindle devices.
+Fb2Kindle provides an easy to use solution to convert, format with customizable css, combine multiple files into one and send your e-books to the Amazon Kindle devices.
 
 The latest stable version can be downloaded from the [releases](https://github.com/sergiye/fb2kindle/releases) page, or get the newer one directly from:
 [Latest Version](https://github.com/sergiye/fb2kindle/releases/latest)
@@ -36,7 +36,7 @@ Features include:
 To use:
   * Download the latest version from releases
   * There is no installation required, just start executable file from anywhere on your computer
-  * Drag and drop `.fb2` file to an app icon to convert single file with default parameters
+  * Drag and drop any `.fb2` file to an app icon in file explorer to convert single file (with default options)
 
 
 ### Start and possible command-line arguments
@@ -78,10 +78,12 @@ To use:
 
 ### Examples:
 
-    Fb2Kindle.exe `somebook.fb2`
-    Fb2Kindle.exe -a -r -j -d -save -w
-    Fb2Kindle.exe `"c:\booksFolder\*.fb2"` -epub
-    Fb2Kindle.exe `"c:\bookSeries\*.fb2"` -j -epub mailto:`user@kindle.com`
+    Fb2Kindle.exe somebook.fb2
+    Fb2Kindle.exe "c:\booksFolder\*.fb2"
+    Fb2Kindle.exe -a -r -j -d -w
+    Fb2Kindle.exe "c:\bookSeries\*.fb2" -j -epub mailto:user@kindle.com -update -save
+
+also you can check cmd script examples in archive here [other/scripts.7z](https://github.com/sergiye/fb2kindle/raw/master/other/scripts.7z)
 
 ----
 
