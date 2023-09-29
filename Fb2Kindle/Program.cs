@@ -34,8 +34,10 @@ namespace Fb2Kindle {
 
       Util.WriteLine("-save: save parameters to be used at the next start");
       Util.WriteLine("-w: wait for key press on finish");
+      
       Util.WriteLine("-preview: keep generated source files");
       Util.WriteLine("-debug: keep all generated source files");
+      Util.WriteLine("-u or -update: update application to the latest version");
       Util.WriteLine();
     }
 
@@ -59,13 +61,14 @@ namespace Fb2Kindle {
       var recursive = false;
       var detailedOutput = true;
       var startedTime = DateTime.Now;
+      DefaultOptions currentSettings = null;
       try {
         var asm = Assembly.GetExecutingAssembly();
         ShowMainInfo(asm);
 
         var appPath = Util.GetAppPath();
         var settingsFile = Path.ChangeExtension(Assembly.GetExecutingAssembly().Location, ".json");
-        var currentSettings = SerializerHelper.ReadJsonFile<DefaultOptions>(settingsFile) ?? new DefaultOptions();
+        currentSettings = SerializerHelper.ReadJsonFile<DefaultOptions>(settingsFile) ?? new DefaultOptions();
         //var settingsFile = Path.ChangeExtension(Assembly.GetExecutingAssembly().Location, ".xml");
         //var currentSettings = XmlSerializerHelper.DeserializeFile<DefaultOptions>(settingsFile) ?? new DefaultOptions();
         var bookPath = string.Empty;
@@ -100,6 +103,10 @@ namespace Fb2Kindle {
           Console.WriteLine($"Executing '{asm.Location}' with parameters: '{string.Join(" ", args)}'");
           for (var j = 0; j < args.Length; j++) {
             switch (args[j].ToLower().Trim()) {
+              case "-u":
+              case "-update":
+                currentSettings.CheckUpdates = true;
+                break;
               case "-preview":
                 currentSettings.CleanupMode = ConverterCleanupMode.Partial;
                 currentSettings.UseSourceAsTempFolder = true;
@@ -211,6 +218,14 @@ namespace Fb2Kindle {
         var timeWasted = DateTime.Now - startedTime;
         Util.WriteLine();
         Util.WriteLine($"Time wasted: {timeWasted:G}", ConsoleColor.White);
+
+        if (currentSettings is {CheckUpdates: true}) {
+          Util.WriteLine();
+          Util.WriteLine($"Checking for updates...", ConsoleColor.White);
+          Updater.CheckForUpdates(false);
+          Util.WriteLine();
+        }
+        
         if (wait) {
           Util.WriteLine();
           Util.WriteLine("Press any key to continue...", ConsoleColor.White);

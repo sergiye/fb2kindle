@@ -29,6 +29,7 @@ Features include:
 - `git clone https://github.com/sergiye/fb2kindle.git`
 - build
 
+----
 
 ### How To Use
 
@@ -37,13 +38,13 @@ To use:
   * There is no installation required, just start executable file from anywhere on your computer
   * Drag and drop `.fb2` file to an app icon to convert single file with default parameters
 
-----
 
-## COMMAND LINE START AND POSSIBLE ARGUMENTS
+### Start and possible command-line arguments
 
   Fb2Kindle.exe <path> [-css <styles.css>] [-d] [-ni] [-mailto:recipient@mail.org]
 
   * `<path>: input `.fb2` file or files mask (ex: *.fb2) or path to *fb2 files`
+
 
   * `-epub`: create file in epub format
   * `-a`: all `.fb2` books in app folder
@@ -51,9 +52,11 @@ To use:
   * `-j`: join files from each folder to the single book
   * `-d`: delete source file after successful convertion
 
+
   * `-css` <styles.css>: styles used in destination book
   * `-mailto`: - send document to email (kindle delivery, see `-save` option to configure SMTP server)
   * `-save`: save parameters to be used at the next start (generated `Fb2Kindle.json` file with last used start parameters, with some hidden)
+
 
   * `-w`: wait for key press on finish
   * `-c`: use compression (slow)
@@ -66,20 +69,25 @@ To use:
   * `-ntoc`: no table of content
   * `-nch`: no chapters
 
+
   * `-preview`: keep generated source files
   * `-debug`: keep all generated source files
 
-# Examples:
-	* Fb2Kindle.exe `somebook.fb2`
-	* Fb2Kindle.exe -a -r -j -d -save -w
-	* Fb2Kindle.exe `"c:\booksFolder\*.fb2"` -epub
-	* Fb2Kindle.exe `"c:\bookSeries\*.fb2"` -j -epub mailto:`user@kindle.com`
+
+  * `-u` or `-update`: update application to the latest version. You can combine it with the `-save` option to enable auto-update check on every start
+
+### Examples:
+
+    Fb2Kindle.exe `somebook.fb2`
+    Fb2Kindle.exe -a -r -j -d -save -w
+    Fb2Kindle.exe `"c:\booksFolder\*.fb2"` -epub
+    Fb2Kindle.exe `"c:\bookSeries\*.fb2"` -j -epub mailto:`user@kindle.com`
 
 ----
 
 ## License
 
-This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+This program is free software: you can redistribute it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 
 This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
