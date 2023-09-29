@@ -10,7 +10,6 @@ using System.Net.Mail;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Xml;
 using System.Xml.Linq;
 using Ionic.Zip;
 
@@ -22,36 +21,36 @@ namespace Fb2Kindle {
     private const string NcxName = "toc.ncx";
     private const string DropCap = "АБВГДЕЖЗИКЛМНОПРСТУФХЦЧЩШЭЮЯ"; //"АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧЩШЬЪЫЭЮЯQWERTYUIOPASDFGHJKLZXCVBNM";
     private const string NoAuthorText = "без автора";
-    private readonly string _workingFolder;
-    private readonly string _defaultCss;
-    private readonly bool _addGuideLine;
-    private readonly bool _detailedOutput;
-    private XElement _opfFile;
-    private readonly DefaultOptions _currentSettings;
+    private readonly string workingFolder;
+    private readonly string defaultCss;
+    private readonly bool addGuideLine;
+    private readonly bool detailedOutput;
+    private XElement opfFile;
+    private readonly DefaultOptions currentSettings;
 
     #region public
 
     public string MailTo { get; set; }
 
     internal Convertor(DefaultOptions currentSettings, string css, bool detailedOutput = true, bool addGuideLine = false) {
-      _currentSettings = currentSettings;
-      _workingFolder = Util.GetAppPath();
-      _addGuideLine = addGuideLine;
-      _detailedOutput = detailedOutput;
-      _defaultCss = css;
-      if (!string.IsNullOrEmpty(_defaultCss)) return;
+      this.currentSettings = currentSettings;
+      workingFolder = Util.GetAppPath();
+      this.addGuideLine = addGuideLine;
+      this.detailedOutput = detailedOutput;
+      defaultCss = css;
+      if (!string.IsNullOrEmpty(defaultCss)) return;
       var defStylesFile = Path.ChangeExtension(Assembly.GetExecutingAssembly().Location, ".css");
       if (File.Exists(defStylesFile)) {
-        _defaultCss = File.ReadAllText(defStylesFile);
+        defaultCss = File.ReadAllText(defStylesFile);
       }
-      if (!string.IsNullOrEmpty(_defaultCss)) return;
-      _defaultCss = Util.GetScriptFromResource("Fb2Kindle.css");
+      if (!string.IsNullOrEmpty(defaultCss)) return;
+      defaultCss = Util.GetScriptFromResource("Fb2Kindle.css");
     }
 
     internal bool ConvertBookSequence(string[] books) {
       string tempDir = null;
       try {
-        if (_currentSettings.UseSourceAsTempFolder)
+        if (currentSettings.UseSourceAsTempFolder)
           tempDir = Path.Combine(Path.GetDirectoryName(books[0]), Path.GetFileNameWithoutExtension(books[0]));
 
         //create temp working folder
@@ -60,11 +59,11 @@ namespace Fb2Kindle {
         if (!Directory.Exists(tempDir))
           Directory.CreateDirectory(tempDir);
 
-        if (_defaultCss.Contains("src: url(\"fonts/") && Directory.Exists(_workingFolder + @"\fonts")) {
+        if (defaultCss.Contains("src: url(\"fonts/") && Directory.Exists(workingFolder + @"\fonts")) {
           Directory.CreateDirectory(tempDir + @"\fonts");
-          Util.CopyDirectory(_workingFolder + @"\fonts", tempDir + @"\fonts", true);
+          Util.CopyDirectory(workingFolder + @"\fonts", tempDir + @"\fonts", true);
         }
-        File.WriteAllText(tempDir + @"\book.css", _defaultCss);
+        File.WriteAllText(tempDir + @"\book.css", defaultCss);
 
         var commonTitle = string.Empty;
         var coverDone = false;
@@ -80,7 +79,7 @@ namespace Fb2Kindle {
             if (idx == 0) {
               commonTitle = fileName;
               //create instances
-              _opfFile = GetEmptyPackage(book, _currentSettings.Sequence, books.Length > 1);
+              opfFile = GetEmptyPackage(book, currentSettings.Sequence, books.Length > 1);
               AddPackItem("ncx", NcxName, "application/x-dtbncx+xml", false);
             }
 
@@ -93,7 +92,7 @@ namespace Fb2Kindle {
               if (!string.IsNullOrEmpty(imgSrc)) {
                 AutoScaleImage(Path.Combine(tempDir, imgSrc));
                 if (!coverDone) {
-                  _opfFile.Elements("metadata").First().Elements("x-metadata").First().Add(new XElement("EmbeddedCover", imgSrc));
+                  opfFile.Elements("metadata").First().Elements("x-metadata").First().Add(new XElement("EmbeddedCover", imgSrc));
                   AddGuideItem("Cover", imgSrc, "other.ms-coverimage-standard");
                   AddPackItem("cover", imgSrc, System.Net.Mime.MediaTypeNames.Image.Jpeg, false);
                   coverDone = true;
@@ -125,9 +124,9 @@ namespace Fb2Kindle {
           }
         }
 
-        CreateNcxFile(tocEl, commonTitle, tempDir, _currentSettings.NoToc);
+        CreateNcxFile(tocEl, commonTitle, tempDir, currentSettings.NoToc);
 
-        if (!_currentSettings.NoToc) {
+        if (!currentSettings.NoToc) {
           SaveXmlToFile(tocEl, tempDir + @"\toc.html");
           AddPackItem("content", "toc.html");
           AddGuideItem("toc", "toc.html", "toc");
@@ -135,17 +134,17 @@ namespace Fb2Kindle {
         }
 
         bool result;
-        if (_currentSettings.Epub) {
-          SaveXmlToFile(_opfFile, tempDir + @"\content.opf");
-          result = CreateEpub(_workingFolder, tempDir, commonTitle, books[0], _detailedOutput);
+        if (currentSettings.Epub) {
+          SaveXmlToFile(opfFile, tempDir + @"\content.opf");
+          result = CreateEpub(tempDir, commonTitle, books[0], detailedOutput);
         }
         else {
-          SaveXmlToFile(_opfFile, tempDir + @"\" + commonTitle + ".opf");
-          result = CreateMobi(_workingFolder, tempDir, commonTitle, books[0], _detailedOutput);
+          SaveXmlToFile(opfFile, tempDir + @"\" + commonTitle + ".opf");
+          result = CreateMobi(workingFolder, tempDir, commonTitle, books[0], detailedOutput);
         }
-        _opfFile.RemoveAll();
+        opfFile.RemoveAll();
 
-        if (result && _currentSettings.DeleteOriginal) {
+        if (result && currentSettings.DeleteOriginal) {
           foreach (var book in books)
             File.Delete(book);
         }
@@ -157,7 +156,7 @@ namespace Fb2Kindle {
       }
       finally {
         try {
-          if (_currentSettings.CleanupMode == ConverterCleanupMode.Full) {
+          if (currentSettings.CleanupMode == ConverterCleanupMode.Full) {
             if (tempDir != null) Directory.Delete(tempDir, true);
           }
         }
@@ -305,10 +304,10 @@ namespace Fb2Kindle {
       }
 
       bodies[0].Name = "section";
-      if (_currentSettings.DropCaps && _defaultCss.Contains("span.dc{"))
+      if (currentSettings.DropCaps && defaultCss.Contains("span.dc{"))
         SetBigFirstLetters(bodies[0]);
 
-      if (_currentSettings.NoChapters) {
+      if (currentSettings.NoChapters) {
         var i = 0;
         var ts = bodies[0].Descendants("title");
         foreach (var t in ts) {
@@ -390,7 +389,7 @@ namespace Fb2Kindle {
       }
     }
 
-    private bool CreateEpub(string workFolder, string tempDir, string bookName, string bookPath,
+    private bool CreateEpub(string tempDir, string bookName, string bookPath,
       bool showOutput) {
       
       Util.WriteLine("Creating epub...", ConsoleColor.White);
@@ -417,46 +416,8 @@ namespace Fb2Kindle {
         zip.AddDirectory(tempDir);
         zip.Save();
       }
-      
-      bool saveLocal = true;
-      if (!string.IsNullOrWhiteSpace(MailTo)) {
-        // Wait for it to finish
-        saveLocal = !SendBookByMail(bookName, tmpBookPath);
-      }
 
-      if (saveLocal) {
-        //save to output folder
-        var versionNumber = 1;
-        var resultPath = Path.GetDirectoryName(bookPath);
-        var resultName = bookName;
-        while (File.Exists($"{resultPath}\\{resultName}.epub")) {
-          resultName = bookName + "(v" + versionNumber + ")";
-          versionNumber++;
-        }
-
-        File.Move(tmpBookPath, $"{resultPath}\\{resultName}.epub");
-
-        if (_currentSettings.CleanupMode == ConverterCleanupMode.Partial) {
-          if (!string.IsNullOrWhiteSpace(tempDir)) {
-            foreach (var f in Directory.EnumerateFiles(tempDir, "*.opf"))
-              File.Delete(f);
-            //File.Delete(Path.Combine(tempDir, Path.GetFileNameWithoutExtension(inputFile) + ".opf"));
-            File.Delete(Path.Combine(tempDir, "toc.ncx"));
-
-            var destFolder = $"{resultPath}\\{resultName}";
-            if (!tempDir.Equals(destFolder, StringComparison.OrdinalIgnoreCase))
-              Directory.Move(tempDir, destFolder);
-          }
-        }
-      }
-      else {
-        File.Move(tmpBookPath, "NUL");
-      }
-
-      if (!showOutput)
-        Util.WriteLine("(OK)", ConsoleColor.Green);
-
-      return true;
+      return SendAndClean(bookName, bookPath, tempDir, tmpBookPath, showOutput,  ".epub");
     }
 
     private bool CreateMobi(string workFolder, string tempDir, string bookName, string bookPath, bool showOutput) {
@@ -471,7 +432,7 @@ namespace Fb2Kindle {
         }
       }
 
-      var args = $"\"{tempDir}\\{bookName}.opf\" -c{_currentSettings.CompressionLevel}";
+      var args = $"\"{tempDir}\\{bookName}.opf\" -c{currentSettings.CompressionLevel}";
       var res = Util.StartProcess(kindleGenPath, args, showOutput);
       if (res == 2) {
         Util.WriteLine("Error converting to mobi", ConsoleColor.Red);
@@ -479,25 +440,30 @@ namespace Fb2Kindle {
       }
 
       var tmpBookPath = $"{tempDir}\\{bookName}.mobi";
+      return SendAndClean(bookName, bookPath, tempDir, tmpBookPath, showOutput,  ".mobi");
+    }
+
+    private bool SendAndClean(string bookName, string bookPath, string tempDir, string tmpBookPath, bool showOutput, string extension) {
+      
       bool saveLocal = true;
       if (!string.IsNullOrWhiteSpace(MailTo)) {
         // Wait for it to finish
         saveLocal = !SendBookByMail(bookName, tmpBookPath);
       }
-
+      
       if (saveLocal) {
         //save to output folder
         var versionNumber = 1;
         var resultPath = Path.GetDirectoryName(bookPath);
         var resultName = bookName;
-        while (File.Exists($"{resultPath}\\{resultName}.mobi")) {
+        while (File.Exists($"{resultPath}\\{resultName}{extension}")) {
           resultName = bookName + "(v" + versionNumber + ")";
           versionNumber++;
         }
 
-        File.Move(tmpBookPath, $"{resultPath}\\{resultName}.mobi");
+        File.Move(tmpBookPath, $"{resultPath}\\{resultName}{extension}");
 
-        if (_currentSettings.CleanupMode == ConverterCleanupMode.Partial) {
+        if (currentSettings.CleanupMode == ConverterCleanupMode.Partial) {
           if (!string.IsNullOrWhiteSpace(tempDir)) {
             foreach (var f in Directory.EnumerateFiles(tempDir, "*.opf"))
               File.Delete(f);
@@ -520,39 +486,33 @@ namespace Fb2Kindle {
 
       return true;
     }
-
+    
     private bool SendBookByMail(string bookName, string tmpBookPath) {
       try {
-        if (string.IsNullOrWhiteSpace(_currentSettings.SmtpServer) || _currentSettings.SmtpPort <= 0) {
+        if (string.IsNullOrWhiteSpace(currentSettings.SmtpServer) || currentSettings.SmtpPort <= 0) {
           Util.WriteLine("Mail delivery failed: smtp not configured", ConsoleColor.Red);
           return false;
         }
         // Util.WriteLine($"SMTP: {_currentSettings.SmtpLogin} / {_currentSettings.SmtpServer}:{_currentSettings.SmtpPort}", ConsoleColor.White);
         Util.Write($"Sending to {MailTo}...", ConsoleColor.White);
-        using (var smtp = new SmtpClient(_currentSettings.SmtpServer, _currentSettings.SmtpPort) {
-          UseDefaultCredentials = false,
-          DeliveryMethod = SmtpDeliveryMethod.Network,
-          Timeout = _currentSettings.SmtpTimeout,
-          Credentials = new NetworkCredential(_currentSettings.SmtpLogin, _currentSettings.SmtpPassword),
-          EnableSsl = true,
-        }) {
-          using (var message = new MailMessage(new MailAddress(_currentSettings.SmtpLogin, "Simpl's converter"),
-                  new MailAddress(MailTo)) {
-            Subject = bookName,
-            Body = "Hello! Please, check book(s) attached"
-          }) {
-            string attachmentName = _currentSettings.Epub ? Path.ChangeExtension(tmpBookPath, ".epub") : tmpBookPath;
-            if (attachmentName != tmpBookPath)
-              File.Copy(tmpBookPath, attachmentName);
+        using (var smtp = new SmtpClient(currentSettings.SmtpServer, currentSettings.SmtpPort)) {
+          smtp.UseDefaultCredentials = false;
+          smtp.DeliveryMethod = SmtpDeliveryMethod.Network;
+          smtp.Timeout = currentSettings.SmtpTimeout;
+          smtp.Credentials = new NetworkCredential(currentSettings.SmtpLogin, currentSettings.SmtpPassword);
+          smtp.EnableSsl = true;
+          using (var message = new MailMessage(new MailAddress(currentSettings.SmtpLogin, "Simpl's converter"),
+                   new MailAddress(MailTo))) {
+            // message.BodyEncoding = message.SubjectEncoding = Encoding.UTF8;
+            message.IsBodyHtml = false;
+            message.Subject = bookName;
+            message.Body = "Hello! Please, check book(s) attached";
 
-            using (var att = new Attachment(attachmentName)) {
+            using (var att = new Attachment(tmpBookPath)) {
               message.Attachments.Add(att);
               smtp.Send(message);
               //await smtp.SendMailAsync(message);
             }
-
-            if (attachmentName != tmpBookPath)
-              File.Delete(attachmentName);
           }
         }
         Util.WriteLine("OK", ConsoleColor.Green);
@@ -636,25 +596,25 @@ namespace Fb2Kindle {
       Util.RenameTags(book, "title", "div", "subtitle");
     }
 
-    private static XDocument ReadXDocumentWithInvalidCharacters(string filename) {
-      XDocument xDocument;
-      var xmlReaderSettings = new XmlReaderSettings { CheckCharacters = false };
-      using (var xmlReader = XmlReader.Create(filename, xmlReaderSettings)) {
-        // Load our XDocument
-        xmlReader.MoveToContent();
-        xDocument = XDocument.Load(xmlReader);
-      }
-      return xDocument;
-    }
-
-    private static Stream GenerateStreamFromString(string s) {
-      var stream = new MemoryStream();
-      var writer = new StreamWriter(stream);
-      writer.Write(s);
-      writer.Flush();
-      stream.Position = 0;
-      return stream;
-    }
+    // private static XDocument ReadXDocumentWithInvalidCharacters(string filename) {
+    //   XDocument xDocument;
+    //   var xmlReaderSettings = new XmlReaderSettings { CheckCharacters = false };
+    //   using (var xmlReader = XmlReader.Create(filename, xmlReaderSettings)) {
+    //     // Load our XDocument
+    //     xmlReader.MoveToContent();
+    //     xDocument = XDocument.Load(xmlReader);
+    //   }
+    //   return xDocument;
+    // }
+    //
+    // private static Stream GenerateStreamFromString(string s) {
+    //   var stream = new MemoryStream();
+    //   var writer = new StreamWriter(stream);
+    //   writer.Write(s);
+    //   writer.Flush();
+    //   stream.Position = 0;
+    //   return stream;
+    // }
 
     private static XElement LoadBookWithoutNs(string fileName) {
       try {
@@ -787,22 +747,22 @@ namespace Fb2Kindle {
       packEl.Add(new XAttribute("id", id));
       packEl.Add(new XAttribute("href", href.Replace("\\", "/")));
       packEl.Add(new XAttribute("media-type", mediaType));
-      _opfFile.Elements("manifest").First().Add(packEl);
+      opfFile.Elements("manifest").First().Add(packEl);
       if (addSpine)
-        _opfFile.Elements("spine").First().Add(new XElement("itemref", new XAttribute("idref", id)));
+        opfFile.Elements("spine").First().Add(new XElement("itemref", new XAttribute("idref", id)));
     }
 
     private void AddGuideItem(string id, string href, string guideType = "text") {
       if (string.IsNullOrEmpty(guideType)) return;
-      if (!_addGuideLine && guideType.Equals("text")) return;
+      if (!addGuideLine && guideType.Equals("text")) return;
       var itemEl = new XElement("reference");
       itemEl.Add(new XAttribute("type", guideType)); //"text"
       itemEl.Add(new XAttribute("title", id));
       itemEl.Add(new XAttribute("href", href.Replace("\\", "/")));
-      var guide = _opfFile.Elements("guide").FirstOrDefault();
+      var guide = opfFile.Elements("guide").FirstOrDefault();
       if (guide == null) {
         guide = new XElement("guide", "");
-        _opfFile.Add(guide);
+        opfFile.Add(guide);
       }
       guide.Add(itemEl);
     }
@@ -812,13 +772,13 @@ namespace Fb2Kindle {
     #region Images
 
     private bool ProcessImages(XElement book, string workFolder, string imagesPrefix, bool coverDone) {
-      var imagesCreated = (!coverDone || !_currentSettings.NoImages) && ExtractImages(book, workFolder, imagesPrefix);
+      var imagesCreated = (!coverDone || !currentSettings.NoImages) && ExtractImages(book, workFolder, imagesPrefix);
       var list = Util.RenameTags(book, "image", "div", "image");
       foreach (var element in list) {
         if (!imagesCreated)
           element.Remove();
         else {
-          if (_currentSettings.NoImages &&
+          if (currentSettings.NoImages &&
               (element.Parent == null || !element.Parent.Name.LocalName.Equals("coverpage", StringComparison.OrdinalIgnoreCase))) {
             //keep coverpage only
             element.Remove();
@@ -851,7 +811,7 @@ namespace Fb2Kindle {
       foreach (var binEl in book.Elements("binary")) {
         try {
           var file = GetImageNameWithExt($"{workFolder}\\{imagesPrefix}{binEl.Attribute("id").Value}");
-          var format = GetImageFormatFromMimeType(binEl.Attribute("content-type")?.Value, _currentSettings.Jpeg ? ImageFormat.Jpeg : ImageFormat.Png);
+          var format = GetImageFormatFromMimeType(binEl.Attribute("content-type")?.Value, currentSettings.Jpeg ? ImageFormat.Jpeg : ImageFormat.Png);
           //todo: we can get format from img.RawFormat
           var fileBytes = Convert.FromBase64String(binEl.Value);
           try {
@@ -871,7 +831,7 @@ namespace Fb2Kindle {
                 img.Save(file, format);
               }
             }
-            if (_currentSettings.Grayscaled) {
+            if (currentSettings.Grayscaled) {
               Image gsImage;
               using (var img = Image.FromFile(file)) {
                 gsImage = GrayScale(img, true, format);
@@ -939,18 +899,18 @@ namespace Fb2Kindle {
       return destImage;
     }
 
-    private static ImageCodecInfo GetEncoderInfo(string extension) {
-      extension = extension.ToLower();
-      var codecs = ImageCodecInfo.GetImageEncoders();
-      for (var i = 0; i < codecs.Length; i++)
-        if (codecs[i].FilenameExtension.ToLower().Contains(extension))
-          return codecs[i];
-      return null;
-    }
-
-    private static ImageCodecInfo GetEncoderInfo(ImageFormat format) {
-      return ImageCodecInfo.GetImageEncoders().FirstOrDefault(codec => codec.FormatID.Equals(format.Guid));
-    }
+    // private static ImageCodecInfo GetEncoderInfo(string extension) {
+    //   extension = extension.ToLower();
+    //   var codecs = ImageCodecInfo.GetImageEncoders();
+    //   for (var i = 0; i < codecs.Length; i++)
+    //     if (codecs[i].FilenameExtension.ToLower().Contains(extension))
+    //       return codecs[i];
+    //   return null;
+    // }
+    //
+    // private static ImageCodecInfo GetEncoderInfo(ImageFormat format) {
+    //   return ImageCodecInfo.GetImageEncoders().FirstOrDefault(codec => codec.FormatID.Equals(format.Guid));
+    // }
 
     private static string GetMimeType(Image image) {
       return GetMimeType(image.RawFormat);
