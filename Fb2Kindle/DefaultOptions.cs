@@ -29,5 +29,6 @@ namespace Fb2Kindle {
     public int SmtpTimeout { get; set; } = 100000;
 
     public bool Epub { get; set; }
+    public bool CheckUpdates { get; set; }
   }
 }
