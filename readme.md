@@ -1,0 +1,91 @@
+# Fb2Kindle converter
+
+![GitHub release (latest by date)](https://img.shields.io/github/v/release/sergiye/fb2kindle?style=plastic)
+![GitHub all releases](https://img.shields.io/github/downloads/sergiye/fb2kindle/total?style=plastic)
+![GitHub last commit](https://img.shields.io/github/last-commit/sergiye/fb2kindle?style=plastic)
+
+*Fb2Kindle is a portable, open-source book converter (for Windows).*
+
+----
+
+## Download Latest Version
+
+Fb2Kindle provides an alternative solution to convert, combine and send various books to the Amazon Kindle devices.
+
+The latest stable version can be downloaded from the [releases](https://github.com/sergiye/fb2kindle/releases) page, or get the newer one directly from:
+[Latest Version](https://github.com/sergiye/fb2kindle/releases/latest)
+
+Features include:
+
+  * Support for `.fb2` files as input and `.mobi`/`.epub` files as output
+  * Joining several `.fb2` books from folder to one output file (for book series)
+  * Send generated book to email (see arguments)
+  * Multiple commandline arguments for customizing behavior
+
+# Build
+
+**The recommended way to get the program is BUILD from source**
+- Install git, Visual Studio 2017 (or higher)
+- `git clone https://github.com/sergiye/fb2kindle.git`
+- build
+
+
+### How To Use
+
+To use:
+  * Download the latest version from releases
+  * There is no installation required, just start executable file from anywhere on your computer
+  * Drag and drop `.fb2` file to an app icon to convert single file with default parameters
+
+----
+
+## COMMAND LINE START AND POSSIBLE ARGUMENTS
+
+  Fb2Kindle.exe <path> [-css <styles.css>] [-d] [-ni] [-mailto:recipient@mail.org]
+
+  <path>: input `.fb2` file or files mask (ex: *.fb2) or path to *fb2 files
+  -epub: create file in epub format
+  -css <styles.css>: styles used in destination book
+  -d: delete source file after successful convertion
+  -c: use compression (slow)
+  -o: hide detailed output
+  -s: add sequence and number to title
+  -ni: no images
+  -dc: DropCaps mode
+  -g: grayscaled images
+  -jpeg: save images in jpeg
+  -ntoc: no table of content
+  -nch: no chapters
+
+  -mailto: - send document to email (kindle delivery)
+  -epub: send file as .epub (experimental)
+
+  -a: all `.fb2` books in app folder
+  -r: process files in subfolders (work with -a key)
+  -j: join files from each folder to the single book
+
+  -save: save parameters to be used at the next start
+  -w: wait for key press on finish
+  -preview: keep generated source files
+  -debug: keep all generated source files
+
+----
+
+## License
+
+This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License  along with this program.  If not, see http://www.gnu.org/licenses/.
+
+
+## Donate
+
+<a href=https://www.buymeacoffee.com/sergiye>
+<img src="https://www.buymeacoffee.com/assets/img/custom_images/yellow_img.png" alt="Buy Me A Coffee" style="height: auto !important;width: auto !important;" />
+</a>
+
+**If you like the program, you can support the author and transfer money to**
+- Card number: 5169 3600 1644 3834
+- IBAN number: UA113052990000026208909644481
