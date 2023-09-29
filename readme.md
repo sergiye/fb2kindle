@@ -43,31 +43,37 @@ To use:
 
   Fb2Kindle.exe <path> [-css <styles.css>] [-d] [-ni] [-mailto:recipient@mail.org]
 
-  <path>: input `.fb2` file or files mask (ex: *.fb2) or path to *fb2 files
-  -epub: create file in epub format
-  -css <styles.css>: styles used in destination book
-  -d: delete source file after successful convertion
-  -c: use compression (slow)
-  -o: hide detailed output
-  -s: add sequence and number to title
-  -ni: no images
-  -dc: DropCaps mode
-  -g: grayscaled images
-  -jpeg: save images in jpeg
-  -ntoc: no table of content
-  -nch: no chapters
+  * `<path>: input `.fb2` file or files mask (ex: *.fb2) or path to *fb2 files`
 
-  -mailto: - send document to email (kindle delivery)
-  -epub: send file as .epub (experimental)
+  * `-epub`: create file in epub format
+  * `-a`: all `.fb2` books in app folder
+  * `-r`: process files in subfolders (work with -a key)
+  * `-j`: join files from each folder to the single book
+  * `-d`: delete source file after successful convertion
 
-  -a: all `.fb2` books in app folder
-  -r: process files in subfolders (work with -a key)
-  -j: join files from each folder to the single book
+  * `-css` <styles.css>: styles used in destination book
+  * `-mailto`: - send document to email (kindle delivery, see `-save` option to configure SMTP server)
+  * `-save`: save parameters to be used at the next start (generated `Fb2Kindle.json` file with last used start parameters, with some hidden)
 
-  -save: save parameters to be used at the next start
-  -w: wait for key press on finish
-  -preview: keep generated source files
-  -debug: keep all generated source files
+  * `-w`: wait for key press on finish
+  * `-c`: use compression (slow)
+  * `-o`: hide detailed output
+  * `-s`: add sequence and number to title
+  * `-ni`: no images
+  * `-dc`: DropCaps mode
+  * `-g`: grayscaled images
+  * `-jpeg`: save images in jpeg
+  * `-ntoc`: no table of content
+  * `-nch`: no chapters
+
+  * `-preview`: keep generated source files
+  * `-debug`: keep all generated source files
+
+# Examples:
+	* Fb2Kindle.exe `somebook.fb2`
+	* Fb2Kindle.exe -a -r -j -d -save -w
+	* Fb2Kindle.exe `"c:\booksFolder\*.fb2"` -epub
+	* Fb2Kindle.exe `"c:\bookSeries\*.fb2"` -j -epub mailto:`user@kindle.com`
 
 ----
 
