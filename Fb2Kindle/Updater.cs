@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Reflection;
 using System.Text;
@@ -63,7 +64,6 @@ namespace Fb2Kindle {
     }
 
     internal static void CheckForUpdates(bool silent) {
-      string newVersion;
       string newVersionUrl = null;
       bool update;
       try {
@@ -72,21 +72,29 @@ namespace Fb2Kindle {
         if (releases == null || releases.Length == 0)
           throw new Exception("Error getting list of releases.");
 
-        newVersion = releases[0].tag_name;
-        newVersionUrl = releases[0].assets[0].browser_download_url;
+        var newVersion = releases[0].tag_name;
+        newVersionUrl = releases[0].assets
+          .FirstOrDefault(a => selfFileName.Equals(a.name, StringComparison.OrdinalIgnoreCase))
+          ?.browser_download_url;
 
+        if (newVersionUrl == null) {
+          if (!silent)
+            Util.WriteLine("Error getting released asset information.", ConsoleColor.White);
+          return;
+        }
+        
         if (string.Compare(CurrentVersion, newVersion, StringComparison.Ordinal) >= 0) {
           if (!silent)
-            Util.Write($"Your version is: {CurrentVersion}\nLatest released version is: {newVersion}\nNo need to update.", ConsoleColor.White);
+            Util.WriteLine($"Your version is: {CurrentVersion}\nLatest released version is: {newVersion}\nNo need to update.", ConsoleColor.White);
           return;
         }
 
-        Util.Write($"Your version is: {CurrentVersion}\nLatest released version is: {newVersion}\nDownloading update...", ConsoleColor.White);
+        Util.WriteLine($"Your version is: {CurrentVersion}\nLatest released version is: {newVersion}\nDownloading update...", ConsoleColor.White);
         update = true;
       }
       catch (Exception ex) {
         if (!silent)
-          Util.Write($"Error checking for a new version.\n{ex.Message}", ConsoleColor.Red);
+          Util.WriteLine($"Error checking for a new version.\n{ex.Message}", ConsoleColor.Red);
         update = false;
       }
 
@@ -94,7 +102,7 @@ namespace Fb2Kindle {
 
       try {
         var tempPath = Path.GetTempPath();
-        var updateFilePath = $"{tempPath}{selfFileName}";
+        var updateFilePath = $"{tempPath}{selfFileName}{Environment.TickCount}";
 
         using (var wc = new WebClient())
           wc.DownloadFile(newVersionUrl, updateFilePath);
@@ -105,7 +113,7 @@ namespace Fb2Kindle {
           batFile.WriteLine("TIMEOUT /t 3 /nobreak > NUL");
           batFile.WriteLine("TASKKILL /IM \"{0}\" > NUL", selfFileName);
           batFile.WriteLine("MOVE \"{0}\" \"{1}\"", updateFilePath, CurrentFileLocation);
-          batFile.WriteLine("DEL \"%~f0\" & START \"\" /B \"{0}\"", CurrentFileLocation);
+          batFile.WriteLine("DEL \"%~f0\"");
         }
 
         var startInfo = new ProcessStartInfo(cmdFilePath) {
@@ -114,11 +122,12 @@ namespace Fb2Kindle {
           WorkingDirectory = tempPath
         };
         Process.Start(startInfo);
+        Util.WriteLine("Updating...", ConsoleColor.White);
         Environment.Exit(0);
       }
       catch (Exception ex) {
         if (!silent)
-          Util.Write($"Error downloading new version\n{ex.Message}", ConsoleColor.Red);
+          Util.WriteLine($"Error downloading new version\n{ex.Message}", ConsoleColor.Red);
       }
     }
   }
