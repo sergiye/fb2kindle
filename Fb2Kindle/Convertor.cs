@@ -56,8 +56,9 @@ namespace Fb2Kindle {
         //create temp working folder
         if (string.IsNullOrWhiteSpace(tempDir))
           tempDir = $"{Path.GetTempPath()}\\{Guid.NewGuid()}";
-        if (!Directory.Exists(tempDir))
-          Directory.CreateDirectory(tempDir);
+
+        tempDir = GetVersionedPath(tempDir);
+        Directory.CreateDirectory(tempDir);
 
         if (defaultCss.Contains("src: url(\"fonts/") && Directory.Exists(workingFolder + @"\fonts")) {
           Directory.CreateDirectory(tempDir + @"\fonts");
@@ -189,7 +190,7 @@ namespace Fb2Kindle {
       var ncx = new XElement("ncx");
       var head = new XElement("head", "");
       head.Add(new XElement("meta", new XAttribute("name", "dtb:uid"), new XAttribute("content", "BookId")));
-      head.Add(new XElement("meta", new XAttribute("name", "dtb:depth"), new XAttribute("content", "1")));
+      head.Add(new XElement("meta", new XAttribute("name", "dtb:depth"), new XAttribute("content", "3")));
       head.Add(new XElement("meta", new XAttribute("name", "dtb:totalPageCount"), new XAttribute("content", "0")));
       head.Add(new XElement("meta", new XAttribute("name", "dtb:maxPageNumber"), new XAttribute("content", "0")));
       ncx.Add(head);
@@ -199,7 +200,7 @@ namespace Fb2Kindle {
       AddNcxItem(navMap, 0, "Описание", "book.html#it");
       var playOrder = 2;
       var listEls = toc.Elements("body").Elements(TocElement);
-      AddTocListItems(listEls, navMap, ref playOrder, true);
+      AddTocListItems(listEls, navMap, ref playOrder, 1);
       if (!addToc)
         AddNcxItem(navMap, 1, "Содержание", "toc.html#toc");
       ncx.Add(navMap);
@@ -207,23 +208,21 @@ namespace Fb2Kindle {
       ncx.RemoveAll();
     }
 
-    private static void AddTocListItems(IEnumerable<XElement> listEls, XElement navMap, ref int playOrder, bool rootLevel = false) {
+    private static void AddTocListItems(IEnumerable<XElement> listEls, XElement navMap, ref int playOrder, int depth) {
       foreach (var list in listEls) {
-        AddTocListItems(list.Elements(TocElement), navMap, ref playOrder);
+        AddTocListItems(list.Elements(TocElement), navMap, ref playOrder, depth + 1);
         foreach (var li in list.Elements("li")) {
           var navPoint = navMap;
           var a = li.Elements("a").FirstOrDefault();
           if (a != null) {
-            //                        if (rootLevel)
-            //                        {
-            //                            navPoint = AddNcxItem(navMap, playOrder++, a.Value, (string) a.Attribute("href"));
-            //                        }
-            //                        else
-            {
+            if (depth == 3) {
+              navPoint = AddNcxItem(navMap, playOrder++, a.Value, (string) a.Attribute("href"));
+            }
+            else {
               AddNcxItem(navMap, playOrder++, a.Value, (string)a.Attribute("href"));
             }
           }
-          AddTocListItems(li.Elements(TocElement), navPoint, ref playOrder);
+          AddTocListItems(li.Elements(TocElement), navPoint, ref playOrder, depth + 1);
         }
       }
     }
@@ -410,8 +409,8 @@ namespace Fb2Kindle {
       Directory.CreateDirectory($"{tempDir}/META-INF");
       File.WriteAllText($"{tempDir}/META-INF/container.xml", @"<?xml version=""1.0"" encoding=""UTF-8""?><container xmlns=""urn:oasis:names:tc:opendocument:xmlns:container"" version=""1.0""><rootfiles><rootfile full-path=""OPS/content.opf"" media-type=""application/oebps-package+xml""/></rootfiles></container>");
       File.WriteAllText($"{tempDir}/mimetype", "application/epub+zip");
-      
-      var tmpBookPath = $"{tempDir}\\{bookName}.epub";
+
+      var tmpBookPath = GetVersionedPath(tempDir, bookName, ".epub");
       using (var zip = new ZipFile(tmpBookPath)) {
         zip.AddDirectory(tempDir);
         zip.Save();
@@ -443,6 +442,22 @@ namespace Fb2Kindle {
       return SendAndClean(bookName, bookPath, tempDir, tmpBookPath, showOutput,  ".mobi");
     }
 
+    private static string GetVersionedPath(string filePath, string fileName = null, string fileExtension = null) {
+      var versionNumber = 1;
+      if (string.IsNullOrWhiteSpace(fileName)) {
+        var result = filePath;
+        while (Directory.Exists(result))
+          result = $"{filePath}(v{versionNumber++})";
+        return result;
+      }
+      else {
+        var result = $"{filePath}\\{fileName}{fileExtension}";
+        while (File.Exists(result))
+          result = $"{filePath}\\{fileName}(v{versionNumber++}){fileExtension}";
+        return result;
+      }
+    }
+    
     private bool SendAndClean(string bookName, string bookPath, string tempDir, string tmpBookPath, bool showOutput, string extension) {
       
       bool saveLocal = true;
@@ -453,27 +468,18 @@ namespace Fb2Kindle {
       
       if (saveLocal) {
         //save to output folder
-        var versionNumber = 1;
-        var resultPath = Path.GetDirectoryName(bookPath);
-        var resultName = bookName;
-        while (File.Exists($"{resultPath}\\{resultName}{extension}")) {
-          resultName = bookName + "(v" + versionNumber + ")";
-          versionNumber++;
-        }
-
-        File.Move(tmpBookPath, $"{resultPath}\\{resultName}{extension}");
+        var resultName = GetVersionedPath(Path.GetDirectoryName(bookPath), bookName, extension);
+        File.Move(tmpBookPath, resultName);
 
         if (currentSettings.CleanupMode == ConverterCleanupMode.Partial) {
           if (!string.IsNullOrWhiteSpace(tempDir)) {
-            foreach (var f in Directory.EnumerateFiles(tempDir, "*.opf"))
-              File.Delete(f);
             //File.Delete(Path.Combine(tempDir, Path.GetFileNameWithoutExtension(inputFile) + ".opf"));
             File.Delete(Path.Combine(tempDir, "kindlegen.exe"));
-            File.Delete(Path.Combine(tempDir, "toc.ncx"));
 
-            var destFolder = $"{resultPath}\\{resultName}";
-            if (!tempDir.Equals(destFolder, StringComparison.OrdinalIgnoreCase))
-              Directory.Move(tempDir, destFolder);
+            //for Partial mode UseSourceAsTempFolder is always true 
+            // var destFolder = GetVersionedPath(Path.GetDirectoryName(bookPath) +"\\" + bookName);
+            // if (!tempDir.Equals(destFolder, StringComparison.OrdinalIgnoreCase))
+            //   Directory.Move(tempDir, destFolder);
           }
         }
       }

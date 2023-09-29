@@ -2,10 +2,7 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-// General Information about an assembly is controlled through the following 
-// set of attributes. Change these attribute values to modify the information
-// associated with an assembly.
-[assembly: AssemblyTitle("fb2 to kindle book converter by Sergiy Yegoshyn")]
+[assembly: AssemblyTitle("Fb2Kindle book converter")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Sergiy Yegoshyn (egoshin.sergey@gmail.com)")]

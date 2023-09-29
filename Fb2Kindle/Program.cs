@@ -219,18 +219,18 @@ namespace Fb2Kindle {
         Util.WriteLine();
         Util.WriteLine($"Time wasted: {timeWasted:G}", ConsoleColor.White);
 
-        if (currentSettings is {CheckUpdates: true}) {
-          Util.WriteLine();
-          Util.WriteLine($"Checking for updates...", ConsoleColor.White);
-          Updater.CheckForUpdates(false);
-          Util.WriteLine();
-        }
-        
         if (wait) {
           Util.WriteLine();
           Util.WriteLine("Press any key to continue...", ConsoleColor.White);
           Console.ReadKey();
         }
+      }
+        
+      if (currentSettings.CheckUpdates) {
+        Util.WriteLine();
+        Util.WriteLine("Checking for updates...", ConsoleColor.White);
+        Updater.CheckForUpdates(false);
+        Util.WriteLine();
       }
     }
 
