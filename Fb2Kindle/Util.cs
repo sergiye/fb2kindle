@@ -5,20 +5,11 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
-using System.Xml;
 using System.Xml.Linq;
 
 namespace Fb2Kindle {
 
   internal static class Util {
-
-    internal static T GetAttribute<T>(ICustomAttributeProvider assembly, bool inherit = false) where T : Attribute {
-      var attr = assembly.GetCustomAttributes(typeof(T), inherit);
-      foreach (var o in attr)
-        if (o is T)
-          return o as T;
-      return null;
-    }
 
     internal static string GetScriptFromResource(string resourceName) {
       using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(String.Format("Fb2Kindle.{0}", resourceName))) {
@@ -43,7 +34,7 @@ namespace Fb2Kindle {
     }
 
     internal static string GetAppPath() {
-      return Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+      return Path.GetDirectoryName(Updater.CurrentFileLocation);
     }
 
     internal static void CopyDirectory(string sourceDirName, string destDirName, bool copySubDirs) {
@@ -76,13 +67,6 @@ namespace Fb2Kindle {
 
     }
 
-    internal static DateTime GetBuildTime(Version ver) {
-      var buildTime = new DateTime(2000, 1, 1).AddDays(ver.Build).AddSeconds(ver.Revision * 2);
-      if (TimeZone.IsDaylightSavingTime(DateTime.Now, TimeZone.CurrentTimeZone.GetDaylightChanges(DateTime.Now.Year)))
-        buildTime = buildTime.AddHours(1);
-      return buildTime;
-    }
-
     internal static XElement[] RenameTags(XElement root, string tagName, string newName, string className = null, bool clearData = false) {
       var list = root.Descendants(tagName).ToArray();
       foreach (var element in list)
@@ -111,28 +95,26 @@ namespace Fb2Kindle {
         StandardOutputEncoding = Encoding.UTF8
         //WindowStyle = ProcessWindowStyle.Hidden
       };
-      //            using (var process = Process.Start(startInfo))
-      //            {
-      //                if (addToConsole)
-      //                {
-      //                    while (!process.StandardOutput.EndOfStream)
-      //                        WriteLine(process.StandardOutput.ReadLine());
-      //                }
-      //                process.WaitForExit();
-      //                return process.ExitCode;
-      //            }
 
-      //            using (var process = Process.Start(startInfo))
-      //            {
-      //                using (var reader = process.StandardOutput)
-      //                {
-      //                    string result = reader.ReadToEnd();
-      //                    if (addToConsole) WriteLine(result);
-      //                }
-      //                return process.ExitCode;
-      //            }
+      // using (var process = Process.Start(startInfo)) {
+      //   if (addToConsole) {
+      //     while (!process.StandardOutput.EndOfStream)
+      //       WriteLine(process.StandardOutput.ReadLine());
+      //   }
+      //   process.WaitForExit();
+      //   return process.ExitCode;
+      // }
+      //
+      // using (var process = Process.Start(startInfo)) {
+      //   using (var reader = process.StandardOutput) {
+      //     string result = reader.ReadToEnd();
+      //     if (addToConsole) WriteLine(result);
+      //   }
+      //   return process.ExitCode;
+      // }
 
-      using (var process = new Process { StartInfo = startInfo }) {
+      using (var process = new Process()) {
+        process.StartInfo = startInfo;
         process.OutputDataReceived += (sender, e) => {
           if (addToConsole) WriteLine(e.Data);
         };

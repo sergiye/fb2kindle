@@ -50,7 +50,7 @@ To use:
   * `-a`: all `.fb2` books in app folder
   * `-r`: process files in subfolders (work with -a key)
   * `-j`: join files from each folder to the single book
-  * `-d`: delete source file after successful convertion
+  * `-d`: delete source file after successful conversion
 
 
   * `-css` <styles.css>: styles used in destination book
@@ -64,16 +64,11 @@ To use:
   * `-s`: add sequence and number to title
   * `-ni`: no images
   * `-dc`: DropCaps mode
-  * `-g`: grayscaled images
+  * `-g`: grayscale images
   * `-jpeg`: save images in jpeg
   * `-ntoc`: no table of content
   * `-nch`: no chapters
-
-
   * `-preview`: keep generated source files
-  * `-debug`: keep all generated source files
-
-
   * `-u` or `-update`: update application to the latest version. You can combine it with the `-save` option to enable auto-update check on every start
 
 ### Examples:
