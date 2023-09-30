@@ -8,27 +8,18 @@ using System.Text;
 
 namespace Fb2Kindle {
   public class GitHubRelease {
-    public Uri assets_url { get; set; }
-    public Uri html_url { get; set; }
-    public string tag_name { get; set; }
-    public string name { get; set; }
-    public bool prerelease { get; set; }
-    public DateTime created_at { get; set; }
-    public DateTime published_at { get; set; }
-    public Asset[] assets { get; set; }
+    public string Tag_name { get; set; }
+    public string Name { get; set; }
+    public bool Prerelease { get; set; }
+    public Asset[] Assets { get; set; }
   }
 
   public class Asset {
-    public Uri url { get; set; }
-    public string name { get; set; }
-    public object label { get; set; }
-    public string content_type { get; set; }
-    public string state { get; set; }
-    public long size { get; set; }
-    public long download_count { get; set; }
-    public DateTime created_at { get; set; }
-    public DateTime updated_at { get; set; }
-    public string browser_download_url { get; set; }
+    public string Name { get; set; }
+    // public string content_type { get; set; }
+    public string State { get; set; }
+    // public long size { get; set; }
+    public string Browser_download_url { get; set; }
   }
 
   internal static class Updater {
@@ -85,10 +76,10 @@ namespace Fb2Kindle {
         if (releases == null || releases.Length == 0)
           throw new Exception("Error getting list of releases.");
 
-        var newVersion = releases[0].tag_name;
-        newVersionUrl = releases[0].assets
-          .FirstOrDefault(a => selfFileName.Equals(a.name, StringComparison.OrdinalIgnoreCase))
-          ?.browser_download_url;
+        var newVersion = releases[0].Tag_name;
+        newVersionUrl = releases[0].Assets
+          .FirstOrDefault(a => selfFileName.Equals(a.Name, StringComparison.OrdinalIgnoreCase))
+          ?.Browser_download_url;
 
         if (newVersionUrl == null) {
           if (!silent)
