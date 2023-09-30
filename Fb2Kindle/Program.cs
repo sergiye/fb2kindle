@@ -222,10 +222,7 @@ namespace Fb2Kindle {
       }
         
       if (currentSettings.CheckUpdates) {
-        Util.WriteLine();
-        Util.WriteLine("Checking for updates...", ConsoleColor.White);
         Updater.CheckForUpdates(false);
-        Util.WriteLine();
       }
     }
 

@@ -78,6 +78,8 @@ namespace Fb2Kindle {
       string newVersionUrl = null;
       bool update;
       try {
+        Util.WriteLine();
+        Util.Write("Checking for updates... ", ConsoleColor.White);
         var jsonString = GetJsonData($"https://api.github.com/repos/{GITHUB_LANDING_PAGE}/releases").TrimEnd();
         var releases = jsonString.FromJson<GitHubRelease[]>();
         if (releases == null || releases.Length == 0)
@@ -95,6 +97,7 @@ namespace Fb2Kindle {
         }
         
         if (string.Compare(CurrentVersion, newVersion, StringComparison.Ordinal) >= 0) {
+          Util.WriteLine("You have the latest version.", ConsoleColor.White);
           return;
         }
 
