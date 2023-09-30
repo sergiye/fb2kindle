@@ -393,9 +393,9 @@ namespace Fb2Kindle {
       var tmpBookPath = GetVersionedPath(tempDir, bookName, ".epub");
       using (var zip = new ZipFile(tmpBookPath)) {
         zip.CompressionLevel = options.Config.CompressionLevel switch {
-          1 => CompressionLevel.BestSpeed,
+          1 => CompressionLevel.Default,
           2 => CompressionLevel.BestCompression,
-          _ => CompressionLevel.Default
+          _ => CompressionLevel.BestSpeed
         };
         zip.AddDirectory(epubDir.FullName);
         zip.Save();
