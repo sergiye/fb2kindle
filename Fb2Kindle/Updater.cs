@@ -35,14 +35,25 @@ namespace Fb2Kindle {
     private const string GITHUB_LANDING_PAGE = "sergiye/fb2kindle";
     private static readonly string selfFileName;
 
+    internal static readonly string AppName;
+    internal static readonly string AppTitle;
     internal static readonly string CurrentVersion;
     internal static readonly string CurrentFileLocation;
 
     static Updater() {
       var asm = Assembly.GetExecutingAssembly();
+      AppName = asm.GetName().Name;
+      AppTitle = GetAttribute<AssemblyTitleAttribute>(asm)?.Title;
       CurrentVersion = asm.GetName().Version.ToString(3);
       CurrentFileLocation = asm.Location;
       selfFileName = Path.GetFileName(CurrentFileLocation);
+    }
+
+    private static T GetAttribute<T>(ICustomAttributeProvider assembly, bool inherit = false) where T : Attribute {
+      foreach (var o in assembly.GetCustomAttributes(typeof(T), inherit))
+        if (o is T attribute)
+          return attribute;
+      return null;
     }
 
     private static string GetJsonData(string uri, int timeout = 10, string method = "GET") {
@@ -84,17 +95,15 @@ namespace Fb2Kindle {
         }
         
         if (string.Compare(CurrentVersion, newVersion, StringComparison.Ordinal) >= 0) {
-          if (!silent)
-            Util.WriteLine($"Your version is: {CurrentVersion}\nLatest released version is: {newVersion}\nNo need to update.", ConsoleColor.White);
           return;
         }
 
-        Util.WriteLine($"Your version is: {CurrentVersion}\nLatest released version is: {newVersion}\nDownloading update...", ConsoleColor.White);
+        Util.WriteLine($"New version found: {newVersion}, app will be updated after close.", ConsoleColor.White);
         update = true;
       }
       catch (Exception ex) {
         if (!silent)
-          Util.WriteLine($"Error checking for a new version.\n{ex.Message}", ConsoleColor.Red);
+          Util.WriteLine($"Error checking for a new version: {ex.Message}", ConsoleColor.Red);
         update = false;
       }
 
@@ -122,12 +131,11 @@ namespace Fb2Kindle {
           WorkingDirectory = tempPath
         };
         Process.Start(startInfo);
-        Util.WriteLine("Updating...", ConsoleColor.White);
         Environment.Exit(0);
       }
       catch (Exception ex) {
         if (!silent)
-          Util.WriteLine($"Error downloading new version\n{ex.Message}", ConsoleColor.Red);
+          Util.WriteLine($"Error downloading new version: {ex.Message}", ConsoleColor.Red);
       }
     }
   }
