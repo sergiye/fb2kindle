@@ -2,25 +2,24 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Reflection;
 using System.Text;
 
 namespace Fb2Kindle {
   static class Program {
-    private static void ShowHelpText(Assembly asm) {
+    private static void ShowHelpText() {
       Util.WriteLine();
-      Util.WriteLine(asm.GetName().Name + " <path> [-css <styles.css>] [-d] [-ni] [-mailto:recipient@mail.org]");
+      Util.WriteLine(Updater.AppName + " <path> [-css <styles.css>] [-d] [-ni] [-mailto:recipient@mail.org]");
       Util.WriteLine();
       Util.WriteLine("<path>: input fb2 file or files mask (ex: *.fb2) or path to *fb2 files");
       Util.WriteLine("-epub: create file in epub format");
       Util.WriteLine("-css <styles.css>: styles used in destination book");
-      Util.WriteLine("-d: delete source file after successful convertion");
+      Util.WriteLine("-d: delete source file after successful conversion");
       Util.WriteLine("-c: use compression (slow)");
       Util.WriteLine("-o: hide detailed output");
       Util.WriteLine("-s: add sequence and number to title");
       Util.WriteLine("-ni: no images");
       Util.WriteLine("-dc: DropCaps mode");
-      Util.WriteLine("-g: grayscaled images");
+      Util.WriteLine("-g: grayscale images");
       Util.WriteLine("-jpeg: save images in jpeg");
       Util.WriteLine("-ntoc: no table of content");
       Util.WriteLine("-nch: no chapters");
@@ -36,19 +35,16 @@ namespace Fb2Kindle {
       Util.WriteLine("-w: wait for key press on finish");
       
       Util.WriteLine("-preview: keep generated source files");
-      Util.WriteLine("-debug: keep all generated source files");
       Util.WriteLine("-u or -update: update application to the latest version");
       Util.WriteLine();
     }
 
-    private static void ShowMainInfo(Assembly asm) {
-      //            Console.Clear();
+    private static void ShowMainInfo() {
+      //Console.Clear();
       Util.WriteLine();
-      var ver = asm.GetName().Version;
-      Util.WriteLine($"{asm.GetName().Name} Version: {ver.ToString(3)}; Build time: {Util.GetBuildTime(ver):yyyy/MM/dd HH:mm:ss}", ConsoleColor.White);
-      var title = Util.GetAttribute<AssemblyTitleAttribute>(asm);
-      if (title != null)
-        Util.WriteLine(title.Title, ConsoleColor.White);
+      Util.WriteLine($"{Updater.AppName} Version: {Updater.CurrentVersion}", ConsoleColor.White);
+      if (Updater.AppTitle != null)
+        Util.WriteLine(Updater.AppTitle, ConsoleColor.White);
       Util.WriteLine();
     }
 
@@ -63,11 +59,10 @@ namespace Fb2Kindle {
       var startedTime = DateTime.Now;
       DefaultOptions currentSettings = null;
       try {
-        var asm = Assembly.GetExecutingAssembly();
-        ShowMainInfo(asm);
+        ShowMainInfo();
 
         var appPath = Util.GetAppPath();
-        var settingsFile = Path.ChangeExtension(Assembly.GetExecutingAssembly().Location, ".json");
+        var settingsFile = Path.ChangeExtension(Updater.CurrentFileLocation, ".json");
         currentSettings = SerializerHelper.ReadJsonFile<DefaultOptions>(settingsFile) ?? new DefaultOptions();
         //var settingsFile = Path.ChangeExtension(Assembly.GetExecutingAssembly().Location, ".xml");
         //var currentSettings = XmlSerializerHelper.DeserializeFile<DefaultOptions>(settingsFile) ?? new DefaultOptions();
@@ -76,7 +71,7 @@ namespace Fb2Kindle {
         string mailTo = null;
 
         if (args.Length == 0) {
-          ShowHelpText(asm);
+          ShowHelpText();
           Util.Write("Process all files with default parameters (-a -r -w)? Press 'Enter' to continue: ", ConsoleColor.White);
           if (Console.ReadKey().Key != ConsoleKey.Enter)
             return;
@@ -86,7 +81,7 @@ namespace Fb2Kindle {
         }
         else {
           if (args[0] == "newconsole") {
-            string parameters = string.Empty;
+            var parameters = string.Empty;
             if (args.Length > 1) {
               for (var i = 1; i < args.Length; i++) {
                 if (args[i].Contains(" "))
@@ -96,11 +91,11 @@ namespace Fb2Kindle {
               }
             }
             //Console.WriteLine($"Executing external with parameters: '{parameters}'...");
-            Process.Start(asm.Location, parameters);
+            Process.Start(Updater.CurrentFileLocation, parameters);
             return;
           }
 
-          Console.WriteLine($"Executing '{asm.Location}' with parameters: '{string.Join(" ", args)}'");
+          Console.WriteLine($"Executing '{Updater.CurrentFileLocation}' with parameters: '{string.Join(" ", args)}'");
           for (var j = 0; j < args.Length; j++) {
             switch (args[j].ToLower().Trim()) {
               case "-u":

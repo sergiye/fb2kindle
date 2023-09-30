@@ -67,6 +67,7 @@
     <Compile Include="AssemblyInfo.cs" />
     <Compile Include="Convertor.cs" />
     <Compile Include="DefaultOptions.cs" />
+    <Compile Include="ImagesHelper.cs" />
     <Compile Include="SerializerHelper.cs" />
     <Compile Include="Updater.cs" />
     <Compile Include="Util.cs" />
