@@ -16,4 +16,4 @@ using System.Runtime.InteropServices;
 
 [assembly: InternalsVisibleTo("jail")]
 
-[assembly: AssemblyVersion("2.0.*")]
+[assembly: AssemblyVersion("2.1.*")]
