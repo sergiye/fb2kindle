@@ -8,7 +8,7 @@ namespace Fb2Kindle {
   }
 
   [Serializable]
-  public class DefaultOptions {
+  public class Config {
 
     public bool DeleteOriginal { get; set; }
     public bool NoChapters { get; set; }
@@ -16,11 +16,9 @@ namespace Fb2Kindle {
     public bool NoImages { get; set; }
     public bool NoToc { get; set; }
     public byte CompressionLevel { get; set; }
-    public bool Sequence { get; set; }
+    public bool AddSequenceInfo { get; set; }
     public bool Grayscaled { get; set; }
     public bool Jpeg { get; set; }
-    public ConverterCleanupMode CleanupMode { get; set; }
-    public bool UseSourceAsTempFolder { get; set; }
 
     public string SmtpServer { get; set; } = "smtp.gmail.com";
     public int SmtpPort { get; set; } = 587;
@@ -28,7 +26,20 @@ namespace Fb2Kindle {
     public string SmtpPassword { get; set; } = "password";
     public int SmtpTimeout { get; set; } = 100000;
 
-    public bool Epub { get; set; }
     public bool CheckUpdates { get; set; }
+  }
+
+  internal class AppOptions {
+    
+    public Config Config { get; set; }
+
+    public ConverterCleanupMode CleanupMode { get; set; }
+    public bool UseSourceAsTempFolder { get; set; }
+    public bool Epub { get; set; }
+    public string MailTo { get; set; }
+    public string WorkingFolder { get; } = Util.GetAppPath();
+    public bool DetailedOutput { get; set; } = true;
+    public bool AddGuideLine { get; set; }
+    public string Css { get; set; }
   }
 }
