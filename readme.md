@@ -47,20 +47,24 @@ To use:
 
 
   * `-epub`: create file in epub format
+  * `-css` <styles.css>: styles used in destination book
+
   * `-a`: all `.fb2` books in app folder
   * `-r`: process files in subfolders (work with -a key)
   * `-j`: join files from each folder to the single book
-  * `-d`: delete source file after successful conversion
-
-
-  * `-css` <styles.css>: styles used in destination book
-  * `-mailto`: - send document to email (kindle delivery, see `-save` option to configure SMTP server)
-  * `-save`: save parameters to be used at the next start (generated `Fb2Kindle.json` file with last used start parameters, with some hidden)
-
-
-  * `-w`: wait for key press on finish
-  * `-c`: use compression (slow)
   * `-o`: hide detailed output
+  * `-w`: wait for key press on finish
+
+
+  * `-preview`: keep generated source files
+  * `-mailto`: - send document to email (kindle delivery, see `-save` option to configure SMTP server)
+
+
+  * `-save`: save parameters (listed below) to be used at the next start (generated `Fb2Kindle.json` file with last used start parameters, with some hidden)
+
+
+  * `-d`: delete source file after successful conversion
+  * `-c`: use compression (slow)
   * `-s`: add sequence and number to title
   * `-ni`: no images
   * `-dc`: DropCaps mode
@@ -68,7 +72,6 @@ To use:
   * `-jpeg`: save images in jpeg
   * `-ntoc`: no table of content
   * `-nch`: no chapters
-  * `-preview`: keep generated source files
   * `-u` or `-update`: update application to the latest version. You can combine it with the `-save` option to enable auto-update check on every start
 
 ### Examples:

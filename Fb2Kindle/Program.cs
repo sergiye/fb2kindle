@@ -11,11 +11,22 @@ namespace Fb2Kindle {
       Util.WriteLine(Updater.AppName + " <path> [-css <styles.css>] [-d] [-ni] [-mailto:recipient@mail.org]");
       Util.WriteLine();
       Util.WriteLine("<path>: input fb2 file or files mask (ex: *.fb2) or path to *fb2 files");
+      
       Util.WriteLine("-epub: create file in epub format");
       Util.WriteLine("-css <styles.css>: styles used in destination book");
+      Util.WriteLine("-a: all fb2 books in app folder");
+      Util.WriteLine("-r: process files in subfolders (work with -a key)");
+      Util.WriteLine("-j: join files from each folder to the single book");
+      Util.WriteLine("-o: hide detailed output");
+      Util.WriteLine("-w: wait for key press on finish");
+
+      Util.WriteLine("-preview: keep generated source files");
+      Util.WriteLine("-mailto: - send document to email (kindle delivery)");
+
+      Util.WriteLine("-save: save parameters (listed below) to be used at the next start");
+      
       Util.WriteLine("-d: delete source file after successful conversion");
       Util.WriteLine("-c: use compression (slow)");
-      Util.WriteLine("-o: hide detailed output");
       Util.WriteLine("-s: add sequence and number to title");
       Util.WriteLine("-ni: no images");
       Util.WriteLine("-dc: DropCaps mode");
@@ -23,19 +34,8 @@ namespace Fb2Kindle {
       Util.WriteLine("-jpeg: save images in jpeg");
       Util.WriteLine("-ntoc: no table of content");
       Util.WriteLine("-nch: no chapters");
-
-      Util.WriteLine("-mailto: - send document to email (kindle delivery)");
-      Util.WriteLine("-epub: send file as .epub (experimental)");
-
-      Util.WriteLine("-a: all fb2 books in app folder");
-      Util.WriteLine("-r: process files in subfolders (work with -a key)");
-      Util.WriteLine("-j: join files from each folder to the single book");
-
-      Util.WriteLine("-save: save parameters to be used at the next start");
-      Util.WriteLine("-w: wait for key press on finish");
-      
-      Util.WriteLine("-preview: keep generated source files");
       Util.WriteLine("-u or -update: update application to the latest version");
+      
       Util.WriteLine();
     }
 
@@ -55,20 +55,19 @@ namespace Fb2Kindle {
       var join = false;
       var save = false;
       var recursive = false;
-      var detailedOutput = true;
       var startedTime = DateTime.Now;
-      DefaultOptions currentSettings = null;
+      AppOptions options = null;
       try {
         ShowMainInfo();
 
         var appPath = Util.GetAppPath();
         var settingsFile = Path.ChangeExtension(Updater.CurrentFileLocation, ".json");
-        currentSettings = SerializerHelper.ReadJsonFile<DefaultOptions>(settingsFile) ?? new DefaultOptions();
+        options = new AppOptions {
+          Config = SerializerHelper.ReadJsonFile<Config>(settingsFile) ?? new Config()
+        };
         //var settingsFile = Path.ChangeExtension(Assembly.GetExecutingAssembly().Location, ".xml");
         //var currentSettings = XmlSerializerHelper.DeserializeFile<DefaultOptions>(settingsFile) ?? new DefaultOptions();
         var bookPath = string.Empty;
-        string cssStyles = null;
-        string mailTo = null;
 
         if (args.Length == 0) {
           ShowHelpText();
@@ -100,49 +99,49 @@ namespace Fb2Kindle {
             switch (args[j].ToLower().Trim()) {
               case "-u":
               case "-update":
-                currentSettings.CheckUpdates = true;
+                options.Config.CheckUpdates = true;
                 break;
               case "-preview":
-                currentSettings.CleanupMode = ConverterCleanupMode.Partial;
-                currentSettings.UseSourceAsTempFolder = true;
+                options.CleanupMode = ConverterCleanupMode.Partial;
+                options.UseSourceAsTempFolder = true;
                 break;
               case "-debug":
-                currentSettings.CleanupMode = ConverterCleanupMode.No;
-                currentSettings.UseSourceAsTempFolder = true;
+                options.CleanupMode = ConverterCleanupMode.No;
+                options.UseSourceAsTempFolder = true;
                 break;
               case "-nch":
-                currentSettings.NoChapters = true;
+                options.Config.NoChapters = true;
                 break;
               case "-dc":
-                currentSettings.DropCaps = true;
+                options.Config.DropCaps = true;
                 break;
               case "-ni":
-                currentSettings.NoImages = true;
+                options.Config.NoImages = true;
                 break;
               case "-g":
-                currentSettings.Grayscaled = true;
+                options.Config.Grayscaled = true;
                 break;
               case "-jpeg":
-                currentSettings.Jpeg = true;
+                options.Config.Jpeg = true;
                 break;
               case "-ntoc":
-                currentSettings.NoToc = true;
+                options.Config.NoToc = true;
                 break;
               case "-c":
               case "-c1":
-                currentSettings.CompressionLevel = 1;
+                options.Config.CompressionLevel = 1;
                 break;
               case "-c2":
-                currentSettings.CompressionLevel = 2;
+                options.Config.CompressionLevel = 2;
                 break;
               case "-s":
-                currentSettings.Sequence = true;
+                options.Config.AddSequenceInfo = true;
                 break;
               case "-d":
-                currentSettings.DeleteOriginal = true;
+                options.Config.DeleteOriginal = true;
                 break;
               case "-epub":
-                currentSettings.Epub = true;
+                options.Epub = true;
                 break;
               case "-save":
                 save = true;
@@ -160,7 +159,7 @@ namespace Fb2Kindle {
                 join = true;
                 break;
               case "-o":
-                detailedOutput = false;
+                options.DetailedOutput = false;
                 break;
               case "-css":
                 if (args.Length > (j + 1)) {
@@ -171,8 +170,8 @@ namespace Fb2Kindle {
                     Util.WriteLine("css styles file not found", ConsoleColor.Red);
                     return;
                   }
-                  cssStyles = File.ReadAllText(cssFile, Encoding.UTF8);
-                  if (string.IsNullOrEmpty(cssStyles)) {
+                  options.Css = File.ReadAllText(cssFile, Encoding.UTF8);
+                  if (string.IsNullOrEmpty(options.Css)) {
                     Util.WriteLine("css styles file is empty", ConsoleColor.Red);
                     return;
                   }
@@ -185,7 +184,7 @@ namespace Fb2Kindle {
                 break;
             }
             if (args[j].StartsWith("-mailto:")) {
-              mailTo = args[j].Split(':')[1];
+              options.MailTo = args[j].Split(':')[1];
             }
           }
         }
@@ -193,8 +192,7 @@ namespace Fb2Kindle {
           Util.WriteLine("No input file", ConsoleColor.Red);
           return;
         }
-        if (save) currentSettings.ToJsonFile(settingsFile);
-        //if (save) currentSettings.ToXmlFile(settingsFile, true);
+        if (save) options.Config.ToJsonFile(settingsFile);
 
         var workPath = Path.GetDirectoryName(bookPath);
         if (string.IsNullOrEmpty(workPath))
@@ -203,7 +201,7 @@ namespace Fb2Kindle {
           bookPath = Path.GetFileName(bookPath);
         if (string.IsNullOrEmpty(bookPath))
           bookPath = allBooksPattern;
-        var conv = new Convertor(currentSettings, cssStyles, detailedOutput) { MailTo = mailTo };
+        var conv = new Convertor(options);
         ProcessFolder(conv, workPath, bookPath, recursive, join);
       }
       catch (Exception ex) {
@@ -221,9 +219,8 @@ namespace Fb2Kindle {
         }
       }
         
-      if (currentSettings.CheckUpdates) {
+      if (options?.Config != null && options.Config.CheckUpdates) 
         Updater.CheckForUpdates(false);
-      }
     }
 
     private static void ProcessFolder(Convertor conv, string workPath, string searchMask, bool recursive, bool join) {
