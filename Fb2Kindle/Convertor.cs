@@ -11,6 +11,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using Ionic.Zip;
+using Ionic.Zlib;
 
 namespace Fb2Kindle {
 
@@ -391,6 +392,11 @@ namespace Fb2Kindle {
 
       var tmpBookPath = GetVersionedPath(tempDir, bookName, ".epub");
       using (var zip = new ZipFile(tmpBookPath)) {
+        zip.CompressionLevel = options.Config.CompressionLevel switch {
+          1 => CompressionLevel.BestSpeed,
+          2 => CompressionLevel.BestCompression,
+          _ => CompressionLevel.Default
+        };
         zip.AddDirectory(epubDir.FullName);
         zip.Save();
       }
