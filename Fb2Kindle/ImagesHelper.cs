@@ -6,7 +6,7 @@ using System.IO;
 using System.Linq;
 
 namespace Fb2Kindle {
-  public static class ImagesHelper {
+  internal static class ImagesHelper {
     
     internal static Bitmap MakeGrayscale3(Bitmap original) {
       var newBitmap = new Bitmap(original.Width, original.Height);
