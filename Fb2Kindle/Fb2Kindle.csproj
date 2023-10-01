@@ -30,6 +30,7 @@
     <BootstrapperEnabled>true</BootstrapperEnabled>
     <NuGetPackageImportStamp>
     </NuGetPackageImportStamp>
+    <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -54,7 +55,6 @@
     <WarningLevel>4</WarningLevel>
     <UseVSHostingProcess>false</UseVSHostingProcess>
     <Prefer32Bit>false</Prefer32Bit>
-    <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <PropertyGroup>
     <RootNamespace>Fb2Kindle</RootNamespace>
@@ -125,7 +125,7 @@
     <None Include="packages.config" />
   </ItemGroup>
   <PropertyGroup>
-    <PostBuildEvent>$(Obfuscar) obfuscar.xml</PostBuildEvent>
+    <PostBuildEvent>if $(ConfigurationName) == Release $(Obfuscar) obfuscar.xml</PostBuildEvent>
   </PropertyGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
