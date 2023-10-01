@@ -117,6 +117,8 @@
   <ItemGroup>
     <Content Include="FodyWeavers.xml" />
     <Content Include="Kindle.ico" />
+  </ItemGroup>
+  <ItemGroup Condition=" '$(Configuration)' == 'Release' ">
     <Content Include="obfuscar.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
