@@ -4,7 +4,7 @@
 ![GitHub all releases](https://img.shields.io/github/downloads/sergiye/fb2kindle/total?style=plastic)
 ![GitHub last commit](https://img.shields.io/github/last-commit/sergiye/fb2kindle?style=plastic)
 
-*Fb2Kindle is a portable, open-source book converter (for Windows).*
+*Fb2Kindle is a portable, open-source fb2 books converter into Amazon Kindle formats (mobi & epub).*
 
 ----
 
