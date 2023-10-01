@@ -1,7 +1,7 @@
 ﻿using System;
 
 namespace Fb2Kindle {
-  public enum ConverterCleanupMode {
+  internal enum ConverterCleanupMode {
     Full = 0,
     Partial = 1, //keep html files, styles & images
     No = 2 //for debug
@@ -31,15 +31,17 @@ namespace Fb2Kindle {
 
   internal class AppOptions {
     
-    public Config Config { get; set; }
+    internal Config Config { get; set; }
 
-    public ConverterCleanupMode CleanupMode { get; set; }
-    public bool UseSourceAsTempFolder { get; set; }
-    public bool Epub { get; set; }
-    public string MailTo { get; set; }
-    public string WorkingFolder { get; } = Util.GetAppPath();
-    public bool DetailedOutput { get; set; } = true;
-    public bool AddGuideLine { get; set; }
-    public string Css { get; set; }
+    internal ConverterCleanupMode CleanupMode { get; set; }
+    internal bool UseSourceAsTempFolder { get; set; }
+    internal bool Epub { get; set; }
+    internal string MailTo { get; set; }
+    internal bool DetailedOutput { get; set; } = true;
+    internal string Css { get; set; }
+    
+    internal string AppPath { get; } = Util.GetAppPath();
+    internal string TargetName { get; set; }
+    internal string TempFolder { get; set; }
   }
 }

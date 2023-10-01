@@ -2,7 +2,7 @@
 using System.Web.Script.Serialization;
 
 namespace Fb2Kindle {
-  public static class SerializerHelper {
+  internal static class SerializerHelper {
 
     internal static string ToJson(this object value) {
       var serializer = new JavaScriptSerializer();
@@ -14,11 +14,11 @@ namespace Fb2Kindle {
       return serializer.Deserialize<T>(json);
     }
 
-    public static void ToJsonFile(this object value, string filePath) {
+    internal static void ToJsonFile(this object value, string filePath) {
       File.WriteAllText(filePath, value.ToJson());
     }
 
-    public static T ReadJsonFile<T>(string fileName) where T : class {
+    internal static T ReadJsonFile<T>(string fileName) where T : class {
       T result = null;
       if (File.Exists(fileName))
         result = File.ReadAllText(fileName).FromJson<T>();
