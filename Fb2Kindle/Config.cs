@@ -14,7 +14,7 @@ namespace Fb2Kindle {
     public bool NoChapters { get; set; }
     public bool DropCaps { get; set; }
     public bool NoImages { get; set; }
-    public bool NoToc { get; set; }
+    public bool SkipToc { get; set; }
     public byte CompressionLevel { get; set; }
     public bool AddSequenceInfo { get; set; }
     public bool Grayscaled { get; set; }
@@ -27,7 +27,6 @@ namespace Fb2Kindle {
     public int SmtpTimeout { get; set; } = 100000;
 
     public bool CheckUpdates { get; set; }
-    public int NavbarDepth { get; set; } = 3;
   }
 
   internal class AppOptions {
