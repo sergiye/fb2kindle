@@ -37,7 +37,7 @@ namespace Fb2Kindle {
       options.Css = Util.GetScriptFromResource("Fb2Kindle.css");
     }
 
-    internal bool ConvertBookSequence(string[] books) {
+    internal bool ConvertBookSequence(List<string> books) {
       try {
         if (options.UseSourceAsTempFolder)
           options.TempFolder = Path.Combine(Path.GetDirectoryName(books[0]), Path.GetFileNameWithoutExtension(books[0]));
@@ -58,7 +58,7 @@ namespace Fb2Kindle {
 
         var coverDone = false;
         XElement tocEl = null;
-        for (var idx = 0; idx < books.Length; idx++) {
+        for (var idx = 0; idx < books.Count; idx++) {
           var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(books[idx]);
           if (fileNameWithoutExtension != null) {
             var fileName = fileNameWithoutExtension.Trim();
@@ -69,7 +69,7 @@ namespace Fb2Kindle {
             if (idx == 0) {
               options.TargetName = fileName;
               //create instances
-              opfFile = GetEmptyPackage(book, options.Config.AddSequenceInfo, books.Length > 1);
+              opfFile = GetEmptyPackage(book, books.Count > 1);
               AddPackItem("ncx", NcxName, "application/x-dtbncx+xml", false);
             }
 
@@ -114,7 +114,7 @@ namespace Fb2Kindle {
           }
         }
 
-        CreateNcxFile(tocEl, options.Config.NoToc, books.Length > 1);
+        CreateNcxFile(tocEl, options.Config.NoToc, books.Count > 1);
 
         if (!options.Config.NoToc) {
           SaveXmlToFile(tocEl, $@"{options.TempFolder}\toc.html");
@@ -133,11 +133,13 @@ namespace Fb2Kindle {
         if (result) {
           if (!string.IsNullOrWhiteSpace(options.MailTo) && SendBookByMail(tmpBookPath))
             File.Delete(tmpBookPath);
-          else
-            File.Move(tmpBookPath,
-              GetVersionedPath(Path.GetDirectoryName(books[0]), options.TargetName, Path.GetExtension(tmpBookPath)));
-          if (!options.DetailedOutput)
-            Util.WriteLine("(OK)", ConsoleColor.Green);
+          else {
+            var targetFilePath = GetVersionedPath(Path.GetDirectoryName(books[0]), options.TargetName,
+              Path.GetExtension(tmpBookPath)); 
+            File.Move(tmpBookPath,targetFilePath);
+            Util.Write("Created: ");
+            Util.WriteLine(targetFilePath, ConsoleColor.DarkCyan);
+          }
         }
     
         if (result && options.Config.DeleteOriginal) {
@@ -177,7 +179,7 @@ namespace Fb2Kindle {
     }
 
     internal bool ConvertBook(string bookPath) {
-      return ConvertBookSequence(new[] { bookPath });
+      return ConvertBookSequence(new List<string> { bookPath });
     }
 
     #endregion public
@@ -223,7 +225,7 @@ namespace Fb2Kindle {
           var navPoint = navMap;
           var a = li.Elements("a").FirstOrDefault();
           if (a != null) {
-            if (depth == 3) {
+            if (depth == options.Config.NavbarDepth) {
               navPoint = AddNcxItem(navMap, playOrder++, a.Value, (string) a.Attribute("href"));
             }
             else {
@@ -643,7 +645,7 @@ namespace Fb2Kindle {
       return Util.Value(book.Elements("description").Elements("title-info").Elements("book-title"), "Книга").Trim();
     }
 
-    private static XElement GetEmptyPackage(XElement book, bool addSequenceToTitle, bool useSequenceNameOnly = false) {
+    private XElement GetEmptyPackage(XElement book, bool useSequenceNameOnly = false) {
       var opfFile = new XElement("package");
       opfFile.Add(new XAttribute("unique-identifier", "DOI"));
       opfFile.Add(new XAttribute(XNamespace.Get("http://www.w3.org/2000/xmlns/").GetName("fo"), "http://www.w3.org/1999/XSL/Format"));
@@ -667,12 +669,12 @@ namespace Fb2Kindle {
         bookTitle = string.IsNullOrEmpty(seqName) ? bookTitle : seqName;
       }
       else {
-        if (addSequenceToTitle)
+        if (options.Config.AddSequenceInfo)
           bookTitle = $"{seqName} {Util.AttributeValue(book.Elements("description").Elements("title-info").Elements("sequence"), "number")} {bookTitle}";
       }
       content.Add(bookTitle);
-      Util.Write("Target book title: ", ConsoleColor.DarkYellow);
-      Util.WriteLine(bookTitle, ConsoleColor.DarkCyan);
+      Util.Write("Target document title: ");
+      Util.WriteLine(bookTitle, ConsoleColor.Green);
 
       linkEl.Add(content);
       content = new XElement(dc + "Creator");

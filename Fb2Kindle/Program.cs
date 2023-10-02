@@ -1,50 +1,53 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Text;
 
 namespace Fb2Kindle {
+  
   static class Program {
+    
     private static void ShowHelpText() {
-      Util.WriteLine();
-      Util.WriteLine(Updater.AppName + " <path> [-css <styles.css>] [-d] [-ni] [-mailto:recipient@mail.org]");
-      Util.WriteLine();
-      Util.WriteLine("<path>: input fb2 file or files mask (ex: *.fb2) or path to *fb2 files");
+      Util.WriteLine($"Usage: {Updater.AppName} [options]");
+      Util.WriteLine("Available options:");
       
-      Util.WriteLine("-epub: create file in epub format");
-      Util.WriteLine("-css <styles.css>: styles used in destination book");
-      Util.WriteLine("-a: all fb2 books in app folder");
-      Util.WriteLine("-r: process files in subfolders (work with -a key)");
-      Util.WriteLine("-j: join files from each folder to the single book");
-      Util.WriteLine("-o: hide detailed output");
-      Util.WriteLine("-w: wait for key press on finish");
-
-      Util.WriteLine("-preview: keep generated source files");
-      Util.WriteLine("-mailto: - send document to email (kindle delivery)");
-
-      Util.WriteLine("-save: save parameters (listed below) to be used at the next start");
+      Util.WriteLine("\t<path>: input fb2 file path or files mask (ex: *.fb2) or path to .fb2 files");
+      Util.WriteLine("\t-epub: create file in epub format");
+      Util.WriteLine("\t-css <styles.css>: styles used in destination book");
+      Util.WriteLine("\t-a: process all .fb2 books in app folder");
+      Util.WriteLine("\t-r: process files in subfolders (work with -a key)");
+      Util.WriteLine("\t-j: join files from each folder to the single book");
+      Util.WriteLine("\t-o: hide detailed output");
+      Util.WriteLine("\t-w: wait for key press on finish");
+      Util.WriteLine("\t-mailto <user@mail.org>: send document to email (kindle send-by-email delivery, see `-save` option to configure SMTP server)");
+      Util.WriteLine($"\t-save: save parameters (listed below) to be used at the next start (`{Updater.AppName}.json` file)");
+      // Util.WriteLine("\t-preview: keep generated source files");
+      // Util.WriteLine("\t-debug: keep all generated files");
+      Util.WriteLine();
       
-      Util.WriteLine("-d: delete source file after successful conversion");
-      Util.WriteLine("-c: use compression (slow)");
-      Util.WriteLine("-s: add sequence and number to title");
-      Util.WriteLine("-ni: no images");
-      Util.WriteLine("-dc: DropCaps mode");
-      Util.WriteLine("-g: grayscale images");
-      Util.WriteLine("-jpeg: save images in jpeg");
-      Util.WriteLine("-ntoc: no table of content");
-      Util.WriteLine("-nch: no chapters");
-      Util.WriteLine("-u or -update: update application to the latest version");
+      Util.WriteLine("\t-d: delete source file after successful conversion");
+      Util.WriteLine("\t-u or -update: update application to the latest version. You can combine it with the `-save` option to enable auto-update on every run");
+      Util.WriteLine("\t-s: add sequence and number to the document title");
+      Util.WriteLine("\t-c (same as -c1) or -c2: use compression (slow)");
+      Util.WriteLine("\t-ni: no images");
+      Util.WriteLine("\t-dc: DropCaps mode");
+      Util.WriteLine("\t-g: grayscale images");
+      Util.WriteLine("\t-jpeg: save images in jpeg");
+      Util.WriteLine("\t-ntoc: no table of content");
+      Util.WriteLine("\t-nch: no chapters");
+      // Util.WriteLine("\t-depth <value>: set kindle chapters navigation menu fold level (default is 3)");
       
       Util.WriteLine();
     }
 
     private static void ShowMainInfo() {
       //Console.Clear();
-      Util.WriteLine();
-      Util.WriteLine($"{Updater.AppName} Version: {Updater.CurrentVersion}", ConsoleColor.White);
-      if (Updater.AppTitle != null)
-        Util.WriteLine(Updater.AppTitle, ConsoleColor.White);
+      Util.Write($"{Updater.AppName} {(Environment.Is64BitProcess ? "x64" : "x32")} version: ");
+      Util.Write(Updater.CurrentVersion, ConsoleColor.DarkCyan);
+#if DEBUG
+      Util.Write(" (DEBUG version) ", ConsoleColor.DarkYellow);
+#endif
       Util.WriteLine();
     }
 
@@ -56,6 +59,7 @@ namespace Fb2Kindle {
       var save = false;
       var recursive = false;
       var startedTime = DateTime.Now;
+      var processedFiles = 0;
       AppOptions options = null;
       try {
         ShowMainInfo();
@@ -71,7 +75,7 @@ namespace Fb2Kindle {
 
         if (args.Length == 0) {
           ShowHelpText();
-          Util.Write("Process all files with default parameters (-a -r -w)? Press 'Enter' to continue: ", ConsoleColor.White);
+          Util.Write("Process all local files (-a) recursively (-r) with default parameters?\nPress 'Enter' to continue, or any other key to exit...", ConsoleColor.White);
           if (Console.ReadKey().Key != ConsoleKey.Enter)
             return;
           wait = true;
@@ -97,17 +101,12 @@ namespace Fb2Kindle {
           Console.WriteLine($"Executing '{Updater.CurrentFileLocation}' with parameters: '{string.Join(" ", args)}'");
           for (var j = 0; j < args.Length; j++) {
             switch (args[j].ToLower().Trim()) {
+
+              #region config
+              
               case "-u":
               case "-update":
                 options.Config.CheckUpdates = true;
-                break;
-              case "-preview":
-                options.CleanupMode = ConverterCleanupMode.Partial;
-                options.UseSourceAsTempFolder = true;
-                break;
-              case "-debug":
-                options.CleanupMode = ConverterCleanupMode.No;
-                options.UseSourceAsTempFolder = true;
                 break;
               case "-nch":
                 options.Config.NoChapters = true;
@@ -140,29 +139,21 @@ namespace Fb2Kindle {
               case "-d":
                 options.Config.DeleteOriginal = true;
                 break;
-              case "-epub":
-                options.Epub = true;
+              case "-depth":
+                if (args.Length > j + 1) {
+                  if (int.TryParse(args[j + 1], out var value)) {
+                    options.Config.NavbarDepth = value;
+                    j++;
+                  }  
+                }
                 break;
-              case "-save":
-                save = true;
-                break;
-              case "-w":
-                wait = true;
-                break;
-              case "-r":
-                recursive = true;
-                break;
-              case "-a":
-                bookPath = allBooksPattern;
-                break;
-              case "-j":
-                join = true;
-                break;
-              case "-o":
-                options.DetailedOutput = false;
-                break;
+              
+              #endregion
+              
+              #region options
+              
               case "-css":
-                if (args.Length > (j + 1)) {
+                if (args.Length > j + 1) {
                   var cssFile = args[j + 1];
                   if (!File.Exists(cssFile))
                     cssFile = appPath + "\\" + cssFile;
@@ -178,13 +169,50 @@ namespace Fb2Kindle {
                   j++;
                 }
                 break;
+              case "-mailto":
+                if (args.Length > j + 1) options.MailTo = args[++j];
+                break;
+              case "-preview":
+                options.CleanupMode = ConverterCleanupMode.Partial;
+                options.UseSourceAsTempFolder = true;
+                break;
+              case "-debug":
+                options.CleanupMode = ConverterCleanupMode.No;
+                options.UseSourceAsTempFolder = true;
+                break;
+              case "-epub":
+                options.Epub = true;
+                break;
+              case "-o":
+                options.DetailedOutput = false;
+                break;
+
+              #endregion
+              
+              #region behavior
+              
+              case "-save":
+                save = true;
+                break;
+              case "-w":
+                wait = true;
+                break;
+              case "-r":
+                recursive = true;
+                break;
+              case "-a":
+                bookPath = allBooksPattern;
+                break;
+              case "-j":
+                join = true;
+                break;
+              
               default:
                 if (j == 0)
                   bookPath = args[j];
                 break;
-            }
-            if (args[j].StartsWith("-mailto:")) {
-              options.MailTo = args[j].Split(':')[1];
+              
+              #endregion
             }
           }
         }
@@ -202,19 +230,25 @@ namespace Fb2Kindle {
         if (string.IsNullOrEmpty(bookPath))
           bookPath = allBooksPattern;
         var conv = new Convertor(options);
-        ProcessFolder(conv, workPath, bookPath, recursive, join);
+        processedFiles = ProcessFolder(conv, workPath, bookPath, recursive, join);
       }
       catch (Exception ex) {
         Util.WriteLine(ex.Message, ConsoleColor.Red);
       }
       finally {
-        var timeWasted = DateTime.Now - startedTime;
-        Util.WriteLine();
-        Util.WriteLine($"Time wasted: {timeWasted:G}", ConsoleColor.White);
+        if (processedFiles > 0) {
+          var timeWasted = DateTime.Now - startedTime;
+          Util.Write($"\nProcessed ", ConsoleColor.White);
+          Util.Write($"{processedFiles}", ConsoleColor.Green);
+          Util.Write(" files in: ", ConsoleColor.White);
+          Util.WriteLine($"{timeWasted:G}", ConsoleColor.Green);
+        }
+        else {
+          Util.WriteLine("\nNo files processed", ConsoleColor.DarkYellow);
+        }
 
         if (wait) {
-          Util.WriteLine();
-          Util.WriteLine("Press any key to continue...", ConsoleColor.White);
+          Util.WriteLine("\nPress any key to continue...", ConsoleColor.White);
           Console.ReadKey();
         }
       }
@@ -223,20 +257,27 @@ namespace Fb2Kindle {
         Updater.CheckForUpdates(false);
     }
 
-    private static void ProcessFolder(Convertor conv, string workPath, string searchMask, bool recursive, bool join) {
-      var files = new List<string>();
-      files.AddRange(Directory.GetFiles(workPath, searchMask, SearchOption.TopDirectoryOnly));
+    private static int ProcessFolder(Convertor conv, string workPath, string searchMask, bool recursive, bool join) {
+      var processedFiles = 0;
+      var files = Directory.GetFiles(workPath, searchMask, SearchOption.TopDirectoryOnly).ToList();
       if (files.Count > 0) {
         files.Sort();
-        if (join)
-          conv.ConvertBookSequence(files.ToArray());
-        else
-          foreach (var file in files)
+        if (join) {
+          conv.ConvertBookSequence(files);
+          processedFiles += files.Count;
+        }
+        else {
+          foreach (var file in files) {
             conv.ConvertBook(file);
+            processedFiles++;
+          }
+        }
       }
-      if (!recursive) return;
-      foreach (var folder in Directory.GetDirectories(workPath))
-        ProcessFolder(conv, folder, searchMask, true, join);
+
+      if (recursive)
+        processedFiles += Directory.GetDirectories(workPath)
+          .Sum(folder => ProcessFolder(conv, folder, searchMask, true, join));
+      return processedFiles;
     }
   }
 }
