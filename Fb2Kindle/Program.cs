@@ -36,7 +36,6 @@ namespace Fb2Kindle {
       Util.WriteLine("\t-jpeg: save images in jpeg");
       Util.WriteLine("\t-ntoc: no table of content");
       Util.WriteLine("\t-nch: no chapters");
-      // Util.WriteLine("\t-depth <value>: set kindle chapters navigation menu fold level (default is 3)");
       
       Util.WriteLine();
     }
@@ -124,7 +123,7 @@ namespace Fb2Kindle {
                 options.Config.Jpeg = true;
                 break;
               case "-ntoc":
-                options.Config.NoToc = true;
+                options.Config.SkipToc = true;
                 break;
               case "-c":
               case "-c1":
@@ -138,14 +137,6 @@ namespace Fb2Kindle {
                 break;
               case "-d":
                 options.Config.DeleteOriginal = true;
-                break;
-              case "-depth":
-                if (args.Length > j + 1) {
-                  if (int.TryParse(args[j + 1], out var value)) {
-                    options.Config.NavbarDepth = value;
-                    j++;
-                  }  
-                }
                 break;
               
               #endregion
