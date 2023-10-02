@@ -43,5 +43,6 @@ namespace Fb2Kindle {
     internal string AppPath { get; } = Util.GetAppPath();
     internal string TargetName { get; set; }
     internal string TempFolder { get; set; }
+    internal string DocumentTitle { get; set; }
   }
 }

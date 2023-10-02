@@ -144,5 +144,14 @@ namespace Fb2Kindle {
         Console.Write(message);
       Console.ResetColor();
     }
+
+    // internal static string GetValidFileName(string origin) {
+    //   if (string.IsNullOrWhiteSpace(origin))
+    //     throw new ArgumentException("File name can not be empty.");
+    //   foreach (var c in Path.GetInvalidFileNameChars()) { 
+    //     origin = origin.Replace(c, '-'); 
+    //   }
+    //   return origin;
+    // }
   }
 }
