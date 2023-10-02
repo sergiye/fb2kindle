@@ -225,7 +225,7 @@ namespace Fb2Kindle {
       var navMap = new XElement("navMap", "");
       AddNcxItem(navMap, 0, "Описание", "book.html#it");
       var playOrder = 2;
-      AddTocListItems(tocItem, navMap, ref playOrder);
+      AddTocListItems(tocItem, navMap, ref playOrder, 1);
       if (!options.Config.SkipToc)
         AddNcxItem(navMap, 1, "Содержание", "toc.html#toc");
       ncx.Add(navMap);
@@ -233,14 +233,14 @@ namespace Fb2Kindle {
       ncx.RemoveAll();
     }
 
-    private void AddTocListItems(TocItem tocItem, XElement navMap, ref int playOrder) {
+    private void AddTocListItems(TocItem tocItem, XElement navMap, ref int playOrder, int depth) {
       foreach (var subItem in tocItem.SubItems) {
         var navPoint = navMap;
-        if (subItem.IsLastCollapsibleLevel)
+        if (depth > 2 && subItem.IsLastCollapsibleLevel)
           navPoint = AddNcxItem(navMap, playOrder++, subItem.Name, subItem.Href);
         else
           AddNcxItem(navMap, playOrder++, subItem.Name, subItem.Href);
-        AddTocListItems(subItem, navPoint, ref playOrder);
+        AddTocListItems(subItem, navPoint, ref playOrder, depth + 1);
       }
     }
 
@@ -406,6 +406,7 @@ namespace Fb2Kindle {
       File.WriteAllText($"{epubDir.FullName}/META-INF/container.xml", @"<?xml version=""1.0"" encoding=""UTF-8""?><container xmlns=""urn:oasis:names:tc:opendocument:xmlns:container"" version=""1.0""><rootfiles><rootfile full-path=""OPS/content.opf"" media-type=""application/oebps-package+xml""/></rootfiles></container>");
       File.WriteAllText($"{epubDir.FullName}/mimetype", "application/epub+zip");
 
+      // var tempFileName = Util.GetValidFileName(options.DocumentTitle);
       var tmpBookPath = GetVersionedPath(options.TempFolder, options.TargetName, ".epub");
       using (var zip = new ZipFile(tmpBookPath)) {
         zip.CompressionLevel = options.Config.CompressionLevel switch {
@@ -477,8 +478,8 @@ namespace Fb2Kindle {
                    new MailAddress(options.MailTo))) {
             // message.BodyEncoding = message.SubjectEncoding = Encoding.UTF8;
             message.IsBodyHtml = false;
-            message.Subject = options.TargetName;
-            message.Body = "Hello! Please, check book(s) attached";
+            message.Subject = options.DocumentTitle; //options.TargetName;
+            message.Body = $"Hello! Please, check '{options.TargetName}' file with '{options.DocumentTitle}' book attached";
 
             using (var att = new Attachment(tmpBookPath)) {
               message.Attachments.Add(att);
@@ -671,6 +672,8 @@ namespace Fb2Kindle {
           bookTitle = $"{seqName} {Util.AttributeValue(book.Elements("description").Elements("title-info").Elements("sequence"), "number")} {bookTitle}";
       }
       content.Add(bookTitle);
+      
+      options.DocumentTitle = bookTitle;
       Util.Write("Target document title: ");
       Util.WriteLine(bookTitle, ConsoleColor.Green);
 
