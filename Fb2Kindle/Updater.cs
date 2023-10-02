@@ -27,25 +27,24 @@ namespace Fb2Kindle {
     private static readonly string selfFileName;
 
     internal static readonly string AppName;
-    internal static readonly string AppTitle;
     internal static readonly string CurrentVersion;
     internal static readonly string CurrentFileLocation;
 
     static Updater() {
       var asm = Assembly.GetExecutingAssembly();
       AppName = asm.GetName().Name;
-      AppTitle = GetAttribute<AssemblyTitleAttribute>(asm)?.Title;
+      // AppTitle = GetAttribute<AssemblyTitleAttribute>(asm)?.Title;
       CurrentVersion = asm.GetName().Version.ToString(3);
       CurrentFileLocation = asm.Location;
       selfFileName = Path.GetFileName(CurrentFileLocation);
     }
 
-    private static T GetAttribute<T>(ICustomAttributeProvider assembly, bool inherit = false) where T : Attribute {
-      foreach (var o in assembly.GetCustomAttributes(typeof(T), inherit))
-        if (o is T attribute)
-          return attribute;
-      return null;
-    }
+    // private static T GetAttribute<T>(ICustomAttributeProvider assembly, bool inherit = false) where T : Attribute {
+    //   foreach (var o in assembly.GetCustomAttributes(typeof(T), inherit))
+    //     if (o is T attribute)
+    //       return attribute;
+    //   return null;
+    // }
 
     private static string GetJsonData(string uri, int timeout = 10, string method = "GET") {
       var request = (HttpWebRequest) WebRequest.Create(uri);

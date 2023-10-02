@@ -27,6 +27,7 @@ namespace Fb2Kindle {
     public int SmtpTimeout { get; set; } = 100000;
 
     public bool CheckUpdates { get; set; }
+    public int NavbarDepth { get; set; } = 3;
   }
 
   internal class AppOptions {
