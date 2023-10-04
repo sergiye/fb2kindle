@@ -406,8 +406,8 @@ namespace Fb2Kindle {
       File.WriteAllText($"{epubDir.FullName}/META-INF/container.xml", @"<?xml version=""1.0"" encoding=""UTF-8""?><container xmlns=""urn:oasis:names:tc:opendocument:xmlns:container"" version=""1.0""><rootfiles><rootfile full-path=""OPS/content.opf"" media-type=""application/oebps-package+xml""/></rootfiles></container>");
       File.WriteAllText($"{epubDir.FullName}/mimetype", "application/epub+zip");
 
-      // var tempFileName = Util.GetValidFileName(options.DocumentTitle);
-      var tmpBookPath = GetVersionedPath(options.TempFolder, options.TargetName, ".epub");
+      var tmpBookPath = GetVersionedPath(options.TempFolder, Util.GetValidFileName(options.DocumentTitle), ".epub");
+      // var tmpBookPath = GetVersionedPath(options.TempFolder, options.TargetName, ".epub");
       using (var zip = new ZipFile(tmpBookPath)) {
         zip.CompressionLevel = options.Config.CompressionLevel switch {
           1 => CompressionLevel.Default,
@@ -434,14 +434,15 @@ namespace Fb2Kindle {
         }
       }
 
-      var args = $"\"{options.TempFolder}\\content.opf\" -c{options.Config.CompressionLevel} -o \"{options.TargetName}.mobi\"";
+      var outputFileName = Util.GetValidFileName(options.DocumentTitle); //options.TargetName
+      var args = $"\"{options.TempFolder}\\content.opf\" -c{options.Config.CompressionLevel} -o \"{outputFileName}.mobi\"";
       var res = Util.StartProcess(kindleGenPath, args, options.DetailedOutput);
       if (res == 2) {
         Util.WriteLine("Error converting to mobi", ConsoleColor.Red);
         return null;
       }
       
-      return $"{options.TempFolder}\\{options.TargetName}.mobi";
+      return $"{options.TempFolder}\\{outputFileName}.mobi";
     }
 
     private static string GetVersionedPath(string filePath, string fileName = null, string fileExtension = null) {
@@ -479,7 +480,8 @@ namespace Fb2Kindle {
             // message.BodyEncoding = message.SubjectEncoding = Encoding.UTF8;
             message.IsBodyHtml = false;
             message.Subject = options.DocumentTitle; //options.TargetName;
-            message.Body = $"Hello! Please, check '{options.TargetName}' file with '{options.DocumentTitle}' book attached";
+            var fileName = Path.GetFileName(tmpBookPath); //options.TargetName
+            message.Body = $"Hello! Please, check '{fileName}' file with '{options.DocumentTitle}' book attached";
 
             using (var att = new Attachment(tmpBookPath)) {
               message.Attachments.Add(att);
