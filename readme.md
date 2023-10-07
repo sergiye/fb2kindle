@@ -25,7 +25,7 @@ Features include:
 # Build
 
 **The recommended way to get the program is BUILD from source**
-- Install git, Visual Studio 2017 (or higher)
+- Install git, Visual Studio (2022 or higher)
 - `git clone https://github.com/sergiye/fb2kindle.git`
 - build
 
