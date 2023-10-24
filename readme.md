@@ -1,5 +1,7 @@
 # Fb2Kindle
 
+[![Stars](https://img.shields.io/github/stars/sergiye/fb2kindle?style=flat-square)](https://github.com/sergiye/fb2kindle/stargazers)
+[![Fork](https://img.shields.io/github/forks/sergiye/fb2kindle?style=flat-square)](https://github.com/sergiye/fb2kindle/fork)
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/sergiye/fb2kindle?style=plastic)
 ![GitHub all releases](https://img.shields.io/github/downloads/sergiye/fb2kindle/total?style=plastic)
 ![GitHub last commit](https://img.shields.io/github/last-commit/sergiye/fb2kindle?style=plastic)
