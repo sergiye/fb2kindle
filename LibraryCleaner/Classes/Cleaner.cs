@@ -234,7 +234,7 @@ JOIN archives a on a.id=b.id_archive and b.file_name is not NULL and b.file_name
                 var info = dbArchiveFiles.Find(f => f.file_name == zipEntry.FileName);
                 if (info == null) continue;
 
-                var created = CalcCreatedDate(zipEntry.LastModified);
+                var created = CalcCreatedDate(zipEntry.LastModified, false);
                 if (created < 0)
                   created = info.created;
                 var size = zipEntry.UncompressedSize;
@@ -373,17 +373,17 @@ delete from fts_book where docid not in (select DISTINCT id FROM books);");
         }
         else {
           var fi = new BookFileInfo(zipFile, 0, 0, archiveName, md5Sum, zipEntry.UncompressedSize,
-            CalcCreatedDate(zipEntry.LastModified));
+            CalcCreatedDate(zipEntry.LastModified, true));
           allHashes.Add(md5Sum, fi);
           filesFound.Add(fi);
         }
       }
     }
 
-    private int CalcCreatedDate(DateTime realDate) {
-      return 1 + realDate.Month * 100 +
-             (realDate.Year - 2000) * 10000; //округлить до месяца, порядок добавления виден по Id
-      //return realDate.Day + realDate.Month * 100 + (realDate.Year-2000) * 10000;
+    private int CalcCreatedDate(DateTime realDate, bool useFirstDayOfMonth) {
+      return useFirstDayOfMonth
+        ? 1 + realDate.Month * 100 + (realDate.Year - 2000) * 10000
+        : realDate.Day + realDate.Month * 100 + (realDate.Year - 2000) * 10000;
     }
 
     private string CalcFileHash(ZipEntry zipEntry) {
