@@ -234,7 +234,7 @@ JOIN archives a on a.id=b.id_archive and b.file_name is not NULL and b.file_name
                 var info = dbArchiveFiles.Find(f => f.file_name == zipEntry.FileName);
                 if (info == null) continue;
 
-                var created = CalcCreatedDate(zipEntry.LastModified, false);
+                var created = CalcCreatedDate(zipEntry.LastModified, true);
                 if (created < 0)
                   created = info.created;
                 var size = zipEntry.UncompressedSize;
