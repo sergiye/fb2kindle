@@ -1,15 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
+﻿using System.Collections.Generic;
 
 namespace jail.Models
 {
     public class BookFavoritesInfo: BookInfo
     {
         public long UserId { get; set; }
-
-        [DataType(DataType.Date), DisplayFormat(DataFormatString = "{0:yyyy-MM-dd HH:mm:ss}", ApplyFormatInEditMode = true)]
-        public DateTime DateAdded { get; set; }
     }
 
     public class BookFavoritesViewModel

@@ -29,9 +29,9 @@ namespace jail {
             var sql = @"select b.id, b.title, b.id_archive IdArchive, b.file_name FileName, b.file_size FileSize, b.md5sum, 
 b.created, b.lang, ";
             if (userId.HasValue && userId.Value > 0)
-                sql += " f.Id FavoriteId,";
+                sql += " f.Id FavoriteId, f.DateAdded FavoriteDateAdded,";
             else
-                sql += " 0 FavoriteId,";
+                sql += " 0 FavoriteId, null FavoriteDateAdded,";
             sql += "s.*, bs.number BookOrder, a.id, a.full_name FullName, a.first_name FirstName, a.middle_name MiddleName, a.last_name LastName from books b";
             if (userId.HasValue && userId.Value > 0)
                 sql += " left join favorites f on f.bookid=b.id and f.UserId=@userId";
@@ -50,9 +50,9 @@ left join sequences s on s.id=bs.id_seq ";
             var sql = @"select b.id, b.title, b.id_archive IdArchive, b.file_name FileName, b.file_size FileSize, b.md5sum, 
 b.created, b.lang, ";
             if (userId.HasValue && userId.Value > 0)
-                sql += " f.Id FavoriteId,";
+                sql += " f.Id FavoriteId, f.DateAdded FavoriteDateAdded, ";
             else
-                sql += " 0 FavoriteId,";
+                sql += " 0 FavoriteId, null FavoriteDateAdded, ";
             sql += "s.*, bs.number BookOrder, a.id, a.full_name FullName, a.first_name FirstName, a.middle_name MiddleName, a.last_name LastName from books b";
             if (userId.HasValue && userId.Value > 0)
                 sql += " left join favorites f on f.bookid=b.id and f.UserId=@userId";
@@ -116,9 +116,9 @@ order by s.value LIMIT 100", new {id = bookId});
 
             var sql = @"select b.id, b.title, b.id_archive IdArchive, b.file_name FileName, b.file_size FileSize, b.md5sum,
   b.created, b.lang, bs.number BookOrder,";
-            sql += userId.HasValue && userId.Value > 0 ? " f.Id FavoriteId," : " 0 FavoriteId,";
+            sql += userId > 0 ? " f.Id FavoriteId, f.DateAdded FavoriteDateAdded," : " 0 FavoriteId, null FavoriteDateAdded,";
             sql += @" a.id, a.full_name FullName, a.first_name FirstName, a.middle_name MiddleName, a.last_name LastName from books b";
-            if (userId.HasValue && userId.Value > 0)
+            if (userId > 0)
                 sql += " left join favorites f on f.bookid=b.id and f.UserId=@userId";
             sql += @" join authors a on a.id=b.id_author
 left join bookseq bs on bs.id_book=b.id
@@ -135,7 +135,7 @@ order by bs.number, b.title, b.created DESC";
             if (author == null) return null;
             var sql = @"select b.id, b.title, b.id_archive IdArchive, b.file_name FileName, b.file_size FileSize, b.md5sum,
   b.created, b.lang, ";
-            sql += userId.HasValue && userId.Value > 0 ? " f.Id FavoriteId," : " 0 FavoriteId,";
+            sql += userId.HasValue && userId.Value > 0 ? " f.Id FavoriteId, f.DateAdded FavoriteDateAdded," : " 0 FavoriteId, null FavoriteDateAdded,";
             sql += @" s.*, bs.number BookOrder, 
   a.id, a.full_name FullName, a.first_name FirstName, a.middle_name MiddleName, a.last_name LastName from books b";
             if (userId.HasValue && userId.Value > 0)
@@ -227,7 +227,7 @@ where b.id in @ids";
 
             //Fetch books
             sql = @"select b.id, b.title, b.id_archive IdArchive, b.file_name FileName, b.file_size FileSize,
-            b.md5sum, b.created, b.lang, f.id FavoriteId, f.UserId, f.DateAdded,
+            b.md5sum, b.created, b.lang, f.id FavoriteId, f.UserId, f.DateAdded FavoriteDateAdded,
             s.*,
             bs.number BookOrder,
                 a.id, a.full_name FullName, a.first_name FirstName, a.middle_name MiddleName, a.last_name LastName ";

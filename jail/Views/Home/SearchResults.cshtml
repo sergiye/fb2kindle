@@ -83,7 +83,7 @@
         @if (user != null)
         {
             <td>
-                <a href="#" onclick="ToggleFavorite(@item.Id, '@item.Title');" class="btn btn-default" title="@string.Format("{0} favorite", item.FavoriteId > 0 ? "Remove" : "Add")">
+                <a href="#" onclick="ToggleFavorite(@item.Id, '@item.Title');" class="btn btn-default" title="@(item.FavoriteId > 0 ? "Added " + item.FavoriteDateAdded : "Add favorite")">
                     <span id="@string.Format("Fav{0}", item.Id)"
                           class='red glyphicon @string.Format("glyphicon-heart{0}", item.FavoriteId > 0 ? "" : "-empty")'></span>
                 </a>
