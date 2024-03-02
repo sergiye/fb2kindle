@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Globalization;
 
 namespace jail.Models {
@@ -15,6 +16,9 @@ namespace jail.Models {
         public string Lang { get; set; }
         public int BookOrder { get; set; }
         public long FavoriteId { get; set; }
+
+        [DataType(DataType.Date), DisplayFormat(DataFormatString = "{0:yyyy-MM-dd HH:mm:ss}", ApplyFormatInEditMode = true)]
+        public DateTime? FavoriteDateAdded { get; set; }
 
         public string CoverImage { get; set; }
 
