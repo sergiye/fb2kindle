@@ -8,6 +8,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using Ionic.Zip;
+using Ionic.Zlib;
 
 namespace LibraryCleaner {
 
@@ -517,16 +518,21 @@ delete from fts_book where docid not in (select DISTINCT id FROM books);");
             wc.DownloadFile("http://flibusta.is/sql/lib.md5.txt.gz", downloadedFilePath);
           if (File.Exists(downloadedFilePath))
             try {
-              //todo: unpack
-              Process.Start(new ProcessStartInfo("7za", "e lib.md5.txt.gz") {
-                CreateNoWindow = true,
-                UseShellExecute = false,
-                WorkingDirectory = appPath
-              })?.WaitForExit();
-              // using (var zip = ZipFile.Read(downloadedFilePath)) {
-              //   var extractPath = Path.GetDirectoryName(fileName);
-              //   zip.ExtractSelectedEntries("name = lib.md5.txt", "", extractPath, ExtractExistingFileAction.Throw);
-              // }
+
+              // Process.Start(new ProcessStartInfo("7za", "e lib.md5.txt.gz") {
+              //   CreateNoWindow = true,
+              //   UseShellExecute = false,
+              //   WorkingDirectory = appPath
+              // })?.WaitForExit();
+
+              using (var originalFileStream = File.OpenRead(downloadedFilePath)) {
+                using (var decompressedFileStream = File.Create(appPath + "\\lib.md5.txt")) {
+                  using (var decompressionStream = new GZipStream(originalFileStream, CompressionMode.Decompress)) {
+                    decompressionStream.CopyTo(decompressedFileStream);
+                  }
+                }
+              }
+
               deleteFileWithDeletedBooksIds = true;
             }
             finally {
