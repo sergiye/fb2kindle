@@ -8,7 +8,7 @@ using System.Windows.Forms;
 
 namespace LibraryCleaner {
   public partial class MainForm : Form {
-    private readonly Cleaner _cleaner;
+    private readonly Cleaner cleaner;
     // private readonly string _logFileName;
 
     public MainForm() {
@@ -30,8 +30,8 @@ namespace LibraryCleaner {
         Text = $"{mainTitleText}; Now: {build}.{revision}";
       };
 
-      _cleaner = new Cleaner(null);
-      _cleaner.OnStateChanged += AddToLog;
+      cleaner = new Cleaner(null);
+      cleaner.OnStateChanged += AddToLog;
 
       clsGenres.Items.Clear();
       var genres = GenresListContainer.GetDefaultItems();
@@ -39,9 +39,9 @@ namespace LibraryCleaner {
         clsGenres.Items.Add(genre, genre.Selected);
       }
 
-      cbxUpdateHashes.Checked = _cleaner.UpdateHashInfo;
-      cbxRemoveDeleted.Checked = _cleaner.RemoveDeleted;
-      cbxRemoveMissedArchives.Checked = _cleaner.RemoveMissingArchivesFromDb;
+      cbxUpdateHashes.Checked = cleaner.UpdateHashInfo;
+      cbxRemoveDeleted.Checked = cleaner.RemoveDeleted;
+      cbxRemoveMissedArchives.Checked = cleaner.RemoveMissingArchivesFromDb;
 
       txtDatabase.Text = @"d:\media\library\myrulib_flibusta\myrulib.db";
       // txtLog.Font = new Font("Verdana", 10, FontStyle.Regular);
@@ -120,26 +120,26 @@ namespace LibraryCleaner {
         try {
           //get selected genres list
           var genresToRemove = clsGenres.CheckedItems.Cast<Genres>().Select(s => s.Code).ToArray();
-          _cleaner.GenresToRemove = genresToRemove;
-          _cleaner.DatabasePath = txtDatabase.Text;
-          _cleaner.ArchivesOutputPath = txtOutput.Text;
-          _cleaner.UpdateHashInfo = cbxUpdateHashes.Checked;
-          _cleaner.RemoveDeleted = cbxRemoveDeleted.Checked;
-          _cleaner.RemoveNotRegisteredFilesFromZip = cbxRemoveDeleted.Checked;
-          _cleaner.RemoveMissingArchivesFromDb = cbxRemoveMissedArchives.Checked; // && !analyzeOnly;
-          _cleaner.MinFilesToUpdateZip = (int)edtMinFilesToSave.Value;
-          _cleaner.FileWithDeletedBooksIds = txtDeletedFile.Text;
+          cleaner.GenresToRemove = genresToRemove;
+          cleaner.DatabasePath = txtDatabase.Text;
+          cleaner.ArchivesOutputPath = txtOutput.Text;
+          cleaner.UpdateHashInfo = cbxUpdateHashes.Checked;
+          cleaner.RemoveDeleted = cbxRemoveDeleted.Checked;
+          cleaner.RemoveNotRegisteredFilesFromZip = cbxRemoveDeleted.Checked;
+          cleaner.RemoveMissingArchivesFromDb = cbxRemoveMissedArchives.Checked; // && !analyzeOnly;
+          cleaner.MinFilesToUpdateZip = (int)edtMinFilesToSave.Value;
+          cleaner.FileWithDeletedBooksIds = txtDeletedFile.Text;
 
-          if (!await _cleaner.CheckParameters().ConfigureAwait(false)) {
+          if (!await cleaner.CheckParameters().ConfigureAwait(false)) {
             AddToLog("Please check input parameters and start again!", Cleaner.StateKind.Warning);
             SetFinishedState(startedTime);
             return;
           }
 
-          await _cleaner.CalculateStats().ConfigureAwait(false);
+          await cleaner.CalculateStats().ConfigureAwait(false);
 
           if (!analyzeOnly) {
-            await _cleaner.CompressLibrary().ConfigureAwait(false);
+            await cleaner.CompressLibrary().ConfigureAwait(false);
             AddToLog("Finished!", Cleaner.StateKind.Log);
           }
 
