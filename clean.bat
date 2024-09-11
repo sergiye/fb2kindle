@@ -12,3 +12,5 @@ rmdir /s /q .\LibraryCleaner\obj
 rmdir /s /q .\jail\obj
 del /S ".\jail\bin\*.pdb"
 del /S ".\jail\bin\*.xml"
+del /S ".\Fb2Kindle\FodyWeavers.xsd"
+del /S ".\LibraryCleaner\FodyWeavers.xsd"
