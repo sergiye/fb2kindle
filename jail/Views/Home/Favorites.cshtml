@@ -104,7 +104,7 @@
             <th data-defaultsort="asc" style="min-width: 300px;">Book</th>
             <th style="min-width: 140px; width: 120px;">Date added</th>
             @*<th style="min-width: 80px; width: 80px;">User Id</th>*@
-            <th style="min-width: 110px; width: 110px;"></th>
+            <th style="min-width: 140px; width: 110px;"></th>
         </tr>
 
         @if (Model != null && Model.Data.Any())
@@ -134,6 +134,9 @@
                     </td>
                     <td>@Html.DisplayFor(modelItem => item.FavoriteDateAdded)</td>
                     <td>
+                        <a class="btn btn-primary" href='@Url.Action("download", new { id = item.Id })' title="@item.FileSizeStr">
+                            <span class="glyphicon glyphicon-save"></span>
+                        </a>
                         <a href="@string.Format("{0}/b/{1}", SettingsHelper.FlibustaLink, item.Id)" target="_blank" class="btn btn-success" title="Flibusta version">
                             <span class='glyphicon glyphicon-link'></span>
                         </a>
