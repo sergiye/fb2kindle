@@ -514,14 +514,14 @@ namespace jail.Controllers {
     public ActionResult Book(long bookId, string fileName) {
       var filePath = Path.Combine(SettingsHelper.TempDataFolder, $"{bookId}\\{fileName}");
       if (!System.IO.File.Exists(filePath)) {
-        if ("cover.jpg".Equals(fileName, StringComparison.OrdinalIgnoreCase) && SettingsHelper.GenerateBookDetails) {
-          var book = DataRepository.GetBook(bookId);
-          var task = new Task(() => PrepareBookDetails(book, true));
-          BackgroundTasks.EnqueueAction(task);
-          task.Wait(SettingsHelper.GenerateBookTimeout * 1000);
-          if (System.IO.File.Exists(filePath)) {
-            return File(filePath, System.Net.Mime.MediaTypeNames.Image.Jpeg);
-          }
+        if (!"cover.jpg".Equals(fileName, StringComparison.OrdinalIgnoreCase) || !SettingsHelper.GenerateBookDetails)
+          return new RedirectResult("~/Images/NoImage.jpg", true);
+        var book = DataRepository.GetBook(bookId);
+        var task = new Task(() => PrepareBookDetails(book, true));
+        BackgroundTasks.EnqueueAction(task);
+        task.Wait(SettingsHelper.GenerateBookTimeout * 1000);
+        if (System.IO.File.Exists(filePath)) {
+          return File(filePath, System.Net.Mime.MediaTypeNames.Image.Jpeg);
         }
         return new RedirectResult("~/Images/NoImage.jpg", true);
         // return new HttpNotFoundResult("File not found.");
