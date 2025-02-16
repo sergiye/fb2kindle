@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -43,7 +44,7 @@ namespace LibraryCleaner {
       cbxRemoveDeleted.Checked = cleaner.RemoveDeleted;
       cbxRemoveMissedArchives.Checked = cleaner.RemoveMissingArchivesFromDb;
 
-      txtDatabase.Text = @"d:\media\library\myrulib_flibusta\myrulib.db";
+      txtDatabase.Text = Path.Combine(Path.GetDirectoryName(assembly.Location), "myrulib.db");
       // txtLog.Font = new Font("Verdana", 10, FontStyle.Regular);
     }
 
@@ -82,6 +83,8 @@ namespace LibraryCleaner {
 
     private void btnBrowse_Click(object sender, EventArgs e) {
       var dlg = new OpenFileDialog { CheckFileExists = true, Filter = "Database file (*.db)|*.db" };
+      // dlg.InitialDirectory = Environment.CurrentDirectory; 
+      dlg.RestoreDirectory = true; 
       if (dlg.ShowDialog() != DialogResult.OK) return;
       txtDatabase.Text = dlg.FileName;
     }
