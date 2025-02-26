@@ -1,14 +1,24 @@
 # Fb2Kindle
 
-[![Stars](https://img.shields.io/github/stars/sergiye/fb2kindle?style=flat-square)](https://github.com/sergiye/fb2kindle/stargazers)
-[![Fork](https://img.shields.io/github/forks/sergiye/fb2kindle?style=flat-square)](https://github.com/sergiye/fb2kindle/fork)
-![GitHub release (latest by date)](https://img.shields.io/github/v/release/sergiye/fb2kindle?style=plastic)
-![GitHub all releases](https://img.shields.io/github/downloads/sergiye/fb2kindle/total?style=plastic)
-![GitHub last commit](https://img.shields.io/github/last-commit/sergiye/fb2kindle?style=plastic)
+![GitHub release (latest by date)](https://img.shields.io/github/v/release/sergiye/fb2kindle?style=for-the-badge)
+![GitHub all releases](https://img.shields.io/github/downloads/sergiye/fb2kindle/total?style=for-the-badge&color=ff4f42)
+![GitHub last commit](https://img.shields.io/github/last-commit/sergiye/fb2kindle?style=for-the-badge&color=00AD00)
+[![Stars](https://img.shields.io/github/stars/sergiye/fb2kindle?style=for-the-badge)](https://github.com/sergiye/fb2kindle/stargazers)
+[![Forks](https://img.shields.io/github/forks/sergiye/fb2kindle?style=for-the-badge)](https://github.com/sergiye/fb2kindle/forks)
 
 *Fb2Kindle is a portable, open-source fb2 books converter into Amazon Kindle formats (mobi & epub).*
 
 ----
+
+[<img src="https://github.com/sergiye/hiberbeeTheme/raw/master/assets/ukraine_flag_bar.png" alt="UA"/>](https://u24.gov.ua)
+
+
+Support the Armed Forces of Ukraine and People Affected by Russia’s Aggression on UNITED24, the official fundraising platform of Ukraine: https://u24.gov.ua.
+
+**Слава Україні!**
+
+[<img src="https://github.com/sergiye/hiberbeeTheme/raw/master/assets/ukraine_flag_bar.png" alt="UA"/>](https://u24.gov.ua)
+
 
 ## Download Latest Version
 
