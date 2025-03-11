@@ -9,6 +9,6 @@
     <ExcludeAssemblies>
       System.Data.SQLite.Bak
     </ExcludeAssemblies>
-    <Unmanaged32Assemblies>System.Data.SQLite</Unmanaged32Assemblies>
+    <Unmanaged64Assemblies>System.Data.SQLite</Unmanaged64Assemblies>
   </Costura>
 </Weavers>
