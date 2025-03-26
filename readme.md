@@ -3,8 +3,6 @@
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/sergiye/fb2kindle?style=for-the-badge)
 ![GitHub all releases](https://img.shields.io/github/downloads/sergiye/fb2kindle/total?style=for-the-badge&color=ff4f42)
 ![GitHub last commit](https://img.shields.io/github/last-commit/sergiye/fb2kindle?style=for-the-badge&color=00AD00)
-[![Stars](https://img.shields.io/github/stars/sergiye/fb2kindle?style=for-the-badge)](https://github.com/sergiye/fb2kindle/stargazers)
-[![Forks](https://img.shields.io/github/forks/sergiye/fb2kindle?style=for-the-badge)](https://github.com/sergiye/fb2kindle/forks)
 
 *Fb2Kindle is a portable, open-source fb2 books converter into Amazon Kindle formats (mobi & epub).*
 
@@ -80,7 +78,7 @@ To use:
 
 ### Examples:
 
-    Fb2Kindle.exe somebook.fb2
+    Fb2Kindle.exe somebook.fb2 -epub
     Fb2Kindle.exe "c:\booksFolder\*.fb2"
     Fb2Kindle.exe -a -r -j -d -w
     Fb2Kindle.exe "c:\bookSeries\*.fb2" -j -epub -mailto user@kindle.com -update -save
