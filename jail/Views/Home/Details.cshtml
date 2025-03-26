@@ -47,11 +47,11 @@
                     var user = Request.IsAuthenticated ? HttpContext.Current.Session["User"] as UserProfile : null;
                     if (user != null)
                     {
-                        <div>
+                        @* <div>
                             <a href='#' onclick="DeliverBook(@Model.Id);" title="Deliver">
                                 <span class="glyphicon glyphicon-envelope"></span> Deliver .mobi file
                             </a>
-                        </div>
+                        </div> *@
                         if (user.UserType == UserType.Administrator) {
                             <div>
                                 <a href="#" onclick="DeleteHistoryItem(@Model.Id, encodeURI('@Model.FileName'));" title="Delete mobi">
