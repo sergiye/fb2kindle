@@ -6,7 +6,7 @@ using System.Xml;
 using System.Xml.Linq;
 using System.Xml.XPath;
 using System.Xml.Xsl;
-using Ionic.Zip;
+using System.IO.Compression;
 using jail.Models;
 
 namespace jail.Classes {
@@ -156,23 +156,11 @@ namespace jail.Classes {
     }
 
     public static void ExtractZipFile(string archivePath, string fileName, string outputFileName) {
-      using (var zip = ZipFile.Read(archivePath)) {
-        if (!zip.ContainsEntry(fileName))
+      using (var zip = ZipFile.OpenRead(archivePath)) {
+        var zipEntry = zip.GetEntry(fileName); 
+        if (zipEntry == null)
           throw new FileNotFoundException("Book file not found in archive");
-        using (var fs = File.Create(outputFileName))
-          zip[fileName].Extract(fs);
-      }
-    }
-
-    public static byte[] ExtractZipFileData(string archivePath, string fileName) {
-      using (var zip = ZipFile.Read(archivePath)) {
-        if (!zip.ContainsEntry(fileName))
-          throw new FileNotFoundException("Book file not found in archive");
-        using (var ms = new MemoryStream()) {
-          zip[fileName].Extract(ms);
-          ms.Seek(0, SeekOrigin.Begin);
-          return ms.ToArray();
-        }
+        zipEntry.ExtractToFile(outputFileName);
       }
     }
 

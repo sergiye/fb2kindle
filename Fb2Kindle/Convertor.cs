@@ -10,8 +10,7 @@ using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
-using Ionic.Zip;
-using Ionic.Zlib;
+using System.IO.Compression;
 
 namespace Fb2Kindle {
 
@@ -408,15 +407,7 @@ namespace Fb2Kindle {
 
       var tmpBookPath = GetVersionedPath(options.TempFolder, Util.GetValidFileName(options.DocumentTitle), ".epub");
       // var tmpBookPath = GetVersionedPath(options.TempFolder, options.TargetName, ".epub");
-      using (var zip = new ZipFile(tmpBookPath)) {
-        zip.CompressionLevel = options.Config.CompressionLevel switch {
-          1 => CompressionLevel.Default,
-          2 => CompressionLevel.BestCompression,
-          _ => CompressionLevel.BestSpeed
-        };
-        zip.AddDirectory(epubDir.FullName);
-        zip.Save();
-      }
+      ZipFile.CreateFromDirectory(epubDir.FullName, tmpBookPath);
       epubDir.Delete(true);
 
       return tmpBookPath;
