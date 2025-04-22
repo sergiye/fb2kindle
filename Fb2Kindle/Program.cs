@@ -1,4 +1,5 @@
-﻿using System;
+﻿using sergiye.Common;
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -9,7 +10,7 @@ namespace Fb2Kindle {
   static class Program {
     
     private static void ShowHelpText() {
-      Util.WriteLine($"Usage: {Updater.AppName} [options]");
+      Util.WriteLine($"Usage: {Updater.ApplicationName} [options]");
       Util.WriteLine("Available options:");
       
       Util.WriteLine("\t<path>: input fb2 file path or files mask (ex: *.fb2) or path to .fb2 files");
@@ -21,7 +22,7 @@ namespace Fb2Kindle {
       Util.WriteLine("\t-o: hide detailed output");
       Util.WriteLine("\t-w: wait for key press on finish");
       Util.WriteLine("\t-mailto <user@mail.org>: send document to email (kindle send-by-email delivery, see `-save` option to configure SMTP server)");
-      Util.WriteLine($"\t-save: save parameters (listed below) to be used at the next start (`{Updater.AppName}.json` file)");
+      Util.WriteLine($"\t-save: save parameters (listed below) to be used at the next start (`{Updater.ApplicationName}.json` file)");
       // Util.WriteLine("\t-preview: keep generated source files");
       // Util.WriteLine("\t-debug: keep all generated files");
       Util.WriteLine();
@@ -42,7 +43,7 @@ namespace Fb2Kindle {
 
     private static void ShowMainInfo() {
       //Console.Clear();
-      Util.Write($"{Updater.AppName} {(Environment.Is64BitProcess ? "x64" : "x32")} version: ");
+      Util.Write($"{Updater.ApplicationName} {(Environment.Is64BitProcess ? "x64" : "x32")} version: ");
       Util.Write(Updater.CurrentVersion, ConsoleColor.DarkCyan);
 #if DEBUG
       Util.Write(" (DEBUG version) ", ConsoleColor.DarkYellow);
@@ -66,7 +67,7 @@ namespace Fb2Kindle {
         var appPath = Util.GetAppPath();
         var settingsFile = Path.ChangeExtension(Updater.CurrentFileLocation, ".json");
         options = new AppOptions {
-          Config = SerializerHelper.ReadJsonFile<Config>(settingsFile) ?? new Config()
+          Config = SerializeHelper.ReadJsonFile<Config>(settingsFile) ?? new Config()
         };
         //var settingsFile = Path.ChangeExtension(Assembly.GetExecutingAssembly().Location, ".xml");
         //var currentSettings = XmlSerializerHelper.DeserializeFile<DefaultOptions>(settingsFile) ?? new DefaultOptions();
@@ -245,7 +246,7 @@ namespace Fb2Kindle {
       }
         
       if (options?.Config != null && options.Config.CheckUpdates) 
-        Updater.CheckForUpdates(false);
+        Updater.CheckForUpdates(true);
     }
 
     private static int ProcessFolder(Convertor conv, string workPath, string searchMask, bool recursive, bool join) {

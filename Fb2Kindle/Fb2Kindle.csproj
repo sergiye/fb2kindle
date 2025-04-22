@@ -7,12 +7,7 @@
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <Deterministic>false</Deterministic>
     <LangVersion>latest</LangVersion>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <IsPublishable>False</IsPublishable>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <IsPublishable>False</IsPublishable>
+    <DefineConstants>NOWINFORMS</DefineConstants>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>Kindle.ico</ApplicationIcon>
@@ -68,7 +63,7 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="Obfuscar">
-      <Version>2.2.31</Version>
+      <Version>2.2.47</Version>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>

@@ -1,17 +1,16 @@
 ﻿using System.IO;
 using System.Web.Script.Serialization;
 
-namespace Fb2Kindle {
-  internal static class SerializerHelper {
+namespace sergiye.Common {
+
+  internal static class SerializeHelper {
 
     internal static string ToJson(this object value) {
-      var serializer = new JavaScriptSerializer();
-      return serializer.Serialize(value);
+      return new JavaScriptSerializer().Serialize(value);
     }
 
     internal static T FromJson<T>(this string json) {
-      var serializer = new JavaScriptSerializer();
-      return serializer.Deserialize<T>(json);
+      return new JavaScriptSerializer().Deserialize<T>(json);
     }
 
     internal static void ToJsonFile(this object value, string filePath) {
