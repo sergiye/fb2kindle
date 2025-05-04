@@ -8,16 +8,6 @@
 
 ----
 
-[<img src="https://github.com/sergiye/hiberbeeTheme/raw/master/assets/ukraine_flag_bar.png" alt="UA"/>](https://u24.gov.ua)
-
-
-Support the Armed Forces of Ukraine and People Affected by Russia’s Aggression on UNITED24, the official fundraising platform of Ukraine: https://u24.gov.ua.
-
-**Слава Україні!**
-
-[<img src="https://github.com/sergiye/hiberbeeTheme/raw/master/assets/ukraine_flag_bar.png" alt="UA"/>](https://u24.gov.ua)
-
-
 ## Download Latest Version
 
 Fb2Kindle provides an easy to use solution to convert, format with customizable css, combine multiple files into one and send your e-books to the Amazon Kindle devices.
