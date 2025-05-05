@@ -1,8 +1,8 @@
 # Fb2Kindle
 
-![GitHub release (latest by date)](https://img.shields.io/github/v/release/sergiye/fb2kindle?style=for-the-badge)
-![GitHub all releases](https://img.shields.io/github/downloads/sergiye/fb2kindle/total?style=for-the-badge&color=ff4f42)
-![GitHub last commit](https://img.shields.io/github/last-commit/sergiye/fb2kindle?style=for-the-badge&color=00AD00)
+![GitHub release (latest by date)](https://img.shields.io/github/v/release/fb2kindle/fb2kindle?style=for-the-badge)
+![GitHub all releases](https://img.shields.io/github/downloads/fb2kindle/fb2kindle/total?style=for-the-badge&color=ff4f42)
+![GitHub last commit](https://img.shields.io/github/last-commit/fb2kindle/fb2kindle?style=for-the-badge&color=00AD00)
 
 *Fb2Kindle is a portable, open-source fb2 books converter into Amazon Kindle formats (mobi & epub).*
 
@@ -12,8 +12,8 @@
 
 Fb2Kindle provides an easy to use solution to convert, format with customizable css, combine multiple files into one and send your e-books to the Amazon Kindle devices.
 
-The latest stable version can be downloaded from the [releases](https://github.com/sergiye/fb2kindle/releases) page, or get the newer one directly from:
-[Latest Version](https://github.com/sergiye/fb2kindle/releases/latest)
+The latest stable version can be downloaded from the [releases](https://github.com/fb2kindle/fb2kindle/releases) page, or get the newer one directly from:
+[Latest Version](https://github.com/fb2kindle/fb2kindle/releases/latest)
 
 Features include:
 
@@ -26,7 +26,7 @@ Features include:
 
 **The recommended way to get the program is BUILD from source**
 - Install git, Visual Studio (2022 or higher)
-- `git clone https://github.com/sergiye/fb2kindle.git`
+- `git clone https://github.com/fb2kindle/fb2kindle.git`
 - build
 
 ----
@@ -45,7 +45,7 @@ To use:
 
   * `<path>`: input `.fb2` file path or files mask (ex: `*.fb2`) or path to `.fb2` files
   * `-epub`: create file in epub format
-  * `-css` <styles.css>: styles used in destination book (example can be found here: [Fb2Kindle/Fb2Kindle.css](https://github.com/sergiye/fb2kindle/raw/master/Fb2Kindle/Fb2Kindle.css))
+  * `-css` <styles.css>: styles used in destination book (example can be found here: [Fb2Kindle/Fb2Kindle.css](https://github.com/fb2kindle/fb2kindle/raw/master/Fb2Kindle/Fb2Kindle.css))
   * `-a`: process all `.fb2` books in app folder
   * `-r`: process files in subfolders (work with -a key)
   * `-j`: join files from each folder to the single book
@@ -73,7 +73,7 @@ To use:
     Fb2Kindle.exe -a -r -j -d -w
     Fb2Kindle.exe "c:\bookSeries\*.fb2" -j -epub -mailto user@kindle.com -update -save
 
-also you can check cmd script examples in archive here [other/scripts.7z](https://github.com/sergiye/fb2kindle/raw/master/other/scripts.7z)
+also you can check cmd script examples in archive here [other/scripts.7z](https://github.com/fb2kindle/fb2kindle/raw/master/other/scripts.7z)
 
 ----
 

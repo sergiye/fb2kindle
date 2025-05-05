@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("Fb2Kindle book converter")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Sergiy Yegoshyn (egoshin.sergey@gmail.com)")]
+[assembly: AssemblyCompany("fb2kindle")]
 [assembly: AssemblyProduct("fb2kindle")]
 [assembly: AssemblyCopyright("Copyright © Sergiy Yegoshyn 2021")]
 [assembly: AssemblyTrademark("")]
