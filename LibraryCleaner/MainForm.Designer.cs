@@ -49,7 +49,7 @@
       this.btnNoneGenres = new System.Windows.Forms.Button();
       this.btnAllGenres = new System.Windows.Forms.Button();
       this.panLog = new System.Windows.Forms.Panel();
-      this.txtLog = new LibraryCleaner.SimplTextBox();
+      this.txtLog = new sergiye.Common.SimplTextBox();
       this.tabControlConfig = new System.Windows.Forms.TabControl();
       this.tabPageMain = new System.Windows.Forms.TabPage();
       this.tabPageGenres = new System.Windows.Forms.TabPage();
@@ -376,7 +376,7 @@
         private System.Windows.Forms.TextBox txtDatabase;
         private System.Windows.Forms.Button btnStart;
         private System.Windows.Forms.Label lblDBPath;
-        private SimplTextBox txtLog;
+        private sergiye.Common.SimplTextBox txtLog;
         private System.Windows.Forms.CheckedListBox clsGenres;
         private System.Windows.Forms.Button btnNoneGenres;
         private System.Windows.Forms.Button btnAllGenres;

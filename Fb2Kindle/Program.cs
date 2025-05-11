@@ -245,8 +245,14 @@ namespace Fb2Kindle {
         }
       }
         
-      if (options?.Config != null && options.Config.CheckUpdates) 
-        Updater.CheckForUpdates(true);
+      if (options?.Config != null && options.Config.CheckUpdates) {
+        Updater.Subscribe(
+          (message, isError) => { Console.WriteLine(message); },
+          (message) => { Console.WriteLine(message); return true; }
+        );
+        Console.WriteLine("\nChecking for an apdated version...");
+        Updater.CheckForUpdates(false);
+      }
     }
 
     private static int ProcessFolder(Convertor conv, string workPath, string searchMask, bool recursive, bool join) {

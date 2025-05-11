@@ -21,7 +21,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Update="SimplTextBox.cs">
+    <Compile Include="..\..\common\SimplTextBox.cs" Link="Common\SimplTextBox.cs">
       <SubType>Component</SubType>
     </Compile>
   </ItemGroup>
