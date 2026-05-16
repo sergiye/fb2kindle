@@ -35,7 +35,7 @@ namespace Fb2Kindle {
   }
 
   internal class AppOptions {
-    
+
     internal Config Config { get; set; }
 
     internal ConverterCleanupMode CleanupMode { get; set; }
@@ -46,7 +46,7 @@ namespace Fb2Kindle {
     internal string MailTo { get; set; }
     internal bool DetailedOutput { get; set; } = true;
     internal string Css { get; set; }
-    
+
     internal string AppPath { get; } = Path.GetDirectoryName(Updater.CurrentFileLocation);
     internal string TargetName { get; set; }
     internal string TempFolder { get; set; }

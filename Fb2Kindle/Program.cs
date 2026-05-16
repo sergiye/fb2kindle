@@ -7,13 +7,13 @@ using System.Linq;
 using System.Text;
 
 namespace Fb2Kindle {
-  
+
   static class Program {
-    
+
     private static void ShowHelpText() {
       Util.WriteLine($"Usage: {Updater.ApplicationName} [options]");
       Util.WriteLine("Available options:");
-      
+
       Util.WriteLine("\t<path>: input fb2 file path or files mask (ex: *.fb2) or path to .fb2 files");
       Util.WriteLine("\t-epub: create file in epub format");
       Util.WriteLine("\t-css <styles.css>: styles used in destination book");
@@ -57,9 +57,9 @@ namespace Fb2Kindle {
     }
 
     private static void Register(string exePath) {
-      
+
       Unregister(true);
-      
+
       var fileExtension = ".fb2";
       //string baseKey = $@"SystemFileAssociations\{fileExtension}\shell\Fb2Kindle";
       //using (var mainKey = Registry.ClassesRoot.CreateSubKey(baseKey)) {
@@ -149,7 +149,7 @@ namespace Fb2Kindle {
         //Registry.ClassesRoot.DeleteSubKeyTree($@"SystemFileAssociations\{fileType}\shell\Fb2Kindle", false);
         //Registry.LocalMachine.DeleteSubKeyTree($@"SOFTWARE\Classes\SystemFileAssociations\{fileType}\shell\Fb2Kindle", false);
         //Registry.LocalMachine.DeleteSubKeyTree($@"SOFTWARE\Classes\SystemFileAssociations\{fileExtension}\shell\Fb2Kindle", false);
-        
+
         Registry.ClassesRoot.DeleteSubKeyTree($@"{fileType}\shell\Fb2Kindle", false);
         Registry.ClassesRoot.DeleteSubKeyTree(@"Directory\shell\Fb2Kindle", false);
 
@@ -228,7 +228,7 @@ namespace Fb2Kindle {
             switch (args[j].ToLower().Trim()) {
 
               #region config
-              
+
               case "-u":
               case "-update":
                 options.Config.CheckUpdates = true;
@@ -267,11 +267,11 @@ namespace Fb2Kindle {
               case "-d":
                 options.Config.DeleteOriginal = true;
                 break;
-              
+
               #endregion
-              
+
               #region options
-              
+
               case "-css":
                 if (args.Length > j + 1) {
                   var cssFile = args[j + 1];
@@ -316,9 +316,9 @@ namespace Fb2Kindle {
                 break;
 
               #endregion
-              
+
               #region behavior
-              
+
               case "-save":
                 save = true;
                 break;
@@ -334,12 +334,12 @@ namespace Fb2Kindle {
               case "-j":
                 join = true;
                 break;
-              
+
               default:
                 if (j == 0)
                   bookPath = args[j];
                 break;
-              
+
               #endregion
             }
           }
@@ -380,7 +380,7 @@ namespace Fb2Kindle {
           Console.ReadKey();
         }
       }
-        
+
       if (options?.Config != null && options.Config.CheckUpdates) {
         Updater.Subscribe(
           (message, isError) => { Util.WriteLine(message, isError ? Util.ErrorColor : Util.InfoColor); },
