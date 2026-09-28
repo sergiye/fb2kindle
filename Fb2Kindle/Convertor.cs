@@ -486,12 +486,13 @@ namespace Fb2Kindle {
       var outputFileName = Util.GetValidFileName(options.DocumentTitle); //options.TargetName
       var args = $"\"{options.TempFolder}\\content.opf\" -c{options.Config.CompressionLevel} -o \"{outputFileName}.mobi\"";
       var res = Util.StartProcess(kindleGenPath, args, options.DetailedOutput);
-      if (res == 2) {
-        Util.WriteLine("Error converting to mobi", Util.ErrorColor);
+      var mobiPath = $"{options.TempFolder}\\{outputFileName}.mobi";
+      if (res == 2 || !File.Exists(mobiPath)) {
+        Util.WriteLine($"Error converting to mobi (kindlegen exit code {res})", Util.ErrorColor);
         return null;
       }
 
-      return $"{options.TempFolder}\\{outputFileName}.mobi";
+      return mobiPath;
     }
 
     private static string GetVersionedPath(string filePath, string fileName = null, string fileExtension = null) {
