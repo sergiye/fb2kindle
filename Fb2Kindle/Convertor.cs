@@ -119,10 +119,10 @@ namespace Fb2Kindle {
           if (options.OptimizeSource) {
             XElement bookRaw;
             using (Stream file = File.OpenRead(books[idx])) {
-              bookRaw = XElement.Load(file, LoadOptions.None);
+              bookRaw = XElement.Load(file, LoadOptions.PreserveWhitespace);
             }
             if (bookRaw != null && OptimizeImages(bookRaw)) {
-               bookRaw.Save(books[idx], SaveOptions.None);
+               bookRaw.Save(books[idx], SaveOptions.DisableFormatting);
             }
             continue;
           }
