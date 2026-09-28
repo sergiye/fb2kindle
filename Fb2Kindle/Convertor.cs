@@ -41,6 +41,7 @@ namespace Fb2Kindle {
     private const string DropCap = "АБВГДЕЖЗИКЛМНОПРСТУФХЦЧЩШЭЮЯ"; //"АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧЩШЬЪЫЭЮЯQWERTYUIOPASDFGHJKLZXCVBNM";
     private const string NoAuthorText = "без автора";
     private const string KindleGenName = "kindlegen.exe";
+    private const long MaxUnzippedBookSize = 512L * 1024 * 1024;
     //prefix keeps generated anchors apart from the ids that come from the book itself
     private const string GeneratedIdPrefix = "fb2k_";
     private const string TitlePageId = GeneratedIdPrefix + "it";
@@ -286,7 +287,9 @@ namespace Fb2Kindle {
                     ? Util.GetValidFileName($"{fileName}{zipEntryFileExtension}")
                     : Util.GetValidFileName($"{fileName}_{zipFileIndex}{zipEntryFileExtension}");
                   var unzippedPath = Path.Combine(options.TempFolder, unzippedFileName);
-                  zipEntry.ExtractToFile(unzippedPath, true);
+                  using (var input = zipEntry.Open())
+                  using (var output = File.Create(unzippedPath))
+                    CopyLimited(input, output, MaxUnzippedBookSize);
                   result.Add(unzippedPath);
                   origins[unzippedPath] = bookPath;
                   zipFileIndex++;
@@ -303,6 +306,19 @@ namespace Fb2Kindle {
         }
       }
       return result;
+    }
+
+    //declared entry sizes are not enforced by ZipArchive on .NET Framework, so the limit is checked while copying
+    private static void CopyLimited(Stream input, Stream output, long maxLength) {
+      var buffer = new byte[81920];
+      long total = 0;
+      int read;
+      while ((read = input.Read(buffer, 0, buffer.Length)) > 0) {
+        total += read;
+        if (total > maxLength)
+          throw new InvalidDataException($"Unpacked book exceeds {maxLength / (1024 * 1024)} MB");
+        output.Write(buffer, 0, read);
+      }
     }
 
     #region ncx
