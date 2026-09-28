@@ -972,7 +972,6 @@ namespace Fb2Kindle {
           var format = (binEl.Attribute("content-type")?.Value).GetImageFormatFromMimeType(options.Config.Jpeg ? ImageFormat.Jpeg : ImageFormat.Png);
           var imageFile = GetImageFileName(imagesPrefix, imageId, format);
           var file = Path.Combine(workFolder, imageFile);
-          imageFiles[imageId] = imageFile;
           //todo: we can get format from img.RawFormat
           var fileBytes = Convert.FromBase64String(binEl.Value);
           try {
@@ -1011,6 +1010,7 @@ namespace Fb2Kindle {
             Util.WriteLine("Error compressing image: " + ex.Message, Util.ErrorColor);
             File.WriteAllBytes(file, fileBytes);
           }
+          imageFiles[imageId] = imageFile;
         }
         catch (Exception ex) {
           Util.WriteLine(ex.Message, Util.ErrorColor);
