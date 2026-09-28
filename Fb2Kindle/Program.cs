@@ -161,8 +161,14 @@ namespace Fb2Kindle {
         Registry.CurrentUser.DeleteSubKeyTree($@"{UserClassesKey}\SystemFileAssociations\{fileExtension}\shell\Fb2Kindle", false);
         Registry.CurrentUser.DeleteSubKeyTree($@"{UserClassesKey}\Directory\shell\Fb2Kindle", false);
         //menus registered by older versions
-        Registry.ClassesRoot.DeleteSubKeyTree($@"{fileType}\shell\Fb2Kindle", false);
-        Registry.ClassesRoot.DeleteSubKeyTree(@"Directory\shell\Fb2Kindle", false);
+        try {
+          Registry.ClassesRoot.DeleteSubKeyTree($@"{fileType}\shell\Fb2Kindle", false);
+          Registry.ClassesRoot.DeleteSubKeyTree(@"Directory\shell\Fb2Kindle", false);
+        }
+        catch (Exception ex) when (ex is UnauthorizedAccessException || ex is System.Security.SecurityException) {
+          if (!silent)
+            Util.WriteLine("Context menus added by an older version are registered for all users; run -unregister as administrator to remove them.", Util.WarningColor);
+        }
 
         if (!silent)
           Util.WriteLine("Context menus successfully removed.", Util.MessageColor);
