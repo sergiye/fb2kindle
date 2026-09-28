@@ -99,11 +99,11 @@ namespace Fb2Kindle {
 
         referencedImages.Clear();
         var origins = new Dictionary<string, string>();
-        var sources = ExtractArchives(books, origins);
+        var failedOrigins = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var sources = ExtractArchives(books, origins, failedOrigins);
         TaskbarProgressHelper.SetState(TaskbarProgressHelper.TaskbarStates.Normal);
         TaskbarProgressHelper.SetValue(0, sources.Count);
         var convertedOrigins = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        var failedOrigins = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var coverDone = false;
         TocItem rootToc = null;
         var sequenceIndex = 0;
@@ -270,7 +270,7 @@ namespace Fb2Kindle {
 
     #endregion public
 
-    private List<string> ExtractArchives(List<string> books, Dictionary<string, string> origins) {
+    private List<string> ExtractArchives(List<string> books, Dictionary<string, string> origins, HashSet<string> failedOrigins) {
       var result = new List<string>();
       foreach (var bookPath in books) {
         var fileExtension = Path.GetExtension(bookPath);
@@ -308,6 +308,7 @@ namespace Fb2Kindle {
             }
             catch (Exception ex) when (ex is InvalidDataException || ex is IOException || ex is UnauthorizedAccessException) {
               Util.WriteLine($"Unable to read archive '{bookPath}': {ex.Message}", Util.ErrorColor);
+              failedOrigins.Add(bookPath);
             }
             break;
           default:

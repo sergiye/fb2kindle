@@ -123,7 +123,7 @@ A file name or mask without a folder (for example `Book.fb2` or `*.fb2`) is look
 | `-ni` | No images (only the cover is kept). |
 | `-g` | Convert images to grayscale. |
 | `-jpeg` | JPEG, PNG and GIF images are kept as they are; other formats (for example BMP or TIFF) are converted to JPEG instead of PNG. |
-| `-d` | Delete the source files after a successful conversion. |
+| `-d` | Delete the source files after a successful conversion. Files that could not be read, and archives with at least one unreadable book, are kept. |
 | `-u` or `-update` | Check for a new version after the conversion and update the app. |
 
 To turn off a saved option for one run, add `-` at the end of it: `-d-`, `-dc-`, `-c-` and so on.
