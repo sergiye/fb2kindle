@@ -3,8 +3,6 @@
   <Var name="InPath" value="." />
   <Var name="OutPath" value=".\Obfuscator_Output" />
   <Var name="HidePrivateApi" value="true" />
-  <Var name="KeyFile" value="..\..\..\Common\sergiye.snk" />
-
   <Module file="$(InPath)\Fb2Kindle.exe" />
 <!--  <Module file="$(InPath)\Fb2Kindle.dll" />-->
 </Obfuscator>
