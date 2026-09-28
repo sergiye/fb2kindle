@@ -95,7 +95,7 @@ The new book is saved **next to the source file** with the same name, for exampl
 
   * a single file: `C:\Books\Book.fb2` or `C:\Books\Book.zip`
   * a mask: `C:\Books\*.fb2` or `C:\Books\*.zip`
-  * a folder, ending with a backslash: `C:\Books\` (same as `C:\Books\*.fb2`)
+  * a folder: `C:\Books` or `C:\Books\` (same as `C:\Books\*.fb2`)
 
 A file name or mask without a folder (for example `Book.fb2` or `*.fb2`) is looked up in the current folder. Paths with spaces must be in quotes.
 
@@ -151,7 +151,7 @@ Fb2Kindle can email the book to your Kindle. Amazon accepts only EPUB by email, 
    "SmtpPassword": "your password",
    ```
 
-   Gmail and many other providers require an **app password** instead of your normal password. The connection always uses SSL/TLS.
+   Gmail and many other providers require an **app password** instead of your normal password. The connection is always encrypted with STARTTLS, so use port `587`; port `465` (implicit TLS) is not supported.
 3. Send a book:
 
        Fb2Kindle.exe "C:\Books\Book.fb2" -mailto your.name@kindle.com
