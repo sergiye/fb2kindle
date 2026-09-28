@@ -108,6 +108,7 @@ namespace Fb2Kindle {
         var coverDone = false;
         TocItem rootToc = null;
         var sequenceIndex = 0;
+        var documentIds = new List<string>();
         for (var idx = 0; idx < sources.Count; idx++) {
           var fileName = Path.GetFileNameWithoutExtension(sources[idx]).Trim();
           Util.WriteLine("Processing: " + fileName);
@@ -180,6 +181,7 @@ namespace Fb2Kindle {
           ConvertTagsToHtml(bookRoot, true);
           SaveAsHtmlBook(bookRoot, $"{options.TempFolder}\\{bookFileName}", bookTitle);
           convertedOrigins.Add(origins[sources[idx]]);
+          documentIds.Add(Util.Value(book.Elements("description").Elements("document-info").Elements("id")));
           sequenceIndex++;
         }
 
@@ -189,6 +191,8 @@ namespace Fb2Kindle {
           return sources.Count;
         if (sequenceIndex == 0)
            return 0;
+        bookId = GetBookIdentifier(documentIds);
+        opfFile.Element(OpfNs + "metadata").Elements(DcNs + "identifier").First().Value = bookId;
         CreateNcxFile(rootToc);
 
         if (!options.Config.SkipToc) {
@@ -896,6 +900,16 @@ namespace Fb2Kindle {
       return text.Length > 0 ? text : null;
     }
 
+    //a stable identifier lets Kindle recognize a re-converted book instead of adding a duplicate
+    private static string GetBookIdentifier(List<string> documentIds) {
+      if (documentIds.Count == 0 || documentIds.Any(string.IsNullOrWhiteSpace))
+        return $"urn:uuid:{Guid.NewGuid()}";
+      if (documentIds.Count == 1)
+        return Guid.TryParse(documentIds[0].Trim('{', '}'), out var guid) ? $"urn:uuid:{guid}" : $"urn:fb2:{documentIds[0]}";
+      using (var md5 = System.Security.Cryptography.MD5.Create())
+        return $"urn:uuid:{new Guid(md5.ComputeHash(Encoding.UTF8.GetBytes(string.Join("|", documentIds))))}";
+    }
+
     private static string GetBookDate(XElement book) {
       var candidates = new[] {
         Util.AttributeValue(TitleInfo(book).Elements("date"), "value"),
@@ -942,8 +956,7 @@ namespace Fb2Kindle {
         linkEl.Add(new XElement(DcNs + "publisher", publisher));
       //content.Add(Util.Value(book.Elements("description").Elements("publish-info").Elements("year")));
       linkEl.Add(new XElement(DcNs + "date", GetBookDate(book)));
-      bookId = $"urn:uuid:{Guid.NewGuid()}";
-      linkEl.Add(new XElement(DcNs + "identifier", new XAttribute("id", "BookId"), bookId));
+      linkEl.Add(new XElement(DcNs + "identifier", new XAttribute("id", "BookId")));
       content = new XElement(DcNs + "language");
       var bookLang = Util.Value(TitleInfo(book).Elements("lang"));
       if (string.IsNullOrEmpty(bookLang))
