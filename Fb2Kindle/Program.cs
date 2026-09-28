@@ -232,11 +232,11 @@ namespace Fb2Kindle {
             Process.Start(Updater.CurrentFileLocation, parameters);
             return;
           }
-          else if (args[0] == "register") {
+          else if (IsCommand(args[0], "register")) {
             Register(Updater.CurrentFileLocation);
             return;
           }
-          else if (args[0] == "unregister") {
+          else if (IsCommand(args[0], "unregister")) {
             Unregister();
             return;
           }
@@ -417,6 +417,11 @@ namespace Fb2Kindle {
         Console.WriteLine("\nChecking for updates...");
         Updater.CheckForUpdates(Updater.CheckUpdatesMode.AutoUpdate);
       }
+    }
+
+    private static bool IsCommand(string arg, string command) {
+      return arg.Equals(command, StringComparison.OrdinalIgnoreCase) ||
+             arg.Equals("-" + command, StringComparison.OrdinalIgnoreCase);
     }
 
     private static int ProcessFolder(Convertor conv, string workPath, string searchMask, bool recursive, bool join) {
