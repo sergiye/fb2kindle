@@ -21,7 +21,7 @@ namespace Fb2Kindle {
       Util.WriteLine($"Usage: {Updater.ApplicationName} [options]");
       Util.WriteLine("Available options:");
 
-      Util.WriteLine("\t<path>: input fb2 file path or files mask (ex: *.fb2) or path to .fb2 files");
+      Util.WriteLine("\t<path>: input .fb2/.zip file, files mask (ex: *.fb2) or folder with .fb2 files; a path without a folder is looked up in the current folder");
       Util.WriteLine("\t-epub: create file in epub format");
       Util.WriteLine("\t-css <styles.css>: styles used in destination book");
       Util.WriteLine("\t-a: process all .fb2 books in app folder");
@@ -48,7 +48,7 @@ namespace Fb2Kindle {
       Util.WriteLine("\t-optimize: optimize images in target (decrease to 824x1200 by default)");
       Util.WriteLine("\t-ni: no images");
       Util.WriteLine("\t-g: grayscale images");
-      Util.WriteLine("\t-jpeg: save images in jpeg");
+      Util.WriteLine("\t-jpeg: save images that are not JPEG, PNG or GIF as JPEG instead of PNG");
       Util.WriteLine();
       Util.WriteLine("\tAppend `-` to -d, -u, -s, -c, -dc, -ntoc, -nch, -optimize, -ni, -g or -jpeg to turn it off (ex: -d-), useful to override saved parameters");
 
