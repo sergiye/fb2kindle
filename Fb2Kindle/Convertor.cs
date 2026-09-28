@@ -441,18 +441,18 @@ namespace Fb2Kindle {
 
       Util.WriteLine("Creating epub...", Util.InfoColor);
 
-      var epubDir = Directory.CreateDirectory($"{Path.GetTempPath()}\\{Guid.NewGuid()}");
-      var opsDir = epubDir.CreateSubdirectory("OPS");
-      Util.CopyDirectory(options.TempFolder, $"{opsDir.FullName}", true);
-
-      epubDir.CreateSubdirectory("META-INF");
-      File.WriteAllText($"{epubDir.FullName}/META-INF/container.xml", @"<?xml version=""1.0"" encoding=""UTF-8""?><container xmlns=""urn:oasis:names:tc:opendocument:xmlns:container"" version=""1.0""><rootfiles><rootfile full-path=""OPS/content.opf"" media-type=""application/oebps-package+xml""/></rootfiles></container>");
-      File.WriteAllText($"{epubDir.FullName}/mimetype", "application/epub+zip");
-
       var tmpBookPath = GetVersionedPath(options.TempFolder, Util.GetValidFileName(options.DocumentTitle), ".epub");
       // var tmpBookPath = GetVersionedPath(options.TempFolder, options.TargetName, ".epub");
-      ZipFile.CreateFromDirectory(epubDir.FullName, tmpBookPath);
-      epubDir.Delete(true);
+      using (var epub = new EpubArchive(tmpBookPath)) {
+        epub.AddEntry("mimetype", "application/epub+zip", false);
+        epub.AddEntry("META-INF/container.xml", @"<?xml version=""1.0"" encoding=""UTF-8""?><container xmlns=""urn:oasis:names:tc:opendocument:xmlns:container"" version=""1.0""><rootfiles><rootfile full-path=""OPS/content.opf"" media-type=""application/oebps-package+xml""/></rootfiles></container>");
+        epub.AddFile("OPS/content.opf", Path.Combine(options.TempFolder, "content.opf"));
+        foreach (var href in GetManifestFiles()) {
+          var file = Path.Combine(options.TempFolder, href);
+          if (File.Exists(file))
+            epub.AddFile($"OPS/{href}", file);
+        }
+      }
 
       return tmpBookPath;
     }
