@@ -564,6 +564,11 @@ namespace Fb2Kindle {
           Util.WriteLine("Mail delivery failed: smtp not configured", Util.ErrorColor);
           return false;
         }
+        //SmtpClient supports only STARTTLS, a connection to an implicit TLS port hangs until the timeout
+        if (options.Config.SmtpPort == 465) {
+          Util.WriteLine("Mail delivery failed: SMTP port 465 (implicit TLS) is not supported, use port 587", Util.ErrorColor);
+          return false;
+        }
         // Util.WriteLine($"SMTP: {_currentSettings.SmtpLogin} / {_currentSettings.SmtpServer}:{_currentSettings.SmtpPort}", Util.InfoColor);
         Util.Write($"Sending to {options.MailTo}...", Util.InfoColor);
         using (var smtp = new SmtpClient(options.Config.SmtpServer, options.Config.SmtpPort)) {
