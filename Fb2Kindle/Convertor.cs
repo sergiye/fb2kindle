@@ -965,6 +965,16 @@ namespace Fb2Kindle {
       return GetImageNameWithExt(imagesPrefix + Util.GetValidFileName(imageId), format);
     }
 
+    private static string MakeUniqueFileName(string fileName, ICollection<string> usedNames) {
+      var extension = Path.GetExtension(fileName);
+      var stem = fileName.Substring(0, fileName.Length - extension.Length);
+      var result = fileName;
+      var index = 1;
+      while (usedNames.Contains(result, StringComparer.OrdinalIgnoreCase))
+        result = $"{stem}_{index++}{extension}";
+      return result;
+    }
+
     private ImageFormat GetTargetFormat(ImageFormat rawFormat) {
       if (rawFormat.Equals(ImageFormat.Jpeg) || rawFormat.Equals(ImageFormat.Png) || rawFormat.Equals(ImageFormat.Gif))
         return rawFormat;
@@ -1021,7 +1031,7 @@ namespace Fb2Kindle {
             using (Stream str = new MemoryStream(fileBytes)) {
               using (var img = Image.FromStream(str)) {
                 format = GetTargetFormat(img.RawFormat);
-                imageFile = GetImageFileName(imagesPrefix, imageId, format);
+                imageFile = MakeUniqueFileName(GetImageFileName(imagesPrefix, imageId, format), imageFiles.Values);
                 file = Path.Combine(workFolder, imageFile);
                 decoded = true;
                 // var pngCodec = Util.GetEncoderInfo(ImageFormat.Png);
