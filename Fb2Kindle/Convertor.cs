@@ -750,6 +750,20 @@ namespace Fb2Kindle {
       }
     }
 
+    private static bool UsesCrLf(string fileName) {
+      var buffer = new byte[64 * 1024];
+      int read;
+      using (var stream = File.OpenRead(fileName))
+        read = stream.Read(buffer, 0, buffer.Length);
+      for (var i = 0; i < read - 1; i++) {
+        if (buffer[i] == '\n')
+          return false;
+        if (buffer[i] == '\r' && buffer[i + 1] == '\n')
+          return true;
+      }
+      return false;
+    }
+
     private static void SaveSourceSafely(XDocument book, string fileName) {
       Encoding encoding;
       try {
@@ -763,7 +777,11 @@ namespace Fb2Kindle {
       //the source is replaced only after the new copy is completely written
       var tmpFileName = $"{fileName}.{Guid.NewGuid():N}.tmp";
       try {
-        using (var writer = XmlWriter.Create(tmpFileName, new XmlWriterSettings { Encoding = encoding }))
+        //the parser normalizes line breaks to LF, so the original style is restored on save
+        var settings = UsesCrLf(fileName)
+          ? new XmlWriterSettings { Encoding = encoding, NewLineHandling = NewLineHandling.Replace, NewLineChars = "\r\n" }
+          : new XmlWriterSettings { Encoding = encoding, NewLineHandling = NewLineHandling.None };
+        using (var writer = XmlWriter.Create(tmpFileName, settings))
           book.Save(writer);
         File.Replace(tmpFileName, fileName, null);
       }
