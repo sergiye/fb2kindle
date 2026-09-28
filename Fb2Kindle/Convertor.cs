@@ -121,8 +121,7 @@ namespace Fb2Kindle {
           Directory.CreateDirectory($"{options.TempFolder}\\Images");
           if (ProcessImages(book, $"Images/{bookPostfix}", coverDone)) {
             var imgSrc = Util.AttributeValue(TitleInfo(book).Elements("coverpage").Elements("div").Elements("img"), "src");
-            if (!string.IsNullOrEmpty(imgSrc)) {
-              ImageExtensions.AutoScaleImage(Path.Combine(options.TempFolder, imgSrc), true, options.Config.OptimizeImagesWidth, options.Config.OptimizeImagesHeight);
+            if (!string.IsNullOrEmpty(imgSrc) && PrepareCover(imgSrc)) {
               if (!coverDone) {
                 opfFile.Element(OpfNs + "metadata").Add(new XElement(OpfNs + "meta", new XAttribute("name", "cover"), new XAttribute("content", "cover")));
                 AddPackItem("cover", imgSrc, GetMediaType(imgSrc), false);
@@ -851,6 +850,17 @@ namespace Fb2Kindle {
         }
       }
       return imagesCreated;
+    }
+
+    private bool PrepareCover(string imgSrc) {
+      try {
+        ImageExtensions.AutoScaleImage(Path.Combine(options.TempFolder, imgSrc), true, options.Config.OptimizeImagesWidth, options.Config.OptimizeImagesHeight);
+        return true;
+      }
+      catch (Exception ex) {
+        Util.WriteLine($"Cover image '{imgSrc}' skipped: {ex.Message}", Util.ErrorColor);
+        return false;
+      }
     }
 
     private static string GetImageFileName(string imagesPrefix, string imageId, ImageFormat format) {
