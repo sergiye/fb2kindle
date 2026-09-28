@@ -48,6 +48,14 @@ namespace Fb2Kindle {
     private static readonly XNamespace OpfNs = "http://www.idpf.org/2007/opf";
     private static readonly XNamespace DcNs = "http://purl.org/dc/elements/1.1/";
     private static readonly string[] BlockImageParents = ["section", "body", "coverpage"];
+    private static readonly HashSet<string> AllowedHtmlElements = [
+      "head", "meta", "title", "link", "body", "div", "p", "span", "a", "i", "b", "em", "strong", "del",
+      "sup", "sub", "br", "img", "ul", "li", "table", "tr", "td", "th", "code"
+    ];
+    private static readonly HashSet<string> RemovedHtmlElements = [
+      "script", "noscript", "iframe", "frame", "frameset", "object", "embed", "applet",
+      "form", "input", "button", "textarea", "select"
+    ];
     private XElement opfFile;
     private string bookId;
     private string kindleGenPath;
@@ -738,7 +746,29 @@ namespace Fb2Kindle {
       return new XElement("meta", new XAttribute("http-equiv", "Content-Type"), new XAttribute("content", "text/html; charset=utf-8"));
     }
 
+    private static void SanitizeHtml(XElement html) {
+      //reverse document order handles children before their parents
+      foreach (var el in html.Descendants().Reverse().ToList()) {
+        var name = el.Name.LocalName.ToLowerInvariant();
+        if (RemovedHtmlElements.Contains(name)) {
+          el.Remove();
+          continue;
+        }
+        if (!AllowedHtmlElements.Contains(name)) {
+          el.ReplaceWith(el.Nodes());
+          continue;
+        }
+        foreach (var attr in el.Attributes().ToList()) {
+          var attrName = attr.Name.LocalName.ToLowerInvariant();
+          if (attrName.StartsWith("on") ||
+              (attrName == "href" || attrName == "src") && attr.Value.TrimStart().StartsWith("javascript:", StringComparison.OrdinalIgnoreCase))
+            attr.Remove();
+        }
+      }
+    }
+
     private static void SaveAsXhtml(XElement html, string fileName) {
+      SanitizeHtml(html);
       foreach (var el in html.DescendantsAndSelf())
         el.Name = XhtmlNs + el.Name.LocalName;
       SaveXmlToFile(html, fileName);
