@@ -45,6 +45,7 @@ namespace Fb2Kindle {
     private static readonly XNamespace XhtmlNs = "http://www.w3.org/1999/xhtml";
     private static readonly XNamespace OpfNs = "http://www.idpf.org/2007/opf";
     private static readonly XNamespace DcNs = "http://purl.org/dc/elements/1.1/";
+    private static readonly string[] BlockImageParents = ["section", "body", "coverpage"];
     private XElement opfFile;
     private string bookId;
     private readonly AppOptions options;
@@ -415,6 +416,7 @@ namespace Fb2Kindle {
         if (string.IsNullOrEmpty(bodyName)) {
           bodyName = (string)item.Attribute("name");
         }
+        item.Attribute("name")?.Remove();
         bookRoot.Add(item);
         parent.Add(bodyName, $"{bookFileName}#{part.Key}");
       }
@@ -555,7 +557,6 @@ namespace Fb2Kindle {
     private static XElement CreateTitlePage(XElement book) {
       var root = new XElement("div", new XAttribute("id", "it"));
       root.Add(new XAttribute("class", "supertitle"));
-      root.Add(new XAttribute("align", "center"));
 
       //author(s)
       var authorsInfo = new XElement("div");
@@ -577,7 +578,7 @@ namespace Fb2Kindle {
       //annotation
       var annotation = TitleInfo(book).Elements("annotation").FirstOrDefault();
       if (annotation != null) {
-        annotation.Name = "p";
+        annotation.Name = "div";
         root.Add(annotation);
       }
       //root.Add(new XElement("p", Util.Value(book.Elements("description").Elements("title-info").Elements("annotation"))));
@@ -609,7 +610,7 @@ namespace Fb2Kindle {
       Util.RenameTags(book, "date", "p", "date");
       Util.RenameTags(book, "poem", "div", "poem");
       Util.RenameTags(book, "v", "p");
-      Util.RenameTags(book, "stanza", "em");
+      Util.RenameTags(book, "stanza", "div", "stanza");
       if (!full) return;
       Util.RenameTags(book, "title", "div", "subtitle");
     }
@@ -680,7 +681,7 @@ namespace Fb2Kindle {
 
       doc.Add(new XElement("body", bodyEl));
       Util.RenameTags(doc, "section", "div", "book");
-      Util.RenameTags(doc, "annotation", "em");
+      Util.RenameTags(doc, "annotation", "div", "annotation");
       SaveAsXhtml(doc, fileName);
       doc.RemoveAll();
     }
@@ -848,6 +849,8 @@ namespace Fb2Kindle {
           element.SetAttributeValue("class", "image");
           if (string.IsNullOrEmpty(src)) continue;
           src = src.Replace("#", "");
+          if (element.Parent != null && !BlockImageParents.Contains(element.Parent.Name.LocalName))
+            element.Name = "span";
           var imgEl = new XElement("img");
           imgEl.SetAttributeValue("src", imageFiles.TryGetValue(src, out var imageFile) ? imageFile : GetImageFileName(imagesPrefix, src, ImageFormat.Jpeg));
           element.Add(imgEl);

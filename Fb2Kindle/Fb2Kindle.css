@@ -26,6 +26,7 @@ div.supertitle{text-align:center;}
 div.subtitle{font-style:italic;font-weight: bold;text-align:center;}
 div.cite{font-style:italic;font-size:95%;}
 div.poem{text-indent:0;font-style:italic;text-align:center;}
+div.annotation{font-style:italic;}
 ul{text-align:left;}
 sup{font-size: 60%;color:#555555;}
 span.dc{float:left;font-size:400%;margin-bottom:-0.1em;margin-right:0.1em;}
