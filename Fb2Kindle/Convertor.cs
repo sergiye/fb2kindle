@@ -928,8 +928,14 @@ namespace Fb2Kindle {
       return GetImageNameWithExt(imagesPrefix + Util.GetValidFileName(imageId), format);
     }
 
+    private ImageFormat GetTargetFormat(ImageFormat rawFormat) {
+      if (rawFormat.Equals(ImageFormat.Jpeg) || rawFormat.Equals(ImageFormat.Png) || rawFormat.Equals(ImageFormat.Gif))
+        return rawFormat;
+      return options.Config.Jpeg ? ImageFormat.Jpeg : ImageFormat.Png;
+    }
+
     private static string GetImageNameWithExt(string original, ImageFormat format) {
-      var formatExt = format.Equals(ImageFormat.Png) ? ".png" : format.Equals(ImageFormat.Bmp) ? ".bmp" : ".jpg";
+      var formatExt = format.Equals(ImageFormat.Png) ? ".png" : format.Equals(ImageFormat.Gif) ? ".gif" : ".jpg";
       var ext = Path.GetExtension(original);
       if (ext.Equals(formatExt, StringComparison.OrdinalIgnoreCase) ||
           formatExt == ".jpg" && ext.Equals(".jpeg", StringComparison.OrdinalIgnoreCase))
@@ -969,15 +975,17 @@ namespace Fb2Kindle {
       foreach (var binEl in book.Elements("binary")) {
         try {
           var imageId = binEl.Attribute("id")?.Value;
-          var format = (binEl.Attribute("content-type")?.Value).GetImageFormatFromMimeType(options.Config.Jpeg ? ImageFormat.Jpeg : ImageFormat.Png);
-          var imageFile = GetImageFileName(imagesPrefix, imageId, format);
-          var file = Path.Combine(workFolder, imageFile);
-          //todo: we can get format from img.RawFormat
           var fileBytes = Convert.FromBase64String(binEl.Value);
           var decoded = false;
+          ImageFormat format = null;
+          string imageFile = null;
+          string file = null;
           try {
             using (Stream str = new MemoryStream(fileBytes)) {
               using (var img = Image.FromStream(str)) {
+                format = GetTargetFormat(img.RawFormat);
+                imageFile = GetImageFileName(imagesPrefix, imageId, format);
+                file = Path.Combine(workFolder, imageFile);
                 decoded = true;
                 // var pngCodec = Util.GetEncoderInfo(ImageFormat.Png);
                 // if (pngCodec != null) {
