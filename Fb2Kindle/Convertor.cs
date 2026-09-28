@@ -86,9 +86,6 @@ namespace Fb2Kindle {
         var sequenceIndex = 0;
         for (var idx = 0; idx < sources.Count; idx++) {
           var fileName = Path.GetFileNameWithoutExtension(sources[idx]).Trim();
-          if (fileName == null)
-            continue;
-
           Util.WriteLine("Processing: " + fileName);
           TaskbarProgressHelper.SetState(TaskbarProgressHelper.TaskbarStates.Normal);
           TaskbarProgressHelper.SetValue(idx, sources.Count);
@@ -162,7 +159,7 @@ namespace Fb2Kindle {
            return false;
         CreateNcxFile(rootToc);
 
-        if (rootToc != null && !options.Config.SkipToc) {
+        if (!options.Config.SkipToc) {
           GenerateTocFile(rootToc);
           AddPackItem("content", "toc.html");
           AddGuideItem("toc", "toc.html", "toc");
