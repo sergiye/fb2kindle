@@ -214,7 +214,7 @@ namespace Fb2Kindle {
           if (Console.ReadKey().Key != ConsoleKey.Enter)
             return;
           wait = true;
-          bookPath = allBooksPattern;
+          bookPath = Path.Combine(appPath, allBooksPattern);
           recursive = true;
         }
         else {
@@ -353,7 +353,7 @@ namespace Fb2Kindle {
                 recursive = true;
                 break;
               case "-a":
-                bookPath = allBooksPattern;
+                bookPath = Path.Combine(appPath, allBooksPattern);
                 break;
               case "-j":
                 join = true;
@@ -380,7 +380,7 @@ namespace Fb2Kindle {
 
         var workPath = Path.GetDirectoryName(bookPath);
         if (string.IsNullOrEmpty(workPath))
-          workPath = appPath;
+          workPath = Environment.CurrentDirectory;
         else
           bookPath = Path.GetFileName(bookPath);
         if (string.IsNullOrEmpty(bookPath))
