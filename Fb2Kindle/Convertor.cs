@@ -97,12 +97,11 @@ namespace Fb2Kindle {
         }
         File.WriteAllText(options.TempFolder + @"\book.css", options.Css);
 
-        TaskbarProgressHelper.SetState(TaskbarProgressHelper.TaskbarStates.Normal);
-        TaskbarProgressHelper.SetValue(0, books.Count);
-
         referencedImages.Clear();
         var origins = new Dictionary<string, string>();
         var sources = ExtractArchives(books, origins);
+        TaskbarProgressHelper.SetState(TaskbarProgressHelper.TaskbarStates.Normal);
+        TaskbarProgressHelper.SetValue(0, sources.Count);
         var convertedOrigins = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var failedOrigins = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var coverDone = false;
