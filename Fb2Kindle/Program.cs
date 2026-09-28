@@ -28,7 +28,7 @@ namespace Fb2Kindle {
       Util.WriteLine("\t-j: join files from each folder to the single book");
       Util.WriteLine("\t-o: hide detailed output");
       Util.WriteLine("\t-w: wait for key press on finish");
-      Util.WriteLine("\t-mailto <user@mail.org>: send document to email (kindle send-by-email delivery, see `-save` option to configure SMTP server)");
+      Util.WriteLine("\t-mailto <user@mail.org>: send document to email (kindle send-by-email delivery, always in epub format, see `-save` option to configure SMTP server)");
       Util.WriteLine($"\t-save: save parameters (listed below) to be used at the next start (`{Updater.ApplicationName}.json` file)");
       Util.WriteLine($"\t-register: add explorer integration (context menu)");
       Util.WriteLine($"\t-unregister: remove explorer integration");
@@ -373,6 +373,10 @@ namespace Fb2Kindle {
           return;
         }
         if (save) options.Config.ToJsonFile(settingsFile);
+        if (!string.IsNullOrWhiteSpace(options.MailTo) && !options.Epub) {
+          Util.WriteLine("Send to Kindle does not accept MOBI anymore, EPUB will be created", Util.WarningColor);
+          options.Epub = true;
+        }
 
         var workPath = Path.GetDirectoryName(bookPath);
         if (string.IsNullOrEmpty(workPath))
