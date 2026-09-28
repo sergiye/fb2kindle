@@ -966,7 +966,8 @@ namespace Fb2Kindle {
               using (var img = Image.FromFile(file)) {
                 gsImage = img.Grayscale(true, format);
               }
-              gsImage.Save(file, format);
+              using (gsImage)
+                gsImage.Save(file, format);
             }
           }
           catch (Exception ex) {
