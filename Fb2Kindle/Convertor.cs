@@ -974,9 +974,11 @@ namespace Fb2Kindle {
           var file = Path.Combine(workFolder, imageFile);
           //todo: we can get format from img.RawFormat
           var fileBytes = Convert.FromBase64String(binEl.Value);
+          var decoded = false;
           try {
             using (Stream str = new MemoryStream(fileBytes)) {
               using (var img = Image.FromStream(str)) {
+                decoded = true;
                 // var pngCodec = Util.GetEncoderInfo(ImageFormat.Png);
                 // if (pngCodec != null) {
                 //   var parameters = new EncoderParameters(1) {
@@ -1006,14 +1008,14 @@ namespace Fb2Kindle {
                 gsImage.Save(file, format);
             }
           }
-          catch (Exception ex) {
+          catch (Exception ex) when (decoded) {
             Util.WriteLine("Error compressing image: " + ex.Message, Util.ErrorColor);
             File.WriteAllBytes(file, fileBytes);
           }
           imageFiles[imageId] = imageFile;
         }
         catch (Exception ex) {
-          Util.WriteLine(ex.Message, Util.ErrorColor);
+          Util.WriteLine($"Image '{binEl.Attribute("id")?.Value}' skipped: {ex.Message}", Util.ErrorColor);
         }
       }
       Util.WriteLine("(OK)", Util.MessageColor);
