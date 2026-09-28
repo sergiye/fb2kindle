@@ -397,13 +397,13 @@ namespace Fb2Kindle {
       if (files.Count > 0) {
         files.Sort();
         if (join) {
-          conv.ConvertBookSequence(files);
-          processedFiles += files.Count;
+          if (conv.ConvertBookSequence(files))
+            processedFiles += files.Count;
         }
         else {
           foreach (var file in files) {
-            conv.ConvertBook(file);
-            processedFiles++;
+            if (conv.ConvertBook(file))
+              processedFiles++;
           }
         }
       }

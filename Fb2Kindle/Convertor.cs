@@ -150,6 +150,8 @@ namespace Fb2Kindle {
 
         TaskbarProgressHelper.SetState(TaskbarProgressHelper.TaskbarStates.NoProgress);
 
+        if (options.OptimizeSource)
+          return sources.Count > 0;
         if (sequenceIndex == 0)
            return false;
         CreateNcxFile(rootToc);
