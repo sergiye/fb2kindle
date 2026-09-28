@@ -859,15 +859,17 @@ namespace Fb2Kindle {
             continue;
           }
 
-          var src = element.Attribute("href")?.Value;
+          var src = element.Attribute("href")?.Value?.Replace("#", "");
+          if (string.IsNullOrEmpty(src) || !imageFiles.TryGetValue(src, out var imageFile)) {
+            element.Remove();
+            continue;
+          }
           element.RemoveAll();
           element.SetAttributeValue("class", "image");
-          if (string.IsNullOrEmpty(src)) continue;
-          src = src.Replace("#", "");
           if (element.Parent != null && !BlockImageParents.Contains(element.Parent.Name.LocalName))
             element.Name = "span";
           var imgEl = new XElement("img");
-          imgEl.SetAttributeValue("src", imageFiles.TryGetValue(src, out var imageFile) ? imageFile : GetImageFileName(imagesPrefix, src, ImageFormat.Jpeg));
+          imgEl.SetAttributeValue("src", imageFile);
           element.Add(imgEl);
         }
       }
