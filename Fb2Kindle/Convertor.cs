@@ -832,6 +832,14 @@ namespace Fb2Kindle {
       return string.IsNullOrEmpty(number) ? name : $"{name} {number}";
     }
 
+    private static string GetAnnotationText(XElement book) {
+      var annotation = TitleInfo(book).Elements("annotation").FirstOrDefault();
+      if (annotation == null) return null;
+      var paragraphs = annotation.Elements().Select(el => Regex.Replace(el.Value, @"\s+", " ").Trim()).Where(text => text.Length > 0).ToList();
+      var text = paragraphs.Count > 0 ? string.Join(" ", paragraphs) : annotation.Value.Trim();
+      return text.Length > 0 ? text : null;
+    }
+
     private static string GetBookDate(XElement book) {
       var candidates = new[] {
         Util.AttributeValue(TitleInfo(book).Elements("date"), "value"),
@@ -886,7 +894,7 @@ namespace Fb2Kindle {
         bookLang = "ru";
       content.Add(bookLang);
       linkEl.Add(content);
-      var description = Util.Value(TitleInfo(book).Elements("annotation"));
+      var description = GetAnnotationText(book);
       if (!string.IsNullOrEmpty(description))
         linkEl.Add(new XElement(DcNs + "description", description));
       linkEl.Add(new XElement(OpfNs + "meta", new XAttribute("name", "zero-gutter"), new XAttribute("content", "true")));
