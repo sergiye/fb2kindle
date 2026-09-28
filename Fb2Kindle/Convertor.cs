@@ -9,6 +9,7 @@ using System.Net.Mail;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Xml;
 using System.Xml.Linq;
 using System.IO.Compression;
 using sergiye.Common;
@@ -651,10 +652,11 @@ namespace Fb2Kindle {
 
     private static void SaveXmlToFile(XNode xml, string file) {
       //xml.Save(file, Debugger.IsAttached ? SaveOptions.None : SaveOptions.DisableFormatting);
-      var doc = XDocument.Load(xml.CreateReader());
-      doc.Declaration = new XDeclaration("1.0", "utf-8", null);
       var writer = new XmlEncodeWriter(Encoding.UTF8);
-      doc.Save(writer, SaveOptions.None);
+      using (var xmlWriter = XmlWriter.Create(writer, new XmlWriterSettings { Indent = true })) {
+        xmlWriter.WriteStartDocument();
+        xml.WriteTo(xmlWriter);
+      }
       File.WriteAllText(file, writer.ToString());
       //File.WriteAllText(file, doc.ToString());
     }
