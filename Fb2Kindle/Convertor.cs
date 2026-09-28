@@ -123,12 +123,12 @@ namespace Fb2Kindle {
               if (!coverDone) {
                 opfFile.Elements("metadata").First().Elements("x-metadata").First().Add(new XElement("EmbeddedCover", imgSrc));
                 AddGuideItem("Cover", imgSrc, "other.ms-coverimage-standard");
-                AddPackItem("cover", imgSrc, System.Net.Mime.MediaTypeNames.Image.Jpeg, false);
+                AddPackItem("cover", imgSrc, GetMediaType(imgSrc), false);
                 coverDone = true;
               }
               else {
                 AddGuideItem($"Cover{bookPostfix}", imgSrc);
-                AddPackItem($"Cover{bookPostfix}", imgSrc, System.Net.Mime.MediaTypeNames.Image.Jpeg);
+                AddPackItem($"Cover{bookPostfix}", imgSrc, GetMediaType(imgSrc));
               }
             }
           }
@@ -790,7 +790,8 @@ namespace Fb2Kindle {
     #region Images
 
     private bool ProcessImages(XElement book, string imagesPrefix, bool coverDone) {
-      var imagesCreated = (!coverDone || !options.Config.NoImages) && ExtractImages(book, options.TempFolder, imagesPrefix);
+      var imageFiles = new Dictionary<string, string>();
+      var imagesCreated = (!coverDone || !options.Config.NoImages) && ExtractImages(book, options.TempFolder, imagesPrefix, imageFiles);
       var list = Util.RenameTags(book, "image", "div", "image");
       foreach (var element in list) {
         if (!imagesCreated)
@@ -809,31 +810,49 @@ namespace Fb2Kindle {
           if (string.IsNullOrEmpty(src)) continue;
           src = src.Replace("#", "");
           var imgEl = new XElement("img");
-          imgEl.SetAttributeValue("src", GetImageFileName(imagesPrefix, src));
+          imgEl.SetAttributeValue("src", imageFiles.TryGetValue(src, out var imageFile) ? imageFile : GetImageFileName(imagesPrefix, src, ImageFormat.Jpeg));
           element.Add(imgEl);
         }
       }
       return imagesCreated;
     }
 
-    private string GetImageFileName(string imagesPrefix, string imageId) {
-      return GetImageNameWithExt(imagesPrefix + Util.GetValidFileName(imageId));
+    private static string GetImageFileName(string imagesPrefix, string imageId, ImageFormat format) {
+      return GetImageNameWithExt(imagesPrefix + Util.GetValidFileName(imageId), format);
     }
 
-    private string GetImageNameWithExt(string original) {
+    private static string GetImageNameWithExt(string original, ImageFormat format) {
+      var formatExt = format.Equals(ImageFormat.Png) ? ".png" : format.Equals(ImageFormat.Bmp) ? ".bmp" : ".jpg";
       var ext = Path.GetExtension(original);
-      if (string.IsNullOrWhiteSpace(ext))
-        return original + ".jpg";
-      return original;
+      if (ext.Equals(formatExt, StringComparison.OrdinalIgnoreCase) ||
+          formatExt == ".jpg" && ext.Equals(".jpeg", StringComparison.OrdinalIgnoreCase))
+        return original;
+      return original + formatExt;
     }
 
-    private bool ExtractImages(XElement book, string workFolder, string imagesPrefix) {
+    private static string GetMediaType(string fileName) {
+      switch (Path.GetExtension(fileName).ToLower()) {
+        case ".png":
+          return "image/png";
+        case ".gif":
+          return "image/gif";
+        case ".bmp":
+          return "image/bmp";
+        default:
+          return System.Net.Mime.MediaTypeNames.Image.Jpeg;
+      }
+    }
+
+    private bool ExtractImages(XElement book, string workFolder, string imagesPrefix, Dictionary<string, string> imageFiles) {
       if (book == null) return true;
       Util.Write("Extracting images...", Util.InfoColor);
       foreach (var binEl in book.Elements("binary")) {
         try {
-          var file = Path.Combine(workFolder, GetImageFileName(imagesPrefix, binEl.Attribute("id")?.Value));
+          var imageId = binEl.Attribute("id")?.Value;
           var format = (binEl.Attribute("content-type")?.Value).GetImageFormatFromMimeType(options.Config.Jpeg ? ImageFormat.Jpeg : ImageFormat.Png);
+          var imageFile = GetImageFileName(imagesPrefix, imageId, format);
+          var file = Path.Combine(workFolder, imageFile);
+          imageFiles[imageId] = imageFile;
           //todo: we can get format from img.RawFormat
           var fileBytes = Convert.FromBase64String(binEl.Value);
           try {
