@@ -80,8 +80,8 @@ You can also drag and drop an `.fb2` file onto `Fb2Kindle.exe` to convert it to 
 
 To add or remove the menu later, run:
 
-    Fb2Kindle.exe register
-    Fb2Kindle.exe unregister
+    Fb2Kindle.exe -register
+    Fb2Kindle.exe -unregister
 
 ### 3. Where the result goes
 
@@ -97,7 +97,7 @@ The new book is saved **next to the source file** with the same name, for exampl
   * a mask: `C:\Books\*.fb2` or `C:\Books\*.zip`
   * a folder, ending with a backslash: `C:\Books\` (same as `C:\Books\*.fb2`)
 
-If you give only a file name or mask without a folder (for example `Book.fb2`), Fb2Kindle looks for it in **its own folder**, not in the current one. Use full paths to avoid surprises. Paths with spaces must be in quotes.
+A file name or mask without a folder (for example `Book.fb2` or `*.fb2`) is looked up in the current folder. Paths with spaces must be in quotes.
 
 #### Input and output
 
