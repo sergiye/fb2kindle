@@ -42,6 +42,7 @@ namespace Fb2Kindle {
     private const string NoAuthorText = "без автора";
     private const string KindleGenName = "kindlegen.exe";
     private const long MaxUnzippedBookSize = 512L * 1024 * 1024;
+    private const long MaxUnzippedArchiveSize = 2048L * 1024 * 1024;
     //prefix keeps generated anchors apart from the ids that come from the book itself
     private const string GeneratedIdPrefix = "fb2k_";
     private const string TitlePageId = GeneratedIdPrefix + "it";
@@ -277,6 +278,7 @@ namespace Fb2Kindle {
             }
             var fileName = Path.GetFileNameWithoutExtension(bookPath).Trim();
             var zipFileIndex = 0;
+            long archiveSize = 0;
             try {
               using (var zip = ZipFile.OpenRead(bookPath)) {
                 foreach (var zipEntry in zip.Entries) {
@@ -289,7 +291,7 @@ namespace Fb2Kindle {
                   var unzippedPath = Path.Combine(options.TempFolder, unzippedFileName);
                   using (var input = zipEntry.Open())
                   using (var output = File.Create(unzippedPath))
-                    CopyLimited(input, output, MaxUnzippedBookSize);
+                    archiveSize += CopyLimited(input, output, Math.Min(MaxUnzippedBookSize, MaxUnzippedArchiveSize - archiveSize));
                   result.Add(unzippedPath);
                   origins[unzippedPath] = bookPath;
                   zipFileIndex++;
@@ -309,16 +311,17 @@ namespace Fb2Kindle {
     }
 
     //declared entry sizes are not enforced by ZipArchive on .NET Framework, so the limit is checked while copying
-    private static void CopyLimited(Stream input, Stream output, long maxLength) {
+    private static long CopyLimited(Stream input, Stream output, long maxLength) {
       var buffer = new byte[81920];
       long total = 0;
       int read;
       while ((read = input.Read(buffer, 0, buffer.Length)) > 0) {
         total += read;
         if (total > maxLength)
-          throw new InvalidDataException($"Unpacked book exceeds {maxLength / (1024 * 1024)} MB");
+          throw new InvalidDataException($"Unpacked data exceeds the limit of {MaxUnzippedBookSize / (1024 * 1024)} MB per book or {MaxUnzippedArchiveSize / (1024 * 1024)} MB per archive");
         output.Write(buffer, 0, read);
       }
+      return total;
     }
 
     #region ncx
