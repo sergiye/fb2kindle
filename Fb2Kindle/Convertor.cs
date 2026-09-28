@@ -81,7 +81,9 @@ namespace Fb2Kindle {
         TaskbarProgressHelper.SetState(TaskbarProgressHelper.TaskbarStates.Normal);
         TaskbarProgressHelper.SetValue(0, books.Count);
 
-        var sources = ExtractArchives(books);
+        var origins = new Dictionary<string, string>();
+        var sources = ExtractArchives(books, origins);
+        var convertedOrigins = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var coverDone = false;
         TocItem rootToc = null;
         var sequenceIndex = 0;
@@ -149,6 +151,7 @@ namespace Fb2Kindle {
           ProcessAllData(book, bookRoot, bookPostfix, tocItem, bookFileName);
           ConvertTagsToHtml(bookRoot, true);
           SaveAsHtmlBook(bookRoot, $"{options.TempFolder}\\{bookFileName}", bookTitle);
+          convertedOrigins.Add(origins[sources[idx]]);
           sequenceIndex++;
         }
 
@@ -191,7 +194,7 @@ namespace Fb2Kindle {
         }
 
         if (result && options.Config.DeleteOriginal) {
-          foreach (var book in books)
+          foreach (var book in convertedOrigins)
             File.Delete(book);
         }
         return result;
@@ -232,13 +235,14 @@ namespace Fb2Kindle {
 
     #endregion public
 
-    private List<string> ExtractArchives(List<string> books) {
+    private List<string> ExtractArchives(List<string> books, Dictionary<string, string> origins) {
       var result = new List<string>();
       foreach (var bookPath in books) {
         var fileExtension = Path.GetExtension(bookPath);
         switch (fileExtension.ToLower()) {
           case ".fb2":
             result.Add(bookPath);
+            origins[bookPath] = bookPath;
             break;
           case ".zip":
             var fileName = Path.GetFileNameWithoutExtension(bookPath).Trim();
@@ -254,6 +258,7 @@ namespace Fb2Kindle {
                 var unzippedPath = Path.Combine(options.TempFolder, unzippedFileName);
                 zipEntry.ExtractToFile(unzippedPath, true);
                 result.Add(unzippedPath);
+                origins[unzippedPath] = bookPath;
                 zipFileIndex++;
               }
             }
