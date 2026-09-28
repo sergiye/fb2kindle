@@ -502,7 +502,7 @@ namespace Fb2Kindle {
           smtp.UseDefaultCredentials = false;
           smtp.DeliveryMethod = SmtpDeliveryMethod.Network;
           smtp.Timeout = options.Config.SmtpTimeout;
-          smtp.Credentials = new NetworkCredential(options.Config.SmtpLogin, options.Config.SmtpPassword);
+          smtp.Credentials = new NetworkCredential(options.Config.SmtpLogin, options.Config.GetSmtpPassword());
           smtp.EnableSsl = true;
           using (var message = new MailMessage(new MailAddress(options.Config.SmtpLogin, "Simpl's converter"),
                    new MailAddress(options.MailTo))) {

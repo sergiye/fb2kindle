@@ -189,6 +189,14 @@ namespace Fb2Kindle {
         options = new AppOptions {
           Config = JsonExtensions.ReadJsonFile<Config>(settingsFile) ?? new Config()
         };
+        if (options.Config.ProtectSecrets()) {
+          try {
+            options.Config.ToJsonFile(settingsFile);
+          }
+          catch (Exception ex) {
+            Util.WriteLine("Unable to encrypt SMTP password in settings file: " + ex.Message, Util.WarningColor);
+          }
+        }
         var appPath = options.AppPath;
         //var settingsFile = Path.ChangeExtension(Assembly.GetExecutingAssembly().Location, ".xml");
         //var currentSettings = XmlSerializerHelper.DeserializeFile<DefaultOptions>(settingsFile) ?? new DefaultOptions();

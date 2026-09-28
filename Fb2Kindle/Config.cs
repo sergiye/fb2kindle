@@ -1,5 +1,7 @@
 ﻿using System;
 using System.IO;
+using System.Security.Cryptography;
+using System.Text;
 using sergiye.Common;
 
 namespace Fb2Kindle {
@@ -32,6 +34,23 @@ namespace Fb2Kindle {
     public int SmtpTimeout { get; set; } = 100000;
 
     public bool CheckUpdates { get; set; }
+
+    private const string ProtectedPrefix = "dpapi:";
+
+    internal string GetSmtpPassword() {
+      if (string.IsNullOrEmpty(SmtpPassword) || !SmtpPassword.StartsWith(ProtectedPrefix))
+        return SmtpPassword;
+      var data = Convert.FromBase64String(SmtpPassword.Substring(ProtectedPrefix.Length));
+      return Encoding.UTF8.GetString(ProtectedData.Unprotect(data, null, DataProtectionScope.CurrentUser));
+    }
+
+    internal bool ProtectSecrets() {
+      if (string.IsNullOrEmpty(SmtpPassword) || SmtpPassword.StartsWith(ProtectedPrefix))
+        return false;
+      var data = ProtectedData.Protect(Encoding.UTF8.GetBytes(SmtpPassword), null, DataProtectionScope.CurrentUser);
+      SmtpPassword = ProtectedPrefix + Convert.ToBase64String(data);
+      return true;
+    }
   }
 
   internal class AppOptions {
