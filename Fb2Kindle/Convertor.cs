@@ -795,10 +795,11 @@ namespace Fb2Kindle {
     }
 
     private static bool UsesCrLf(string fileName) {
-      var buffer = new byte[64 * 1024];
+      var buffer = new char[64 * 1024];
       int read;
-      using (var stream = File.OpenRead(fileName))
-        read = stream.Read(buffer, 0, buffer.Length);
+      //reading as text handles UTF-16 files; line breaks look the same in any single-byte encoding
+      using (var reader = new StreamReader(fileName, Encoding.UTF8, true))
+        read = reader.Read(buffer, 0, buffer.Length);
       for (var i = 0; i < read - 1; i++) {
         if (buffer[i] == '\n')
           return false;
