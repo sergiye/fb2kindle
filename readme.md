@@ -158,7 +158,7 @@ Fb2Kindle can email the book to your Kindle. Amazon accepts only EPUB by email, 
 
 After a successful send, the book file is not kept. If sending fails, the book is saved next to the source file as usual.
 
-On the next start, Fb2Kindle replaces the password in `Fb2Kindle.json` with an encrypted version (Windows DPAPI). The encrypted password works only for the same Windows user on the same computer. If you move the file, type the password in again.
+The password is stored in `Fb2Kindle.json` as plain text. Use an app password rather than your main account password, and do not share the settings file.
 
 ### 6. Settings file
 
