@@ -453,7 +453,8 @@ namespace Fb2Kindle {
         }
         item.Attribute("name")?.Remove();
         bookRoot.Add(item);
-        parent.Add(bodyName, $"{bookFileName}#{part.Key}");
+        if (!string.IsNullOrEmpty(bodyName))
+          parent.Add(bodyName, $"{bookFileName}#{part.Key}");
       }
 
       Util.WriteLine("(OK)", Util.MessageColor);
