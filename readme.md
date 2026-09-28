@@ -122,7 +122,7 @@ A file name or mask without a folder (for example `Book.fb2` or `*.fb2`) is look
 | `-optimize` | Shrink large images in the result to fit 824×1200. |
 | `-ni` | No images (only the cover is kept). |
 | `-g` | Convert images to grayscale. |
-| `-jpeg` | Save images of unknown type as JPEG instead of PNG. |
+| `-jpeg` | JPEG, PNG and GIF images are kept as they are; other formats (for example BMP or TIFF) are converted to JPEG instead of PNG. |
 | `-d` | Delete the source files after a successful conversion. |
 | `-u` or `-update` | Check for a new version after the conversion and update the app. |
 
@@ -132,7 +132,7 @@ To turn off a saved option for one run, add `-` at the end of it: `-d-`, `-dc-`,
 
 | Option | Description |
 |---|---|
-| `-optimizeSource` | Shrink the images inside the source `.fb2` files to 824×1200 instead of converting them. An image is replaced only if the result is smaller. |
+| `-optimizeSource` | Shrink the images inside the source `.fb2` files to 824×1200 instead of converting them. An image is replaced only if the result is smaller; the file keeps its encoding and line endings. Books inside `.zip` archives are not supported. |
 | `-save` | Save the book options used in this run to `Fb2Kindle.json` next to the app. They are applied automatically on every next run. |
 | `-o` | Hide the detailed KindleGen output. |
 | `-w` | Wait for a key press before closing the window. |
