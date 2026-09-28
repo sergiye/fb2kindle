@@ -11,7 +11,7 @@ namespace Fb2Kindle {
     }
 
     public override string ToString() {
-      var optimized = Regex.Replace(base.ToString(), @"\s{2,}", " ");
+      var optimized = Regex.Replace(base.ToString(), @"[ \t\r\n]{2,}", " ");
       return optimized;
     }
   }
