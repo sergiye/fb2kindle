@@ -117,7 +117,7 @@ namespace Fb2Kindle {
           //update images (extract and rewrite refs)
           Directory.CreateDirectory($"{options.TempFolder}\\Images");
           if (ProcessImages(book, $"Images/{bookPostfix}", coverDone)) {
-            var imgSrc = Util.AttributeValue(book.Elements("description").Elements("title-info").Elements("coverpage").Elements("div").Elements("img"), "src");
+            var imgSrc = Util.AttributeValue(TitleInfo(book).Elements("coverpage").Elements("div").Elements("img"), "src");
             if (!string.IsNullOrEmpty(imgSrc)) {
               ImageExtensions.AutoScaleImage(Path.Combine(options.TempFolder, imgSrc), true, options.Config.OptimizeImagesWidth, options.Config.OptimizeImagesHeight);
               if (!coverDone) {
@@ -555,31 +555,31 @@ namespace Fb2Kindle {
       //author(s)
       var authorsInfo = new XElement("div");
       authorsInfo.Add(new XAttribute("class", "text-author"));
-      var authors = GetAuthors(book.Elements("description").Elements("title-info").Elements("author"));
+      var authors = GetAuthors(TitleInfo(book).Elements("author"));
       authorsInfo.Add(new XElement("div", string.Join(", ", authors)));
       root.Add(authorsInfo, new XElement("br"));
 
       //title
       var title = new XElement("p");
       title.Add(new XAttribute("class", "text-name"));
-      title.Add(Util.Value(book.Elements("description").Elements("title-info").Elements("book-title"), ""));
+      title.Add(Util.Value(TitleInfo(book).Elements("book-title"), ""));
       root.Add(title, new XElement("br"));
 
       //sequence
-      root.Add(new XElement("p", $"{Util.AttributeValue(book.Elements("description").Elements("title-info").Elements("sequence"), "name")} {Util.AttributeValue(book.Elements("description").Elements("title-info").Elements("sequence"), "number")}"));
+      root.Add(new XElement("p", $"{Util.AttributeValue(TitleInfo(book).Elements("sequence"), "name")} {Util.AttributeValue(TitleInfo(book).Elements("sequence"), "number")}"));
       root.Add(new XElement("br"));
 
       //annotation
-      var annotation = book.Elements("description").Elements("title-info").Elements("annotation").FirstOrDefault();
+      var annotation = TitleInfo(book).Elements("annotation").FirstOrDefault();
       if (annotation != null) {
         annotation.Name = "p";
         root.Add(annotation);
       }
       //root.Add(new XElement("p", Util.Value(book.Elements("description").Elements("title-info").Elements("annotation"))));
       root.Add(new XElement("br"), new XElement("br"));
-      root.Add(new XElement("p", Util.Value(book.Elements("description").Elements("publish-info").Elements("publisher"))));
-      root.Add(new XElement("p", Util.Value(book.Elements("description").Elements("publish-info").Elements("city"))));
-      root.Add(new XElement("p", Util.Value(book.Elements("description").Elements("publish-info").Elements("year"))));
+      root.Add(new XElement("p", Util.Value(PublishInfo(book).Elements("publisher"))));
+      root.Add(new XElement("p", Util.Value(PublishInfo(book).Elements("city"))));
+      root.Add(new XElement("p", Util.Value(PublishInfo(book).Elements("year"))));
 
       //footer
       root.Add(new XElement("br"), new XElement("br"), new XElement("br"));
@@ -685,8 +685,16 @@ namespace Fb2Kindle {
       SaveXmlToFile(html, fileName);
     }
 
+    private static IEnumerable<XElement> TitleInfo(XElement book) {
+      return book.Elements("description").Elements("title-info");
+    }
+
+    private static IEnumerable<XElement> PublishInfo(XElement book) {
+      return book.Elements("description").Elements("publish-info");
+    }
+
     private static string GetTitle(XElement book) {
-      return Util.Value(book.Elements("description").Elements("title-info").Elements("book-title"), "Книга").Trim();
+      return Util.Value(TitleInfo(book).Elements("book-title"), "Книга").Trim();
     }
 
     private XElement GetEmptyPackage(XElement book, bool useSequenceNameOnly = false) {
@@ -696,13 +704,13 @@ namespace Fb2Kindle {
       var content = new XElement(DcNs + "title");
 
       var bookTitle = GetTitle(book);
-      var seqName = Util.AttributeValue(book.Elements("description").Elements("title-info").Elements("sequence"), "name");
+      var seqName = Util.AttributeValue(TitleInfo(book).Elements("sequence"), "name");
       if (useSequenceNameOnly) {
         bookTitle = string.IsNullOrEmpty(seqName) ? bookTitle : seqName;
       }
       else {
         if (options.Config.AddSequenceInfo)
-          bookTitle = $"{seqName} {Util.AttributeValue(book.Elements("description").Elements("title-info").Elements("sequence"), "number")} {bookTitle}";
+          bookTitle = $"{seqName} {Util.AttributeValue(TitleInfo(book).Elements("sequence"), "number")} {bookTitle}";
       }
       content.Add(bookTitle);
 
@@ -712,10 +720,10 @@ namespace Fb2Kindle {
 
       linkEl.Add(content);
       content = new XElement(DcNs + "creator");
-      var authors = GetAuthors(book.Elements("description").Elements("title-info").Elements("author"), 5);
+      var authors = GetAuthors(TitleInfo(book).Elements("author"), 5);
       content.Add(string.Join(", ", authors));
       linkEl.Add(content);
-      var publisher = Util.Value(book.Elements("description").Elements("publish-info").Elements("publisher"));
+      var publisher = Util.Value(PublishInfo(book).Elements("publisher"));
       if (!string.IsNullOrEmpty(publisher))
         linkEl.Add(new XElement(DcNs + "publisher", publisher));
       //content.Add(Util.Value(book.Elements("description").Elements("publish-info").Elements("year")));
@@ -723,12 +731,12 @@ namespace Fb2Kindle {
       bookId = $"urn:uuid:{Guid.NewGuid()}";
       linkEl.Add(new XElement(DcNs + "identifier", new XAttribute("id", "BookId"), bookId));
       content = new XElement(DcNs + "language");
-      var bookLang = Util.Value(book.Elements("description").First().Elements("title-info").First().Elements("lang"));
+      var bookLang = Util.Value(TitleInfo(book).Elements("lang"));
       if (string.IsNullOrEmpty(bookLang))
         bookLang = "ru";
       content.Add(bookLang);
       linkEl.Add(content);
-      var description = Util.Value(book.Elements("description").Elements("title-info").Elements("annotation"));
+      var description = Util.Value(TitleInfo(book).Elements("annotation"));
       if (!string.IsNullOrEmpty(description))
         linkEl.Add(new XElement(DcNs + "description", description));
       linkEl.Add(new XElement(OpfNs + "meta", new XAttribute("name", "zero-gutter"), new XAttribute("content", "true")));
