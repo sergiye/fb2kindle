@@ -177,7 +177,7 @@ namespace Fb2Kindle {
 
         var settingsFile = Path.ChangeExtension(Updater.CurrentFileLocation, ".json");
         options = new AppOptions {
-          Config = JsonSerializeHelper.ReadJsonFile<Config>(settingsFile) ?? new Config()
+          Config = JsonExtensions.ReadJsonFile<Config>(settingsFile) ?? new Config()
         };
         var appPath = options.AppPath;
         //var settingsFile = Path.ChangeExtension(Assembly.GetExecutingAssembly().Location, ".xml");
