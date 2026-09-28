@@ -1056,6 +1056,7 @@ namespace Fb2Kindle {
           var fileBytes = Convert.FromBase64String(binEl.Value);
           var decoded = false;
           ImageFormat format = null;
+          var keptOriginal = false;
           string imageFile = null;
           string file = null;
           try {
@@ -1075,7 +1076,8 @@ namespace Fb2Kindle {
                 //   img.Save(file, pngCodec, parameters);
                 // }
                 // else
-                if (img.RawFormat.Equals(format))
+                keptOriginal = img.RawFormat.Equals(format);
+                if (keptOriginal)
                   File.WriteAllBytes(file, fileBytes);
                 else
                   img.Save(file, format);
@@ -1096,7 +1098,8 @@ namespace Fb2Kindle {
           }
           catch (Exception ex) when (decoded) {
             Util.WriteLine("Error compressing image: " + ex.Message, Util.ErrorColor);
-            File.WriteAllBytes(file, fileBytes);
+            if (keptOriginal)
+              File.WriteAllBytes(file, fileBytes);
           }
           imageFiles[imageId] = imageFile;
         }
