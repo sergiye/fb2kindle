@@ -624,9 +624,11 @@ namespace Fb2Kindle {
       }
       //root.Add(new XElement("p", Util.Value(book.Elements("description").Elements("title-info").Elements("annotation"))));
       root.Add(new XElement("br"), new XElement("br"));
-      root.Add(new XElement("p", Util.Value(PublishInfo(book).Elements("publisher"))));
-      root.Add(new XElement("p", Util.Value(PublishInfo(book).Elements("city"))));
-      root.Add(new XElement("p", Util.Value(PublishInfo(book).Elements("year"))));
+      foreach (var field in new[] { "publisher", "city", "year" }) {
+        var value = Util.Value(PublishInfo(book).Elements(field));
+        if (!string.IsNullOrEmpty(value))
+          root.Add(new XElement("p", value));
+      }
 
       //footer
       root.Add(new XElement("br"), new XElement("br"), new XElement("br"));
