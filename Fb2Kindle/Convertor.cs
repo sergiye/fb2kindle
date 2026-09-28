@@ -308,7 +308,7 @@ namespace Fb2Kindle {
       head.Add(new XElement(NcxNs + "meta", new XAttribute("name", "dtb:totalPageCount"), new XAttribute("content", "0")));
       head.Add(new XElement(NcxNs + "meta", new XAttribute("name", "dtb:maxPageNumber"), new XAttribute("content", "0")));
       ncx.Add(head);
-      ncx.Add(new XElement(NcxNs + "docTitle", new XElement(NcxNs + "text", options.TargetName)));
+      ncx.Add(new XElement(NcxNs + "docTitle", new XElement(NcxNs + "text", options.DocumentTitle)));
       ncx.Add(new XElement(NcxNs + "docAuthor", new XElement(NcxNs + "text", "fb2Kindle")));
       var navMap = new XElement(NcxNs + "navMap", "");
       var playOrder = 1;
