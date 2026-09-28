@@ -266,6 +266,10 @@ namespace Fb2Kindle {
             origins[bookPath] = bookPath;
             break;
           case ".zip":
+            if (options.OptimizeSource) {
+              Util.WriteLine($"Optimizing books inside archives is not supported: {bookPath}", Util.WarningColor);
+              break;
+            }
             var fileName = Path.GetFileNameWithoutExtension(bookPath).Trim();
             var zipFileIndex = 0;
             try {
