@@ -91,7 +91,7 @@ The new book is saved **next to the source file** with the same name, for exampl
 
     Fb2Kindle.exe <path> [options]
 
-`<path>` must be the **first** argument. It can be:
+`<path>` can be placed anywhere among the options. It can be:
 
   * a single file: `C:\Books\Book.fb2` or `C:\Books\Book.zip`
   * a mask: `C:\Books\*.fb2` or `C:\Books\*.zip`

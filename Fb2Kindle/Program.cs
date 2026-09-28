@@ -361,8 +361,12 @@ namespace Fb2Kindle {
                 break;
 
               default:
-                if (j == 0)
+                if (arg.StartsWith("-"))
+                  Util.WriteLine($"Unknown option ignored: {args[j]}", Util.WarningColor);
+                else if (string.IsNullOrEmpty(bookPath))
                   bookPath = args[j];
+                else
+                  Util.WriteLine($"Only one input path is supported, ignored: {args[j]}", Util.WarningColor);
                 break;
 
               #endregion
