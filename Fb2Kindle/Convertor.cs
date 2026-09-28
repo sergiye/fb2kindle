@@ -583,8 +583,9 @@ namespace Fb2Kindle {
       root.Add(title, new XElement("br"));
 
       //sequence
-      root.Add(new XElement("p", $"{Util.AttributeValue(TitleInfo(book).Elements("sequence"), "name")} {Util.AttributeValue(TitleInfo(book).Elements("sequence"), "number")}"));
-      root.Add(new XElement("br"));
+      var sequence = GetSequenceText(book);
+      if (sequence != null)
+        root.Add(new XElement("p", sequence), new XElement("br"));
 
       //annotation
       var annotation = TitleInfo(book).Elements("annotation").FirstOrDefault();
@@ -719,6 +720,14 @@ namespace Fb2Kindle {
       return book.Elements("description").Elements("publish-info");
     }
 
+    private static string GetSequenceText(XElement book) {
+      var sequence = TitleInfo(book).Elements("sequence");
+      var name = Util.AttributeValue(sequence, "name");
+      if (string.IsNullOrEmpty(name)) return null;
+      var number = Util.AttributeValue(sequence, "number");
+      return string.IsNullOrEmpty(number) ? name : $"{name} {number}";
+    }
+
     private static string GetTitle(XElement book) {
       return Util.Value(TitleInfo(book).Elements("book-title"), "Книга").Trim();
     }
@@ -735,8 +744,9 @@ namespace Fb2Kindle {
         bookTitle = string.IsNullOrEmpty(seqName) ? bookTitle : seqName;
       }
       else {
-        if (options.Config.AddSequenceInfo)
-          bookTitle = $"{seqName} {Util.AttributeValue(TitleInfo(book).Elements("sequence"), "number")} {bookTitle}";
+        var sequence = GetSequenceText(book);
+        if (options.Config.AddSequenceInfo && sequence != null)
+          bookTitle = $"{sequence} {bookTitle}";
       }
       content.Add(bookTitle);
 
