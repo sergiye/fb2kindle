@@ -227,15 +227,7 @@ namespace Fb2Kindle {
         }
         else {
           if (args[0] == "newconsole") {
-            var parameters = string.Empty;
-            if (args.Length > 1) {
-              for (var i = 1; i < args.Length; i++) {
-                if (args[i].Contains(" "))
-                  parameters += $"\"{args[i]}\" ";
-                else
-                  parameters += $"{args[i]} ";
-              }
-            }
+            var parameters = string.Join(" ", args.Skip(1).Select(QuoteArgument));
             //Console.WriteLine($"Executing external with parameters: '{parameters}'...");
             Process.Start(Updater.CurrentFileLocation, parameters);
             return;
@@ -433,6 +425,26 @@ namespace Fb2Kindle {
         Console.WriteLine("\nChecking for updates...");
         Updater.CheckForUpdates(Updater.CheckUpdatesMode.AutoUpdate);
       }
+    }
+
+    //follows the CommandLineToArgvW rules, so backslashes before quotes survive the round trip
+    private static string QuoteArgument(string arg) {
+      if (arg.Length > 0 && arg.IndexOfAny([' ', '\t', '"']) < 0)
+        return arg;
+      var result = new StringBuilder("\"");
+      var backslashes = 0;
+      foreach (var c in arg) {
+        if (c == '\\') {
+          backslashes++;
+          continue;
+        }
+        result.Append('\\', c == '"' ? backslashes * 2 + 1 : backslashes);
+        result.Append(c);
+        backslashes = 0;
+      }
+      result.Append('\\', backslashes * 2);
+      result.Append('"');
+      return result.ToString();
     }
 
     private static ConsoleKey? ReadKey() {
