@@ -109,6 +109,7 @@ namespace Fb2Kindle {
         TocItem rootToc = null;
         var sequenceIndex = 0;
         var documentIds = new List<string>();
+        string singleBookTitle = null;
         for (var idx = 0; idx < sources.Count; idx++) {
           var fileName = Path.GetFileNameWithoutExtension(sources[idx]).Trim();
           Util.WriteLine("Processing: " + fileName);
@@ -139,8 +140,10 @@ namespace Fb2Kindle {
 
           if (sequenceIndex == 0) {
             options.TargetName = fileName;
+            singleBookTitle = GetDocumentTitle(book, false);
             //create instances
-            opfFile = GetEmptyPackage(book, sources.Count > 1);
+            opfFile = GetEmptyPackage(book);
+            SetDocumentTitle(GetDocumentTitle(book, sources.Count > 1));
             AddPackItem("ncx", "toc.ncx", "application/x-dtbncx+xml", false);
           }
 
@@ -191,6 +194,8 @@ namespace Fb2Kindle {
           return sources.Count;
         if (sequenceIndex == 0)
            return 0;
+        if (sequenceIndex == 1 && singleBookTitle != options.DocumentTitle)
+          SetDocumentTitle(singleBookTitle);
         bookId = GetBookIdentifier(documentIds);
         opfFile.Element(OpfNs + "metadata").Elements(DcNs + "identifier").First().Value = bookId;
         CreateNcxFile(rootToc);
@@ -891,6 +896,23 @@ namespace Fb2Kindle {
       return book.Elements("description").Elements("publish-info");
     }
 
+    private string GetDocumentTitle(XElement book, bool useSequenceNameOnly) {
+      var bookTitle = GetTitle(book);
+      if (useSequenceNameOnly) {
+        var seqName = Util.AttributeValue(TitleInfo(book).Elements("sequence"), "name");
+        return string.IsNullOrEmpty(seqName) ? bookTitle : seqName;
+      }
+      var sequence = GetSequenceText(book);
+      return options.Config.AddSequenceInfo && sequence != null ? $"{sequence} {bookTitle}" : bookTitle;
+    }
+
+    private void SetDocumentTitle(string title) {
+      opfFile.Element(OpfNs + "metadata").Element(DcNs + "title").Value = title;
+      options.DocumentTitle = title;
+      Util.Write("Target document title: ");
+      Util.WriteLine(title, Util.MessageColor);
+    }
+
     private static string GetSequenceText(XElement book) {
       var sequence = TitleInfo(book).Elements("sequence");
       var name = Util.AttributeValue(sequence, "name");
@@ -931,30 +953,12 @@ namespace Fb2Kindle {
       return Util.Value(TitleInfo(book).Elements("book-title"), "Книга").Trim();
     }
 
-    private XElement GetEmptyPackage(XElement book, bool useSequenceNameOnly = false) {
+    private XElement GetEmptyPackage(XElement book) {
       var package = new XElement(OpfNs + "package", new XAttribute("version", "2.0"), new XAttribute("unique-identifier", "BookId"));
       var linkEl = new XElement(OpfNs + "metadata", new XAttribute(XNamespace.Xmlns + "dc", DcNs));
 
-      var content = new XElement(DcNs + "title");
-
-      var bookTitle = GetTitle(book);
-      var seqName = Util.AttributeValue(TitleInfo(book).Elements("sequence"), "name");
-      if (useSequenceNameOnly) {
-        bookTitle = string.IsNullOrEmpty(seqName) ? bookTitle : seqName;
-      }
-      else {
-        var sequence = GetSequenceText(book);
-        if (options.Config.AddSequenceInfo && sequence != null)
-          bookTitle = $"{sequence} {bookTitle}";
-      }
-      content.Add(bookTitle);
-
-      options.DocumentTitle = bookTitle;
-      Util.Write("Target document title: ");
-      Util.WriteLine(bookTitle, Util.MessageColor);
-
-      linkEl.Add(content);
-      content = new XElement(DcNs + "creator");
+      linkEl.Add(new XElement(DcNs + "title"));
+      var content = new XElement(DcNs + "creator");
       var authors = GetAuthors(TitleInfo(book).Elements("author"), 5);
       content.Add(string.Join(", ", authors));
       linkEl.Add(content);
