@@ -48,6 +48,7 @@ namespace Fb2Kindle {
     private static readonly string[] BlockImageParents = ["section", "body", "coverpage"];
     private XElement opfFile;
     private string bookId;
+    private string kindleGenPath;
     private readonly AppOptions options;
 
     #region public
@@ -474,18 +475,15 @@ namespace Fb2Kindle {
     private string CreateMobi() {
 
       Util.WriteLine("Creating mobi (KF8)...", Util.InfoColor);
-      var kindleGenPath = $"{options.AppPath}\\{KindleGenName}";
-      if (!File.Exists(kindleGenPath)) {
-        kindleGenPath = $"{options.TempFolder}\\{KindleGenName}";
-        if (!Util.GetFileFromResource(KindleGenName, kindleGenPath)) {
-          Util.WriteLine($"{KindleGenName} not found", Util.ErrorColor);
-          return null;
-        }
+      var kindleGen = GetKindleGenPath();
+      if (kindleGen == null) {
+        Util.WriteLine($"{KindleGenName} not found", Util.ErrorColor);
+        return null;
       }
 
       var outputFileName = Util.GetValidFileName(options.DocumentTitle); //options.TargetName
       var args = $"\"{options.TempFolder}\\content.opf\" -c{options.Config.CompressionLevel} -o \"{outputFileName}.mobi\"";
-      var res = Util.StartProcess(kindleGenPath, args, options.DetailedOutput);
+      var res = Util.StartProcess(kindleGen, args, options.DetailedOutput);
       var mobiPath = $"{options.TempFolder}\\{outputFileName}.mobi";
       if (res == 2 || !File.Exists(mobiPath)) {
         Util.WriteLine($"Error converting to mobi (kindlegen exit code {res})", Util.ErrorColor);
@@ -493,6 +491,31 @@ namespace Fb2Kindle {
       }
 
       return mobiPath;
+    }
+
+    private string GetKindleGenPath() {
+      if (kindleGenPath != null && File.Exists(kindleGenPath))
+        return kindleGenPath;
+      var appKindleGen = Path.Combine(options.AppPath, KindleGenName);
+      if (File.Exists(appKindleGen))
+        return kindleGenPath = appKindleGen;
+
+      var cacheFolder = Path.Combine(Path.GetTempPath(), "Fb2Kindle", Assembly.GetExecutingAssembly().GetName().Version.ToString());
+      var cachedPath = Path.Combine(cacheFolder, KindleGenName);
+      if (!File.Exists(cachedPath)) {
+        Directory.CreateDirectory(cacheFolder);
+        var tmpPath = $"{cachedPath}.{Guid.NewGuid()}.tmp";
+        if (!Util.GetFileFromResource(KindleGenName, tmpPath))
+          return null;
+        try {
+          File.Move(tmpPath, cachedPath);
+        }
+        catch (IOException) {
+          //another instance has extracted it in the meantime
+          File.Delete(tmpPath);
+        }
+      }
+      return kindleGenPath = cachedPath;
     }
 
     private static string GetVersionedPath(string filePath, string fileName = null, string fileExtension = null) {
