@@ -378,6 +378,8 @@ namespace Fb2Kindle {
           options.Epub = true;
         }
 
+        if (Directory.Exists(bookPath))
+          bookPath = Path.Combine(bookPath, allBooksPattern);
         var workPath = Path.GetDirectoryName(bookPath);
         if (string.IsNullOrEmpty(workPath))
           workPath = Environment.CurrentDirectory;
