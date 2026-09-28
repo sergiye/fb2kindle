@@ -455,8 +455,7 @@ namespace Fb2Kindle {
       if (files.Count > 0) {
         files.Sort();
         if (join) {
-          if (conv.ConvertBookSequence(files))
-            processedFiles += files.Count;
+          processedFiles += conv.ConvertBookSequence(files);
         }
         else {
           foreach (var file in files) {

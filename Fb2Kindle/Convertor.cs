@@ -65,7 +65,7 @@ namespace Fb2Kindle {
       options.Css = Util.GetScriptFromResource("Fb2Kindle.css");
     }
 
-    internal bool ConvertBookSequence(List<string> books) {
+    internal int ConvertBookSequence(List<string> books) {
       try {
         options.TempFolder = options.UseSourceAsTempFolder
           ? Path.Combine(Path.GetDirectoryName(books[0]), Path.GetFileNameWithoutExtension(books[0]))
@@ -170,9 +170,9 @@ namespace Fb2Kindle {
         TaskbarProgressHelper.SetState(TaskbarProgressHelper.TaskbarStates.NoProgress);
 
         if (options.OptimizeSource)
-          return sources.Count > 0;
+          return sources.Count;
         if (sequenceIndex == 0)
-           return false;
+           return 0;
         CreateNcxFile(rootToc);
 
         if (!options.Config.SkipToc) {
@@ -185,7 +185,7 @@ namespace Fb2Kindle {
         SaveXmlToFile(opfFile, $@"{options.TempFolder}\content.opf");
 
         if (options.Test)
-          return true;
+          return sequenceIndex;
 
         var tmpBookPath = options.Epub
           ? CreateEpub()
@@ -209,11 +209,11 @@ namespace Fb2Kindle {
           foreach (var book in convertedOrigins.Except(failedOrigins))
             File.Delete(book);
         }
-        return result;
+        return result ? sequenceIndex : 0;
       }
       catch (Exception ex) {
         Util.WriteLine("Unknown error: " + ex.Message, Util.ErrorColor);
-        return false;
+        return 0;
       }
       finally {
         try {
@@ -242,7 +242,7 @@ namespace Fb2Kindle {
     }
 
     internal bool ConvertBook(string bookPath) {
-      return ConvertBookSequence([bookPath]);
+      return ConvertBookSequence([bookPath]) > 0;
     }
 
     #endregion public
