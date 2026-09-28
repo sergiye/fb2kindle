@@ -934,7 +934,10 @@ namespace Fb2Kindle {
                 //   img.Save(file, pngCodec, parameters);
                 // }
                 // else
-                img.Save(file, format);
+                if (img.RawFormat.Equals(format))
+                  File.WriteAllBytes(file, fileBytes);
+                else
+                  img.Save(file, format);
               }
             }
 
