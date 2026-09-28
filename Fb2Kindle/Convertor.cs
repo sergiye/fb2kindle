@@ -40,7 +40,9 @@ namespace Fb2Kindle {
     private const string DropCap = "АБВГДЕЖЗИКЛМНОПРСТУФХЦЧЩШЭЮЯ"; //"АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧЩШЬЪЫЭЮЯQWERTYUIOPASDFGHJKLZXCVBNM";
     private const string NoAuthorText = "без автора";
     private const string KindleGenName = "kindlegen.exe";
+    private static readonly XNamespace NcxNs = "http://www.daisy.org/z3986/2005/ncx/";
     private XElement opfFile;
+    private string bookId;
     private readonly AppOptions options;
 
     #region public
@@ -264,31 +266,31 @@ namespace Fb2Kindle {
     #region ncx
 
     private static XElement AddNcxItem(XElement parent, int playOrder, string label, string href) {
-      var navPoint = new XElement("navPoint");
+      var navPoint = new XElement(NcxNs + "navPoint");
       navPoint.Add(new XAttribute("id", $"p{playOrder}"));
       navPoint.Add(new XAttribute("playOrder", playOrder.ToString()));
-      navPoint.Add(new XElement("navLabel", new XElement("text", label)));
-      navPoint.Add(new XElement("content", new XAttribute("src", href)));
+      navPoint.Add(new XElement(NcxNs + "navLabel", new XElement(NcxNs + "text", label)));
+      navPoint.Add(new XElement(NcxNs + "content", new XAttribute("src", href)));
       parent.Add(navPoint);
       return navPoint;
     }
 
     private void CreateNcxFile(TocItem tocItem) {
-      var ncx = new XElement("ncx");
-      var head = new XElement("head", "");
-      head.Add(new XElement("meta", new XAttribute("name", "dtb:uid"), new XAttribute("content", "BookId")));
-      head.Add(new XElement("meta", new XAttribute("name", "dtb:depth"), new XAttribute("content", "3")));
-      head.Add(new XElement("meta", new XAttribute("name", "dtb:totalPageCount"), new XAttribute("content", "0")));
-      head.Add(new XElement("meta", new XAttribute("name", "dtb:maxPageNumber"), new XAttribute("content", "0")));
+      var ncx = new XElement(NcxNs + "ncx", new XAttribute("version", "2005-1"));
+      var head = new XElement(NcxNs + "head", "");
+      head.Add(new XElement(NcxNs + "meta", new XAttribute("name", "dtb:uid"), new XAttribute("content", bookId)));
+      head.Add(new XElement(NcxNs + "meta", new XAttribute("name", "dtb:depth"), new XAttribute("content", "3")));
+      head.Add(new XElement(NcxNs + "meta", new XAttribute("name", "dtb:totalPageCount"), new XAttribute("content", "0")));
+      head.Add(new XElement(NcxNs + "meta", new XAttribute("name", "dtb:maxPageNumber"), new XAttribute("content", "0")));
       ncx.Add(head);
-      ncx.Add(new XElement("docTitle", new XElement("text", options.TargetName)));
-      ncx.Add(new XElement("docAuthor", new XElement("text", "fb2Kindle")));
-      var navMap = new XElement("navMap", "");
-      AddNcxItem(navMap, 0, "Описание", "book.html#it");
-      var playOrder = 2;
+      ncx.Add(new XElement(NcxNs + "docTitle", new XElement(NcxNs + "text", options.TargetName)));
+      ncx.Add(new XElement(NcxNs + "docAuthor", new XElement(NcxNs + "text", "fb2Kindle")));
+      var navMap = new XElement(NcxNs + "navMap", "");
+      var playOrder = 1;
+      AddNcxItem(navMap, playOrder++, "Описание", "book.html#it");
       AddTocListItems(tocItem, navMap, ref playOrder, 1);
       if (!options.Config.SkipToc)
-        AddNcxItem(navMap, 1, "Содержание", "toc.html#toc");
+        AddNcxItem(navMap, playOrder, "Содержание", "toc.html#toc");
       ncx.Add(navMap);
       SaveXmlToFile(ncx, $"{options.TempFolder}\\toc.ncx");
       ncx.RemoveAll();
@@ -718,7 +720,8 @@ namespace Fb2Kindle {
       linkEl.Add(content);
       //content.Add(Util.Value(book.Elements("description").Elements("publish-info").Elements("year")));
       linkEl.Add(new XElement(dc + "Date", DateTime.Today.ToString("yyyy-MM-dd")));
-      linkEl.Add(new XElement(dc + "Identifier", new XAttribute("id", "DOI"), Guid.NewGuid().ToString()));
+      bookId = Guid.NewGuid().ToString();
+      linkEl.Add(new XElement(dc + "Identifier", new XAttribute("id", "DOI"), bookId));
       content = new XElement(dc + "Language");
       var bookLang = Util.Value(book.Elements("description").First().Elements("title-info").First().Elements("lang"));
       if (string.IsNullOrEmpty(bookLang))
