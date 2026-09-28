@@ -10,6 +10,10 @@ namespace Fb2Kindle {
 
   static class Program {
 
+    private static readonly string[] ConfigSwitches = [
+      "-u", "-update", "-nch", "-dc", "-ni", "-optimize", "-g", "-jpeg", "-ntoc", "-c", "-c1", "-c2", "-s", "-d"
+    ];
+
     private static void ShowHelpText() {
       Util.WriteLine($"Usage: {Updater.ApplicationName} [options]");
       Util.WriteLine("Available options:");
@@ -42,6 +46,8 @@ namespace Fb2Kindle {
       Util.WriteLine("\t-ni: no images");
       Util.WriteLine("\t-g: grayscale images");
       Util.WriteLine("\t-jpeg: save images in jpeg");
+      Util.WriteLine();
+      Util.WriteLine("\tAppend `-` to -d, -u, -s, -c, -dc, -ntoc, -nch, -optimize, -ni, -g or -jpeg to turn it off (ex: -d-), useful to override saved parameters");
 
       Util.WriteLine();
     }
@@ -225,47 +231,53 @@ namespace Fb2Kindle {
 
           Console.WriteLine($"Executing '{Updater.CurrentFileLocation}' with parameters: '{string.Join(" ", args)}'");
           for (var j = 0; j < args.Length; j++) {
-            switch (args[j].ToLower().Trim()) {
+            var arg = args[j].ToLower().Trim();
+            var enable = true;
+            if (arg.Length > 2 && arg.EndsWith("-") && ConfigSwitches.Contains(arg.Substring(0, arg.Length - 1))) {
+              arg = arg.Substring(0, arg.Length - 1);
+              enable = false;
+            }
+            switch (arg) {
 
               #region config
 
               case "-u":
               case "-update":
-                options.Config.CheckUpdates = true;
+                options.Config.CheckUpdates = enable;
                 break;
               case "-nch":
-                options.Config.NoChapters = true;
+                options.Config.NoChapters = enable;
                 break;
               case "-dc":
-                options.Config.DropCaps = true;
+                options.Config.DropCaps = enable;
                 break;
               case "-ni":
-                options.Config.NoImages = true;
+                options.Config.NoImages = enable;
                 break;
               case "-optimize":
-                options.Config.OptimizeImages = true;
+                options.Config.OptimizeImages = enable;
                 break;
               case "-g":
-                options.Config.Grayscaled = true;
+                options.Config.Grayscaled = enable;
                 break;
               case "-jpeg":
-                options.Config.Jpeg = true;
+                options.Config.Jpeg = enable;
                 break;
               case "-ntoc":
-                options.Config.SkipToc = true;
+                options.Config.SkipToc = enable;
                 break;
               case "-c":
               case "-c1":
-                options.Config.CompressionLevel = 1;
+                options.Config.CompressionLevel = (byte)(enable ? 1 : 0);
                 break;
               case "-c2":
-                options.Config.CompressionLevel = 2;
+                options.Config.CompressionLevel = (byte)(enable ? 2 : 0);
                 break;
               case "-s":
-                options.Config.AddSequenceInfo = true;
+                options.Config.AddSequenceInfo = enable;
                 break;
               case "-d":
-                options.Config.DeleteOriginal = true;
+                options.Config.DeleteOriginal = enable;
                 break;
 
               #endregion
