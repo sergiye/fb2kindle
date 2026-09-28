@@ -183,7 +183,7 @@ namespace Fb2Kindle {
           ConvertTagsToHtml(bookRoot, true);
           SaveAsHtmlBook(bookRoot, $"{options.TempFolder}\\{bookFileName}", bookTitle);
           convertedOrigins.Add(origins[sources[idx]]);
-          documentIds.Add(Util.Value(book.Elements("description").Elements("document-info").Elements("id")));
+          documentIds.Add(GetDocumentKey(book));
           sequenceIndex++;
         }
 
@@ -942,14 +942,19 @@ namespace Fb2Kindle {
       return text.Length > 0 ? text : null;
     }
 
+    //FB2 ids are often reused between books, so title and authors are part of the key
+    private static string GetDocumentKey(XElement book) {
+      var id = Util.Value(book.Elements("description").Elements("document-info").Elements("id"));
+      if (id == null) return null;
+      return $"{id}\n{GetTitle(book)}\n{string.Join(", ", GetAuthors(TitleInfo(book).Elements("author")))}";
+    }
+
     //a stable identifier lets Kindle recognize a re-converted book instead of adding a duplicate
-    private static string GetBookIdentifier(List<string> documentIds) {
-      if (documentIds.Count == 0 || documentIds.Any(string.IsNullOrWhiteSpace))
+    private static string GetBookIdentifier(List<string> documentKeys) {
+      if (documentKeys.Count == 0 || documentKeys.Any(key => key == null))
         return $"urn:uuid:{Guid.NewGuid()}";
-      if (documentIds.Count == 1)
-        return Guid.TryParse(documentIds[0].Trim('{', '}'), out var guid) ? $"urn:uuid:{guid}" : $"urn:fb2:{documentIds[0]}";
       using (var md5 = System.Security.Cryptography.MD5.Create())
-        return $"urn:uuid:{new Guid(md5.ComputeHash(Encoding.UTF8.GetBytes(string.Join("|", documentIds))))}";
+        return $"urn:uuid:{new Guid(md5.ComputeHash(Encoding.UTF8.GetBytes(string.Join("\n\n", documentKeys))))}";
     }
 
     private static string GetBookDate(XElement book) {
