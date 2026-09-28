@@ -22,7 +22,7 @@ namespace Fb2Kindle {
     internal static bool GetFileFromResource(string resourceName, string filename) {
       using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream($"Fb2Kindle.{resourceName}")) {
         if (stream == null) return false;
-        using (Stream file = File.OpenWrite(filename)) {
+        using (Stream file = File.Create(filename)) {
           var buffer = new byte[8 * 1024];
           int len;
           while ((len = stream.Read(buffer, 0, buffer.Length)) > 0)
