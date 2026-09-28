@@ -407,43 +407,18 @@ namespace Fb2Kindle {
 
     private static void SetBigFirstLetters(XElement body) {
       var regex = new Regex(@"^<p>(\w{1})([\s\w]+.+?)</p>$");
-      var sections = body.Descendants("section");
-      foreach (var sec in sections) {
-        var newPart = true;
-        foreach (var t in sec.Elements()) {
-          switch (t.Name.ToString()) {
-            case "title":
-            case "subtitle":
-              newPart = true;
-              break;
-            case "p":
-              if (t.IsEmpty || t.HasAttributes) continue;
-              var pVal = t.ToString().Trim().Replace("\r", "").Replace("\n", "");
-              var matches = regex.Matches(pVal);
-              if (matches.Count <= 0 || matches[0].Groups.Count != 3) {
-                newPart = false;
-                continue;
-              }
-              var firstSymbol = matches[0].Groups[1].Value;
-              if (!DropCap.Contains(firstSymbol)) {
-                newPart = false;
-                continue;
-              }
-              t.RemoveAll();
-              var newEl = XElement.Parse("<p>" + matches[0].Groups[2].Value + "</p>");
-              var span = new XElement("span", firstSymbol);
-              if (newPart) {
-                newEl.SetAttributeValue("style", "text-indent:0px;");
-                span.SetAttributeValue("class", "dc");
-                newPart = false;
-              }
-              else
-                span.SetAttributeValue("class", "dc2");
-              newEl.AddFirst(span);
-              t.ReplaceWith(newEl);
-              break;
-          }
-        }
+      foreach (var sec in body.Descendants("section")) {
+        var t = sec.Elements("p").FirstOrDefault(p => !p.IsEmpty && !p.HasAttributes);
+        if (t == null) continue;
+        var pVal = t.ToString().Trim().Replace("\r", "").Replace("\n", "");
+        var matches = regex.Matches(pVal);
+        if (matches.Count <= 0 || matches[0].Groups.Count != 3) continue;
+        var firstSymbol = matches[0].Groups[1].Value;
+        if (!DropCap.Contains(firstSymbol)) continue;
+        var newEl = XElement.Parse("<p>" + matches[0].Groups[2].Value + "</p>");
+        newEl.SetAttributeValue("style", "text-indent:0px;");
+        newEl.AddFirst(new XElement("span", new XAttribute("class", "dc"), firstSymbol));
+        t.ReplaceWith(newEl);
       }
     }
 
