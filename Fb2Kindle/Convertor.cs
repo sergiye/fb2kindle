@@ -49,6 +49,7 @@ namespace Fb2Kindle {
     private XElement opfFile;
     private string bookId;
     private string kindleGenPath;
+    private readonly HashSet<string> referencedImages = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
     private readonly AppOptions options;
 
     #region public
@@ -83,6 +84,7 @@ namespace Fb2Kindle {
         TaskbarProgressHelper.SetState(TaskbarProgressHelper.TaskbarStates.Normal);
         TaskbarProgressHelper.SetValue(0, books.Count);
 
+        referencedImages.Clear();
         var origins = new Dictionary<string, string>();
         var sources = ExtractArchives(books, origins);
         var convertedOrigins = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -854,6 +856,7 @@ namespace Fb2Kindle {
         if (mediaType == null) continue;
         var href = file.Substring(options.TempFolder.Length).TrimStart('\\', '/').Replace("\\", "/");
         if (hrefs.Contains(href)) continue;
+        if (href.StartsWith("Images/", StringComparison.OrdinalIgnoreCase) && !referencedImages.Contains(href)) continue;
         AddPackItem($"res{index++}", href, mediaType, false);
       }
     }
@@ -903,6 +906,7 @@ namespace Fb2Kindle {
             element.Name = "span";
           var imgEl = new XElement("img");
           imgEl.SetAttributeValue("src", imageFile);
+          referencedImages.Add(imageFile);
           element.Add(imgEl);
         }
       }
