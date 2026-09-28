@@ -84,7 +84,7 @@ namespace Fb2Kindle {
     internal int ConvertBookSequence(List<string> books) {
       try {
         options.TempFolder = options.UseSourceAsTempFolder
-          ? Path.Combine(Path.GetDirectoryName(books[0]), Path.GetFileNameWithoutExtension(books[0]))
+          ? GetVersionedPath(Path.Combine(Path.GetDirectoryName(books[0]), Path.GetFileNameWithoutExtension(books[0])))
           : Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
 
         // tempDir = GetVersionedPath(tempDir);
