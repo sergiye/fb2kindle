@@ -40,8 +40,13 @@ namespace Fb2Kindle {
     internal string GetSmtpPassword() {
       if (string.IsNullOrEmpty(SmtpPassword) || !SmtpPassword.StartsWith(ProtectedPrefix))
         return SmtpPassword;
-      var data = Convert.FromBase64String(SmtpPassword.Substring(ProtectedPrefix.Length));
-      return Encoding.UTF8.GetString(ProtectedData.Unprotect(data, null, DataProtectionScope.CurrentUser));
+      try {
+        var data = Convert.FromBase64String(SmtpPassword.Substring(ProtectedPrefix.Length));
+        return Encoding.UTF8.GetString(ProtectedData.Unprotect(data, null, DataProtectionScope.CurrentUser));
+      }
+      catch (Exception ex) when (ex is CryptographicException || ex is FormatException) {
+        throw new InvalidOperationException("Unable to decrypt the SMTP password: it was encrypted by another Windows user or on another computer. Enter the password in the settings file again.", ex);
+      }
     }
 
     internal bool ProtectSecrets() {
