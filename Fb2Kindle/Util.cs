@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Xml.Linq;
 
 namespace Fb2Kindle {
@@ -148,7 +149,12 @@ namespace Fb2Kindle {
     internal static string GetValidFileName(string origin) {
       if (string.IsNullOrWhiteSpace(origin))
         throw new ArgumentException("File name can not be empty.");
-      return Path.GetInvalidFileNameChars().Aggregate(origin, (current, c) => current.Replace(c, '-'));
+      var result = Path.GetInvalidFileNameChars().Aggregate(origin, (current, c) => current.Replace(c, '-')).TrimEnd('.', ' ');
+      if (result.Length == 0 || ReservedFileName.IsMatch(result))
+        result = "_" + result;
+      return result;
     }
+
+    private static readonly Regex ReservedFileName = new Regex(@"^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])(\..*)?$", RegexOptions.IgnoreCase);
   }
 }
