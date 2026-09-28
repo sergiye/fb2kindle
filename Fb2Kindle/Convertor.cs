@@ -95,18 +95,23 @@ namespace Fb2Kindle {
           TaskbarProgressHelper.SetValue(idx, sources.Count);
 
           if (options.OptimizeSource) {
-            XElement bookRaw;
-            using (Stream file = File.OpenRead(sources[idx])) {
-              bookRaw = XElement.Load(file, LoadOptions.PreserveWhitespace);
+            try {
+              XElement bookRaw;
+              using (Stream file = File.OpenRead(sources[idx])) {
+                bookRaw = XElement.Load(file, LoadOptions.PreserveWhitespace);
+              }
+              if (bookRaw != null && OptimizeImages(bookRaw)) {
+                 bookRaw.Save(sources[idx], SaveOptions.DisableFormatting);
+              }
             }
-            if (bookRaw != null && OptimizeImages(bookRaw)) {
-               bookRaw.Save(sources[idx], SaveOptions.DisableFormatting);
+            catch (Exception ex) {
+              Util.WriteLine("Unable to optimize source: " + ex.Message, Util.ErrorColor);
             }
             continue;
           }
 
           var book = LoadBookWithoutNs(sources[idx]);
-          if (book == null) return false;
+          if (book == null) continue;
 
           if (sequenceIndex == 0) {
             options.TargetName = fileName;
@@ -247,20 +252,25 @@ namespace Fb2Kindle {
           case ".zip":
             var fileName = Path.GetFileNameWithoutExtension(bookPath).Trim();
             var zipFileIndex = 0;
-            using (var zip = ZipFile.OpenRead(bookPath)) {
-              foreach (var zipEntry in zip.Entries) {
-                var zipEntryFileExtension = Path.GetExtension(zipEntry.Name)?.ToLower();
-                if (!".fb2".Equals(zipEntryFileExtension))
-                  continue;
-                var unzippedFileName = zipFileIndex == 0
-                  ? Util.GetValidFileName($"{fileName}{zipEntryFileExtension}")
-                  : Util.GetValidFileName($"{fileName}_{zipFileIndex}{zipEntryFileExtension}");
-                var unzippedPath = Path.Combine(options.TempFolder, unzippedFileName);
-                zipEntry.ExtractToFile(unzippedPath, true);
-                result.Add(unzippedPath);
-                origins[unzippedPath] = bookPath;
-                zipFileIndex++;
+            try {
+              using (var zip = ZipFile.OpenRead(bookPath)) {
+                foreach (var zipEntry in zip.Entries) {
+                  var zipEntryFileExtension = Path.GetExtension(zipEntry.Name)?.ToLower();
+                  if (!".fb2".Equals(zipEntryFileExtension))
+                    continue;
+                  var unzippedFileName = zipFileIndex == 0
+                    ? Util.GetValidFileName($"{fileName}{zipEntryFileExtension}")
+                    : Util.GetValidFileName($"{fileName}_{zipFileIndex}{zipEntryFileExtension}");
+                  var unzippedPath = Path.Combine(options.TempFolder, unzippedFileName);
+                  zipEntry.ExtractToFile(unzippedPath, true);
+                  result.Add(unzippedPath);
+                  origins[unzippedPath] = bookPath;
+                  zipFileIndex++;
+                }
               }
+            }
+            catch (Exception ex) when (ex is InvalidDataException || ex is IOException || ex is UnauthorizedAccessException) {
+              Util.WriteLine($"Unable to read archive '{bookPath}': {ex.Message}", Util.ErrorColor);
             }
             break;
           default:
@@ -651,6 +661,10 @@ namespace Fb2Kindle {
             el.Add(new XAttribute(ns.GetName(at.Name.LocalName), at.Value));
         }
         book = new XElement("book", book.Elements("description"), book.Elements("body"), book.Elements("binary"));
+        if (!book.Elements("body").Any()) {
+          Util.WriteLine("Unknown file format: no book body found", Util.ErrorColor);
+          return null;
+        }
         return book;
       }
       catch (Exception ex) {
