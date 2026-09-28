@@ -570,8 +570,21 @@ namespace Fb2Kindle {
           //another instance has extracted it in the meantime
           File.Delete(tmpPath);
         }
+        DeleteOtherVersions(cacheFolder);
       }
       return kindleGenPath = cachedPath;
+    }
+
+    private static void DeleteOtherVersions(string cacheFolder) {
+      foreach (var folder in Directory.GetDirectories(Path.GetDirectoryName(cacheFolder))) {
+        if (string.Equals(folder, cacheFolder, StringComparison.OrdinalIgnoreCase)) continue;
+        try {
+          Directory.Delete(folder, true);
+        }
+        catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException) {
+          //still used by a running instance of another version
+        }
+      }
     }
 
     private static string GetVersionedPath(string filePath, string fileName = null, string fileExtension = null) {
