@@ -214,12 +214,12 @@ namespace Fb2Kindle {
           ShowHelpText();
           Util.WriteLine("\nDo you want to integrate this app with Windows Explorer (add context menu)?", Util.StatusColor);
           Util.WriteLine("Press Enter to confirm, or any other key to skip...", Util.WarningColor);
-          if (Console.ReadKey().Key == ConsoleKey.Enter) {
+          if (ReadKey() == ConsoleKey.Enter) {
             Register(Updater.CurrentFileLocation);
           }
           Util.WriteLine("\nDo you want to process all local files recursively using default settings?", Util.StatusColor);
           Util.WriteLine("Press Enter to continue, or any other key to exit...", Util.WarningColor);
-          if (Console.ReadKey().Key != ConsoleKey.Enter)
+          if (ReadKey() != ConsoleKey.Enter)
             return;
           wait = true;
           bookPath = Path.Combine(appPath, allBooksPattern);
@@ -419,7 +419,7 @@ namespace Fb2Kindle {
           Util.WriteLine("\nNo files processed", Util.WarningColor);
         }
 
-        if (wait) {
+        if (wait && !Console.IsInputRedirected) {
           Util.WriteLine("\nPress any key to continue...", Util.InfoColor);
           Console.ReadKey();
         }
@@ -433,6 +433,10 @@ namespace Fb2Kindle {
         Console.WriteLine("\nChecking for updates...");
         Updater.CheckForUpdates(Updater.CheckUpdatesMode.AutoUpdate);
       }
+    }
+
+    private static ConsoleKey? ReadKey() {
+      return Console.IsInputRedirected ? null : Console.ReadKey().Key;
     }
 
     private static bool IsCommand(string arg, string command) {
