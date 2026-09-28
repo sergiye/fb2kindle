@@ -825,11 +825,15 @@ namespace Fb2Kindle {
           if (string.IsNullOrEmpty(src)) continue;
           src = src.Replace("#", "");
           var imgEl = new XElement("img");
-          imgEl.SetAttributeValue("src", GetImageNameWithExt($"{imagesPrefix}{src}"));
+          imgEl.SetAttributeValue("src", GetImageFileName(imagesPrefix, src));
           element.Add(imgEl);
         }
       }
       return imagesCreated;
+    }
+
+    private string GetImageFileName(string imagesPrefix, string imageId) {
+      return GetImageNameWithExt(imagesPrefix + Util.GetValidFileName(imageId));
     }
 
     private string GetImageNameWithExt(string original) {
@@ -844,7 +848,7 @@ namespace Fb2Kindle {
       Util.Write("Extracting images...", Util.InfoColor);
       foreach (var binEl in book.Elements("binary")) {
         try {
-          var file = GetImageNameWithExt($"{workFolder}\\{imagesPrefix}{binEl.Attribute("id")?.Value}");
+          var file = Path.Combine(workFolder, GetImageFileName(imagesPrefix, binEl.Attribute("id")?.Value));
           var format = (binEl.Attribute("content-type")?.Value).GetImageFormatFromMimeType(options.Config.Jpeg ? ImageFormat.Jpeg : ImageFormat.Png);
           //todo: we can get format from img.RawFormat
           var fileBytes = Convert.FromBase64String(binEl.Value);
