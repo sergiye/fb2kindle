@@ -491,7 +491,8 @@ namespace Fb2Kindle {
 
     private bool SendBookByMail(string tmpBookPath) {
       try {
-        if (string.IsNullOrWhiteSpace(options.Config.SmtpServer) || options.Config.SmtpPort <= 0) {
+        if (string.IsNullOrWhiteSpace(options.Config.SmtpServer) || options.Config.SmtpPort <= 0 ||
+            string.IsNullOrWhiteSpace(options.Config.SmtpLogin) || string.IsNullOrEmpty(options.Config.SmtpPassword)) {
           Util.WriteLine("Mail delivery failed: smtp not configured", Util.ErrorColor);
           return false;
         }

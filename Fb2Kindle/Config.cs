@@ -27,8 +27,8 @@ namespace Fb2Kindle {
 
     public string SmtpServer { get; set; } = "smtp.gmail.com";
     public int SmtpPort { get; set; } = 587;
-    public string SmtpLogin { get; set; } = "user@gmail.com";
-    public string SmtpPassword { get; set; } = "password";
+    public string SmtpLogin { get; set; }
+    public string SmtpPassword { get; set; }
     public int SmtpTimeout { get; set; } = 100000;
 
     public bool CheckUpdates { get; set; }
