@@ -73,7 +73,7 @@ namespace Fb2Kindle {
         if (!Directory.Exists(options.TempFolder))
           Directory.CreateDirectory(options.TempFolder);
 
-        if (options.Css.Contains("src: url(\"fonts/") && Directory.Exists(options.AppPath + @"\fonts")) {
+        if (Regex.IsMatch(options.Css, @"url\(\s*[""']?fonts/", RegexOptions.IgnoreCase) && Directory.Exists(options.AppPath + @"\fonts")) {
           Directory.CreateDirectory(options.TempFolder + @"\fonts");
           Util.CopyDirectory(options.AppPath + @"\fonts", options.TempFolder + @"\fonts", true);
         }
@@ -390,7 +390,7 @@ namespace Fb2Kindle {
       }
 
       bodies[0].Name = "section";
-      if (options.Config.DropCaps && options.Css.Contains("span.dc{"))
+      if (options.Config.DropCaps && Regex.IsMatch(options.Css, @"span\.dc\s*\{"))
         SetBigFirstLetters(bodies[0]);
 
       if (options.Config.NoChapters) {
