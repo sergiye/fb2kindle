@@ -41,6 +41,8 @@ namespace Fb2Kindle {
     private const string DropCap = "АБВГДЕЖЗИКЛМНОПРСТУФХЦЧЩШЭЮЯ"; //"АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧЩШЬЪЫЭЮЯQWERTYUIOPASDFGHJKLZXCVBNM";
     private const string NoAuthorText = "без автора";
     private const string KindleGenName = "kindlegen.exe";
+    //short fixed name keeps the temp path far from MAX_PATH; the result is renamed afterwards
+    private const string TempBookName = "result";
     private static readonly XNamespace NcxNs = "http://www.daisy.org/z3986/2005/ncx/";
     private static readonly XNamespace XhtmlNs = "http://www.w3.org/1999/xhtml";
     private static readonly XNamespace OpfNs = "http://www.idpf.org/2007/opf";
@@ -462,7 +464,7 @@ namespace Fb2Kindle {
 
       Util.WriteLine("Creating epub...", Util.InfoColor);
 
-      var tmpBookPath = GetVersionedPath(options.TempFolder, Util.GetValidFileName(options.DocumentTitle), ".epub");
+      var tmpBookPath = GetVersionedPath(options.TempFolder, TempBookName, ".epub");
       // var tmpBookPath = GetVersionedPath(options.TempFolder, options.TargetName, ".epub");
       using (var epub = new EpubArchive(tmpBookPath)) {
         epub.AddEntry("mimetype", "application/epub+zip", false);
@@ -487,7 +489,7 @@ namespace Fb2Kindle {
         return null;
       }
 
-      var outputFileName = Util.GetValidFileName(options.DocumentTitle); //options.TargetName
+      var outputFileName = TempBookName;
       var args = $"\"{options.TempFolder}\\content.opf\" -c{options.Config.CompressionLevel} -o \"{outputFileName}.mobi\"";
       var res = Util.StartProcess(kindleGen, args, options.DetailedOutput);
       var mobiPath = $"{options.TempFolder}\\{outputFileName}.mobi";
@@ -560,10 +562,10 @@ namespace Fb2Kindle {
             // message.BodyEncoding = message.SubjectEncoding = Encoding.UTF8;
             message.IsBodyHtml = false;
             message.Subject = options.DocumentTitle; //options.TargetName;
-            var fileName = Path.GetFileName(tmpBookPath); //options.TargetName
+            var fileName = Util.GetValidFileName(options.DocumentTitle) + Path.GetExtension(tmpBookPath);
             message.Body = $"Hello! Please, check '{fileName}' file with '{options.DocumentTitle}' book attached";
 
-            using (var att = new Attachment(tmpBookPath)) {
+            using (var att = new Attachment(tmpBookPath) { Name = fileName }) {
               message.Attachments.Add(att);
               smtp.Send(message);
               //await smtp.SendMailAsync(message);
