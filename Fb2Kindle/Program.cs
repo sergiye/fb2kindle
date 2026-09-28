@@ -1,6 +1,7 @@
 ﻿using Microsoft.Win32;
 using sergiye.Common;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -430,7 +431,16 @@ namespace Fb2Kindle {
 
     private static int ProcessFolder(Convertor conv, string workPath, string searchMask, bool recursive, bool join) {
       var processedFiles = 0;
-      var files = Directory.GetFiles(workPath, searchMask, SearchOption.TopDirectoryOnly).ToList();
+      List<string> files;
+      DirectoryInfo[] subFolders;
+      try {
+        files = Directory.GetFiles(workPath, searchMask, SearchOption.TopDirectoryOnly).ToList();
+        subFolders = recursive ? new DirectoryInfo(workPath).GetDirectories() : [];
+      }
+      catch (Exception ex) when (ex is UnauthorizedAccessException || ex is IOException) {
+        Util.WriteLine($"Skipping folder '{workPath}': {ex.Message}", Util.WarningColor);
+        return 0;
+      }
       if (files.Count > 0) {
         files.Sort();
         if (join) {
@@ -445,9 +455,10 @@ namespace Fb2Kindle {
         }
       }
 
-      if (recursive)
-        processedFiles += Directory.GetDirectories(workPath)
-          .Sum(folder => ProcessFolder(conv, folder, searchMask, true, join));
+      //junctions and symlinks can point back to a parent folder
+      processedFiles += subFolders
+        .Where(folder => (folder.Attributes & FileAttributes.ReparsePoint) == 0)
+        .Sum(folder => ProcessFolder(conv, folder.FullName, searchMask, true, join));
       return processedFiles;
     }
   }
