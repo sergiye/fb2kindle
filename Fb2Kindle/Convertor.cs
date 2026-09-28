@@ -110,12 +110,12 @@ namespace Fb2Kindle {
 
           if (options.OptimizeSource) {
             try {
-              XElement bookRaw;
+              XDocument bookRaw;
               using (Stream file = File.OpenRead(sources[idx])) {
-                bookRaw = XElement.Load(file, LoadOptions.PreserveWhitespace);
+                bookRaw = XDocument.Load(file, LoadOptions.PreserveWhitespace);
               }
-              if (bookRaw != null && OptimizeImages(bookRaw)) {
-                 bookRaw.Save(sources[idx], SaveOptions.DisableFormatting);
+              if (bookRaw.Root != null && OptimizeImages(bookRaw.Root)) {
+                 SaveSourceSafely(bookRaw, sources[idx]);
               }
             }
             catch (Exception ex) {
@@ -712,6 +712,29 @@ namespace Fb2Kindle {
       catch (Exception ex) {
         Util.WriteLine("Unknown file format: " + ex.Message, Util.ErrorColor);
         return null;
+      }
+    }
+
+    private static void SaveSourceSafely(XDocument book, string fileName) {
+      Encoding encoding;
+      try {
+        encoding = Encoding.GetEncoding(book.Declaration?.Encoding ?? "utf-8");
+      }
+      catch (ArgumentException) {
+        encoding = Encoding.UTF8;
+      }
+      if (encoding.CodePage == Encoding.UTF8.CodePage)
+        encoding = new UTF8Encoding(false);
+      //the source is replaced only after the new copy is completely written
+      var tmpFileName = $"{fileName}.{Guid.NewGuid():N}.tmp";
+      try {
+        using (var writer = XmlWriter.Create(tmpFileName, new XmlWriterSettings { Encoding = encoding }))
+          book.Save(writer);
+        File.Replace(tmpFileName, fileName, null);
+      }
+      finally {
+        if (File.Exists(tmpFileName))
+          File.Delete(tmpFileName);
       }
     }
 
