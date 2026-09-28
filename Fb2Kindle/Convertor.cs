@@ -88,6 +88,7 @@ namespace Fb2Kindle {
         var origins = new Dictionary<string, string>();
         var sources = ExtractArchives(books, origins);
         var convertedOrigins = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var failedOrigins = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var coverDone = false;
         TocItem rootToc = null;
         var sequenceIndex = 0;
@@ -114,7 +115,10 @@ namespace Fb2Kindle {
           }
 
           var book = LoadBookWithoutNs(sources[idx]);
-          if (book == null) continue;
+          if (book == null) {
+            failedOrigins.Add(origins[sources[idx]]);
+            continue;
+          }
 
           if (sequenceIndex == 0) {
             options.TargetName = fileName;
@@ -202,7 +206,7 @@ namespace Fb2Kindle {
         }
 
         if (result && options.Config.DeleteOriginal) {
-          foreach (var book in convertedOrigins)
+          foreach (var book in convertedOrigins.Except(failedOrigins))
             File.Delete(book);
         }
         return result;
