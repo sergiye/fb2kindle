@@ -1042,6 +1042,8 @@ namespace Fb2Kindle {
           return "application/vnd.ms-opentype";
         case ".woff":
           return "application/font-woff";
+        case ".woff2":
+          return "font/woff2";
         default:
           return null;
       }
