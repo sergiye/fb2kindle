@@ -41,6 +41,9 @@ namespace Fb2Kindle {
     private const string DropCap = "АБВГДЕЖЗИКЛМНОПРСТУФХЦЧЩШЭЮЯ"; //"АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧЩШЬЪЫЭЮЯQWERTYUIOPASDFGHJKLZXCVBNM";
     private const string NoAuthorText = "без автора";
     private const string KindleGenName = "kindlegen.exe";
+    //prefix keeps generated anchors apart from the ids that come from the book itself
+    private const string GeneratedIdPrefix = "fb2k_";
+    private const string TitlePageId = GeneratedIdPrefix + "it";
     //short fixed name keeps the temp path far from MAX_PATH; the result is renamed afterwards
     private const string TempBookName = "result";
     private static readonly XNamespace NcxNs = "http://www.daisy.org/z3986/2005/ncx/";
@@ -326,7 +329,7 @@ namespace Fb2Kindle {
       ncx.Add(new XElement(NcxNs + "docAuthor", new XElement(NcxNs + "text", "fb2Kindle")));
       var navMap = new XElement(NcxNs + "navMap", "");
       var playOrder = 1;
-      AddNcxItem(navMap, playOrder++, "Описание", "book.html#it");
+      AddNcxItem(navMap, playOrder++, "Описание", $"book.html#{TitlePageId}");
       AddTocListItems(tocItem, navMap, ref playOrder, 1);
       if (!options.Config.SkipToc)
         AddNcxItem(navMap, playOrder, "Содержание", "toc.html#toc");
@@ -370,7 +373,7 @@ namespace Fb2Kindle {
     }
 
     private static int SaveSubSections(XElement section, int bookNum, TocItem parent, string postfix, string bookFileName) {
-      var bookId = "i" + bookNum + postfix;
+      var bookId = $"{GeneratedIdPrefix}i{bookNum}{postfix}";
       var t = section.Elements("title").FirstOrDefault(el => !string.IsNullOrWhiteSpace(el.Value));
       //var t = section.Descendants("title").FirstOrDefault(el => !string.IsNullOrWhiteSpace(el.Value));
       // if (t == null || string.IsNullOrEmpty(t.Value)) {
@@ -411,7 +414,7 @@ namespace Fb2Kindle {
         //   bodies[0].Add(bodies[i]);
         //   continue;
         // }
-        additionalParts.Add(new KeyValuePair<string, XElement>($"body{i}", bodies[i]));
+        additionalParts.Add(new KeyValuePair<string, XElement>($"{GeneratedIdPrefix}body{i}", bodies[i]));
       }
 
       bodies[0].Name = "section";
@@ -423,11 +426,11 @@ namespace Fb2Kindle {
         var ts = bodies[0].Descendants("title");
         foreach (var t in ts) {
           if (!string.IsNullOrEmpty(t.Value))
-            parent.Add(t.Value.Trim(), $"{bookFileName}#title{i + 2}");
+            parent.Add(t.Value.Trim(), $"{bookFileName}#{GeneratedIdPrefix}title{i + 2}");
           Util.RenameTag(t, "div", "title");
           var inner = new XElement("div");
           inner.SetAttributeValue("class", i == 0 ? "title0" : "title1");
-          inner.SetAttributeValue("id", $"title{i + 2}");
+          inner.SetAttributeValue("id", $"{GeneratedIdPrefix}title{i + 2}");
           inner.Add(t.Nodes());
           t.RemoveNodes();
           t.Add(inner);
@@ -444,6 +447,7 @@ namespace Fb2Kindle {
         var item = part.Value;
         if (string.IsNullOrWhiteSpace((string)item.Attribute("id")))
           item.Add(new XAttribute("id", part.Key));
+        var partId = (string)item.Attribute("id");
         string bodyName = null;
         var titleEl = item.Descendants("title").FirstOrDefault(el => !string.IsNullOrWhiteSpace(el.Value));
         if (titleEl != null)
@@ -454,7 +458,7 @@ namespace Fb2Kindle {
         item.Attribute("name")?.Remove();
         bookRoot.Add(item);
         if (!string.IsNullOrEmpty(bodyName))
-          parent.Add(bodyName, $"{bookFileName}#{part.Key}");
+          parent.Add(bodyName, $"{bookFileName}#{partId}");
       }
 
       Util.WriteLine("(OK)", Util.MessageColor);
@@ -619,7 +623,7 @@ namespace Fb2Kindle {
     }
 
     private static XElement CreateTitlePage(XElement book) {
-      var root = new XElement("div", new XAttribute("id", "it"));
+      var root = new XElement("div", new XAttribute("id", TitlePageId));
       root.Add(new XAttribute("class", "supertitle"));
 
       //author(s)
