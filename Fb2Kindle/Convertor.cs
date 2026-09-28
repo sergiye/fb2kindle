@@ -78,62 +78,37 @@ namespace Fb2Kindle {
         TaskbarProgressHelper.SetState(TaskbarProgressHelper.TaskbarStates.Normal);
         TaskbarProgressHelper.SetValue(0, books.Count);
 
+        var sources = ExtractArchives(books);
         var coverDone = false;
         TocItem rootToc = null;
         var sequenceIndex = 0;
-        for (var idx = 0; idx < books.Count; idx++) {
-          var fileName = Path.GetFileNameWithoutExtension(books[idx]).Trim();
+        for (var idx = 0; idx < sources.Count; idx++) {
+          var fileName = Path.GetFileNameWithoutExtension(sources[idx]).Trim();
           if (fileName == null)
             continue;
 
           Util.WriteLine("Processing: " + fileName);
-          var fileExtension = Path.GetExtension(books[idx]);
-          switch (fileExtension.ToLower()) {
-            case ".zip":
-              var zipFileIndex = 0;
-              using (var zip = ZipFile.OpenRead(books[idx])) {
-                foreach (var zipEntry in zip.Entries) {
-                  var zipEntryFileExtension = Path.GetExtension(zipEntry.Name)?.ToLower();
-                  if (!".fb2".Equals(zipEntryFileExtension))
-                    continue;
-                  var unzippedFileName = zipFileIndex == 0
-                    ? Util.GetValidFileName($"{fileName}{zipEntryFileExtension}")
-                    : Util.GetValidFileName($"{fileName}_{zipFileIndex}{zipEntryFileExtension}");
-                  var unzippedPath = Path.Combine(options.TempFolder, unzippedFileName);
-                  zipEntry.ExtractToFile(unzippedPath);
-                  books.Add(unzippedPath);
-                  zipFileIndex++;
-                }
-              }
-              continue;
-            case ".fb2":
-              break;
-            default:
-              Util.WriteLine("Not supported file format: " + fileExtension, Util.ErrorColor);
-              continue;
-          }
-
           TaskbarProgressHelper.SetState(TaskbarProgressHelper.TaskbarStates.Normal);
-          TaskbarProgressHelper.SetValue(idx, books.Count);
+          TaskbarProgressHelper.SetValue(idx, sources.Count);
 
           if (options.OptimizeSource) {
             XElement bookRaw;
-            using (Stream file = File.OpenRead(books[idx])) {
+            using (Stream file = File.OpenRead(sources[idx])) {
               bookRaw = XElement.Load(file, LoadOptions.PreserveWhitespace);
             }
             if (bookRaw != null && OptimizeImages(bookRaw)) {
-               bookRaw.Save(books[idx], SaveOptions.DisableFormatting);
+               bookRaw.Save(sources[idx], SaveOptions.DisableFormatting);
             }
             continue;
           }
 
-          var book = LoadBookWithoutNs(books[idx]);
+          var book = LoadBookWithoutNs(sources[idx]);
           if (book == null) return false;
 
           if (sequenceIndex == 0) {
             options.TargetName = fileName;
             //create instances
-            opfFile = GetEmptyPackage(book, books.Count > 1);
+            opfFile = GetEmptyPackage(book, sources.Count > 1);
             AddPackItem("ncx", "toc.ncx", "application/x-dtbncx+xml", false);
           }
 
@@ -252,6 +227,40 @@ namespace Fb2Kindle {
     }
 
     #endregion public
+
+    private List<string> ExtractArchives(List<string> books) {
+      var result = new List<string>();
+      foreach (var bookPath in books) {
+        var fileExtension = Path.GetExtension(bookPath);
+        switch (fileExtension.ToLower()) {
+          case ".fb2":
+            result.Add(bookPath);
+            break;
+          case ".zip":
+            var fileName = Path.GetFileNameWithoutExtension(bookPath).Trim();
+            var zipFileIndex = 0;
+            using (var zip = ZipFile.OpenRead(bookPath)) {
+              foreach (var zipEntry in zip.Entries) {
+                var zipEntryFileExtension = Path.GetExtension(zipEntry.Name)?.ToLower();
+                if (!".fb2".Equals(zipEntryFileExtension))
+                  continue;
+                var unzippedFileName = zipFileIndex == 0
+                  ? Util.GetValidFileName($"{fileName}{zipEntryFileExtension}")
+                  : Util.GetValidFileName($"{fileName}_{zipFileIndex}{zipEntryFileExtension}");
+                var unzippedPath = Path.Combine(options.TempFolder, unzippedFileName);
+                zipEntry.ExtractToFile(unzippedPath, true);
+                result.Add(unzippedPath);
+                zipFileIndex++;
+              }
+            }
+            break;
+          default:
+            Util.WriteLine("Not supported file format: " + fileExtension, Util.ErrorColor);
+            break;
+        }
+      }
+      return result;
+    }
 
     #region ncx
 
