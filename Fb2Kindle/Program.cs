@@ -10,6 +10,8 @@ namespace Fb2Kindle {
 
   static class Program {
 
+    private const string UserClassesKey = @"Software\Classes";
+
     private static readonly string[] ConfigSwitches = [
       "-u", "-update", "-nch", "-dc", "-ni", "-optimize", "-g", "-jpeg", "-ntoc", "-c", "-c1", "-c2", "-s", "-d"
     ];
@@ -94,12 +96,6 @@ namespace Fb2Kindle {
       //  }
       //}
 
-      string fileType = Registry.GetValue($@"HKEY_CLASSES_ROOT\{fileExtension}", "", null) as string;
-      if (string.IsNullOrEmpty(fileType)) {
-        fileType = fileExtension.TrimStart('.') + "_auto_file";
-        Registry.SetValue($@"HKEY_CLASSES_ROOT\{fileExtension}", "", fileType);
-      }
-
       static void AddSubItems(RegistryKey key, string baseCommand) {
         using (var subKey = key.CreateSubKey(@"shell\convert_epub")) {
           subKey.SetValue("", "Convert to .epub");
@@ -129,20 +125,25 @@ namespace Fb2Kindle {
         }
       }
 
-      using (var key = Registry.ClassesRoot.CreateSubKey($@"{fileType}\shell\Fb2Kindle")) {
-        key.SetValue("MUIVerb", "Fb2Kindle");
-        key.SetValue("Icon", exePath);
-        key.SetValue("SubCommands", "");
-        AddSubItems(key, $"\"{exePath}\" \"%1\"");
-      }
-      using (var key = Registry.ClassesRoot.CreateSubKey(@"Directory\shell\Fb2Kindle")) {
-        key.SetValue("MUIVerb", "Fb2Kindle");
-        key.SetValue("Icon", exePath);
-        key.SetValue("SubCommands", "");
-        AddSubItems(key, $"\"{exePath}\" \"%1\\*.fb2\" -r -j");
-      }
+      try {
+        using (var key = Registry.CurrentUser.CreateSubKey($@"{UserClassesKey}\SystemFileAssociations\{fileExtension}\shell\Fb2Kindle")) {
+          key.SetValue("MUIVerb", "Fb2Kindle");
+          key.SetValue("Icon", exePath);
+          key.SetValue("SubCommands", "");
+          AddSubItems(key, $"\"{exePath}\" \"%1\"");
+        }
+        using (var key = Registry.CurrentUser.CreateSubKey($@"{UserClassesKey}\Directory\shell\Fb2Kindle")) {
+          key.SetValue("MUIVerb", "Fb2Kindle");
+          key.SetValue("Icon", exePath);
+          key.SetValue("SubCommands", "");
+          AddSubItems(key, $"\"{exePath}\" \"%1\\*.fb2\" -r -j");
+        }
 
-      Util.WriteLine("Context menus successfully added.", Util.MessageColor);
+        Util.WriteLine("Context menus successfully added.", Util.MessageColor);
+      }
+      catch (Exception ex) {
+        Util.WriteLine("Error while adding context menus: " + ex.Message, Util.ErrorColor);
+      }
     }
 
     static void Unregister(bool silent = false) {
@@ -156,6 +157,9 @@ namespace Fb2Kindle {
         //Registry.LocalMachine.DeleteSubKeyTree($@"SOFTWARE\Classes\SystemFileAssociations\{fileType}\shell\Fb2Kindle", false);
         //Registry.LocalMachine.DeleteSubKeyTree($@"SOFTWARE\Classes\SystemFileAssociations\{fileExtension}\shell\Fb2Kindle", false);
 
+        Registry.CurrentUser.DeleteSubKeyTree($@"{UserClassesKey}\SystemFileAssociations\{fileExtension}\shell\Fb2Kindle", false);
+        Registry.CurrentUser.DeleteSubKeyTree($@"{UserClassesKey}\Directory\shell\Fb2Kindle", false);
+        //menus registered by older versions
         Registry.ClassesRoot.DeleteSubKeyTree($@"{fileType}\shell\Fb2Kindle", false);
         Registry.ClassesRoot.DeleteSubKeyTree(@"Directory\shell\Fb2Kindle", false);
 
