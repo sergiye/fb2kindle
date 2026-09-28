@@ -657,7 +657,7 @@ namespace Fb2Kindle {
     private static void SaveXmlToFile(XNode xml, string file) {
       //xml.Save(file, Debugger.IsAttached ? SaveOptions.None : SaveOptions.DisableFormatting);
       var writer = new XmlEncodeWriter(Encoding.UTF8);
-      using (var xmlWriter = XmlWriter.Create(writer, new XmlWriterSettings { Indent = true })) {
+      using (var xmlWriter = XmlWriter.Create(writer)) {
         xmlWriter.WriteStartDocument();
         xml.WriteTo(xmlWriter);
       }
