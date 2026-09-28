@@ -1118,9 +1118,11 @@ namespace Fb2Kindle {
       foreach (var binEl in book.Descendants().Where(e => e.Name.LocalName == "binary")) {
         var imgId = binEl.Attribute("id")?.Value;
         try {
-          var format = (binEl.Attribute("content-type")?.Value).GetImageFormatFromMimeType(options.Config.Jpeg ? ImageFormat.Jpeg : ImageFormat.Png);
-          //todo: we can get format from img.RawFormat
           var imageBytes = Convert.FromBase64String(binEl.Value);
+          ImageFormat format;
+          using (var stream = new MemoryStream(imageBytes))
+          using (var img = Image.FromStream(stream))
+            format = img.RawFormat;
           if (!ImageExtensions.AutoScaleImage(imageBytes, format, false,
                 options.Config.OptimizeImagesWidth, options.Config.OptimizeImagesHeight,
                 out var scaledBytes)) continue;
