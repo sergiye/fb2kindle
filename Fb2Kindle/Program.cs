@@ -304,9 +304,12 @@ namespace Fb2Kindle {
                   }
                   j++;
                 }
+                else
+                  Util.WriteLine("-css option requires a styles file path", Util.WarningColor);
                 break;
               case "-mailto":
                 if (args.Length > j + 1) options.MailTo = args[++j];
+                else Util.WriteLine("-mailto option requires an email address", Util.WarningColor);
                 break;
               case "-preview":
                 options.CleanupMode = ConverterCleanupMode.Partial;
