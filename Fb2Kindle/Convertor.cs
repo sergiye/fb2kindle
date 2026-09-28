@@ -603,6 +603,10 @@ namespace Fb2Kindle {
       Util.RenameTags(book, "cite", "div", "cite");
       Util.RenameTags(book, "emphasis", "i");
       Util.RenameTags(book, "strong", "b");
+      Util.RenameTags(book, "strikethrough", "del");
+      foreach (var style in Util.RenameTags(book, "style", "span"))
+        style.Attribute("name")?.Remove();
+      Util.RenameTags(book, "date", "p", "date");
       Util.RenameTags(book, "poem", "div", "poem");
       Util.RenameTags(book, "v", "p");
       Util.RenameTags(book, "stanza", "em");
