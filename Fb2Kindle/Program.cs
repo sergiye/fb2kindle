@@ -368,11 +368,15 @@ namespace Fb2Kindle {
             }
           }
         }
+        if (save) {
+          options.Config.ToJsonFile(settingsFile);
+          Util.WriteLine($"Settings saved to {settingsFile}", Util.MessageColor);
+        }
         if (string.IsNullOrEmpty(bookPath)) {
-          Util.WriteLine("No input file", Util.ErrorColor);
+          if (!save)
+            Util.WriteLine("No input file", Util.ErrorColor);
           return;
         }
-        if (save) options.Config.ToJsonFile(settingsFile);
         if (!string.IsNullOrWhiteSpace(options.MailTo) && !options.Epub) {
           Util.WriteLine("Send to Kindle does not accept MOBI anymore, EPUB will be created", Util.WarningColor);
           options.Epub = true;
