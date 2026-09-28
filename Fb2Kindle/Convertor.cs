@@ -41,6 +41,7 @@ namespace Fb2Kindle {
     private const string NoAuthorText = "без автора";
     private const string KindleGenName = "kindlegen.exe";
     private static readonly XNamespace NcxNs = "http://www.daisy.org/z3986/2005/ncx/";
+    private static readonly XNamespace XhtmlNs = "http://www.w3.org/1999/xhtml";
     private XElement opfFile;
     private string bookId;
     private readonly AppOptions options;
@@ -115,7 +116,7 @@ namespace Fb2Kindle {
 
           //update images (extract and rewrite refs)
           Directory.CreateDirectory($"{options.TempFolder}\\Images");
-          if (ProcessImages(book, $"Images\\{bookPostfix}", coverDone)) {
+          if (ProcessImages(book, $"Images/{bookPostfix}", coverDone)) {
             var imgSrc = Util.AttributeValue(book.Elements("description").Elements("title-info").Elements("coverpage").Elements("div").Elements("img"), "src");
             if (!string.IsNullOrEmpty(imgSrc)) {
               ImageExtensions.AutoScaleImage(Path.Combine(options.TempFolder, imgSrc), true, options.Config.OptimizeImagesWidth, options.Config.OptimizeImagesHeight);
@@ -589,7 +590,7 @@ namespace Fb2Kindle {
     #region helper methods
 
     private static void ConvertTagsToHtml(XElement book, bool full = false) {
-      Util.RenameTags(book, "text-author", "P", "text-author");
+      Util.RenameTags(book, "text-author", "p", "text-author");
       Util.RenameTags(book, "empty-line", "br");
       Util.RenameTags(book, "epigraph", "div", "epigraph");
       Util.RenameTags(book, "subtitle", "div", "subtitle");
@@ -661,7 +662,7 @@ namespace Fb2Kindle {
       var doc = new XElement("html");
 
       var head = new XElement("head", "");
-      head.Add(new XElement("meta", new XAttribute("charset", "utf-8")));
+      head.Add(CreateContentTypeMeta());
       head.Add(new XElement("title", $"{title}"),
         new XElement("link", new XAttribute("type", "text/css"), new XAttribute("href", "book.css"), new XAttribute("rel", "Stylesheet")));
       doc.Add(head);
@@ -669,8 +670,18 @@ namespace Fb2Kindle {
       doc.Add(new XElement("body", bodyEl));
       Util.RenameTags(doc, "section", "div", "book");
       Util.RenameTags(doc, "annotation", "em");
-      SaveXmlToFile(doc, fileName);
+      SaveAsXhtml(doc, fileName);
       doc.RemoveAll();
+    }
+
+    private static XElement CreateContentTypeMeta() {
+      return new XElement("meta", new XAttribute("http-equiv", "Content-Type"), new XAttribute("content", "text/html; charset=utf-8"));
+    }
+
+    private static void SaveAsXhtml(XElement html, string fileName) {
+      foreach (var el in html.DescendantsAndSelf())
+        el.Name = XhtmlNs + el.Name.LocalName;
+      SaveXmlToFile(html, fileName);
     }
 
     private static string GetTitle(XElement book) {
@@ -739,9 +750,9 @@ namespace Fb2Kindle {
     }
 
     private void GenerateTocFile(TocItem rootToc) {
-      var toc = new XElement("html", new XAttribute("type", "toc"));
+      var toc = new XElement("html");
       var head = new XElement("head", "");
-      head.Add(new XElement("meta", new XAttribute("charset", "utf-8")));
+      head.Add(CreateContentTypeMeta());
       head.Add(new XElement("title", $"{rootToc.Name} - Содержание"),
           new XElement("link", new XAttribute("type", "text/css"), new XAttribute("href", "book.css"), new XAttribute("rel", "Stylesheet")));
       toc.Add(head);
@@ -749,7 +760,7 @@ namespace Fb2Kindle {
       toc.Add(new XElement("body", new XElement("div", new XAttribute("class", "title"),
           new XAttribute("id", "toc"), "Содержание"), ul));
       AddTocSubItems(rootToc, ul);
-      SaveXmlToFile(toc, $@"{options.TempFolder}\toc.html");
+      SaveAsXhtml(toc, $@"{options.TempFolder}\toc.html");
     }
 
     private static void AddTocSubItems(TocItem tocItem, XElement tocEl) {
