@@ -34,9 +34,9 @@ namespace Fb2Kindle {
 
     internal static void CopyDirectory(string sourceDirName, string destDirName, bool copySubDirs) {
       var dir = new DirectoryInfo(sourceDirName);
-      var dirs = dir.GetDirectories();
       if (!dir.Exists)
         throw new DirectoryNotFoundException("Source directory does not exist or could not be found: " + sourceDirName);
+      var dirs = dir.GetDirectories();
       if (!Directory.Exists(destDirName))
         Directory.CreateDirectory(destDirName);
       var files = dir.GetFiles();
