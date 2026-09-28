@@ -226,7 +226,6 @@ namespace Fb2Kindle {
                 break;
               case ConverterCleanupMode.Partial:
                 //File.Delete(Path.Combine(tempDir, Path.GetFileNameWithoutExtension(inputFile) + ".opf"));
-                File.Delete(Path.Combine(options.TempFolder, KindleGenName));
 
                 //for Partial mode UseSourceAsTempFolder is always true
                 // var destFolder = GetVersionedPath(Path.GetDirectoryName(bookPath) +"\\" + bookName);
