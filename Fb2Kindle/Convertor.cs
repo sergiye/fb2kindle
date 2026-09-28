@@ -357,6 +357,10 @@ namespace Fb2Kindle {
       foreach (var a in book.Descendants("a")) {
         var href = a.Attribute("href")?.Value;
         if (string.IsNullOrEmpty(href) || !links.ContainsKey(href)) continue;
+        if (!"note".Equals((string)a.Attribute("type"), StringComparison.OrdinalIgnoreCase)) {
+          a.SetAttributeValue("href", links[href] + href);
+          continue;
+        }
         var value = a.Value;
         a.RemoveAll();
         a.SetAttributeValue("href", links[href] + href);
