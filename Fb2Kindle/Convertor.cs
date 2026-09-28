@@ -48,6 +48,7 @@ namespace Fb2Kindle {
     private static readonly XNamespace OpfNs = "http://www.idpf.org/2007/opf";
     private static readonly XNamespace DcNs = "http://purl.org/dc/elements/1.1/";
     private static readonly string[] BlockImageParents = ["section", "body", "coverpage"];
+    private static readonly Regex BookDate = new Regex(@"^\d{4}(-\d{2}(-\d{2})?)?$");
     private static readonly HashSet<string> AllowedHtmlElements = [
       "head", "meta", "title", "link", "body", "div", "p", "span", "a", "i", "b", "em", "strong", "del",
       "sup", "sub", "br", "img", "ul", "li", "table", "tr", "td", "th", "code"
@@ -826,6 +827,16 @@ namespace Fb2Kindle {
       return string.IsNullOrEmpty(number) ? name : $"{name} {number}";
     }
 
+    private static string GetBookDate(XElement book) {
+      var candidates = new[] {
+        Util.AttributeValue(TitleInfo(book).Elements("date"), "value"),
+        Util.Value(TitleInfo(book).Elements("date")),
+        Util.Value(PublishInfo(book).Elements("year")),
+      };
+      var date = candidates.FirstOrDefault(value => value != null && BookDate.IsMatch(value));
+      return date ?? DateTime.Today.ToString("yyyy-MM-dd");
+    }
+
     private static string GetTitle(XElement book) {
       return Util.Value(TitleInfo(book).Elements("book-title"), "Книга").Trim();
     }
@@ -861,7 +872,7 @@ namespace Fb2Kindle {
       if (!string.IsNullOrEmpty(publisher))
         linkEl.Add(new XElement(DcNs + "publisher", publisher));
       //content.Add(Util.Value(book.Elements("description").Elements("publish-info").Elements("year")));
-      linkEl.Add(new XElement(DcNs + "date", DateTime.Today.ToString("yyyy-MM-dd")));
+      linkEl.Add(new XElement(DcNs + "date", GetBookDate(book)));
       bookId = $"urn:uuid:{Guid.NewGuid()}";
       linkEl.Add(new XElement(DcNs + "identifier", new XAttribute("id", "BookId"), bookId));
       content = new XElement(DcNs + "language");
