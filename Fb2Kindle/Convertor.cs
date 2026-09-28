@@ -58,12 +58,9 @@ namespace Fb2Kindle {
 
     internal bool ConvertBookSequence(List<string> books) {
       try {
-        if (options.UseSourceAsTempFolder)
-          options.TempFolder = Path.Combine(Path.GetDirectoryName(books[0]), Path.GetFileNameWithoutExtension(books[0]));
-
-        //create temp working folder
-        if (string.IsNullOrWhiteSpace(options.TempFolder))
-          options.TempFolder = $"{Path.GetTempPath()}\\{Guid.NewGuid()}";
+        options.TempFolder = options.UseSourceAsTempFolder
+          ? Path.Combine(Path.GetDirectoryName(books[0]), Path.GetFileNameWithoutExtension(books[0]))
+          : Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
 
         // tempDir = GetVersionedPath(tempDir);
         if (!Directory.Exists(options.TempFolder))
