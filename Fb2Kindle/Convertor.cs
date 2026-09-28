@@ -750,6 +750,25 @@ namespace Fb2Kindle {
       }
     }
 
+    private static void ReplaceFile(string newFileName, string fileName) {
+      try {
+        File.Replace(newFileName, fileName, null);
+      }
+      catch (Exception ex) when (ex is PlatformNotSupportedException || ex is IOException && File.Exists(newFileName)) {
+        //some network and FAT volumes do not support File.Replace
+        var backupFileName = $"{fileName}.{Guid.NewGuid():N}.bak";
+        File.Move(fileName, backupFileName);
+        try {
+          File.Move(newFileName, fileName);
+        }
+        catch {
+          File.Move(backupFileName, fileName);
+          throw;
+        }
+        File.Delete(backupFileName);
+      }
+    }
+
     private static bool UsesCrLf(string fileName) {
       var buffer = new byte[64 * 1024];
       int read;
@@ -783,7 +802,7 @@ namespace Fb2Kindle {
           : new XmlWriterSettings { Encoding = encoding, NewLineHandling = NewLineHandling.None };
         using (var writer = XmlWriter.Create(tmpFileName, settings))
           book.Save(writer);
-        File.Replace(tmpFileName, fileName, null);
+        ReplaceFile(tmpFileName, fileName);
       }
       finally {
         if (File.Exists(tmpFileName))
