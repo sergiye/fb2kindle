@@ -862,11 +862,18 @@ namespace Fb2Kindle {
         }
         foreach (var attr in el.Attributes().ToList()) {
           var attrName = attr.Name.LocalName.ToLowerInvariant();
-          if (attrName.StartsWith("on") ||
-              (attrName == "href" || attrName == "src") && attr.Value.TrimStart().StartsWith("javascript:", StringComparison.OrdinalIgnoreCase))
+          if (attrName.StartsWith("on") || (attrName == "href" || attrName == "src") && IsScriptUrl(attr.Value))
             attr.Remove();
         }
       }
+    }
+
+    private static bool IsScriptUrl(string url) {
+      //readers drop whitespace and control characters inside the scheme, as browsers do
+      var normalized = new string(url.Where(c => !char.IsWhiteSpace(c) && !char.IsControl(c)).ToArray());
+      return normalized.StartsWith("javascript:", StringComparison.OrdinalIgnoreCase) ||
+             normalized.StartsWith("vbscript:", StringComparison.OrdinalIgnoreCase) ||
+             normalized.StartsWith("data:", StringComparison.OrdinalIgnoreCase);
     }
 
     private static void SaveAsXhtml(XElement html, string fileName) {
