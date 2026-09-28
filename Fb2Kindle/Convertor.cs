@@ -336,7 +336,7 @@ namespace Fb2Kindle {
         parent = parent.Add(t.Value.Trim(), $"{bookFileName}#{bookId}");
       }
       bookNum++;
-      foreach (var subSection in section.Descendants("section")) {
+      foreach (var subSection in section.Elements("section")) {
         bookNum = SaveSubSections(subSection, bookNum, parent, postfix, bookFileName);
       }
       return bookNum;
