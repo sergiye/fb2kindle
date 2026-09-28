@@ -187,8 +187,15 @@ namespace Fb2Kindle {
         ShowMainInfo();
 
         var settingsFile = Path.ChangeExtension(Updater.CurrentFileLocation, ".json");
+        Config config = null;
+        try {
+          config = JsonExtensions.ReadJsonFile<Config>(settingsFile);
+        }
+        catch (Exception ex) {
+          Util.WriteLine($"Settings file '{settingsFile}' is invalid and was ignored: {ex.Message}", Util.WarningColor);
+        }
         options = new AppOptions {
-          Config = JsonExtensions.ReadJsonFile<Config>(settingsFile) ?? new Config()
+          Config = config ?? new Config()
         };
         if (options.Config.ProtectSecrets()) {
           try {
