@@ -10,6 +10,18 @@
     <DefineConstants>NOWINFORMS</DefineConstants>
     <ApplicationIcon>Kindle.ico</ApplicationIcon>
   </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugType>full</DebugType>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>none</DebugType>
+    <Optimize>True</Optimize>
+  </PropertyGroup>
+  <PropertyGroup>
+    <CommonSourcesDir>$(MSBuildThisFileDirectory)..\..\common\</CommonSourcesDir>
+    <UseLocalCommon Condition="'$(UseLocalCommon)' == '' And Exists('$(CommonSourcesDir)sergiye.Common')">true</UseLocalCommon>
+    <UseLocalCommon Condition="'$(UseLocalCommon)' == ''">false</UseLocalCommon>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="System.IO.Compression" />
     <Reference Include="System.Web.Extensions" />
@@ -22,7 +34,14 @@
     <Content Include="FodyWeavers.xml" />
     <Content Include="Kindle.ico" />
   </ItemGroup>
-  <ItemGroup>
+  <ItemGroup Condition="'$(UseLocalCommon)' == 'true'">
+    <Compile Include="$(CommonSourcesDir)sergiye.Common\Extensions\JsonExtensions.cs" Link="Common\JsonExtensions.cs" />
+    <Compile Include="$(CommonSourcesDir)sergiye.Common\Tools\OSHelper.cs" Link="Common\OSHelper.cs" />
+    <Compile Include="$(CommonSourcesDir)sergiye.Common\Tools\Updater.cs" Link="Common\Updater.cs" />
+    <Compile Include="$(CommonSourcesDir)sergiye.Common\Win\TaskbarProgressHelper.cs" Link="Common\TaskbarProgressHelper.cs" />
+    <Compile Include="$(CommonSourcesDir)sergiye.Common\Extensions\ImageExtensions.cs" Link="Common\ImageExtensions.cs" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(UseLocalCommon)' != 'true'">
     <PackageReference Include="SergiyE.Common" Version="1.*" />
   </ItemGroup>
   <ItemGroup Condition=" '$(Configuration)' == 'Release' ">
