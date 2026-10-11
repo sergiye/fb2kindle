@@ -828,7 +828,11 @@ namespace Fb2Kindle {
           : new XmlWriterSettings { Encoding = encoding, NewLineHandling = NewLineHandling.None };
         using (var writer = XmlWriter.Create(tmpFileName, settings))
           book.Save(writer);
+        var creationTime = File.GetCreationTimeUtc(fileName);
+        var writeTime = File.GetLastWriteTimeUtc(fileName);
         ReplaceFile(tmpFileName, fileName);
+        File.SetCreationTimeUtc(fileName, creationTime);
+        File.SetLastWriteTimeUtc(fileName, writeTime);
       }
       finally {
         if (File.Exists(tmpFileName))
