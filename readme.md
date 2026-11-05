@@ -36,7 +36,7 @@ Fb2Kindle adds a menu to Windows Explorer, so you can convert a book or a whole 
   * Can add the series name and number to the book title.
 
 **Images**
-  * Shrinks large images to fit the Kindle screen (824×1200 by default) to make the file smaller.
+  * Shrinks large images to fit the Kindle screen (1072×1448 by default) to make the file smaller.
   * Can convert images to grayscale or leave them out altogether (the cover is always kept).
   * Can shrink the images inside your original `.fb2` files to save disk space, without converting anything.
 
@@ -121,7 +121,7 @@ A file name or mask without a folder (for example `Book.fb2` or `*.fb2`) is look
 | `-ntoc` | Do not add a separate table of contents page. |
 | `-nch` | Do not split the book into nested chapters: all headings go into a single flat list. |
 | `-c` or `-c1`, `-c2` | Compress the `.mobi` file (smaller but slower; `-c2` is the strongest). |
-| `-optimize` | Shrink large images in the result to fit 824×1200. |
+| `-optimize` | Shrink large images in the result to fit 1072×1448. |
 | `-ni` | No images (only the cover is kept). |
 | `-g` | Convert images to grayscale. |
 | `-jpeg` | JPEG, PNG and GIF images are kept as they are; other formats (for example BMP or TIFF) are converted to JPEG instead of PNG. |
@@ -134,7 +134,7 @@ To turn off a saved option for one run, add `-` at the end of it: `-d-`, `-dc-`,
 
 | Option | Description |
 |---|---|
-| `-optimizeSource` | Shrink the images inside the source `.fb2` files to 824×1200 instead of converting them. An image is replaced only if the result is smaller; the file keeps its encoding and line endings. Books inside `.zip` archives are not supported. |
+| `-optimizeSource` | Shrink the images inside the source `.fb2` files to 1072×1448 instead of converting them. An image is replaced only if the result is smaller; the file keeps its encoding and line endings. For a `.zip` archive, the books inside it are optimized and the archive is rewritten. |
 | `-save` | Save the book options used in this run to `Fb2Kindle.json` next to the app. They are applied automatically on every next run. |
 | `-o` | Hide the detailed KindleGen output. |
 | `-w` | Wait for a key press before closing the window. |
@@ -166,7 +166,7 @@ The password is stored in `Fb2Kindle.json` as plain text. Use an app password ra
 
 `Fb2Kindle.json` lives next to `Fb2Kindle.exe` and is created by `-save`. Besides the book options and SMTP settings, you can edit these values by hand:
 
-  * `OptimizeImagesWidth` / `OptimizeImagesHeight`: the maximum image size (default `824` × `1200`).
+  * `OptimizeImagesWidth` / `OptimizeImagesHeight`: the maximum image size (default `1072` × `1448`).
   * `SmtpTimeout`: the time to wait for the mail server, in milliseconds (default `100000`).
 
 ### 7. Custom styles and fonts

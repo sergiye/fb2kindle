@@ -40,6 +40,7 @@
     <Compile Include="$(CommonSourcesDir)sergiye.Common\Tools\Updater.cs" Link="Common\Updater.cs" />
     <Compile Include="$(CommonSourcesDir)sergiye.Common\Win\TaskbarProgressHelper.cs" Link="Common\TaskbarProgressHelper.cs" />
     <Compile Include="$(CommonSourcesDir)sergiye.Common\Extensions\ImageExtensions.cs" Link="Common\ImageExtensions.cs" />
+    <Compile Include="$(CommonSourcesDir)sergiye.Common\Tools\ZipRewriter.cs" Link="Common\ZipRewriter.cs" />
   </ItemGroup>
   <ItemGroup Condition="'$(UseLocalCommon)' != 'true'">
     <PackageReference Include="SergiyE.Common" Version="1.*" />
@@ -67,6 +68,5 @@
   </ItemGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
     <PostBuildEvent>$(Obfuscar) obfuscar.xml</PostBuildEvent>
-    <PlatformTarget>x86</PlatformTarget>
   </PropertyGroup>
 </Project>

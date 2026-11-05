@@ -20,8 +20,8 @@ namespace Fb2Kindle {
     public byte CompressionLevel { get; set; }
     public bool AddSequenceInfo { get; set; }
     public bool OptimizeImages { get; set; }
-    public int OptimizeImagesWidth { get; set; } = 824;
-    public int OptimizeImagesHeight { get; set; } = 1200;
+    public int OptimizeImagesWidth { get; set; } = 1072;
+    public int OptimizeImagesHeight { get; set; } = 1448;
     public bool Grayscaled { get; set; }
     public bool Jpeg { get; set; }
 

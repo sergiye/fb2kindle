@@ -44,8 +44,8 @@ namespace Fb2Kindle {
       Util.WriteLine("\t-ntoc: no table of content");
       Util.WriteLine("\t-nch: no chapters");
       Util.WriteLine();
-      Util.WriteLine("\t-optimizeSource: optimize images in source file (decrease to 824x1200 by default)");
-      Util.WriteLine("\t-optimize: optimize images in target (decrease to 824x1200 by default)");
+      Util.WriteLine("\t-optimizeSource: optimize images in source file (decrease to 1072x1448 by default)");
+      Util.WriteLine("\t-optimize: optimize images in target (decrease to 1072x1448 by default)");
       Util.WriteLine("\t-ni: no images");
       Util.WriteLine("\t-g: grayscale images");
       Util.WriteLine("\t-jpeg: save images that are not JPEG, PNG or GIF as JPEG instead of PNG");
@@ -149,7 +149,7 @@ namespace Fb2Kindle {
         Util.WriteLine("Context menus successfully added.", Util.MessageColor);
       }
       catch (Exception ex) {
-        Util.WriteLine("Error while adding context menus: " + ex.Message, Util.ErrorColor);
+        Util.WriteError("Error while adding context menus: " + ex.Message);
       }
     }
 
@@ -182,7 +182,7 @@ namespace Fb2Kindle {
       }
       catch (Exception ex) {
         if (!silent)
-          Util.WriteLine("Error while removing context menus: " + ex.Message, Util.ErrorColor);
+          Util.WriteError("Error while removing context menus: " + ex.Message);
       }
     }
 
@@ -307,12 +307,12 @@ namespace Fb2Kindle {
                   if (!File.Exists(cssFile))
                     cssFile = appPath + "\\" + cssFile;
                   if (!File.Exists(cssFile)) {
-                    Util.WriteLine("css styles file not found", Util.ErrorColor);
+                    Util.WriteError("css styles file not found");
                     return;
                   }
                   options.Css = File.ReadAllText(cssFile, Encoding.UTF8);
                   if (string.IsNullOrEmpty(options.Css)) {
-                    Util.WriteLine("css styles file is empty", Util.ErrorColor);
+                    Util.WriteError("css styles file is empty");
                     return;
                   }
                   j++;
@@ -386,7 +386,7 @@ namespace Fb2Kindle {
         }
         if (string.IsNullOrEmpty(bookPath)) {
           if (!save)
-            Util.WriteLine("No input file", Util.ErrorColor);
+            Util.WriteError("No input file");
           return;
         }
         if (!string.IsNullOrWhiteSpace(options.MailTo) && !options.Epub) {
@@ -407,7 +407,7 @@ namespace Fb2Kindle {
         processedFiles = ProcessFolder(conv, workPath, bookPath, recursive, join);
       }
       catch (Exception ex) {
-        Util.WriteLine(ex.Message, Util.ErrorColor);
+        Util.WriteError(ex.Message);
       }
       finally {
         if (processedFiles > 0) {
@@ -421,7 +421,7 @@ namespace Fb2Kindle {
           Util.WriteLine("\nNo files processed", Util.WarningColor);
         }
 
-        if (wait && !Console.IsInputRedirected) {
+        if ((wait || Util.HadErrors) && !Console.IsInputRedirected) {
           Util.WriteLine("\nPress any key to continue...", Util.InfoColor);
           Console.ReadKey();
         }
@@ -487,10 +487,8 @@ namespace Fb2Kindle {
           processedFiles += conv.ConvertBookSequence(files);
         }
         else {
-          foreach (var file in files) {
-            if (conv.ConvertBook(file))
-              processedFiles++;
-          }
+          foreach (var file in files)
+            processedFiles += conv.ConvertBookSequence([file]);
         }
       }
 

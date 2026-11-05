@@ -43,6 +43,8 @@ namespace Fb2Kindle {
     private const string KindleGenName = "kindlegen.exe";
     private const long MaxUnzippedBookSize = 512L * 1024 * 1024;
     private const long MaxUnzippedArchiveSize = 2048L * 1024 * 1024;
+    //optimization streams one book at a time, so archives can be larger than for conversion
+    private const long MaxOptimizedArchiveSize = 32L * 1024 * 1024 * 1024;
     //prefix keeps generated anchors apart from the ids that come from the book itself
     private const string GeneratedIdPrefix = "fb2k_";
     private const string SharedNotesFileName = "notes.html";
@@ -250,14 +252,10 @@ namespace Fb2Kindle {
           }
         }
         catch (Exception ex) {
-          Util.WriteLine("Error clearing temp folder: " + ex.Message, Util.ErrorColor);
+          Util.WriteError("Error clearing temp folder: " + ex.Message);
           Util.WriteLine();
         }
       }
-    }
-
-    internal bool ConvertBook(string bookPath) {
-      return ConvertBookSequence([bookPath]) > 0;
     }
 
     #endregion public
@@ -287,7 +285,7 @@ namespace Fb2Kindle {
                   var unzippedPath = Path.Combine(options.TempFolder, unzippedFileName);
                   using (var input = zipEntry.Open())
                   using (var output = File.Create(unzippedPath))
-                    archiveSize += CopyLimited(input, output, Math.Min(MaxUnzippedBookSize, MaxUnzippedArchiveSize - archiveSize));
+                    archiveSize += CopyLimited(input, output, MaxUnzippedArchiveSize - archiveSize, MaxUnzippedArchiveSize);
                   result.Add(unzippedPath);
                   origins[unzippedPath] = bookPath;
                   zipFileIndex++;
@@ -307,7 +305,6 @@ namespace Fb2Kindle {
       return result;
     }
 
-    //declared entry sizes are not enforced by ZipArchive on .NET Framework, so the limit is checked while copying
     private int OptimizeSources(List<string> books) {
       var processed = 0;
       for (var idx = 0; idx < books.Count; idx++) {
@@ -322,8 +319,7 @@ namespace Fb2Kindle {
               processed++;
               break;
             case ".zip":
-              OptimizeArchive(bookPath);
-              processed++;
+              processed += OptimizeArchive(bookPath);
               break;
             default:
               Util.WriteLine("Not supported file format: " + Path.GetExtension(bookPath), Util.ErrorColor);
@@ -331,7 +327,7 @@ namespace Fb2Kindle {
           }
         }
         catch (Exception ex) {
-          Util.WriteLine("Unable to optimize source: " + ex.Message, Util.ErrorColor);
+          Util.WriteError("Unable to optimize source: " + ex.Message);
         }
       }
       TaskbarProgressHelper.SetState(TaskbarProgressHelper.TaskbarStates.NoProgress);
@@ -339,77 +335,143 @@ namespace Fb2Kindle {
     }
 
     private bool OptimizeSourceFile(string fileName) {
+      var data = File.ReadAllBytes(fileName);
+      if (!MayHaveOversizedImages(data))
+        return false;
       XDocument bookRaw;
-      using (Stream file = File.OpenRead(fileName))
-        bookRaw = XDocument.Load(file, LoadOptions.PreserveWhitespace);
+      using (var stream = new MemoryStream(data))
+        bookRaw = XDocument.Load(stream, LoadOptions.PreserveWhitespace);
       if (bookRaw.Root == null || !OptimizeImages(bookRaw.Root))
         return false;
       SaveSourceSafely(bookRaw, fileName);
       return true;
     }
 
-    private void OptimizeArchive(string zipPath) {
-      var tmpZipPath = $"{zipPath}.{Guid.NewGuid():N}.tmp";
-      var changed = false;
-      try {
-        using (var source = ZipFile.OpenRead(zipPath))
-        using (var target = new ZipArchive(File.Create(tmpZipPath), ZipArchiveMode.Create)) {
-          long archiveSize = 0;
-          var bookIndex = 0;
-          foreach (var entry in source.Entries) {
-            string optimizedPath = null;
-            if (".fb2".Equals(Path.GetExtension(entry.Name), StringComparison.OrdinalIgnoreCase)) {
-              var extractedPath = Path.Combine(options.TempFolder, $"opt_{bookIndex++}.fb2");
-              using (var input = entry.Open())
-              using (var output = File.Create(extractedPath))
-                archiveSize += CopyLimited(input, output, Math.Min(MaxUnzippedBookSize, MaxUnzippedArchiveSize - archiveSize));
-              Util.WriteLine("Entry: " + entry.FullName);
-              try {
-                if (OptimizeSourceFile(extractedPath))
-                  optimizedPath = extractedPath;
-              }
-              catch (Exception ex) {
-                Util.WriteLine($"Unable to optimize '{entry.FullName}': {ex.Message}", Util.ErrorColor);
-              }
-              if (optimizedPath == null)
-                File.Delete(extractedPath);
-            }
+    //image headers are checked on raw bytes, so books without oversized images skip XML parsing and decoding
+    private bool MayHaveOversizedImages(byte[] book) {
+      //UTF-16 sources cannot be scanned byte by byte
+      if (book.Length >= 2 && (book[0] == 0 || book[1] == 0 || book[0] == 0xFF && book[1] == 0xFE || book[0] == 0xFE && book[1] == 0xFF))
+        return true;
+      var pos = 0;
+      while ((pos = Array.IndexOf(book, (byte)'<', pos)) >= 0) {
+        pos++;
+        var nameStart = pos;
+        while (pos < book.Length && (char.IsLetterOrDigit((char)book[pos]) || book[pos] == ':' || book[pos] == '_' || book[pos] == '-' || book[pos] == '.')) {
+          if (book[pos] == ':')
+            nameStart = pos + 1;
+          pos++;
+        }
+        if (!IsAsciiName(book, nameStart, pos, "binary"))
+          continue;
+        var contentStart = Array.IndexOf(book, (byte)'>', pos);
+        if (contentStart < 0)
+          return true;
+        contentStart++;
+        var contentEnd = Array.IndexOf(book, (byte)'<', contentStart);
+        if (contentEnd < 0)
+          return true;
+        pos = contentEnd;
+        byte[] image;
+        try {
+          image = Convert.FromBase64String(Encoding.ASCII.GetString(book, contentStart, contentEnd - contentStart));
+        }
+        catch (FormatException) {
+          return true;
+        }
+        if (!ImageSize.TryGet(image, out var width, out var height) ||
+            width > options.Config.OptimizeImagesWidth || height > options.Config.OptimizeImagesHeight)
+          return true;
+      }
+      return false;
+    }
 
-            var newEntry = target.CreateEntry(entry.FullName, CompressionLevel.Optimal);
-            newEntry.LastWriteTime = entry.LastWriteTime;
-            if (entry.FullName.EndsWith("/"))
+    private static bool IsAsciiName(byte[] data, int start, int end, string name) {
+      if (end - start != name.Length)
+        return false;
+      for (var i = 0; i < name.Length; i++) {
+        if (data[start + i] != name[i])
+          return false;
+      }
+      return true;
+    }
+
+    private int OptimizeArchive(string zipPath) {
+      var processed = 0;
+      var entryCount = 0;
+      var replacements = new Dictionary<int, string>();
+      static bool IsBook(ZipArchiveEntry entry) => ".fb2".Equals(Path.GetExtension(entry.Name), StringComparison.OrdinalIgnoreCase);
+      try {
+        using (var source = ZipFile.OpenRead(zipPath)) {
+          //declared sizes give an early answer for regular archives; the real limit is still enforced while copying
+          if (source.Entries.Where(IsBook).Sum(e => e.Length) > MaxOptimizedArchiveSize)
+            throw new InvalidDataException($"Unpacked books exceed the limit of {MaxOptimizedArchiveSize / (1024 * 1024)} MB per archive");
+          entryCount = source.Entries.Count;
+          long archiveSize = 0;
+          for (var idx = 0; idx < source.Entries.Count; idx++) {
+            var entry = source.Entries[idx];
+            if (!IsBook(entry))
               continue;
-            using (var input = optimizedPath != null ? File.OpenRead(optimizedPath) : entry.Open())
-            using (var output = newEntry.Open())
-              input.CopyTo(output);
-            if (optimizedPath == null)
+            TaskbarProgressHelper.SetValue(idx, source.Entries.Count);
+            byte[] book;
+            using (var input = entry.Open())
+            using (var output = new MemoryStream()) {
+              archiveSize += CopyLimited(input, output, MaxOptimizedArchiveSize - archiveSize, MaxOptimizedArchiveSize);
+              book = output.ToArray();
+            }
+            processed++;
+            if (!MayHaveOversizedImages(book))
               continue;
-            changed = true;
-            File.Delete(optimizedPath);
+            Util.WriteLine("Entry: " + entry.FullName);
+            var extractedPath = Path.Combine(options.TempFolder, $"opt_{idx}.fb2");
+            File.WriteAllBytes(extractedPath, book);
+            try {
+              if (OptimizeSourceFile(extractedPath)) {
+                replacements[idx] = extractedPath;
+                continue;
+              }
+            }
+            catch (Exception ex) {
+              processed--;
+              Util.WriteLine($"Unable to optimize '{entry.FullName}': {ex.Message}", Util.ErrorColor);
+            }
+            File.Delete(extractedPath);
           }
         }
-        if (!changed)
-          return;
+        Util.WriteLine($"Optimized books: {replacements.Count} of {processed}", Util.InfoColor);
+        if (replacements.Count == 0)
+          return processed;
+        //ZipArchive and ZipRewriter both list the entries in the central directory order
+        var archive = new ZipRewriter(zipPath);
+        if (archive.Entries.Count != entryCount)
+          throw new InvalidDataException("The central directory does not match the archive entries");
+        foreach (var replacement in replacements) {
+          var path = replacement.Value;
+          archive.Replace(replacement.Key, () => File.OpenRead(path));
+        }
         var creationTime = File.GetCreationTimeUtc(zipPath);
         var writeTime = File.GetLastWriteTimeUtc(zipPath);
-        ReplaceFile(tmpZipPath, zipPath);
+        archive.Save();
         File.SetCreationTimeUtc(zipPath, creationTime);
         File.SetLastWriteTimeUtc(zipPath, writeTime);
+        return processed;
       }
       finally {
-        if (File.Exists(tmpZipPath))
-          File.Delete(tmpZipPath);
+        foreach (var path in replacements.Values.Where(File.Exists))
+          File.Delete(path);
       }
     }
 
-    private static long CopyLimited(Stream input, Stream output, long maxLength) {
+    //declared entry sizes are not enforced by ZipArchive on .NET Framework, so the limits are checked while copying
+    private static long CopyLimited(Stream input, Stream output, long archiveRemaining, long archiveLimit) {
       var buffer = new byte[81920];
       long total = 0;
       int read;
       while ((read = input.Read(buffer, 0, buffer.Length)) > 0) {
         total += read;
-        if (total > maxLength)
-          throw new InvalidDataException($"Unpacked data exceeds the limit of {MaxUnzippedBookSize / (1024 * 1024)} MB per book or {MaxUnzippedArchiveSize / (1024 * 1024)} MB per archive");
+        if (total > MaxUnzippedBookSize)
+          throw new InvalidDataException($"Unpacked book exceeds the limit of {MaxUnzippedBookSize / (1024 * 1024)} MB");
+        if (total > archiveRemaining)
+          throw new InvalidDataException($"Unpacked books exceed the limit of {archiveLimit / (1024 * 1024)} MB per archive");
         output.Write(buffer, 0, read);
       }
       return total;
@@ -669,7 +731,7 @@ namespace Fb2Kindle {
       Util.WriteLine("Creating mobi (KF8)...", Util.InfoColor);
       var kindleGen = GetKindleGenPath();
       if (kindleGen == null) {
-        Util.WriteLine($"{KindleGenName} not found", Util.ErrorColor);
+        Util.WriteError($"{KindleGenName} not found");
         return null;
       }
 
@@ -743,12 +805,12 @@ namespace Fb2Kindle {
       try {
         if (string.IsNullOrWhiteSpace(options.Config.SmtpServer) || options.Config.SmtpPort <= 0 ||
             string.IsNullOrWhiteSpace(options.Config.SmtpLogin) || string.IsNullOrEmpty(options.Config.SmtpPassword)) {
-          Util.WriteLine("Mail delivery failed: smtp not configured", Util.ErrorColor);
+          Util.WriteError("Mail delivery failed: smtp not configured");
           return false;
         }
         //SmtpClient supports only STARTTLS, a connection to an implicit TLS port hangs until the timeout
         if (options.Config.SmtpPort == 465) {
-          Util.WriteLine("Mail delivery failed: SMTP port 465 (implicit TLS) is not supported, use port 587", Util.ErrorColor);
+          Util.WriteError("Mail delivery failed: SMTP port 465 (implicit TLS) is not supported, use port 587");
           return false;
         }
         // Util.WriteLine($"SMTP: {_currentSettings.SmtpLogin} / {_currentSettings.SmtpServer}:{_currentSettings.SmtpPort}", Util.InfoColor);
@@ -778,7 +840,7 @@ namespace Fb2Kindle {
         return true;
       }
       catch (Exception ex) {
-        Util.WriteLine($"Error: {ex.Message}", Util.ErrorColor);
+        Util.WriteError($"Error: {ex.Message}");
       }
       return false;
     }
@@ -1254,8 +1316,43 @@ namespace Fb2Kindle {
         return true;
       }
       catch (Exception ex) {
-        Util.WriteLine($"Cover image '{imgSrc}' skipped: {ex.Message}", Util.ErrorColor);
+        byte[] data = null;
+        try {
+          data = File.ReadAllBytes(Path.Combine(options.TempFolder, imgSrc));
+        }
+        catch (Exception readEx) when (readEx is IOException || readEx is UnauthorizedAccessException) {
+          Util.WriteLine($"Cover image '{imgSrc}' skipped: {ex.Message}", Util.WarningColor);
+          return false;
+        }
+        Util.WriteLine(DescribeImageProblem($"Cover image '{imgSrc}'", data, null, ex, "skipped"), Util.WarningColor);
         return false;
+      }
+    }
+
+    //GDI+ reports any undecodable data as "Parameter is not valid", so the data itself is inspected for a clearer message
+    private static string DescribeImageProblem(string image, byte[] data, string declaredType, Exception ex, string action) {
+      if (data == null)
+        return $"{image} is not valid base64 data, {action}";
+      if (data.All(b => b == ' ' || b == '\t' || b == '\r' || b == '\n' || b == 0))
+        return $"{image} is empty, {action}";
+      var format = ImageSize.DetectFormat(data);
+      if (format == null)
+        return string.IsNullOrEmpty(declaredType)
+          ? $"{image} has unknown format, {action}"
+          : $"{image} has unknown format (declared {declaredType}), {action}";
+      if (!ImageSize.IsSupported(format))
+        return $"{image} has unsupported format {format}, {action}";
+      if (ex is ArgumentException || ex is OutOfMemoryException || ex is System.Runtime.InteropServices.ExternalException)
+        return $"{image} ({format}) is damaged, {action}";
+      return $"{image} ({format}) {action}: {ex.Message}";
+    }
+
+    private static byte[] TryDecodeBase64(string value) {
+      try {
+        return Convert.FromBase64String(value);
+      }
+      catch (FormatException) {
+        return null;
       }
     }
 
@@ -1319,10 +1416,13 @@ namespace Fb2Kindle {
     private bool ExtractImages(XElement book, string workFolder, string imagesPrefix, Dictionary<string, string> imageFiles) {
       if (book == null) return true;
       Util.Write("Extracting images...", Util.InfoColor);
+      var warnings = new List<string>();
       foreach (var binEl in book.Elements("binary")) {
+        var imageId = binEl.Attribute("id")?.Value;
+        var fileBytes = TryDecodeBase64(binEl.Value);
         try {
-          var imageId = binEl.Attribute("id")?.Value;
-          var fileBytes = Convert.FromBase64String(binEl.Value);
+          if (fileBytes == null)
+            throw new FormatException();
           var decoded = false;
           ImageFormat format = null;
           var keptOriginal = false;
@@ -1366,28 +1466,31 @@ namespace Fb2Kindle {
             }
           }
           catch (Exception ex) when (decoded) {
-            Util.WriteLine("Error compressing image: " + ex.Message, Util.ErrorColor);
+            warnings.Add($"Image '{imageId}' is used without resizing: {ex.Message}");
             if (keptOriginal)
               File.WriteAllBytes(file, fileBytes);
           }
           imageFiles[imageId] = imageFile;
         }
         catch (Exception ex) {
-          Util.WriteLine($"Image '{binEl.Attribute("id")?.Value}' skipped: {ex.Message}", Util.ErrorColor);
+          warnings.Add(DescribeImageProblem($"Image '{imageId}'", fileBytes, binEl.Attribute("content-type")?.Value, ex, "skipped"));
         }
       }
-      Util.WriteLine("(OK)", Util.MessageColor);
+      WriteImagesStatus(warnings);
       return true;
     }
 
     private bool OptimizeImages(XElement book) {
       if (book == null) return false;
       Util.Write("Optimizing source images...", Util.InfoColor);
-      var hasChanges = false;
+      var resized = 0;
+      var warnings = new List<string>();
       foreach (var binEl in book.Descendants().Where(e => e.Name.LocalName == "binary")) {
         var imgId = binEl.Attribute("id")?.Value;
+        var imageBytes = TryDecodeBase64(binEl.Value);
         try {
-          var imageBytes = Convert.FromBase64String(binEl.Value);
+          if (imageBytes == null)
+            throw new FormatException();
           ImageFormat format;
           using (var stream = new MemoryStream(imageBytes))
           using (var img = Image.FromStream(stream))
@@ -1398,14 +1501,38 @@ namespace Fb2Kindle {
           if (imageBytes.Length <= scaledBytes.Length)
             continue;
           binEl.Value = Convert.ToBase64String(scaledBytes);
-          hasChanges = true;
+          resized++;
         }
         catch (Exception ex) {
-          Util.WriteLine($"Error processing image '{imgId}': " + ex.Message, Util.ErrorColor);
+          warnings.Add(DescribeImageProblem($"Image '{imgId}'", imageBytes, binEl.Attribute("content-type")?.Value, ex, "left unchanged"));
         }
       }
-      Util.WriteLine("(OK)", Util.MessageColor);
-      return hasChanges;
+
+      var details = new List<string>();
+      if (resized > 0)
+        details.Add(resized == 1 ? "1 image resized" : $"{resized} images resized");
+      else if (warnings.Count == 0)
+        details.Add("no changes");
+      if (warnings.Count > 0)
+        details.Add(warnings.Count == 1 ? "1 image with problems" : $"{warnings.Count} images with problems");
+      if (resized > 0)
+        Util.Write("(saved)", Util.MessageColor);
+      else
+        Util.Write("(skipped)", Util.WarningColor);
+      Util.WriteLine(" " + string.Join(", ", details));
+      foreach (var warning in warnings)
+        Util.WriteLine("  " + warning, Util.WarningColor);
+      return resized > 0;
+    }
+
+    private static void WriteImagesStatus(List<string> warnings) {
+      if (warnings.Count == 0) {
+        Util.WriteLine("(OK)", Util.MessageColor);
+        return;
+      }
+      Util.WriteLine(warnings.Count == 1 ? "(1 image with problems)" : $"({warnings.Count} images with problems)", Util.WarningColor);
+      foreach (var warning in warnings)
+        Util.WriteLine("  " + warning, Util.WarningColor);
     }
 
     #endregion Images

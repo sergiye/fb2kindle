@@ -114,7 +114,7 @@ namespace Fb2Kindle {
           if (addToConsole) WriteLine(e.Data);
         };
         process.ErrorDataReceived += (_, e) => {
-          if (addToConsole) WriteLine(e.Data, ErrorColor);
+          if (addToConsole && e.Data != null) WriteLine(e.Data, ErrorColor);
         };
         process.Start();
         process.BeginOutputReadLine();
@@ -132,6 +132,13 @@ namespace Fb2Kindle {
 
     internal static void WriteLine(string message = null, ConsoleColor? color = null, ConsoleColor? backColor = null) {
       Write(message, color, backColor, true);
+    }
+
+    internal static bool HadErrors { get; private set; }
+
+    internal static void WriteError(string message) {
+      HadErrors = true;
+      WriteLine(message, ErrorColor);
     }
 
     internal static void Write(string message = null, ConsoleColor? color = null, ConsoleColor? backColor = null, bool newLine = false) {
