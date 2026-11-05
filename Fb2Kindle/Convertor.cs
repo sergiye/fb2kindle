@@ -45,6 +45,9 @@ namespace Fb2Kindle {
     private const long MaxUnzippedArchiveSize = 2048L * 1024 * 1024;
     //prefix keeps generated anchors apart from the ids that come from the book itself
     private const string GeneratedIdPrefix = "fb2k_";
+    private const string SharedNotesFileName = "notes.html";
+    private const string SharedNotesId = GeneratedIdPrefix + "notes";
+    private const string SharedNotesTitle = "Примечания";
     private const string TitlePageId = GeneratedIdPrefix + "it";
     //short fixed name keeps the temp path far from MAX_PATH; the result is renamed afterwards
     private const string TempBookName = "result";
@@ -112,6 +115,8 @@ namespace Fb2Kindle {
         var sequenceIndex = 0;
         var documentIds = new List<string>();
         string singleBookTitle = null;
+        var sharedNotes = sources.Count > 1 ? new List<XElement>() : null;
+        var notesToc = new TocItem(SharedNotesTitle, $"{SharedNotesFileName}#{SharedNotesId}");
         for (var idx = 0; idx < sources.Count; idx++) {
           var fileName = Path.GetFileNameWithoutExtension(sources[idx]).Trim();
           Util.WriteLine("Processing: " + fileName);
@@ -166,7 +171,7 @@ namespace Fb2Kindle {
           //add to TOC
           rootToc ??= new TocItem(bookTitle, null);
           var tocItem = rootToc.Add(bookTitle, bookFileName);
-          ProcessAllData(book, bookRoot, bookPostfix, tocItem, bookFileName);
+          ProcessAllData(book, bookRoot, bookPostfix, tocItem, bookFileName, bookTitle, sharedNotes, notesToc);
           ConvertTagsToHtml(bookRoot, true);
           SaveAsHtmlBook(bookRoot, $"{options.TempFolder}\\{bookFileName}", bookTitle);
           convertedOrigins.Add(origins[sources[idx]]);
@@ -180,6 +185,8 @@ namespace Fb2Kindle {
            return 0;
         if (sequenceIndex == 1 && singleBookTitle != options.DocumentTitle)
           SetDocumentTitle(singleBookTitle);
+        if (sharedNotes is { Count: > 0 })
+          SaveSharedNotes(sharedNotes, rootToc, notesToc);
         bookId = GetBookIdentifier(documentIds);
         opfFile.Element(OpfNs + "metadata").Elements(DcNs + "identifier").First().Value = bookId;
         CreateNcxFile(rootToc);
@@ -501,11 +508,64 @@ namespace Fb2Kindle {
       return bookNum;
     }
 
-    private void ProcessAllData(XElement book, XElement bookRoot, string postfix, TocItem parent, string bookFileName) {
+    private static void MoveNotesToShared(XElement book, XElement[] noteBodies, string bookFileName, string postfix,
+      string bookTitle, List<XElement> sharedNotes, TocItem notesToc) {
+      //ids repeat from book to book, so each book gets its own prefix in the shared notes file
+      var idPrefix = $"{GeneratedIdPrefix}n{postfix}_";
+      var noteIds = new HashSet<string>();
+      foreach (var el in noteBodies.SelectMany(b => b.DescendantsAndSelf())) {
+        var id = (string)el.Attribute("id");
+        if (string.IsNullOrEmpty(id)) continue;
+        noteIds.Add(id);
+        el.SetAttributeValue("id", idPrefix + id);
+      }
+      var oldPrefix = bookFileName + "#";
+      foreach (var a in book.Descendants("a")) {
+        var href = (string)a.Attribute("href");
+        if (href == null || !href.StartsWith(oldPrefix, StringComparison.Ordinal)) continue;
+        var id = href.Substring(oldPrefix.Length);
+        if (noteIds.Contains(id))
+          a.SetAttributeValue("href", $"{SharedNotesFileName}#{idPrefix}{id}");
+      }
+      var wrapperId = $"{GeneratedIdPrefix}notesb{postfix}";
+      var wrapper = new XElement("section", new XAttribute("id", wrapperId),
+        new XElement("div", new XAttribute("class", "title"),
+          new XElement("div", new XAttribute("class", "title1"), bookTitle)));
+      foreach (var body in noteBodies) {
+        //the shared file already has its own headings
+        body.Elements("title").Remove();
+        Util.RenameTag(body, "section");
+        body.Remove();
+        wrapper.Add(body);
+      }
+      sharedNotes.Add(wrapper);
+      notesToc.Add(bookTitle, $"{SharedNotesFileName}#{wrapperId}");
+    }
+
+    private void SaveSharedNotes(List<XElement> sharedNotes, TocItem rootToc, TocItem notesToc) {
+      var root = new XElement("div");
+      var titleDiv = new XElement("div", new XAttribute("class", "title"),
+        new XElement("div", new XAttribute("class", "title0"), new XAttribute("id", SharedNotesId), SharedNotesTitle));
+      root.Add(titleDiv);
+      var section = new XElement("section");
+      section.Add(sharedNotes);
+      root.Add(section);
+      ConvertTagsToHtml(root, true);
+      SaveAsHtmlBook(root, $"{options.TempFolder}\\{SharedNotesFileName}", SharedNotesTitle);
+      AddPackItem("notes", SharedNotesFileName);
+      rootToc.SubItems.Add(notesToc);
+    }
+
+    private void ProcessAllData(XElement book, XElement bookRoot, string postfix, TocItem parent, string bookFileName,
+      string bookTitle = null, List<XElement> sharedNotes = null, TocItem notesToc = null) {
 
       Util.Write("FB2 to HTML...", Util.InfoColor);
       UpdateLinksInBook(book, bookFileName);
       var bodies = book.Elements("body").ToArray();
+      if (sharedNotes != null && bodies.Length > 1) {
+        MoveNotesToShared(book, bodies.Skip(1).ToArray(), bookFileName, postfix, bookTitle, sharedNotes, notesToc);
+        bodies = new[] { bodies[0] };
+      }
       //process other "bodies" (notes)
       var additionalParts = new List<KeyValuePair<string, XElement>>();
       for (var i = 1; i < bodies.Length; i++) {
