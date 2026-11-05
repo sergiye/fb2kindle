@@ -97,7 +97,7 @@ namespace Fb2Kindle {
       //  }
       //}
 
-      static void AddSubItems(RegistryKey key, string baseCommand) {
+      static void AddSubItems(RegistryKey key, string baseCommand, string optimizeCommand = null) {
         using (var subKey = key.CreateSubKey(@"shell\convert_epub")) {
           subKey.SetValue("", "Convert to .epub");
           using (var cmdKey = subKey.CreateSubKey("command")) {
@@ -121,7 +121,7 @@ namespace Fb2Kindle {
         using (var subKey = key.CreateSubKey(@"shell\optimize")) {
           subKey.SetValue("", "Optimize source");
           using (var cmdKey = subKey.CreateSubKey("command")) {
-            cmdKey.SetValue("", $"{baseCommand} -optimizeSource");
+            cmdKey.SetValue("", $"{optimizeCommand ?? baseCommand} -optimizeSource");
           }
         }
       }
@@ -133,11 +133,17 @@ namespace Fb2Kindle {
           key.SetValue("SubCommands", "");
           AddSubItems(key, $"\"{exePath}\" \"%1\"");
         }
+        using (var key = Registry.CurrentUser.CreateSubKey($@"{UserClassesKey}\SystemFileAssociations\.zip\shell\Fb2Kindle")) {
+          key.SetValue("MUIVerb", "Fb2Kindle");
+          key.SetValue("Icon", exePath);
+          key.SetValue("SubCommands", "");
+          AddSubItems(key, $"\"{exePath}\" \"%1\"");
+        }
         using (var key = Registry.CurrentUser.CreateSubKey($@"{UserClassesKey}\Directory\shell\Fb2Kindle")) {
           key.SetValue("MUIVerb", "Fb2Kindle");
           key.SetValue("Icon", exePath);
           key.SetValue("SubCommands", "");
-          AddSubItems(key, $"\"{exePath}\" \"%1\\*.fb2\" -r -j");
+          AddSubItems(key, $"\"{exePath}\" \"%1\\*.fb2\" -r -j", $"\"{exePath}\" \"%1\\*.fb2;*.zip\" -r");
         }
 
         Util.WriteLine("Context menus successfully added.", Util.MessageColor);
@@ -159,6 +165,7 @@ namespace Fb2Kindle {
         //Registry.LocalMachine.DeleteSubKeyTree($@"SOFTWARE\Classes\SystemFileAssociations\{fileExtension}\shell\Fb2Kindle", false);
 
         Registry.CurrentUser.DeleteSubKeyTree($@"{UserClassesKey}\SystemFileAssociations\{fileExtension}\shell\Fb2Kindle", false);
+        Registry.CurrentUser.DeleteSubKeyTree($@"{UserClassesKey}\SystemFileAssociations\.zip\shell\Fb2Kindle", false);
         Registry.CurrentUser.DeleteSubKeyTree($@"{UserClassesKey}\Directory\shell\Fb2Kindle", false);
         //menus registered by older versions
         try {
@@ -464,7 +471,10 @@ namespace Fb2Kindle {
       List<string> files;
       DirectoryInfo[] subFolders;
       try {
-        files = Directory.GetFiles(workPath, searchMask, SearchOption.TopDirectoryOnly).ToList();
+        files = searchMask.Split([';'], StringSplitOptions.RemoveEmptyEntries)
+          .SelectMany(mask => Directory.GetFiles(workPath, mask.Trim(), SearchOption.TopDirectoryOnly))
+          .Distinct(StringComparer.OrdinalIgnoreCase)
+          .ToList();
         subFolders = recursive ? new DirectoryInfo(workPath).GetDirectories() : [];
       }
       catch (Exception ex) when (ex is UnauthorizedAccessException || ex is IOException) {

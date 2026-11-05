@@ -97,6 +97,9 @@ namespace Fb2Kindle {
         }
         File.WriteAllText(options.TempFolder + @"\book.css", options.Css);
 
+        if (options.OptimizeSource)
+          return OptimizeSources(books);
+
         referencedImages.Clear();
         var origins = new Dictionary<string, string>();
         var failedOrigins = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -114,22 +117,6 @@ namespace Fb2Kindle {
           Util.WriteLine("Processing: " + fileName);
           TaskbarProgressHelper.SetState(TaskbarProgressHelper.TaskbarStates.Normal);
           TaskbarProgressHelper.SetValue(idx, sources.Count);
-
-          if (options.OptimizeSource) {
-            try {
-              XDocument bookRaw;
-              using (Stream file = File.OpenRead(sources[idx])) {
-                bookRaw = XDocument.Load(file, LoadOptions.PreserveWhitespace);
-              }
-              if (bookRaw.Root != null && OptimizeImages(bookRaw.Root)) {
-                 SaveSourceSafely(bookRaw, sources[idx]);
-              }
-            }
-            catch (Exception ex) {
-              Util.WriteLine("Unable to optimize source: " + ex.Message, Util.ErrorColor);
-            }
-            continue;
-          }
 
           var book = LoadBookWithoutNs(sources[idx]);
           if (book == null) {
@@ -189,8 +176,6 @@ namespace Fb2Kindle {
 
         TaskbarProgressHelper.SetState(TaskbarProgressHelper.TaskbarStates.NoProgress);
 
-        if (options.OptimizeSource)
-          return sources.Count;
         if (sequenceIndex == 0)
            return 0;
         if (sequenceIndex == 1 && singleBookTitle != options.DocumentTitle)
@@ -280,10 +265,6 @@ namespace Fb2Kindle {
             origins[bookPath] = bookPath;
             break;
           case ".zip":
-            if (options.OptimizeSource) {
-              Util.WriteLine($"Optimizing books inside archives is not supported: {bookPath}", Util.WarningColor);
-              break;
-            }
             var fileName = Path.GetFileNameWithoutExtension(bookPath).Trim();
             var zipFileIndex = 0;
             long archiveSize = 0;
@@ -320,6 +301,100 @@ namespace Fb2Kindle {
     }
 
     //declared entry sizes are not enforced by ZipArchive on .NET Framework, so the limit is checked while copying
+    private int OptimizeSources(List<string> books) {
+      var processed = 0;
+      for (var idx = 0; idx < books.Count; idx++) {
+        var bookPath = books[idx];
+        Util.WriteLine("Processing: " + Path.GetFileNameWithoutExtension(bookPath).Trim());
+        TaskbarProgressHelper.SetState(TaskbarProgressHelper.TaskbarStates.Normal);
+        TaskbarProgressHelper.SetValue(idx, books.Count);
+        try {
+          switch (Path.GetExtension(bookPath).ToLower()) {
+            case ".fb2":
+              OptimizeSourceFile(bookPath);
+              processed++;
+              break;
+            case ".zip":
+              OptimizeArchive(bookPath);
+              processed++;
+              break;
+            default:
+              Util.WriteLine("Not supported file format: " + Path.GetExtension(bookPath), Util.ErrorColor);
+              break;
+          }
+        }
+        catch (Exception ex) {
+          Util.WriteLine("Unable to optimize source: " + ex.Message, Util.ErrorColor);
+        }
+      }
+      TaskbarProgressHelper.SetState(TaskbarProgressHelper.TaskbarStates.NoProgress);
+      return processed;
+    }
+
+    private bool OptimizeSourceFile(string fileName) {
+      XDocument bookRaw;
+      using (Stream file = File.OpenRead(fileName))
+        bookRaw = XDocument.Load(file, LoadOptions.PreserveWhitespace);
+      if (bookRaw.Root == null || !OptimizeImages(bookRaw.Root))
+        return false;
+      SaveSourceSafely(bookRaw, fileName);
+      return true;
+    }
+
+    private void OptimizeArchive(string zipPath) {
+      var tmpZipPath = $"{zipPath}.{Guid.NewGuid():N}.tmp";
+      var changed = false;
+      try {
+        using (var source = ZipFile.OpenRead(zipPath))
+        using (var target = new ZipArchive(File.Create(tmpZipPath), ZipArchiveMode.Create)) {
+          long archiveSize = 0;
+          var bookIndex = 0;
+          foreach (var entry in source.Entries) {
+            string optimizedPath = null;
+            if (".fb2".Equals(Path.GetExtension(entry.Name), StringComparison.OrdinalIgnoreCase)) {
+              var extractedPath = Path.Combine(options.TempFolder, $"opt_{bookIndex++}.fb2");
+              using (var input = entry.Open())
+              using (var output = File.Create(extractedPath))
+                archiveSize += CopyLimited(input, output, Math.Min(MaxUnzippedBookSize, MaxUnzippedArchiveSize - archiveSize));
+              Util.WriteLine("Entry: " + entry.FullName);
+              try {
+                if (OptimizeSourceFile(extractedPath))
+                  optimizedPath = extractedPath;
+              }
+              catch (Exception ex) {
+                Util.WriteLine($"Unable to optimize '{entry.FullName}': {ex.Message}", Util.ErrorColor);
+              }
+              if (optimizedPath == null)
+                File.Delete(extractedPath);
+            }
+
+            var newEntry = target.CreateEntry(entry.FullName, CompressionLevel.Optimal);
+            newEntry.LastWriteTime = entry.LastWriteTime;
+            if (entry.FullName.EndsWith("/"))
+              continue;
+            using (var input = optimizedPath != null ? File.OpenRead(optimizedPath) : entry.Open())
+            using (var output = newEntry.Open())
+              input.CopyTo(output);
+            if (optimizedPath == null)
+              continue;
+            changed = true;
+            File.Delete(optimizedPath);
+          }
+        }
+        if (!changed)
+          return;
+        var creationTime = File.GetCreationTimeUtc(zipPath);
+        var writeTime = File.GetLastWriteTimeUtc(zipPath);
+        ReplaceFile(tmpZipPath, zipPath);
+        File.SetCreationTimeUtc(zipPath, creationTime);
+        File.SetLastWriteTimeUtc(zipPath, writeTime);
+      }
+      finally {
+        if (File.Exists(tmpZipPath))
+          File.Delete(tmpZipPath);
+      }
+    }
+
     private static long CopyLimited(Stream input, Stream output, long maxLength) {
       var buffer = new byte[81920];
       long total = 0;

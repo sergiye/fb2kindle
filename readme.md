@@ -72,9 +72,11 @@ Right-click an `.fb2` file and open the **Fb2Kindle** submenu:
 
   * **Convert to .mobi**: creates a `.mobi` book next to the source file (large images are shrunk).
   * **Convert to .epub**: creates an `.epub` book next to the source file.
-  * **Optimize source**: shrinks the images inside the `.fb2` file itself.
+  * **Optimize source**: shrinks the images inside the `.fb2` file itself. For a `.zip` archive, every `.fb2` inside it is optimized and the archive is rewritten.
 
-Right-click a **folder** to see the same items. They process every `.fb2` file in that folder and its subfolders, joining the books of each folder into one e-book. This is the easiest way to convert a series.
+The same submenu is available for `.zip` archives.
+
+Right-click a **folder** to see the same items. They process every `.fb2` file in that folder and its subfolders, joining the books of each folder into one e-book. This is the easiest way to convert a series. **Optimize source** for a folder also processes `.zip` archives, each file separately.
 
 You can also drag and drop an `.fb2` file onto `Fb2Kindle.exe` to convert it to `.mobi` with default settings.
 
